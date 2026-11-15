@@ -1,0 +1,85 @@
+# Database backup procedure (shared by three callers)
+
+⛔ **(INV-094, INV-300) This file is the ONE implementation of "back up the resolved repository".
+Three callers cite it; none reimplements it.**
+
+- `SKILL.md` Step 6a, writing the INV-094 revisit bundle at graduation.
+- `../bootcamp-onboarding/packaging.md`, when the `transfer` profile is asked for and
+  `backups/revisit/` does not exist yet — the flow runs at any point in the bootcamp, so it can be
+  reached before graduation has ever run.
+- `../module-06-data-processing/SKILL.md` → "The repository, on either engine", before each load in
+  Data Processing, whose Phase D recovery restores from that backup.
+
+⚠️ **Why it was factored out rather than copied.** The indeterminate-`database_type` branch below is
+subtle, and getting it wrong means either no backup at all or `pg_dump` aimed at a SQLite file. A
+second copy is precisely the drift this repo writes tests to prevent, and the backup is the whole
+point of the bundle: INV-094 requires exactly one of the two branches to have run.
+
+## The destination
+
+The caller names where the backup goes. Graduation and packaging write `backups/revisit/database/`,
+the paths the commands below show. Module 6 writes `data/backups/` (INV-050), under pre-load names:
+`data/backups/G2C.db.pre-load` on SQLite, `data/backups/senzing.dump.pre-load` on PostgreSQL. A
+Module 6 backup puts its path in place of `backups/revisit/database/G2C.db` or
+`backups/revisit/database/senzing.dump` in each command below, the existence check included, and
+changes nothing else.
+
+## The procedure
+
+Back up the resolved repository so it can be restored later. Read **`database_type`**
+(`sqlite`/`postgresql`) from pre-checks and the connection from `config/engine_config.json`.
+
+⛔ **When `database_type` is indeterminate, do not guess a branch** — determine the engine from
+`config/engine_config.json`'s connection string instead (and note the missing key per pre-check 3).
+Picking the wrong branch here means either no backup or `pg_dump` against a SQLite file.
+
+- **SQLite:** copy the repository file into `backups/revisit/database/` (e.g.
+  `cp database/G2C.db backups/revisit/database/G2C.db`).
+- **PostgreSQL:** run `pg_dump` of the Senzing database to
+  `backups/revisit/database/senzing.dump`, writing the file with `-f`:
+  `pg_dump -U <user> -d <db> -Fc -f backups/revisit/database/senzing.dump`.
+  When the database runs in a container, dump inside the container and copy the file out,
+  because `-f` there writes into the container's filesystem. `<container>` and `<runtime>` are
+  the PostgreSQL container's recorded `name` and `runtime` in `docker_containers` in
+  `config/bootcamp_progress.json` (INV-195); an entry with no `runtime` means `docker`. First
+  check that the runtime has a `cp` with `<runtime> cp --help`: if it fails, the backup cannot be
+  produced (below), and no dump is started.
+  1. `<runtime> exec <container> pg_dump -U <user> -d <db> -Fc -f /tmp/senzing.dump`
+  2. `<runtime> cp <container>:/tmp/senzing.dump backups/revisit/database/senzing.dump`
+  3. `<runtime> exec <container> rm /tmp/senzing.dump`
+
+  Confirm the exact user / database / container from `config/engine_config.json` (and the recorded
+  container, when container-lifecycle tracking is present); **never invent credentials.**
+  ⛔ **(INV-166, INV-001) Never write the dump with a `>` redirection**, in any shell: under
+  Windows PowerShell 5.1 `>` re-encodes the binary dump as text, and the damage stays silent until
+  a restore. The backup
+  exists only once `backups/revisit/database/senzing.dump` is on the host and non-empty; a failed
+  `<runtime> cp`, or a missing or empty file, means the backup could not be produced (below).
+
+**If the backup cannot be produced** (tool missing, a container runtime with no `cp`, database
+unreachable), warn and continue — the rest of the bundle still saves, and graduation is
+non-blocking (INV-094). The packaging flow reports
+the same way: it says the archive carries no database and why, rather than refusing to package.
+Module 6 says the load will run with no backup, and why, and continues; its Phase D recovery then
+takes the no-backup route.
+
+## Restore
+
+Record the exact **restore** command wherever this backup is described — `SKILL.md` Step 6c's return
+guide (`docs/REVISIT_BOOTCAMP.md`), which a `transfer` archive carries, and its `OPEN_ME_FIRST.md`
+points at, only when the guide was packaged; a backup packaged without it gets the step below
+in `OPEN_ME_FIRST.md` itself. Module 6's Phase D recovery restores from its own destination by the
+same steps:
+
+- **SQLite** — copy the file back to `database/`, as `database/G2C.db`.
+- **PostgreSQL** — into a fresh database, with the file named by an argument, never a `<`
+  redirection (Windows PowerShell 5.1 rejects `<`): `pg_restore -U <user> -d <db> <file>` for this
+  custom-format dump, or `psql -U <user> -d <db> -f <file>` for a plain dump. When the database runs
+  in a container, copy the file in first and restore it from the path inside the container, with
+  `<runtime>` and `<container>` from the PostgreSQL container's `docker_containers` entry, as in
+  the backup (INV-195):
+  `<runtime> cp <file> <container>:/tmp/senzing.dump`, then
+  `<runtime> exec <container> pg_restore -U <user> -d <db> /tmp/senzing.dump` (or
+  `<runtime> exec <container> psql -U <user> -d <db> -f /tmp/senzing.dump` for a plain dump).
+
+These commands are written for every shell but are unverified on Windows: no test runs them there.

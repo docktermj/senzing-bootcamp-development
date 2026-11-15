@@ -1,0 +1,168 @@
+# Bootcamp Packaging Workflow (available at any time)
+
+The bootcamper can package their bootcamp at any point: onboarding, any module, or after
+graduation (the INV-254 any-time-flow precedent this follows). The result is **one zip
+archive under `backups/packages/`** that they can archive, move to another machine, or
+hand to a colleague.
+
+⛔ **The plugin writes the archive and stops.** It never uploads, emails, attaches or opens
+an issue with it (INV-135) — the same rule the feedback flow follows. Moving the file off
+the machine is the bootcamper's action, and the closing summary names the path so they can.
+
+⚠️ **This is not the revisit bundle, and it does not replace it.** Graduation Step 6 writes
+`backups/revisit/` **in place** (INV-094), which is a save point on *this* machine. This
+flow makes that portable, and reuses it rather than duplicating it.
+
+Reached by the `/package-bootcamp` command. ⚠️ **There is no hook for this flow** — unlike
+`notes.md`, whose `UserPromptSubmit` clause is real, nothing intercepts prompts on packaging
+vocabulary. So **recognize these as a request for it and offer the command**: "back up the
+bootcamp", "archive this", "move this to another machine", "zip it up", "send this to my
+colleague". Recognizing them is the guide's job, not a hook's. Follow `ground-rules.md`: one 👉
+question per yielding turn (INV-251), and the turn ends on it.
+
+## Step 1: Get the real size before asking anything
+
+⛔ **Run the dry run first. The question below quotes a measured size, never an estimate.**
+
+```bash
+python3 "{{host.plugin_root}}/scripts/package_bootcamp.py" --profile share --dry-run
+python3 "{{host.plugin_root}}/scripts/package_bootcamp.py" --profile transfer --dry-run
+```
+
+Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
+
+(Skill-relative fallback `../../scripts/package_bootcamp.py` per INV-252, exactly as every
+other bundled script is invoked — INV-185.)
+
+Each prints the manifest on stdout and a `size:` line on stderr, and **writes nothing**.
+Read the two `size:` figures; they are what the question needs. If either run exits
+non-zero saying nothing is packageable yet, say so plainly — the bootcamp has not produced
+artifacts yet — and do not ask the question.
+
+⚠️ **Read the `transfer` run's `absent:` line too, where it prints one.** It names every path
+that profile reaches for and did not find: `backups/revisit` on any run before graduation, and
+`config` or `src` on an early one. A path named there is a path the `size:` figure above it did
+**not** measure, and Step 2's option 2 has to say so.
+
+⚠️ **If a dry run reports a size above 2 GB it prints a warning naming that.** Relay it:
+recommend option 1, or note that the database backup is what makes option 2 large.
+
+## Step 2: Ask what should travel
+
+Pin this verbatim (INV-051/INV-056), substituting the two measured sizes, keeping or dropping
+option 2's `{…}` clause as the rule below the question says, and end the turn on it:
+
+👉 **What should the package contain? Reply with a number:**
+
+1. **Results to share** — your recap PDF, keepsake documents, visualizations, the exports
+   written for the systems you named (`data/exports/`) and your `production/` project
+   (~<n> MB). No database, no source data, no credentials.
+2. **Everything to continue elsewhere** — the above plus your database backup, config
+   and mappings, so you can pick the bootcamp back up on another machine (~<n> MB{, which
+   excludes your database backup — choosing this creates it, and it is the largest part}).
+3. **Cancel.**
+
+*(Internal: end the turn on this question and wait.)*
+
+⛔ **(INV-388) Option 2's `{…}` clause goes in exactly when the `transfer` dry run's `absent:` line named `backups/revisit`, and is dropped when it did not.** Drop the braces themselves either way — they mark the choice, and the bootcamper never sees them.
+
+⚠️ **Why it is conditional rather than standing text.** Before graduation `backups/revisit/` does
+not exist; Step 3 creates it *after* this answer; so the figure beside the clause was measured
+over a tree with no database backup in it — the very component the 2 GB warning above says makes
+option 2 large. The figure was always honest about having been measured and said nothing about
+what it measured. After graduation the bundle is already there, Step 1's dry run walks it, and the
+figure is complete: a clause printed anyway would be false on every one of those runs, and a
+disclosure that is always present is one the reader learns to skip past.
+
+⛔ **Option 3 writes nothing at all.** Acknowledge and return the bootcamper to exactly
+where they left off.
+
+**Handling each answer (INV-284).**
+
+- **1, "Results to share":** Step 4 with `--profile share`, then Step 5.
+- **2, "Everything to continue elsewhere":** Step 3 (the database backup), then Step 4 with
+  `--profile transfer`, then Step 5.
+- **3, "Cancel":** write nothing, as the rule above says, and return them to where they left off.
+
+## Step 3: For option 2, make sure a database backup exists
+
+⛔ **(INV-094, INV-300) If `backups/revisit/` does not exist, run the shared procedure — do NOT
+write a second SQLite-vs-PostgreSQL branch.** Follow `../graduation/database-backup.md`, the one
+implementation, into `backups/revisit/database/`. That file carries the `database_type`
+lookup, the do-not-guess rule for an indeterminate value, both engine branches and the
+warn-and-continue rule.
+
+**If the backup cannot be produced**, warn and continue: package what exists and say in
+the closing summary that the archive carries no database and why. Never refuse to package
+over it.
+
+## Step 4: Write it
+
+```bash
+python3 "{{host.plugin_root}}/scripts/package_bootcamp.py" --profile <share|transfer>
+```
+
+Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
+
+The script does the rest, and its guarantees are worth knowing because they are what make
+the archive safe to hand over:
+
+- **One top-level directory**, so extraction never scatters files into the recipient's
+  working directory.
+- **`OPEN_ME_FIRST.md`** at its root — what this is, the bootcamper's business problem in one
+  line, what is included, what is excluded **and why**. It says to open the recap PDF first and
+  (transfer only) points at `docs/REVISIT_BOOTCAMP.md` for the restore commands **only when the
+  manifest's `included` list carries that file**; otherwise it says plainly which part is
+  missing and what to do instead.
+- **`PACKAGE_MANIFEST.json`** — profile, plugin version, date, `modules_completed`, every
+  included path with SHA-256 and size, the exclusion rules applied, and every path skipped.
+  ⚠️ A recipient must be able to tell what is **missing** without guessing; that is what
+  the exclusion half is for.
+- **Packaged on both profiles:** `docs/` (the recap, the keepsake documents and
+  `docs/visualizations/`), `production/`, and `data/exports/` — Module 7 step 4e's export of
+  the resolved results in each named system's import format.
+  ⛔ **(INV-392) A path a step hands the bootcamper over as that step's deliverable must be one a packaging profile carries, or the step must say, where it names the path, that it does not travel.**
+  `data/exports/` is the one tree under `data/` that `share` reaches, because step 4e hands its
+  contents over and they are the bootcamp's own output written for another system to read rather
+  than the bootcamper's source data. Graduation copies it to `production/data/exports/` at the
+  same project-relative path (INV-186), so a graduated project carries it in both places and
+  both travel.
+- **Never packaged, either profile:** `.env`, `licenses/`, `config/license.json` and any
+  `license.json` copy wherever it sits, `data/raw/` (the bootcamper's own source data),
+  `data/temp/`, `logs/`, `.git/`, caches and virtualenvs, and `backups/packages/` itself.
+  `config/license.json` is the SDK's `get_license` response: it names the license's customer,
+  contract and billing terms and holds no license payload, so the content scan below passes it
+  as clean. The rule `license.json` matches that exact, case-sensitive name at any depth, which
+  also covers the `backups/revisit/state/license.json` copy an earlier graduation's Step 6b
+  left behind.
+- **Never packaged on `share`, on top of that:** the mapped loader inputs
+  (`data/senzing-ready/`), `backups/`, every database file, and `docs/mapping/`.
+  ⛔ **(INV-410) Every exclusion rule matches a path's segments wherever they sit, not only at the
+  project root.** `production/` is packaged recursively and graduation copies
+  `data/senzing-ready/**` into `production/data/senzing-ready/` (INV-186), so a root-anchored
+  rule carried the bootcamper's own mapped rows inside the generated tree while
+  `OPEN_ME_FIRST.md` told the recipient no source data had traveled. ⚠️ `transfer` keeps
+  those inputs on purpose — the `src/load/**` copied into `production/` reads from exactly
+  that path (INV-084), so a transfer package without them cannot resume the bootcamp.
+- **Content-scanned, every member, regardless of extension:** a member whose bytes match an
+  INV-109 secret pattern — a PEM private key, an AWS access-key ID, a Senzing license payload —
+  is excluded and **named** in the manifest. ⛔ **There is no file-type allowlist**, and there was
+  one until 2026-08-26: it carried `.md`/`.py`/`.json` and not `.pem`, `.key` or the empty
+  extension, so a `server.pem` and an extensionless `id_rsa` were packaged while the same key in
+  a `.py` was excluded. A member that cannot be **read** is also excluded and named — nothing
+  unexamined is packaged.
+- **Symlinks resolved, then compared:** a member resolving outside the project root is
+  skipped and named (the INV-200 rule).
+- **Verified before it is announced:** `testzip()` re-opens the finished archive and a
+  `.sha256` sidecar is written before the success line prints. Never tell the bootcamper an
+  archive exists without that (INV-067's discipline) — they may not discover otherwise
+  until they are on the machine that no longer has the original.
+
+## Step 5: Tell them where it is
+
+Report the path, the size and the digest from the script's own output — not from memory —
+and say plainly that they move it themselves. If anything was excluded that they might
+expect (a database on the `share` profile, a file the secret scan caught), name it here
+rather than leaving it to the manifest alone.
+
+Then return the bootcamper to exactly where they left off.
