@@ -7,6 +7,9 @@ steering files.)
 
 ## Session start
 
+- Read `host-rules.md`, beside this file, at the start of every session, and follow it on every
+  turn. It lists the safeguards this assistant does not run by itself, which you then carry out
+  as instructions.
 - Decide whether to resume or run onboarding by what `config/bootcamp_progress.json`
   records, never by whether it exists. Follow `SKILL.md` → "Fresh start vs. resume —
   decided by the progress file's CONTENT, not its existence", which states the rule
@@ -759,7 +762,7 @@ copy (INV-300).
   process lifetime, or return it alongside whatever it created. The framing is ownership, not a
   Python idiom (INV-002): however your language expresses it, the factory's lifetime must enclose
   every engine's. Worked example in the bundled reference server
-  (`{{host.plugin_root}}/scripts/senzing_viz_server.py`, INV-185; skill-relative fallback
+  (`{{host.scripts_dir}}/senzing_viz_server.py`, INV-185; skill-relative fallback
   `../../scripts/senzing_viz_server.py`, INV-252): it returns `factory` next to `engine` for
   exactly this reason. Confirm the error text against the installed SDK rather than trusting
   this note (INV-080).

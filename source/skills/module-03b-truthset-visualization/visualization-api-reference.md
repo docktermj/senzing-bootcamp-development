@@ -987,7 +987,7 @@ and defeats the entire purpose of the feature, which exists to make Senzing's re
 Entity-detail dialogs (Records / Why? / How?) are a primary surface in both apps and get the same
 visual care as the headline tabs: a real header bar (title plus a close control) visually separated
 from the body, deliberate spacing and typographic hierarchy, and a subtle entrance transition.
-Palette and type come from `{{host.plugin_root}}/scripts/brand_tokens.py` (INV-081; skill-relative
+Palette and type come from `{{host.scripts_dir}}/brand_tokens.py` (INV-081; skill-relative
 fallback `../../scripts/brand_tokens.py`, INV-252) — the brand tokens apply *inside* the
 modal, not only to the app shell. A functionally-correct but visually plain dialog undersells the
 moment.
@@ -1477,14 +1477,14 @@ hand over; Truth Set visualization (`phase1-visualization.md` 2.3) and Query, Vi
 Discover (`../module-07-query-visualize-discover/phase1-query-visualize.md` step 3c) link here rather
 than restating it (INV-300). Run the host commands from the project root, on the host. `<runtime>`
 and `<container>` are the SDK container's recorded `runtime` and `name` in `docker_containers`
-(INV-195, INV-349). The helper is `{{host.plugin_root}}/scripts/docker_lifecycle.py` (fallback
+(INV-195, INV-349). The helper is `{{host.scripts_dir}}/docker_lifecycle.py` (fallback
 `../../scripts/docker_lifecycle.py` relative to this skill, INV-252). It reads the progress file
 and makes one HTTP request; it never starts, stops or removes a container.
 
 1. **Read the published port.**
 
    ```bash
-   python3 "{{host.plugin_root}}/scripts/docker_lifecycle.py" viz-port <container>
+   python3 "{{host.scripts_dir}}/docker_lifecycle.py" viz-port <container>
    ```
 
    Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
@@ -1519,7 +1519,7 @@ and makes one HTTP request; it never starts, stops or removes a container.
 3. **Confirm from the host, and hand over only the URL the helper prints.**
 
    ```bash
-   python3 "{{host.plugin_root}}/scripts/docker_lifecycle.py" confirm-viz <container> --log logs/viz-server.log --wait 120
+   python3 "{{host.scripts_dir}}/docker_lifecycle.py" confirm-viz <container> --log logs/viz-server.log --wait 120
    ```
 
    Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).

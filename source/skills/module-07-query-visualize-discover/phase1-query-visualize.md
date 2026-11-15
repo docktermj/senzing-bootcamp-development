@@ -1025,7 +1025,7 @@ Pin the offer verbatim:
   `{"offered": true, "accepted": true, "artifact": "docs/visualizations/results_visualization.html"}`.
 
 Build it modeled on the shipped Truth Set visualization server
-(`{{host.plugin_root}}/scripts/senzing_viz_server.py`, INV-185; skill-relative fallback
+(`{{host.scripts_dir}}/senzing_viz_server.py`, INV-185; skill-relative fallback
 `../../scripts/senzing_viz_server.py`, INV-252) and the
 `../module-03b-truthset-visualization/visualization-api-reference.md` contract, in the
 bootcamper's chosen programming language (INV-090), pointed at the bootcamper's loaded data instead
@@ -1139,7 +1139,7 @@ The server MUST:
   entity/relationship/report data through generated SDK code and `reporting_guide`, never direct
   SQL.
 - Render offline with the vendored D3 asset inlined, no CDN (INV-091), and brand the pages with the
-  palette/typography token values from `{{host.plugin_root}}/scripts/brand_tokens.py` (INV-081;
+  palette/typography token values from `{{host.scripts_dir}}/brand_tokens.py` (INV-081;
   skill-relative fallback `../../scripts/brand_tokens.py`, INV-252).
   - ⛔ **(INV-081, INV-091) Copy the brand-token values into the server's own code when you write
     it, in every language, Python included.** Read them from `brand_tokens.py` on the host, where
@@ -1158,7 +1158,7 @@ The server MUST:
     and no import from the plugin, so the values are copied for you. Run it from the project root:
 
     ```bash
-    python3 "{{host.plugin_root}}/scripts/senzing_viz_server.py" --emit-standalone src/server/results_server.py
+    python3 "{{host.scripts_dir}}/senzing_viz_server.py" --emit-standalone src/server/results_server.py
     ```
 
     Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
@@ -1214,12 +1214,12 @@ The server MUST:
   several shots of one tab — and derive every caption from the opened image and its tab label.
 
   ⛔ **The capture tool is bundled — run it, do not assess whether automation exists.**
-  `{{host.plugin_root}}/scripts/capture_screenshots.py` (INV-185; skill-relative fallback
+  `{{host.scripts_dir}}/capture_screenshots.py` (INV-185; skill-relative fallback
   `../../scripts/capture_screenshots.py`, INV-252). It tries several headless backends itself and
   writes both the PNGs and a `<name>-tabs.json` coverage manifest that graduation reads:
 
   ```bash
-  python3 "{{host.plugin_root}}/scripts/capture_screenshots.py" \
+  python3 "{{host.scripts_dir}}/capture_screenshots.py" \
     --url "http://localhost:<the port 3c actually bound>" \
     --name results_visualization --tabs all --query "<a name present in the loaded data>"
   ```
@@ -1270,7 +1270,7 @@ at the Bootcamper's scale. The bundled capture helper runs them in a verificatio
 captures nothing, against `docs/visualizations/results_visualization.html`:
 
 ```bash
-python3 "{{host.plugin_root}}/scripts/capture_screenshots.py" \
+python3 "{{host.scripts_dir}}/capture_screenshots.py" \
   --html docs/visualizations/results_visualization.html --verify-scale
 ```
 
@@ -1521,8 +1521,8 @@ synthesized, and a single source is all of them:
 | None `synthesized` | no `--subtitle`: the default, "What Senzing found in your data" |
 
 ```bash
-python3 "{{host.plugin_root}}/scripts/generate_discoveries_pdf.py" --subtitle "<the table's subtitle>"
-# or, if {{host.plugin_root_var}} is unset: python3 <this-skill-dir>/../../scripts/generate_discoveries_pdf.py …
+python3 "{{host.scripts_dir}}/generate_discoveries_pdf.py" --subtitle "<the table's subtitle>"
+# or, if {{host.plugin_root_var}} is unset: python3 {{host.scripts_fallback}}/generate_discoveries_pdf.py …
 ```
 
 Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).

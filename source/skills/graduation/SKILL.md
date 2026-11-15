@@ -392,7 +392,7 @@ The recap is the crown-jewel deliverable. Produce it before the `production/`
 project so the recap PDF always exists.
 
 A finished-recap sample ships with the plugin (INV-065) at
-`{{host.plugin_root}}/docs/examples/bootcamp_recap.example.pdf` (skill-relative
+`{{host.docs_dir}}/examples/bootcamp_recap.example.pdf` (skill-relative
 fallback: `../../docs/examples/bootcamp_recap.example.pdf`). You may point the
 bootcamper to it so they see what theirs is about to look like — a non-blocking
 statement, never a 👉 question or gate, and it adds no turn.
@@ -432,7 +432,7 @@ found in had summaries whose three blocks were simply absent.
 are **lists**: put the label on its own line and one bullet per accomplishment, and one bullet per
 file with a short "— what it is" gloss. `**Why it matters:**` is **prose**: it stays inline after its
 label. This is the shape `../bootcamp-onboarding/module-completion.md` prescribes and the shape
-`{{host.plugin_root}}/docs/examples/bootcamp_recap.example.md` (skill-relative fallback:
+`{{host.docs_dir}}/examples/bootcamp_recap.example.md` (skill-relative fallback:
 `../../docs/examples/bootcamp_recap.example.md`, INV-252) shows. It is not cosmetic: the PDF renders bullets as
 bullets and inline text as one wrapped paragraph, so a list written inline — the comma-joined run of
 paths being the usual way it happens — reaches the keepsake as a paragraph and cannot be recovered
@@ -603,7 +603,7 @@ none of these are covered by it:
 
    ⛔ **(INV-271) Offer the remedy — it is cheap while the artifacts are still on disk.** Re-start the app and
    re-run the capture against it with the bundled tool,
-   `python3 "{{host.plugin_root}}/scripts/capture_screenshots.py" --url http://localhost:<port> --name <name>`
+   `python3 "{{host.scripts_dir}}/capture_screenshots.py" --url http://localhost:<port> --name <name>`
    (INV-185; skill-relative fallback `../../scripts/capture_screenshots.py`, INV-252), then
    re-embed via the backfill path, rather than proceeding with a recap that pictures the sample
    dataset in place of the Bootcamper's results.
@@ -706,8 +706,8 @@ During the bootcamp these files were written plain (see
 more importantly, enforces the content guard below in code:
 
 ```bash
-python3 "{{host.plugin_root}}/scripts/normalize_docs_markdown.py"
-# or, if {{host.plugin_root_var}} is unset: python3 <this-skill-dir>/../../scripts/normalize_docs_markdown.py
+python3 "{{host.scripts_dir}}/normalize_docs_markdown.py"
+# or, if {{host.plugin_root_var}} is unset: python3 {{host.scripts_fallback}}/normalize_docs_markdown.py
 ```
 
 Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
@@ -789,11 +789,11 @@ if you created one above; otherwise `python3`:
 
 ```bash
 # fpdf2 already importable, or using the stdlib fallback:
-python3 "{{host.plugin_root}}/scripts/generate_recap_pdf.py"
+python3 "{{host.scripts_dir}}/generate_recap_pdf.py"
 # Or, when you installed fpdf2 into the project-local venv above (Linux/macOS):
-data/temp/recap-venv/bin/python "{{host.plugin_root}}/scripts/generate_recap_pdf.py"
+data/temp/recap-venv/bin/python "{{host.scripts_dir}}/generate_recap_pdf.py"
 # Windows:
-data/temp/recap-venv/Scripts/python "{{host.plugin_root}}/scripts/generate_recap_pdf.py"
+data/temp/recap-venv/Scripts/python "{{host.scripts_dir}}/generate_recap_pdf.py"
 ```
 
 Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it
@@ -804,7 +804,7 @@ relative to this skill's directory instead (this skill lives at
 `skills/graduation/`, so the generator is two levels up under `scripts/`):
 
 ```bash
-python3 <this-skill-dir>/../../scripts/generate_recap_pdf.py
+python3 {{host.scripts_fallback}}/generate_recap_pdf.py
 ```
 
 Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
@@ -1199,12 +1199,12 @@ otherwise `python3`). Pass no `--voice-model`: the renderer finds the voice at i
 `data/temp/piper-voices/en_US-ljspeech-high.onnx`.
 
 ```bash
-python3 "{{host.plugin_root}}/scripts/generate_recap_video.py" --check
-python3 "{{host.plugin_root}}/scripts/generate_recap_video.py"
-# or, if {{host.plugin_root_var}} is unset: python3 <this-skill-dir>/../../scripts/generate_recap_video.py
+python3 "{{host.scripts_dir}}/generate_recap_video.py" --check
+python3 "{{host.scripts_dir}}/generate_recap_video.py"
+# or, if {{host.plugin_root_var}} is unset: python3 {{host.scripts_fallback}}/generate_recap_video.py
 # With Piper set up (Linux/macOS; Windows: data/temp/recap-venv/Scripts/python):
-data/temp/recap-venv/bin/python "{{host.plugin_root}}/scripts/generate_recap_video.py" --check
-data/temp/recap-venv/bin/python "{{host.plugin_root}}/scripts/generate_recap_video.py"
+data/temp/recap-venv/bin/python "{{host.scripts_dir}}/generate_recap_video.py" --check
+data/temp/recap-venv/bin/python "{{host.scripts_dir}}/generate_recap_video.py"
 ```
 
 Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
@@ -1263,11 +1263,11 @@ it already:
 # Linux/macOS (add Pillow when it is missing):
 python3 -m venv data/temp/recap-venv    # only if it does not exist yet
 data/temp/recap-venv/bin/python -m pip install imageio-ffmpeg
-data/temp/recap-venv/bin/python "{{host.plugin_root}}/scripts/generate_recap_video.py"
+data/temp/recap-venv/bin/python "{{host.scripts_dir}}/generate_recap_video.py"
 # Windows:
 python3 -m venv data/temp/recap-venv    # only if it does not exist yet
 data/temp/recap-venv/Scripts/python -m pip install imageio-ffmpeg
-data/temp/recap-venv/Scripts/python "{{host.plugin_root}}/scripts/generate_recap_video.py"
+data/temp/recap-venv/Scripts/python "{{host.scripts_dir}}/generate_recap_video.py"
 ```
 
 Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it
@@ -1368,7 +1368,7 @@ Resolve three paths:
   root (`<project>/data/temp/recap-venv/bin/python`; on Windows
   `<project>\data\temp\recap-venv\Scripts\python.exe`), or else the absolute path of `python3`
   (`command -v python3`).
-- **The renderer:** the absolute path that `{{host.plugin_root}}/scripts/generate_recap_video.py`
+- **The renderer:** the absolute path that `{{host.scripts_dir}}/generate_recap_video.py`
   expands to in your shell (or the skill-relative fallback, resolved).
 - **The project root:** the absolute path of the bootcamper's project.
 
@@ -1505,8 +1505,8 @@ and this scan names any read that slipped through. After the copy, on Overwrite 
 run the bundled scanner from the project root:
 
 ```bash
-python3 "{{host.plugin_root}}/scripts/scan_uncopied_paths.py"
-# or, if {{host.plugin_root_var}} is unset: python3 <this-skill-dir>/../../scripts/scan_uncopied_paths.py
+python3 "{{host.scripts_dir}}/scan_uncopied_paths.py"
+# or, if {{host.plugin_root_var}} is unset: python3 {{host.scripts_fallback}}/scan_uncopied_paths.py
 ```
 
 Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
@@ -1667,8 +1667,8 @@ best-effort CommonMark pass over them that Step 1a made over `docs/*.md` — INV
 pass over **both** sets, and the `production/` half is why this step exists:
 
 ```bash
-python3 "{{host.plugin_root}}/scripts/normalize_docs_markdown.py" --docs-dir production
-# or, if {{host.plugin_root_var}} is unset: python3 <this-skill-dir>/../../scripts/normalize_docs_markdown.py --docs-dir production
+python3 "{{host.scripts_dir}}/normalize_docs_markdown.py" --docs-dir production
+# or, if {{host.plugin_root_var}} is unset: python3 {{host.scripts_fallback}}/normalize_docs_markdown.py --docs-dir production
 ```
 
 Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
@@ -1706,11 +1706,11 @@ Render each with the bundled general renderer, resolved the same way as every ot
 script and never as a bare `scripts/…` path (INV-185):
 
 ```bash
-python3 "{{host.plugin_root}}/scripts/generate_document_pdf.py" \
+python3 "{{host.scripts_dir}}/generate_document_pdf.py" \
     --input docs/business_problem.md --output docs/business_problem.pdf \
     --require-sections "<this document's own H2 headings, semicolon-separated>" \
     --subtitle "The problem this bootcamp set out to solve"
-# or, if {{host.plugin_root_var}} is unset: python3 <this-skill-dir>/../../scripts/generate_document_pdf.py …
+# or, if {{host.plugin_root_var}} is unset: python3 {{host.scripts_fallback}}/generate_document_pdf.py …
 ```
 
 Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).

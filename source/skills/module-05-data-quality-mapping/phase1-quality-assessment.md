@@ -923,11 +923,11 @@ and `../module-03b-truthset-visualization/visualization-api-reference.md` → "R
 the third; both are the statements of record, so read them rather than reconstructing the rules here.
 
 1. **Brand tokens, not an ad hoc palette** (INV-081): take colors and typography from
-   `{{host.plugin_root}}/scripts/brand_tokens.py` (skill-relative fallback
+   `{{host.scripts_dir}}/brand_tokens.py` (skill-relative fallback
    `../../scripts/brand_tokens.py`, INV-252), degrading gracefully if the module cannot be
    imported.
 2. **Renders offline** (INV-081/INV-091): **no CDN, no web font, no remote script.** If you need a
-   charting library, inline the vendored `{{host.plugin_root}}/scripts/vendor/d3.v7.min.js`
+   charting library, inline the vendored `{{host.scripts_dir}}/vendor/d3.v7.min.js`
    (skill-relative fallback `../../scripts/vendor/d3.v7.min.js`, INV-252); plain
    HTML/CSS bars need no library at all and are the better default here. A `<script src="https://…">`
    makes the page render blank on an air-gapped workstation — which Senzing evaluations frequently

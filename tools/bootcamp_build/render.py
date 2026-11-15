@@ -13,7 +13,8 @@ assistant by construction:
     Each marker sits on a line of its own and the marker lines are never emitted.
 
 ``<!-- host:include name -->``
-    Replaced by ``hosts/<id>/fragments/<name>.md``. Every host must supply the fragment.
+    Replaced by ``hosts/<id>/fragments/<name>.md`` (or by ``<name>`` itself when it carries
+    an extension, as the site's HTML fragments do). Every host must supply the fragment.
 """
 
 from __future__ import annotations
@@ -27,7 +28,7 @@ TOKEN_RE = re.compile(r"\{\{host\.([a-z][a-z0-9_]*)\}\}")
 #: Anything that looks like an attempt at a token but is not a well-formed one.
 MALFORMED_TOKEN_RE = re.compile(r"\{\{\s*host\b[^}]*\}\}")
 DIRECTIVE_RE = re.compile(
-    r"^[ \t]*<!-- host:(only|except|end|include)(?: ([a-z0-9][a-z0-9, -]*?))? -->[ \t]*$"
+    r"^[ \t]*<!-- host:(only|except|end|include)(?: ([a-z0-9][a-z0-9,. _-]*?))? -->[ \t]*$"
 )
 #: A line that mentions a directive without being one (indented oddly, extra text, …).
 DIRECTIVE_HINT_RE = re.compile(r"<!--\s*host:")

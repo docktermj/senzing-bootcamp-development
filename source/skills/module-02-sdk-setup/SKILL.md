@@ -886,8 +886,8 @@ project's `SessionEnd` would stop, and its `SessionStart` would report, the othe
    `bootcamp-postgres` for PostgreSQL) and the runtime you will create it with:
 
    ```bash
-   python3 "{{host.plugin_root}}/scripts/docker_lifecycle.py" container-name <base> --runtime <runtime>
-   # or, if {{host.plugin_root_var}} is unset: python3 <this-skill-dir>/../../scripts/docker_lifecycle.py container-name <base> --runtime <runtime>
+   python3 "{{host.scripts_dir}}/docker_lifecycle.py" container-name <base> --runtime <runtime>
+   # or, if {{host.plugin_root_var}} is unset: python3 {{host.scripts_fallback}}/docker_lifecycle.py container-name <base> --runtime <runtime>
    ```
 
    Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
@@ -929,8 +929,8 @@ host reaches it only through a port published to host loopback.
    root, on the host:
 
    ```bash
-   python3 "{{host.plugin_root}}/scripts/docker_lifecycle.py" free-port 8080
-   # or, if {{host.plugin_root_var}} is unset: python3 <this-skill-dir>/../../scripts/docker_lifecycle.py free-port 8080
+   python3 "{{host.scripts_dir}}/docker_lifecycle.py" free-port 8080
+   # or, if {{host.plugin_root_var}} is unset: python3 {{host.scripts_fallback}}/docker_lifecycle.py free-port 8080
    ```
 
    Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
@@ -2169,9 +2169,9 @@ config with `sdk_guide(topic='configure', ...)` — never hand-construct
    prints `5432` when a socket can bind `127.0.0.1:5432`, else the first free port in 5433–5531:
 
    ```bash
-   python3 "{{host.plugin_root}}/scripts/docker_lifecycle.py" container-name bootcamp-postgres --runtime docker
-   python3 "{{host.plugin_root}}/scripts/docker_lifecycle.py" free-port 5432
-   # or, if {{host.plugin_root_var}} is unset: python3 <this-skill-dir>/../../scripts/docker_lifecycle.py <same arguments>
+   python3 "{{host.scripts_dir}}/docker_lifecycle.py" container-name bootcamp-postgres --runtime docker
+   python3 "{{host.scripts_dir}}/docker_lifecycle.py" free-port 5432
+   # or, if {{host.plugin_root_var}} is unset: python3 {{host.scripts_fallback}}/docker_lifecycle.py <same arguments>
    ```
 
    Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).

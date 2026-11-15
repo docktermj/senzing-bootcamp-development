@@ -14,7 +14,7 @@ rename would break every one of those addresses for a cosmetic gain.
 
 Usage — identical to the script it wraps::
 
-    python3 "{{host.plugin_root}}/scripts/generate_document_pdf.py" \
+    python3 "{{host.scripts_dir}}/generate_document_pdf.py" \
         --input docs/business_problem.md \
         --output docs/business_problem.pdf \
         --require-sections "the problem;why it matters;success criteria" \

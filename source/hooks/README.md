@@ -6,7 +6,7 @@ bootcamper's point of view. In the Kiro Power these were named hook files
 (e.g. "to review what you said"); in the Claude plugin they are `command`-type
 hooks wired to small **Python** scripts under `../scripts/`, each invoked by a
 `command` string naming the interpreter and the script, quoted
-(`python3 "{{host.plugin_root}}/scripts/<script>.py"`).
+(`python3 "{{host.scripts_dir}}/<script>.py"`).
 
 Every hook is gated, so the plugin never alters unrelated Claude Code sessions: each
 script no-ops unless a `config/bootcamp_progress.json` file exists in the working
@@ -53,7 +53,7 @@ ambiguity between the purpose-phrasing and emitted-message readings.
 
 The hooks are **Python 3** scripts, invoked as `type: command` hooks whose `command`
 string names both the interpreter and the script, with the plugin root **quoted**
-(`{"command": "python3 \"{{host.plugin_root}}/scripts/<hook>.py\""}`). The quoting is
+(`{"command": "python3 \"{{host.scripts_dir}}/<hook>.py\""}`). The quoting is
 what keeps a plugin root containing a space working.
 
 > ⚠️ **Corrected 2026-08-21.** This section previously described an *exec form*

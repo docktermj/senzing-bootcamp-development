@@ -38,8 +38,8 @@ Format is **zip**, not tar: it opens natively on Windows, macOS and Linux with n
 
 Usage::
 
-    python3 "{{host.plugin_root}}/scripts/package_bootcamp.py" --profile share --dry-run
-    python3 "{{host.plugin_root}}/scripts/package_bootcamp.py" --profile transfer
+    python3 "{{host.scripts_dir}}/package_bootcamp.py" --profile share --dry-run
+    python3 "{{host.scripts_dir}}/package_bootcamp.py" --profile transfer
 
 ``--dry-run`` prints the manifest and the total uncompressed size and writes **nothing**. The
 conversation layer (`skills/bootcamp-onboarding/packaging.md`) runs it first so the consent question

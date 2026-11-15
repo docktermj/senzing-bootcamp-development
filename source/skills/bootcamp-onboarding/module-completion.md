@@ -238,8 +238,8 @@ weeks of session-time later. Never invent a file that was not produced; write
 **Then run the structural check — every module, after the append:**
 
 ```bash
-python3 "{{host.plugin_root}}/scripts/generate_recap_pdf.py" --check
-# or, if {{host.plugin_root_var}} is unset: python3 <this-skill-dir>/../../scripts/generate_recap_pdf.py --check
+python3 "{{host.scripts_dir}}/generate_recap_pdf.py" --check
+# or, if {{host.plugin_root_var}} is unset: python3 {{host.scripts_fallback}}/generate_recap_pdf.py --check
 ```
 
 Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
@@ -412,7 +412,7 @@ a short `{name}`):
 
    Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
-   Resolve `<helper>` as `{{host.plugin_root}}/scripts/capture_screenshots.py` (command/hook
+   Resolve `<helper>` as `{{host.scripts_dir}}/capture_screenshots.py` (command/hook
    context) or `../../scripts/capture_screenshots.py` relative to a module skill. It tries several
    headless backends (Playwright, Selenium, headless Chrome/Chromium, `wkhtmltoimage`) and never
    fetches a remote URL (offline — INV-091). Pass only tabs the app actually shows for this data —

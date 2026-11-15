@@ -1,0 +1,212 @@
+<!doctype html>
+<!--
+  Install page for the Senzing Agentic AI Bootcamp, one per AI assistant.
+  GENERATED: this file is rendered from site/_install.html in the development
+  repository, with the assistant's own steps taken from
+  hosts/<assistant>/fragments/site-*.html. Edit those, not this page.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Senzing Bootcamp for {{host.site_name}}</title>
+    <meta name="description" content="{{host.site_description}}">
+    <link rel="canonical" href="https://hub.senzing.com/bootcamp/{{host.site_id}}/">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Senzing Bootcamp for {{host.site_name}}">
+    <meta property="og:description" content="{{host.site_description}}">
+    <meta property="og:url" content="https://hub.senzing.com/bootcamp/{{host.site_id}}/">
+    <meta name="theme-color" content="#0F0D0C">
+    <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../images/apple-touch-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com/">
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&amp;family=Roboto+Mono:wght@400;500&amp;display=swap">
+    <link rel="stylesheet" href="../install.css">
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="nav">
+      <div class="wrap nav__inner">
+        <a class="brand" href="#top" aria-label="Senzing Bootcamp for {{host.site_name}}, back to top">
+          <img class="brand__mark" src="../images/senzing-logo.png" alt="" width="32" height="32">
+          <span class="brand__word">SENZING</span>
+        </a>
+        <nav aria-label="Site">
+          <ul class="nav__links">
+            <li><a class="nav__cta" href="../">All assistants</a></li>
+            <li><a href="https://github.com/Senzing/bootcamp">GitHub</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero dark" id="top" aria-labelledby="hero-title">
+        <div class="wrap hero__inner">
+          <div>
+            <p class="label">Quick start</p>
+            <h1 id="hero-title">Senzing Bootcamp for <span class="grad">{{host.site_name}}</span></h1>
+            <p class="lead">{{host.site_lead}}</p>
+            <div class="actions">
+              <a class="btn btn--primary" href="#install">Get started</a>
+            </div>
+            <p class="hero__alt"><a href="../">New to the bootcamp? See what it covers</a></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="light white" id="before" aria-labelledby="before-title">
+        <div class="wrap">
+          <p class="label">Checklist</p>
+          <h2 id="before-title">Before you start</h2>
+          <ul class="checklist">
+            <!-- host:include site-before.html -->
+            <li><strong>Network access to the <a href="https://mcp.senzing.com/mcp">SENZING® MCP server</a></strong> (<code>https://mcp.senzing.com/mcp</code>). The bootcamp cannot proceed without it. On a corporate network or VPN, ask for the domain <code>mcp.senzing.com</code> to be allowed.</li>
+            <li><strong>A new, empty folder</strong> for the bootcamp.</li>
+            <li><span class="tag">Recommended</span> <strong>A business problem and 5,000 to 20,000 records.</strong> A problem that needs entity resolution, and records that illustrate it. Recommended, not mandatory.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="light offwhite" id="install" aria-labelledby="install-title">
+        <div class="wrap">
+          <p class="label">Install and start</p>
+          <h2 id="install-title">Install the bootcamp and start it</h2>
+          <!-- site:verification-note -->
+          <!-- host:include site-install.html -->
+        </div>
+      </section>
+
+      <section class="light white" id="next" aria-labelledby="next-title">
+        <div class="wrap">
+          <p class="label">After you start</p>
+          <h2 id="next-title">What happens next</h2>
+          <p class="prose">The bootcamp first asks you to choose your curriculum, level of detail and programming language, then guides you module by module. It is the same bootcamp in every assistant. <a href="../#covers">See every module</a></p>
+        </div>
+      </section>
+
+      <section class="light offwhite" id="finish" aria-labelledby="finish-title">
+        <div class="wrap">
+          <p class="label">When you graduate</p>
+          <h2 id="finish-title">What you finish with</h2>
+          <ul class="checklist">
+            <li><strong>Working Senzing code and data</strong> in your project (<code>src/</code>, <code>data/</code>, <code>database/</code>).</li>
+            <li><strong>A professional recap PDF</strong> you can keep and share (<code>docs/bootcamp_recap.pdf</code>).</li>
+            <li><strong>A write-up of what the Senzing SDK found in your data</strong> (<code>docs/bootcamp_data_discoveries.md</code>, also rendered as a PDF).</li>
+            <li><strong>A <code>production/</code> starter project.</strong></li>
+            <li><span class="tag">Optional</span> <strong>A narrated 2-minute graduation video</strong> (<code>docs/bootcamp_recap.mp4</code>). Graduation offers it once; say no and nothing is rendered.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="light white" id="tips" aria-labelledby="tips-title">
+        <div class="wrap">
+          <p class="label">Good to know</p>
+          <h2 id="tips-title">Tips</h2>
+          <div class="tips">
+            <div class="tip" id="commands">
+              <h3>Bootcamp requests</h3>
+              <p>Ask for any of these in plain English, at any time. {{host.site_commands_note}}</p>
+              <div class="table-wrap">
+                <table class="commands">
+                  <thead>
+                    <tr><th scope="col">Say</th><th scope="col">What it does</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>“Start the bootcamp”</td><td>Start the bootcamp, or resume one already in progress.</td></tr>
+                    <tr><td>“Bootcamp feedback”</td><td>Share feedback about the bootcamp. Saved locally to <code>docs/feedback/SENZING_BOOTCAMP_FEEDBACK.md</code>, with the assistant you used recorded in each entry. Nothing is sent anywhere without your yes. To share it with Senzing, email the file to <a href="mailto:support@senzing.com">support@senzing.com</a>.</td></tr>
+                    <tr><td>“Make a note”</td><td>Jot down an idea, question, reminder or to-do. Saved locally to <code>docs/bootcamp_notes.md</code> and folded into your recap at graduation.</td></tr>
+                    <tr><td>“Graduate”</td><td>Render the recap PDF and generate the <code>production/</code> starter project. Graduation normally follows the last module on its own, so use this only to graduate early or to run it again.</td></tr>
+                    <tr><td>“Back up the bootcamp”</td><td>Package your bootcamp into a single zip under <code>backups/packages/</code>: either the results to share, or everything needed to continue on another machine.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <!-- host:include site-tips.html -->
+          </div>
+        </div>
+      </section>
+
+      <section class="closing dark" id="other" aria-labelledby="other-title">
+        <div class="wrap">
+          <p class="label">Other assistants</p>
+          <h2 id="other-title">Using a different AI assistant?</h2>
+          <p class="lead">The same bootcamp runs in each of these.</p>
+          <div class="actions">
+            <!-- site:other-assistants -->
+            <a class="btn btn--outline" href="../">All assistants</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer dark">
+      <div class="wrap footer__inner">
+        <p class="brand">
+          <img class="brand__mark" src="../images/senzing-logo.png" alt="Senzing logo" width="32" height="32">
+          <span class="brand__word">SENZING</span>
+        </p>
+        <p>Senzing Agentic AI Bootcamp {{host.site_version}} · © 2026 Senzing, Inc.</p>
+        <ul class="footer__links">
+          <li><a href="https://github.com/Senzing/bootcamp">GitHub</a></li>
+          <li><a href="../">All assistants</a></li>
+          <li><a href="#top">Back to top</a></li>
+        </ul>
+      </div>
+    </footer>
+
+    <script>
+      // Progressive enhancement: add a Copy button to each command block.
+      // Without JavaScript there is no button, and every command can still be
+      // selected and copied by hand.
+      (function () {
+        var blocks = document.querySelectorAll(".cmd");
+        Array.prototype.forEach.call(blocks, function (block) {
+          var code = block.querySelector("code");
+          var button = document.createElement("button");
+          var timer;
+
+          button.type = "button";
+          button.className = "cmd__copy";
+          button.textContent = "Copy";
+          button.setAttribute("aria-live", "polite");
+
+          function show(label) {
+            button.textContent = label;
+            clearTimeout(timer);
+            timer = setTimeout(function () {
+              button.textContent = "Copy";
+            }, 2000);
+          }
+
+          function fail() {
+            show("Copy failed");
+            try {
+              var range = document.createRange();
+              var selection = window.getSelection();
+              range.selectNodeContents(code);
+              selection.removeAllRanges();
+              selection.addRange(range);
+            } catch (e) {
+              // Selection is best effort; the text can still be selected by hand.
+            }
+          }
+
+          button.addEventListener("click", function () {
+            try {
+              Promise.resolve(navigator.clipboard.writeText(code.textContent)).then(function () {
+                show("Copied");
+              }, fail);
+            } catch (e) {
+              fail();
+            }
+          });
+
+          block.appendChild(button);
+        });
+      })();
+    </script>
+  </body>
+</html>

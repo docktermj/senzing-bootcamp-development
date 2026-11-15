@@ -14,3 +14,7 @@ __pycache__/
 
 # Editor history
 .history
+
+# /release-cycle run directories: the finding skills' --draft records. Not a durable record by
+# design: the caller records every unresolved draft in its ledger entry (INV-317).
+.claude/release-cycle/runs/

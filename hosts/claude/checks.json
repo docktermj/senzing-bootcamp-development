@@ -1,0 +1,10 @@
+[
+  {
+    "release": "0.7.0",
+    "client": "Claude Code 2.1.325",
+    "date": "2026-11-14",
+    "scope": "first-turn",
+    "result": "pass",
+    "notes": "Built package loaded with --plugin-dir in an empty project. \"Start the bootcamp\" ran onboarding, reached the Senzing MCP server, wrote README.md and the two config files, showed the WELCOME banner with v0.7.0 and ended on one 👉 question."
+  }
+]

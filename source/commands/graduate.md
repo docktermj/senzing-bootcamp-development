@@ -29,5 +29,5 @@ Never show the banner or the line while exploration is still continuing, and nev
 graduation on the closing question when the bootcamper has said they are done.
 
 The bundled recap PDF generator is available at
-`{{host.plugin_root}}/scripts/generate_recap_pdf.py`; pass that path when the
+`{{host.scripts_dir}}/generate_recap_pdf.py`; pass that path when the
 graduation skill renders the PDF.

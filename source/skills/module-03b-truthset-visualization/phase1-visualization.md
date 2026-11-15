@@ -296,7 +296,7 @@ Whatever the language, the server MUST reproduce the reference's behavior:
   exit 0). The capture step now refuses to run against such a server instead of writing them, so
   this is a prerequisite for completing the module, not a nicety.
 - **Render offline (INV-091):** inline the vendored D3 at
-  `{{host.plugin_root}}/scripts/vendor/d3.v7.min.js` (skill-relative fallback:
+  `{{host.scripts_dir}}/vendor/d3.v7.min.js` (skill-relative fallback:
   `../../scripts/vendor/d3.v7.min.js`, INV-252) into both
   the live page and the standalone snapshot; never fetch from a CDN. (D3 runs in the browser, so
   this holds regardless of the server's language.) 2.1 says where each path's server reads it
@@ -308,7 +308,7 @@ Whatever the language, the server MUST reproduce the reference's behavior:
     at all. Check for the asset before serving or writing anything, by whatever means your
     language reads a file.
 - **Use the Senzing brand (INV-081):** take the palette and typography from the shipped brand
-  tokens (`{{host.plugin_root}}/scripts/brand_tokens.py`, skill-relative fallback
+  tokens (`{{host.scripts_dir}}/brand_tokens.py`, skill-relative fallback
   `../../scripts/brand_tokens.py` — INV-252; mirrored in `senzing_viz_server.py`). A non-Python server
   cannot import the Python module, so replicate the token **values** from the reference; never
   invent an ad-hoc palette. ⛔ **Assign data-source colors from the sources actually present in the
@@ -335,7 +335,7 @@ window that runs the server (the Windows form is unverified on Windows PowerShel
 Read `programming_language` from `config/bootcamp_preferences.yaml`:
 
 - **Python** → the reference implementation *is* the server. Resolve `scripts/senzing_viz_server.py`
-  (`{{host.plugin_root}}/scripts/senzing_viz_server.py` in a command/hook context, else
+  (`{{host.scripts_dir}}/senzing_viz_server.py` in a command/hook context, else
   `../../scripts/senzing_viz_server.py` relative to this skill) and run it directly. This is the
   **only** path on which `senzing_viz_server.py` runs. That resolved path is `<viz-server-path>` in
   2.2, 2.3 and the Python fallback below on every route except SDK setup's container route.
@@ -359,7 +359,7 @@ Read `programming_language` from `config/bootcamp_preferences.yaml`:
   `VIZ_SRC` the plugin's `scripts/` directory resolved as above:
 
   ```bash
-  VIZ_SRC="{{host.plugin_root}}/scripts"
+  VIZ_SRC="{{host.scripts_dir}}"
   mkdir -p data/temp/truthset-viz/vendor &&
     cp "$VIZ_SRC/senzing_viz_server.py" "$VIZ_SRC/brand_tokens.py" data/temp/truthset-viz/ &&
     cp "$VIZ_SRC/vendor/d3.v7.min.js" data/temp/truthset-viz/vendor/
@@ -396,7 +396,7 @@ Read `programming_language` from `config/bootcamp_preferences.yaml`:
   server resolve it from there.** This is the one statement of the copy for every server written
   into `src/server/`: this one, and Query, Visualize and Discover's results server in every
   language, Python included, whose step 3c links here rather than restating it. At each such
-  server's first build, copy `{{host.plugin_root}}/scripts/vendor/d3.v7.min.js` (skill-relative
+  server's first build, copy `{{host.scripts_dir}}/vendor/d3.v7.min.js` (skill-relative
   fallback `../../scripts/vendor/d3.v7.min.js`, INV-252) on the host to
   `src/server/vendor/d3.v7.min.js`, on every route, overwriting any earlier copy, and have the
   server resolve it from beside its own file there. The plugin's `scripts/` resolves only on the
@@ -652,12 +652,12 @@ inert. `{name}` = `truthset_verification`. Follow
 rule that every caption is derived from the opened image and its tab label, never from the plan.
 
 ⛔ **(INV-122) The capture tool is bundled — run it, do not assess whether automation exists.**
-`{{host.plugin_root}}/scripts/capture_screenshots.py` (INV-185; skill-relative fallback
+`{{host.scripts_dir}}/capture_screenshots.py` (INV-185; skill-relative fallback
 `../../scripts/capture_screenshots.py`, INV-252). It tries several headless backends itself and
 writes both the PNGs and a `<name>-tabs.json` coverage manifest that graduation reads:
 
 ```bash
-python3 "{{host.plugin_root}}/scripts/capture_screenshots.py" \
+python3 "{{host.scripts_dir}}/capture_screenshots.py" \
   --url "http://localhost:<the port 2.3 actually bound>" \
   --name truthset_verification --tabs all --query "<a name present in the Truth Set>"
 ```

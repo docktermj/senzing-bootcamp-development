@@ -5,8 +5,8 @@
   "author": {
     "name": "Senzing"
   },
-  "homepage": "https://github.com/docktermj/senzing-bootcamp-claude-plugin-development",
-  "repository": "https://github.com/docktermj/senzing-bootcamp-claude-plugin-development",
+  "homepage": "https://github.com/Senzing/bootcamp",
+  "repository": "https://github.com/Senzing/bootcamp",
   "license": "Apache-2.0",
   "keywords": ["senzing", "bootcamp", "entity-resolution", "tutorial", "guided-learning"],
   "mcp_servers": {

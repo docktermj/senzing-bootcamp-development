@@ -1,0 +1,88 @@
+{
+  "id": "kiro",
+  "name": "Kiro",
+  "package_format": "agent-plugin",
+  "vars": {
+    "product": "Kiro",
+    "plugin_root": "${PLUGIN_ROOT}",
+    "plugin_root_var": "PLUGIN_ROOT",
+    "scripts_dir": "${PLUGIN_ROOT}/skills/bootcamp-onboarding/scripts",
+    "docs_dir": "${PLUGIN_ROOT}/skills/bootcamp-onboarding/docs",
+    "scripts_fallback": "<this-skill-dir>/../bootcamp-onboarding/scripts",
+    "manifest_path": "plugin.json",
+    "package_noun": "Power",
+    "command_prefix": "/",
+    "assistant": "Kiro",
+    "scripts_relative": "../bootcamp-onboarding/scripts",
+    "docs_relative": "../bootcamp-onboarding/docs",
+    "model_balanced": "Sonnet 5.5",
+    "model_capable": "Opus 5.5",
+    "model_top": "the most capable model Kiro offers",
+    "model_controls": "the model and effort pickers in Kiro's chat"
+  },
+  "layout": {
+    "skills": "skills",
+    "commands": null,
+    "scripts": "skills/bootcamp-onboarding/scripts",
+    "docs": "skills/bootcamp-onboarding/docs",
+    "hooks/README.md": null,
+    "hooks/fallbacks": null
+  },
+  "hooks": {
+    "command": "\"<ABSOLUTE_PYTHON>\" \"<ABSOLUTE_SCRIPTS_DIR>/{script}\" {event}",
+    "events": {
+      "session_start": "SessionStart",
+      "prompt_submit": "UserPromptSubmit",
+      "pre_tool_use": "PreToolUse",
+      "post_tool_use": "PostToolUse",
+      "post_tool_use_failure": null,
+      "stop": "Stop",
+      "pre_compact": null,
+      "session_end": null
+    },
+    "tools": {
+      "write": "fs_write",
+      "edit": "str_replace|fs_append",
+      "shell": "execute_bash"
+    },
+    "guaranteed": false,
+    "note": "Kiro does not load hooks from a Power: they run only if the bootcamper chose to install them into the project, and Kiro has no event for some of them.",
+    "advisory": [
+      "stop"
+    ]
+  },
+  "options": {
+    "adapter": {
+      "result_dialect": "text",
+      "transcript_dialect": null,
+      "tool_categories": {
+        "fs_write": "write",
+        "write": "write",
+        "str_replace": "edit",
+        "fs_append": "edit",
+        "execute_bash": "shell",
+        "shell": "shell"
+      }
+    }
+  },
+  "foreign_terms": [
+    "Claude",
+    "CLAUDE_",
+    "Copilot",
+    "Codex",
+    "ChatGPT",
+    "Gemini",
+    "Antigravity"
+  ],
+  "site": {
+    "order": 3,
+    "name": "Kiro",
+    "kind": "Kiro Power",
+    "plan": "2000 Kiro credits",
+    "plan_url": "https://kiro.dev/pricing/",
+    "note": "Runs in the Kiro IDE’s agentic chat.",
+    "lead": "From nothing installed to a running bootcamp, in the Kiro IDE.",
+    "description": "Install the Senzing Bootcamp Power for Kiro and start the bootcamp in Kiro’s agentic chat.",
+    "commands_note": "Kiro runs each from the request itself; there is nothing to memorize."
+  }
+}

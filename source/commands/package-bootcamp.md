@@ -10,7 +10,7 @@ dry run FIRST so the question quotes a measured size rather than an estimate, as
 pinned numbered 👉 question about what should travel, then write the archive with
 
 ```bash
-python3 "{{host.plugin_root}}/scripts/package_bootcamp.py" --profile <share|transfer>
+python3 "{{host.scripts_dir}}/package_bootcamp.py" --profile <share|transfer>
 ```
 
 Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../skills/bootcamp-onboarding/ground-rules.md#guide-run-blocks)).

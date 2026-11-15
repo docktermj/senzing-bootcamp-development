@@ -16,6 +16,9 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 SOURCE_DIR = REPO_ROOT / "source"
 HOSTS_DIR = REPO_ROOT / "hosts"
 DECLARATION = "bootcamp.json"
+CHECKS_FILE = "checks.json"
+#: How far a recorded on-assistant check went, weakest first.
+CHECK_SCOPES = ("first-turn", "install", "full")
 
 HOST_ID_RE = re.compile(r"^[a-z][a-z0-9-]*$")
 VAR_NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
@@ -55,9 +58,27 @@ class Host:
     foreign_terms: tuple[str, ...]
     directory: Path
     options: dict = field(default_factory=dict)
+    site: dict = field(default_factory=dict)
+    checks: tuple = ()
+
+    def check_for(self, version: str, scope: str | None = None) -> dict | None:
+        """The latest recorded on-assistant check of ``version`` (of ``scope``, when given)."""
+        found = [
+            check for check in self.checks
+            if check["release"] == version and (scope is None or check["scope"] == scope)
+        ]
+        return max(found, key=lambda check: check["date"]) if found else None
 
     def fragment_path(self, name: str) -> Path:
-        return self.directory / "fragments" / f"{name}.md"
+        """Where this host's copy of a fragment is, or the shared copy when it has none of its own.
+
+        A host supplies a fragment only where it truly differs. ``hosts/_shared/fragments/`` holds
+        the wording every other host uses, so that wording is written once.
+        """
+        file_name = name if "." in name else f"{name}.md"
+        own = self.directory / "fragments" / file_name
+        shared = self.directory.parent / "_shared" / "fragments" / file_name
+        return own if own.is_file() or not shared.is_file() else shared
 
 
 def _read_json(path: Path) -> dict:
@@ -90,6 +111,33 @@ def load_declaration(source_dir: Path = SOURCE_DIR) -> dict:
             if tool not in HOOK_TOOLS:
                 raise BuildError(f"{where}: unknown tool category {tool!r}")
     return declaration
+
+
+def _load_checks(path: Path) -> tuple:
+    """Recorded runs of the bootcamp on the real assistant, from ``hosts/<id>/checks.json``.
+
+    A record is evidence, written by whoever ran the check: which version of the bootcamp, in
+    which client, on what date, how far it went (``scope``) and what happened. ``scope`` is
+    ``first-turn`` (the bootcamp started), ``install`` (installed from the public repository
+    and started) or ``full`` (walked through to graduation).
+    """
+    if not path.is_file():
+        return ()
+    try:
+        records = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as error:
+        raise BuildError(f"{path}: invalid JSON: {error}") from error
+    if not isinstance(records, list):
+        raise BuildError(f"{path}: expected a list of check records")
+    for index, record in enumerate(records):
+        for key in ("release", "client", "date", "scope", "result"):
+            if not isinstance(record.get(key), str) or not record[key]:
+                raise BuildError(f"{path}: record {index} needs a text value for {key!r}")
+        if record["scope"] not in CHECK_SCOPES:
+            raise BuildError(f"{path}: record {index} has scope {record['scope']!r}; use one of {CHECK_SCOPES}")
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", record["date"]):
+            raise BuildError(f"{path}: record {index} date must be YYYY-MM-DD")
+    return tuple(records)
 
 
 def host_ids(hosts_dir: Path = HOSTS_DIR) -> list[str]:
@@ -139,6 +187,8 @@ def load_host(host_id: str, hosts_dir: Path = HOSTS_DIR) -> Host:
         foreign_terms=tuple(data.get("foreign_terms", ())),
         directory=directory,
         options=dict(data.get("options", {})),
+        site=dict(data.get("site", {})),
+        checks=_load_checks(directory / CHECKS_FILE),
     )
 
 

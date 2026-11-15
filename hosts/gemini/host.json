@@ -1,0 +1,95 @@
+{
+  "id": "gemini",
+  "name": "Gemini",
+  "package_format": "antigravity-plugin",
+  "vars": {
+    "product": "Antigravity",
+    "plugin_root": "${PLUGIN_ROOT}",
+    "plugin_root_var": "PLUGIN_ROOT",
+    "scripts_dir": "${PLUGIN_ROOT}/scripts",
+    "docs_dir": "${PLUGIN_ROOT}/docs",
+    "scripts_fallback": "<this-skill-dir>/../../scripts",
+    "manifest_path": "plugin.json",
+    "package_noun": "plugin",
+    "command_prefix": "/",
+    "assistant": "Gemini",
+    "scripts_relative": "../../scripts",
+    "docs_relative": "../../docs",
+    "model_balanced": "a balanced Gemini model",
+    "model_capable": "a high-capability Gemini model",
+    "model_top": "the most capable Gemini model available",
+    "model_controls": "the model controls in the Antigravity CLI"
+  },
+  "layout": {
+    "skills": "skills",
+    "commands": null,
+    "scripts": "scripts",
+    "docs": "docs",
+    "hooks/README.md": null,
+    "hooks/fallbacks": null
+  },
+  "hooks": {
+    "command": "python3 ./scripts/{script} {event}",
+    "matchers": false,
+    "entry": {
+      "timeout": 30
+    },
+    "events": {
+      "session_start": "SessionStart",
+      "prompt_submit": "PreInvocation",
+      "pre_tool_use": "PreToolUse",
+      "post_tool_use": "PostToolUse",
+      "post_tool_use_failure": null,
+      "stop": "Stop",
+      "pre_compact": null,
+      "session_end": null
+    },
+    "tools": {
+      "write": "write_to_file",
+      "edit": "replace_file_content",
+      "shell": "run_command"
+    },
+    "guaranteed": false,
+    "note": "Antigravity has no event for some of them, and reads a hook's result differently for others."
+  },
+  "options": {
+    "manifest": {
+      "displayName": "Senzing Bootcamp",
+      "suggestedPrompts": [
+        "Start the Senzing Bootcamp.",
+        "Resume my Senzing Bootcamp."
+      ]
+    },
+    "adapter": {
+      "result_dialect": "steps",
+      "transcript_dialect": null,
+      "tool_categories": {
+        "write_to_file": "write",
+        "write_file": "write",
+        "edit_file": "edit",
+        "replace_file_content": "edit",
+        "multi_replace_file_content": "edit",
+        "run_command": "shell"
+      }
+    }
+  },
+  "foreign_terms": [
+    "Claude",
+    "CLAUDE_",
+    "Copilot",
+    "Kiro",
+    "Codex",
+    "ChatGPT"
+  ],
+  "site": {
+    "order": 5,
+    "name": "Gemini",
+    "kind": "Antigravity plugin",
+    "plan": "Google AI Pro",
+    "plan_url": "https://antigravity.google/pricing",
+    "note": "Runs in the Antigravity CLI, the successor to Gemini CLI.",
+    "lead": "From nothing installed to a running bootcamp, in the Antigravity CLI.",
+    "description": "Install the Senzing Bootcamp plugin for the Antigravity CLI and start the bootcamp.",
+    "commands_note": "Antigravity runs each from the request itself; there is nothing to memorize."
+  }
+}

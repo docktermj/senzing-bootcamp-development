@@ -25,8 +25,8 @@ question per yielding turn (INV-251), and the turn ends on it.
 ⛔ **Run the dry run first. The question below quotes a measured size, never an estimate.**
 
 ```bash
-python3 "{{host.plugin_root}}/scripts/package_bootcamp.py" --profile share --dry-run
-python3 "{{host.plugin_root}}/scripts/package_bootcamp.py" --profile transfer --dry-run
+python3 "{{host.scripts_dir}}/package_bootcamp.py" --profile share --dry-run
+python3 "{{host.scripts_dir}}/package_bootcamp.py" --profile transfer --dry-run
 ```
 
 Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
@@ -99,7 +99,7 @@ over it.
 ## Step 4: Write it
 
 ```bash
-python3 "{{host.plugin_root}}/scripts/package_bootcamp.py" --profile <share|transfer>
+python3 "{{host.scripts_dir}}/package_bootcamp.py" --profile <share|transfer>
 ```
 
 Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).

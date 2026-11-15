@@ -34,8 +34,8 @@ It is also the helper SDK setup calls BEFORE it creates a container (#461), so t
 two bootcamp projects on one machine never share a container name, and therefore
 never stop, report or reuse each other's containers through the hooks above:
 
-    python3 "{{host.plugin_root}}/scripts/docker_lifecycle.py" container-name <base> [--runtime <runtime>]
-    python3 "{{host.plugin_root}}/scripts/docker_lifecycle.py" free-port <preferred>
+    python3 "{{host.scripts_dir}}/docker_lifecycle.py" container-name <base> [--runtime <runtime>]
+    python3 "{{host.scripts_dir}}/docker_lifecycle.py" free-port <preferred>
 
 Both run from the bootcamp project root (the directory holding ``config/``), on the
 host. ``container-name`` prints ``<base>-<slug>-<hash6>`` derived from that
@@ -49,9 +49,9 @@ And it is the host-side half of serving a visualization from the SDK container (
 where the server binds the container's own interface address on port 8080 and the host
 reaches it only through the port SDK setup published to host loopback:
 
-    python3 "{{host.plugin_root}}/scripts/docker_lifecycle.py" viz-port <container>
-    python3 "{{host.plugin_root}}/scripts/docker_lifecycle.py" confirm-viz <container> --log <file> [--wait <seconds>]
-    python3 "{{host.plugin_root}}/scripts/docker_lifecycle.py" confirm-viz <container> --nonce <nonce>
+    python3 "{{host.scripts_dir}}/docker_lifecycle.py" viz-port <container>
+    python3 "{{host.scripts_dir}}/docker_lifecycle.py" confirm-viz <container> --log <file> [--wait <seconds>]
+    python3 "{{host.scripts_dir}}/docker_lifecycle.py" confirm-viz <container> --nonce <nonce>
 
 ``viz-port`` prints the ``host_port`` recorded on that container's ``docker_containers``
 entry, and exits 3 when the entry records none (a container created before the port
