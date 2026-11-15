@@ -19,7 +19,9 @@ extra question for this — and record "Unknown"/"Unavailable" (never a guess) w
 source is missing:
 
 - **Time:** the current date and time.
-- **Plugin version:** the `version` field of the plugin manifest, resolved exactly as
+- **Plugin version:** `bootcamp_version` in the `bootcamp_host.json` read for the AI assistant
+  line below, which the build writes with the version of this package. Only if that file cannot
+  be read: the `version` field of the plugin manifest, resolved exactly as
   `onboarding-flow.md` step 0 specifies — `{{host.plugin_root}}/{{host.manifest_path}}`, else
   `<this-skill-dir>/../../{{host.manifest_path}}`, else "Unknown". ⛔ Never found by searching
   the filesystem: a machine carrying two plugin checkouts then reports the wrong version (INV-252).

@@ -86,7 +86,12 @@ class Packages(unittest.TestCase):
                     continue
                 source_body = path.read_text(encoding="utf-8").split("---\n", 2)[2]
                 built_body = skill.read_text(encoding="utf-8").split("---\n", 2)[2]
-                self.assertEqual(len(source_body.splitlines()), len(built_body.splitlines()), path.name)
+                # The skill is the command's text plus one closing note saying where sibling
+                # skills are, so an assistant never searches the disk for them.
+                source_lines, built_lines = source_body.rstrip("\n").splitlines(), built_body.splitlines()
+                self.assertEqual(len(built_lines), len(source_lines) + 2, path.name)
+                self.assertEqual(built_lines[len(source_lines)], "", path.name)
+                self.assertIn("Never search the filesystem for a skill file", built_lines[-1], path.name)
 
     def test_every_skill_uses_only_frontmatter_every_assistant_reads(self):
         for build in self.each():

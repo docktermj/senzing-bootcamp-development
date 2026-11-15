@@ -32,6 +32,16 @@ HOST_FILE = "bootcamp_host.json"
 FALLBACK_DIR = "hooks/fallbacks"
 HOST_RULES = "bootcamp-onboarding/host-rules.md"
 FRONTMATTER_OPEN = "---\n"
+#: Appended to a command rendered as a skill. A command names another skill's file by the skill's
+#: name; as a skill it must say where that is, or an assistant searches the disk and can find
+#: another copy of the bootcamp (seen on Copilot CLI 1.0.111, 2026-11-15).
+SIBLING_SKILLS_NOTE = (
+    "**Where the files this names are.** Every bootcamp skill is a directory beside this one, so "
+    "the `bootcamp-onboarding` skill's files are in `../bootcamp-onboarding/`, counted from the "
+    "directory of this `SKILL.md`, and the `graduation` skill's are in `../graduation/`. "
+    "⛔ Read them from there. Never search the filesystem for a skill file: a second copy of the "
+    "bootcamp on the same machine is normal, and it is not the one running.\n"
+)
 
 
 @dataclass(frozen=True)
@@ -322,6 +332,7 @@ def _commands_as_skills(build: HostBuild, context: BuildContext) -> None:
         if not text.startswith(FRONTMATTER_OPEN):
             raise BuildError(f"{where}: a command must start with frontmatter")
         skill = FRONTMATTER_OPEN + f"name: {path.stem}\n" + text[len(FRONTMATTER_OPEN):]
+        skill = skill.rstrip("\n") + "\n\n" + SIBLING_SKILLS_NOTE
         _write(build, Path("skills") / path.stem / "SKILL.md", skill.encode("utf-8"), 0o644)
 
 
