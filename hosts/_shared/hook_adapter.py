@@ -279,7 +279,7 @@ def final_message(path, dialect, wait_seconds=FINAL_MESSAGE_WAIT_SECONDS):
     """The assistant's final text for the turn that is ending, read from an ``event-data`` transcript.
 
     Some assistants run the stop hook before the turn's last message is on disk, so a single
-    read finds nothing and the closing-question check stays silent (seen on Copilot CLI, where
+    read finds nothing and the closing-question check stays silent (seen in one assistant, where
     the same transcript read a moment later holds the message). This waits briefly for it.
     Returns None when the dialect is not one this reads, or no message appears in time.
     """
