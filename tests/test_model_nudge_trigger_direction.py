@@ -28,9 +28,10 @@ Run:  python3 -m unittest discover -s tests
 import re
 import unittest
 from pathlib import Path
+from _built import built  # the Claude package, built from source/
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-PLUGIN = REPO_ROOT / "source"
+PLUGIN = built("claude")
 PREP = PLUGIN / "skills" / "bootcamp-preparation" / "SKILL.md"
 GROUND_RULES = PLUGIN / "skills" / "bootcamp-onboarding" / "ground-rules.md"
 

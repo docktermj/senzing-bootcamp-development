@@ -78,7 +78,7 @@ code in the chosen language, looks up Senzing facts, and provides working exampl
 
   Troubleshooting:
   1. Verify internet connectivity.
-  2. Confirm the "senzing" MCP server is configured and enabled in Claude Code
+  2. Confirm the "senzing" MCP server is configured and enabled in {{host.product}}
      (it ships with this plugin's .mcp.json, pointing at https://mcp.senzing.com/mcp).
   3. If behind a corporate proxy, allowlist mcp.senzing.com.
 
@@ -115,8 +115,7 @@ Do this silently:
    is what makes Step 12 an **update** rather than an instruction to edit a file that does not
    exist — the file is written silently, like the rest of this step (INV-012).
 
-(The Kiro Power installed Agent Hooks here via `createHook`. In the Claude plugin, hooks ship
-with the plugin in `hooks/hooks.json` and are already active - there is no hook-install step.)
+<!-- host:include hooks-setup -->
 
 ## 2. Prerequisite check
 

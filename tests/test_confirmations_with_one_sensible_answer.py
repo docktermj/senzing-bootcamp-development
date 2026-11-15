@@ -69,9 +69,10 @@ import unittest
 from pathlib import Path
 
 from _wrapped_text import match_lines
+from _built import built  # the Claude package, built from source/
 
 REPO = Path(__file__).resolve().parent.parent
-PLUGIN = REPO / "source"
+PLUGIN = built("claude")
 SKILLS = PLUGIN / "skills"
 M7 = SKILLS / "module-07-query-visualize-discover"
 M5 = SKILLS / "module-05-data-quality-mapping"

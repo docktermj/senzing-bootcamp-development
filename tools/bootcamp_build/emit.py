@@ -79,7 +79,11 @@ def placed_files(host: Host, source_dir: Path) -> set[Path]:
     placed: set[Path] = set()
     for entry, destination in host.layout.items():
         if destination is not None:
-            placed.update(_source_files(source_dir, entry))
+            narrower = [other for other in host.layout if other != entry and other.startswith(entry + "/")]
+            placed.update(
+                path for path in _source_files(source_dir, entry)
+                if not any(path.as_posix() == other or path.as_posix().startswith(other + "/") for other in narrower)
+            )
     return placed
 
 
@@ -98,7 +102,12 @@ def _copy_layout(build: HostBuild, source_dir: Path, known_hosts: set[str]) -> N
     host = build.host
     covered: set[Path] = set()
     for entry, destination in host.layout.items():
-        files = _source_files(source_dir, entry)
+        # A more specific entry wins: "docs/notes.md" takes that file out of "docs".
+        narrower = [other for other in host.layout if other != entry and other.startswith(entry + "/")]
+        files = [
+            path for path in _source_files(source_dir, entry)
+            if not any(path.as_posix() == other or path.as_posix().startswith(other + "/") for other in narrower)
+        ]
         covered.update(files)
         if destination is None:
             continue

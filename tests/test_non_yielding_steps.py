@@ -37,9 +37,10 @@ Run:  python3 -m unittest discover -s tests
 import re
 import unittest
 from pathlib import Path
+from _built import built  # the Claude package, built from source/
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-SKILLS = REPO_ROOT / "source" / "skills"
+SKILLS = built("claude") / "skills"
 GROUND_RULES = SKILLS / "bootcamp-onboarding" / "ground-rules.md"
 DISCOVERY = SKILLS / "module-01-business-problem" / "phase1-discovery.md"
 M3_SKILL = SKILLS / "module-03-system-verification" / "SKILL.md"

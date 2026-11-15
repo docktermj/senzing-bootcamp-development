@@ -22,9 +22,10 @@ Run:  python3 -m unittest discover -s tests
 import os
 import re
 import unittest
+from _built import built  # the Claude package, built from source/
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PLUGIN = os.path.join(REPO_ROOT, "source")
+PLUGIN = os.path.join(str(built("claude")))
 GROUND_RULES = os.path.join(PLUGIN, "skills", "bootcamp-onboarding", "ground-rules.md")
 MODEL_SELECTION = os.path.join(PLUGIN, "docs", "model-selection.md")
 

@@ -113,7 +113,8 @@ WINDOWS_PHRASES = (
     ("Give the Bootcamper Module 2's remedy ([the Windows script]"
      "(../module-02-sdk-setup/SKILL.md#env-script-windows) → \"When PowerShell refuses to run "
      "the script\")", "the pointer to Module 2's remedy"),
-    ("restart Claude Code from that same PowerShell window", "the restart"),
+    # The product is a token in the source (one-repository migration, 2026-11-14).
+    ("restart {{host.product}} from that same PowerShell window", "the restart"),
     ("Then re-run the same call", "the re-run"),
     ("Never suggest a persistent scope instead (INV-199)", "no persistent scope"),
 )
@@ -470,7 +471,7 @@ class TheSectionStatesTheNativeWindowsForm(unittest.TestCase):
         self.bites(WINDOWS_FORM + "\n  ```\n\n  " + POINTER, WINDOWS_FORM + "\n  ```\n\n  Runs.")
 
     def test_negative_control_the_restart_dropped(self):
-        self.bites("restart Claude Code from that same PowerShell\n  window", "open a new window")
+        self.bites("restart {{host.product}} from that same PowerShell\n  window", "open a new window")
 
     def test_negative_control_the_remedy_copied_instead_of_pointed_at(self):
         self.bites("Then re-run the same call.",

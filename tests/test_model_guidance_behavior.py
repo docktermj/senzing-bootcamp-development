@@ -39,9 +39,10 @@ import re
 import unittest
 
 from _wrapped_text import match_lines
+from _built import built  # the Claude package, built from source/
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PLUGIN = os.path.join(REPO_ROOT, "source")
+PLUGIN = os.path.join(str(built("claude")))
 GROUND_RULES = os.path.join(PLUGIN, "skills", "bootcamp-onboarding", "ground-rules.md")
 GRADUATION = os.path.join(PLUGIN, "skills", "graduation", "SKILL.md")
 PREPARATION = os.path.join(PLUGIN, "skills", "bootcamp-preparation", "SKILL.md")

@@ -61,9 +61,10 @@ import re
 import unittest
 
 from _wrapped_text import match_lines
+from _built import built  # the Claude package, built from source/
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SHIPPED = os.path.join(REPO_ROOT, "source")
+SHIPPED = os.path.join(str(built("claude")))
 
 #: The vocabulary a single-statement ownership claim is written in today.
 CLAIM = re.compile(

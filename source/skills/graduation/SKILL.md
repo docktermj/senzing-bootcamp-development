@@ -107,7 +107,9 @@ specific to graduation follows.
   graduation is always a step up — it is not, and asking a bootcamper to switch to the model they are
   already running is the pointless question INV-006 and INV-012 forbid.
 
+<!-- host:only claude -->
 See `../../docs/model-selection.md`.
+<!-- host:end -->
 
 ## Pre-checks
 

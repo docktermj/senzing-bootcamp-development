@@ -122,7 +122,7 @@ symptom; identifying the component is the plugin's job.
 - Nothing above is clear → **unclear**.
 
 ⚠️ **`host` exists because the first two questions alone give the wrong answer (INV-248).** A defect in the
-Claude Code harness survives a perfect plugin *and* a perfect server, so a two-question test lands
+{{host.product}} harness survives a perfect plugin *and* a perfect server, so a two-question test lands
 it on `both` — "the plugin repeated or failed to guard an **upstream** defect" — when there is no
 upstream Senzing defect at all. `unclear` is wrong for it too: that verdict means the component
 *cannot be identified*, and here it can be, exactly.
@@ -214,7 +214,7 @@ the local entry is on disk. For `plugin`, `host` or `unclear`, skip this step en
 `**Upstream:** not applicable` and go to Step 4.
 
 ⛔ **`host` is never forwarded, and the reason is not that it is unimportant (INV-249).** `submit_feedback`
-reaches **Senzing**. A report about the Claude Code harness sent there arrives at a party that does
+reaches **Senzing**. A report about the {{host.product}} harness sent there arrives at a party that does
 not ship it and cannot fix it — a misrouted report, which the bootcamper cannot follow up because
 submissions are anonymous. There is no upstream channel for this class from inside the bootcamp;
 the local entry is the whole record.

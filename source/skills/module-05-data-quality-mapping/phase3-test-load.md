@@ -386,7 +386,6 @@ conformance split above and continuing.
 
 ## Hooks
 
-In the Claude Code plugin, bootcamp hooks ship with the plugin: there is no manual hook-install
-step (this replaces the Kiro `install_hooks.py` / `.kiro/hooks/` workflow). The plugin's Stop
-hook is a safety net for the closing 👉 question; you still own that question on every yielding
+Whether or not a hook backs it on this assistant (`../bootcamp-onboarding/host-rules.md` says
+which safeguards you carry out yourself), you own the closing 👉 question on every yielding
 turn (see the ground rules).

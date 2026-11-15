@@ -65,9 +65,10 @@ import unittest
 from pathlib import Path
 
 from _wrapped_text import blocks, match_lines
+from _built import built  # the Claude package, built from source/
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-PLUGIN = REPO_ROOT / "source"
+PLUGIN = built("claude")
 GROUND_RULES = PLUGIN / "skills" / "bootcamp-onboarding" / "ground-rules.md"
 
 # A pinned 👉 question: the pointer immediately followed by the bold question text. Prose that

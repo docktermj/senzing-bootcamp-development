@@ -72,9 +72,9 @@ Senzing database (`database/G2C.db`) or its internal tables (`RES_ENT`, `OBS_ENT
 - **Counts, stats, quality, reporting and visualization data** → `reporting_guide` (topics
   `reports`, `quality`, `evaluation`, `dashboard`, `graph`).
 
-Reconciliation note: the Kiro source referred to `search_by_attributes`, `get_entity`,
+Reconciliation note: `search_by_attributes`, `get_entity`,
 `why_entities`, `how_entity`, `why_records`, `find_network`, `find_path`, and
-`get_entity_by_record_id` as if they were callable tools. The current Senzing MCP server does
+`get_entity_by_record_id` are not callable tools. The current Senzing MCP server does
 NOT expose direct entity-query tools. These are SDK **methods**: the agent generates SDK code
 that calls them, sourcing flags and signatures from `get_sdk_reference` and code patterns from
 `sdk_guide` / `reporting_guide`. Never fabricate SDK method names; always confirm via MCP.

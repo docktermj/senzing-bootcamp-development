@@ -124,7 +124,7 @@ Verify MCP server connectivity before code generation operations.
    - Verify internet connectivity.
    - Test the `mcp.senzing.com:443` endpoint.
    - Allowlist the endpoint if behind a corporate proxy.
-   - Restart the MCP connection for the senzing server in Claude Code.
+   - Restart the MCP connection for the senzing server in {{host.product}}.
    - Verify DNS resolution.
 
    Block all further module progress until the bootcamper says "retry" and the connectivity

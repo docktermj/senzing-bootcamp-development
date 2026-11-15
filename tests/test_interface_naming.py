@@ -31,9 +31,10 @@ import html
 import os
 import re
 import unittest
+from _built import built  # the Claude package, built from source/
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PLUGIN = os.path.join(REPO_ROOT, "source")
+PLUGIN = os.path.join(str(built("claude")))
 # Adapted (one-repository migration, 2026-11-14): see the dated note in the docstring.
 README = os.path.join(REPO_ROOT, "public", "README.md")
 HOSTS = os.path.join(REPO_ROOT, "hosts")
