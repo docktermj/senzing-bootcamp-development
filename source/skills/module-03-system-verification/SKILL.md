@@ -96,7 +96,7 @@ acquired, loaded, and visualized exclusively by the separate, standalone **Truth
 module (`../module-03b-truthset-visualization/`), which documents its own Truth Set source and
 fallback.
 
-## Reconciliation notes (Kiro Power -> Claude plugin)
+## Reconciliation notes
 
 - Entity operations (query, read by entity ID, search by attributes, why/how, relationship
   network, export) are NOT direct tools on this MCP server. Generate the SDK code for them via
@@ -106,8 +106,8 @@ fallback.
 - System Verification starts **no** web service (INV-087; `phase1-verification.md` → Agent Rules,
   *No orphaned processes*). Any web service belongs to the separate Truth Set visualization module,
   which starts and stops it within its own phases.
-- Kiro helper scripts (`scripts/progress_utils.py`, `scripts/fetch_fallback_truthset.py`) are
-  later porting phases; where referenced, perform the described action directly (write markers to
+- No helper script is bundled for `scripts/progress_utils.py` or
+  `scripts/fetch_fallback_truthset.py`; where one is referenced, perform the described action directly (write markers to
   `config/bootcamp_progress.json`, fetch/build inline, etc.).
 
 ## Phases

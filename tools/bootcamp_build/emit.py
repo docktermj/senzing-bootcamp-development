@@ -501,8 +501,7 @@ def build_host(
     emitter(build, declaration, context)
     if (source_dir / FALLBACK_DIR).is_dir():
         _emit_host_rules(build, declaration, context)
-    if uses_adapter(host) or host.options.get("host_file", False):
-        _emit_host_file(build, declaration)
+    _emit_host_file(build, declaration)
     build.files.sort()
     return build
 

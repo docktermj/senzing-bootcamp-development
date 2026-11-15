@@ -147,8 +147,8 @@ RUNS_PARENT = (".claude", "release-cycle", "runs")
 
 #: `/feedback-to-issues` Step 1's candidates, after an explicit path, repo-relative and in its
 #: order. The kickoff asks which one when more than one exists (#610).
-FEEDBACK_CANDIDATES = ("SENZING_BOOTCAMP_PLUGIN_FEEDBACK.md",
-                       "docs/feedback/SENZING_BOOTCAMP_PLUGIN_FEEDBACK.md")
+FEEDBACK_CANDIDATES = ("SENZING_BOOTCAMP_FEEDBACK.md",
+                       "docs/feedback/SENZING_BOOTCAMP_FEEDBACK.md")
 
 STAGES = ("Kickoff", "Find", "Refine", "Build", "Exercise", "Settle", "Ship")
 

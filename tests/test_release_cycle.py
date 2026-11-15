@@ -200,8 +200,8 @@ class Kickoff(RunCase):
 class FeedbackFile(RunCase):
     """#610: a subagent never asks, so the kickoff asks which feedback file when there are several."""
 
-    ROOT_FILE = "SENZING_BOOTCAMP_PLUGIN_FEEDBACK.md"
-    DOCS_FILE = "docs/feedback/SENZING_BOOTCAMP_PLUGIN_FEEDBACK.md"
+    ROOT_FILE = "SENZING_BOOTCAMP_FEEDBACK.md"
+    DOCS_FILE = "docs/feedback/SENZING_BOOTCAMP_FEEDBACK.md"
 
     def plant(self, *names):
         for name in names:
@@ -270,8 +270,8 @@ class FeedbackFile(RunCase):
         step1 = text[text.index("## Step 1"):text.index("## Step 2")]
         named = re.findall(r"^\d\. `([^`]+\.md)`", step1, re.M)
         source = flat(CYCLE.read_text(encoding="utf-8"))
-        self.assertEqual(["SENZING_BOOTCAMP_PLUGIN_FEEDBACK.md",
-                          "docs/feedback/SENZING_BOOTCAMP_PLUGIN_FEEDBACK.md"], named)
+        self.assertEqual(["SENZING_BOOTCAMP_FEEDBACK.md",
+                          "docs/feedback/SENZING_BOOTCAMP_FEEDBACK.md"], named)
         self.assertIn('FEEDBACK_CANDIDATES = ("%s", "%s")' % tuple(named), source)
 
 

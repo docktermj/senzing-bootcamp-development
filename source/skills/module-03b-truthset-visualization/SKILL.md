@@ -99,7 +99,7 @@ Truth Set" states (INV-300).
 - Full detection, provenance recording, and graceful degradation live in the Step 1 flow in
   `phase1-visualization.md`.
 
-## Reconciliation notes (Kiro Power -> Claude plugin)
+## Reconciliation notes
 
 - Entity operations (query, read by entity ID, search by attributes, why/how, relationship network,
   export) are NOT direct tools on this MCP server. Generate the SDK code for them via
@@ -109,14 +109,12 @@ Truth Set" states (INV-300).
   ⚠️ **(INV-289) That per-record build is scoped to the Truth Set** — it does not carry to the
   Bootcamper's own datastore, which needs the export stream. The reason is stated where the build
   happens, at `phase1-visualization.md` Step 2; do not restate it here (INV-183, INV-300).
-- Kiro process control (`controlBashProcess`) maps here to running the web service as a background
-  process and stopping it later at this module's close.
+- The web service runs as a background process and is stopped at this module's close.
 - **Visualization (Step 2) is built in the Bootcamper's chosen programming language,** modeled on the
   shipped reference `senzing_viz_server.py` (resolved at `phase1-visualization.md` → "2.1 Choose the
   path") and the `visualization-api-reference.md` contract;
   the Python reference is run directly only when the chosen language is Python. The visualization is
   guaranteed by the snapshot-first build and the completion gate (INV-077), not by a bundled runtime.
-  This supersedes the Kiro `generate_standalone_demo.py` / `write_html.py` / builder-module approach.
 
 ## Phases
 

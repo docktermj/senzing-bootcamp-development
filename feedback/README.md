@@ -1,7 +1,7 @@
 # Processed bootcamp feedback (archive)
 
-Every `SENZING_BOOTCAMP_PLUGIN_FEEDBACK*.md` that `feedback-to-issues` has triaged is moved
-here as `SENZING_BOOTCAMP_PLUGIN_FEEDBACK_<unixtime>.md`, and every entry it processed is
+Every `SENZING_BOOTCAMP_FEEDBACK*.md` that `feedback-to-issues` has triaged is moved
+here as `SENZING_BOOTCAMP_FEEDBACK_<unixtime>.md`, and every entry it processed is
 recorded in `PROCESSED.jsonl`.
 
 **Why this exists.** Feedback files arrive from multiple bootcampers at multiple times, and

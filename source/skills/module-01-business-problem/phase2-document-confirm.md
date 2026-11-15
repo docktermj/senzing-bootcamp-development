@@ -401,8 +401,7 @@ document is a new state, not an INV-006 repeat (INV-284).
 
 Always produce `docs/stakeholder_summary_module1.md` — no gate, no 👉 question. It covers problem,
 approach, data sources, key findings, next steps, and ROI considerations, filled with Module 1
-context from `docs/business_problem.md`. (The Kiro `templates/stakeholder_summary.md` port is a
-later phase; compose the summary directly for now.) Do not ask whether to create it; announce it
+context from `docs/business_problem.md`. (No template is bundled for it: compose the summary directly.) Do not ask whether to create it; announce it
 as a statement in the end-of-module summary (Step 17) — noting the file was created and where to
 find it — via the module-completion "Files produced" list. **Checkpoint:** write step 16.
 

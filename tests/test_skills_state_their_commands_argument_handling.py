@@ -110,7 +110,7 @@ ARGUMENT_RULES = {
         ("no argument: default candidates, else stop",
          r"If `\$ARGUMENTS` is empty, default to",
          [r"An explicit path the maintainer gave \(argument or message\)",
-          r"`SENZING_BOOTCAMP_PLUGIN_FEEDBACK\.md` at the repo root",
+          r"`SENZING_BOOTCAMP_FEEDBACK\.md` at the repo root",
           r"If none is found, say so and stop"]),
     ],
     "production-readiness-audit": [

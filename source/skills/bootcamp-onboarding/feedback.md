@@ -2,7 +2,7 @@
 
 The bootcamper can submit feedback at any point in the bootcamp: onboarding, any
 module, or graduation. Feedback is saved locally to
-`docs/feedback/SENZING_BOOTCAMP_PLUGIN_FEEDBACK.md` and is never sent anywhere
+`docs/feedback/SENZING_BOOTCAMP_FEEDBACK.md` and is never sent anywhere
 unless the bootcamper explicitly asks.
 
 This workflow is triggered by the plugin's `UserPromptSubmit` hook ("to capture
@@ -20,9 +20,15 @@ source is missing:
 
 - **Time:** the current date and time.
 - **Plugin version:** the `version` field of the plugin manifest, resolved exactly as
-  `onboarding-flow.md` step 0 specifies — `{{host.plugin_root}}/.claude-plugin/plugin.json`, else
-  `<this-skill-dir>/../../.claude-plugin/plugin.json`, else "Unknown". ⛔ Never found by searching
+  `onboarding-flow.md` step 0 specifies — `{{host.plugin_root}}/{{host.manifest_path}}`, else
+  `<this-skill-dir>/../../{{host.manifest_path}}`, else "Unknown". ⛔ Never found by searching
   the filesystem: a machine carrying two plugin checkouts then reports the wrong version (INV-252).
+- **AI assistant:** which assistant this bootcamp is running in, read from
+  `{{host.scripts_dir}}/bootcamp_host.json` (else `{{host.scripts_fallback}}/bootcamp_host.json`): its
+  `name` and `product`. Add the interface in use and the assistant's own version when the
+  environment shows them. ⛔ Read it from that file, never from memory or from the model name:
+  the same model runs in more than one assistant, and this field is how the maintainer tells a
+  problem in one assistant from a problem in the bootcamp itself.
 - **Workstation:** the operating system and platform the bootcamper is running on, from the environment/system context — OS name and version, and architecture if available.
 - **Model and effort:** the model name/ID and the reasoning-effort level in use, from the environment/system context.
 - **Context size:** the approximate size of the conversation context at the time of feedback — a token count and/or percentage of the context window in use. If only an estimate is available, label it as approximate rather than recording a precise-looking guess.
@@ -35,11 +41,11 @@ source is missing:
 
 ## Step 1: Ensure the feedback file exists
 
-If `docs/feedback/SENZING_BOOTCAMP_PLUGIN_FEEDBACK.md` does not exist, create the
+If `docs/feedback/SENZING_BOOTCAMP_FEEDBACK.md` does not exist, create the
 `docs/feedback/` directory and write this header once:
 
 ```markdown
-# Senzing Bootcamp Plugin Feedback
+# Senzing Bootcamp Feedback
 
 Feedback captured during the Senzing Bootcamp. Every entry is saved here, whatever it turns
 out to be about. Entries routed `mcp-server` may **also** have been forwarded to Senzing —
@@ -109,7 +115,7 @@ symptom; identifying the component is the plugin's job.
 **The discriminating test — ask the third question first, because a yes there settles it:**
 
 - *Would this still happen with a perfect bootcamp plugin **and** a perfect Senzing MCP server?*
-  If yes → **host** (the bootcamper's Claude interface owns it; neither component ships it).
+  If yes → **host** (the bootcamper's {{host.assistant}} interface owns it; neither component ships it).
 - *Would this still happen if the bootcamp plugin were perfect?* If yes → **MCP server**.
 - *Would this still happen if the Senzing MCP server were perfect?* If yes → **plugin**.
 - Yes to the middle two → **both** (the plugin repeated or failed to guard an upstream defect).
@@ -126,11 +132,11 @@ upstream Senzing defect at all. `unclear` is wrong for it too: that verdict mean
 | `plugin` | The bootcamp's own skills, hooks, bundled scripts, questions, gates, banners, ordering, module content or generated deliverables | A question asked twice; a stale instruction; a PDF generator dropping a table off the page; a screenshot helper capturing the wrong tab; a module omitted from the Core path |
 | `mcp-server` | A Senzing MCP **tool** returned wrong, incomplete, truncated or unusable output, or its reference data does not match the installed SDK | `mapping_workflow` step-3 validation rejecting a payload with the reason truncated away; `get_sdk_reference` not covering parameter shapes; a flag documented for one language binding but absent from another; a tool unreachable or erroring |
 | `both` | The plugin's guidance propagated or failed to guard an upstream defect | The plugin's own docs repeated an incorrect flag claim that came from a tool |
-| `host` | The bootcamper's **Claude interface** owns it — a harness prompt, dialog, toggle or session control that neither the bootcamp nor Senzing ships, and neither can fix | The Claude Code "Set up auto mode for your environment?" prompt appearing over a pending 👉 question during the onboarding preface (reported twice on 2026-08-15) |
+| `host` | The bootcamper's **{{host.assistant}} interface** owns it — a harness prompt, dialog, toggle or session control that neither the bootcamp nor Senzing ships, and neither can fix | The Claude Code "Set up auto mode for your environment?" prompt appearing over a pending 👉 question during the onboarding preface (reported twice on 2026-08-15) |
 | `unclear` | The symptom is real but the component cannot be identified from the evidence | Wrong entity-resolution results with no way to tell whether the mapping, the SDK, or the guidance caused it |
 
 ⛔ **The verdict never changes whether the entry is recorded locally.** Every submitted entry is
-appended to `docs/feedback/SENZING_BOOTCAMP_PLUGIN_FEEDBACK.md` regardless of verdict (INV-015) —
+appended to `docs/feedback/SENZING_BOOTCAMP_FEEDBACK.md` regardless of verdict (INV-015) —
 the file is the bootcamper's own durable record and the maintainer's triage input. The verdict
 decides only whether an **additional** upstream submission is *offered* (Step 3c).
 
@@ -173,6 +179,7 @@ verdict gets `not applicable`.
 
 - **Time:** [YYYY-MM-DD HH:MM local, or "Unknown"]
 - **Plugin version:** [the version captured above, or "Unknown"]
+- **AI assistant:** [`name` and `product` from `bootcamp_host.json`, then the interface and the assistant's version when known; e.g. "{{host.assistant}} ({{host.product}})", or "Unknown"]
 - **Workstation:** [OS name and version, and architecture; e.g. "Linux 6.17.0-35-generic (x86_64)", or "Unknown"]
 - **Model / effort:** [model ID and reasoning-effort level; e.g. "claude-opus-5-5[1m] / high", or "Unknown"]
 - **Context size:** [approximate tokens and/or % of context window in use; e.g. "~85k tokens (~42% of window)", or "Unknown"]
@@ -193,7 +200,7 @@ friction from the assistant's own stumbles, because the two deserve different we
 
 ## Step 3b: Verify it landed (durability)
 
-Immediately re-read `docs/feedback/SENZING_BOOTCAMP_PLUGIN_FEEDBACK.md` and confirm
+Immediately re-read `docs/feedback/SENZING_BOOTCAMP_FEEDBACK.md` and confirm
 the `## Improvement:` entry you just appended is present. If it is missing — a lost or
 partial write, or a session/compaction boundary — append it again and re-read to
 confirm. Only continue once the entry is confirmed on disk. This mirrors the recap's
@@ -287,7 +294,7 @@ the open question, not an answered one.
 
 ⛔ (INV-006) **On resume, present the unanswered offer once more, then never again.** This is
 the unanswered question being presented, not a re-ask. When a resumed session finds one or more
-`offer pending` entries in `docs/feedback/SENZING_BOOTCAMP_PLUGIN_FEEDBACK.md`:
+`offer pending` entries in `docs/feedback/SENZING_BOOTCAMP_FEEDBACK.md`:
 
 1. Show the draft for each, stripped as step 2 requires, and ask step 3's pinned 👉 question once
    for all of them, the way graduation Step 0 batches its offer.
@@ -309,7 +316,8 @@ report as still owed.
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   ```
 
-  Then, in one line: "Saved to `docs/feedback/SENZING_BOOTCAMP_PLUGIN_FEEDBACK.md`. You can add more anytime by saying \"bootcamp feedback\"."
+  Then, in one line: "Saved to `docs/feedback/SENZING_BOOTCAMP_FEEDBACK.md`. To share it with Senzing, email that file to support@senzing.com. You can add more anytime by saying \"bootcamp feedback\"."
+  Naming the address is not sending anything: the bootcamper sends the file themselves, if they choose to.
 - Do NOT submit feedback anywhere external on your own initiative. The **only** sanctioned external path is Step 3c: an `mcp-server`/`both` verdict, the local entry already saved, the exact message shown, and the bootcamper answering yes to the pinned question. Everything else — `plugin`, `host` and `unclear` verdicts, and any other destination — stays local.
 - The exit banner and confirmation are statements, not questions. Immediately after them, return the bootcamper to exactly where they left off, as `ground-rules.md` → "Ask-once" says for a pending, unanswered question: **re-present the exact pending 👉 bootcamp question verbatim only if the bootcamper has not answered it.** When the message that opened the feedback detour also answered it, proceed on that answer instead of asking it again; a bare "ok" answers nothing. Either way exactly one 👉 ends the turn (INV-006/INV-251). Do not make them re-navigate, and do not merge the feedback questions with the resumed bootcamp question into one turn.
 

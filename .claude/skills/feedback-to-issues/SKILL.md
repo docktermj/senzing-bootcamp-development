@@ -1,6 +1,6 @@
 ---
 name: feedback-to-issues
-description: 'Analyze a Senzing Bootcamp plugin feedback file and file it as GitHub issues in this repository, re-verifying every Senzing fact against the live Senzing MCP server first and reporting confirmed server-side defects upstream via submit_feedback. Use when the maintainer wants to process SENZING_BOOTCAMP_PLUGIN_FEEDBACK.md, triage bootcamper feedback, or turn collected feedback into issues. Maintainer tool — not part of the bootcamper experience.'
+description: 'Analyze a Senzing Bootcamp plugin feedback file and file it as GitHub issues in this repository, re-verifying every Senzing fact against the live Senzing MCP server first and reporting confirmed server-side defects upstream via submit_feedback. Use when the maintainer wants to process SENZING_BOOTCAMP_FEEDBACK.md, triage bootcamper feedback, or turn collected feedback into issues. Maintainer tool — not part of the bootcamper experience.'
 argument-hint: "[path to feedback file] [--draft <run-dir> | --file <run-dir>]"
 ---
 
@@ -48,8 +48,8 @@ It is unrelated to the bootcamper-facing `/bootcamp-feedback` flow, which only
 Resolve the feedback file in this order:
 
 1. An explicit path the maintainer gave (argument or message).
-2. `SENZING_BOOTCAMP_PLUGIN_FEEDBACK.md` at the repo root.
-3. `docs/feedback/SENZING_BOOTCAMP_PLUGIN_FEEDBACK.md` (a bootcamper project's file, if copied into the repo).
+2. `SENZING_BOOTCAMP_FEEDBACK.md` at the repo root.
+3. `docs/feedback/SENZING_BOOTCAMP_FEEDBACK.md` (a bootcamper project's file, if copied into the repo).
 
 ⛔ **`feedback/` is the archive, never a candidate.** Files under `feedback/` have already
 been processed (Step 9), and `*_DUPLICATE.md` files have already been rejected. Never resolve
@@ -120,7 +120,7 @@ It prints every entry with its id and status, and exits **0** when some entries 
   produced, so the maintainer can see what was skipped and why. Continue to Step 4.
 - **DUPLICATE** (every entry seen) → **stop. File no issues.** Run
   `feedback_ledger.py commit <candidate.md>`, which renames the file in place to
-  `SENZING_BOOTCAMP_PLUGIN_FEEDBACK_<unixtime>_DUPLICATE.md` — the unixtime of the archive
+  `SENZING_BOOTCAMP_FEEDBACK_<unixtime>_DUPLICATE.md` — the unixtime of the archive
   it duplicates — and leaves the ledger untouched. Then tell the maintainer plainly: this
   file is a duplicate, nothing was processed, here is the archive it duplicates and the
   issues those entries already produced. Skip to Step 10 and report only that.
@@ -358,7 +358,7 @@ python3 .claude/skills/feedback-to-issues/feedback_ledger.py commit <candidate.m
 
 With `--file <run-dir>`, the dispositions are the lines `drafts.py after` prints.
 
-This moves the file to `feedback/SENZING_BOOTCAMP_PLUGIN_FEEDBACK_<unixtime>.md` and
+This moves the file to `feedback/SENZING_BOOTCAMP_FEEDBACK_<unixtime>.md` and
 appends one ledger line per **newly processed** entry. Entries this file carried that were
 already in the ledger are not re-recorded, and are reported as skipped.
 

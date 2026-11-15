@@ -257,8 +257,7 @@ generated scenario is a results presentation, and a results presentation is not 
 - **Generation failed / invariants violated:** tell the bootcamper it couldn't complete, fall
   back to their own description, no generated `docs/business_problem.md`.
 
-*(The Kiro helper `business_case_offer.py` encodes these invariants; the script port is a later
-phase: validate them directly for now.)*
+*(No helper script checks these invariants: validate them directly.)*
 
 **Checkpoint:** write step 4a — but as part of the turn's one write with Step 6a's at the end of
 the shared turn, not a write of its own.

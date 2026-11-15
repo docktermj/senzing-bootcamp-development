@@ -394,8 +394,8 @@ If loading fails partway through:
    Module 2 config.
 4. **Common causes:** disk full, out of memory, invalid records, network timeout.
 
-(The Kiro backup/restore helper `scripts/restore_project.py` is a later porting phase; until then,
-restore by `../graduation/database-backup.md` → "Restore", as above.)
+(No helper script restores the project: restore by `../graduation/database-backup.md` → "Restore",
+as above.)
 
 ### Multi-source recovery (Phase C)
 
@@ -957,8 +957,7 @@ UAT-not-established question alike.
 
 After validation, always produce a one-page executive summary — no question (INV-012) —
 following the Module 6 guidance, and save it to `docs/stakeholder_summary_module6.md`. Announce
-it as a produced file in the end-of-module summary's "Files produced" list (INV-032). (The Kiro
-`templates/stakeholder_summary.md` port is a later phase; compose the summary directly for now.)
+it as a produced file in the end-of-module summary's "Files produced" list (INV-032). (No template is bundled for it: compose the summary directly.)
 
 ## Success criteria
 
@@ -991,9 +990,6 @@ it as a produced file in the end-of-module summary's "Files produced" list (INV-
 - For production systems that receive ongoing data, ask about incremental loading patterns, use
   `search_docs` and `generate_scaffold` for current guidance on adding new records to an existing
   database, processing redo records after incremental loads, and monitoring pipeline health.
-
-(The Kiro multi-source reference `data-processing-reference.md` and the user reference
-`docs/modules/MODULE_6_DATA_PROCESSING.md` are later porting phases.)
 
 ## Module completion and transition to Module 7
 

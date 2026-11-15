@@ -103,7 +103,7 @@ class TheScaffoldBuildsUnderTheTempDirectory(unittest.TestCase):
         self.assertEqual("", (project / "config" / "bootcamp_preferences.yaml")
                          .read_text(encoding="utf-8"))
         self.assertTrue((project / "docs" / "feedback"
-                         / "SENZING_BOOTCAMP_PLUGIN_FEEDBACK.md").is_file())
+                         / "SENZING_BOOTCAMP_FEEDBACK.md").is_file())
         # More than the five folders of the retired fallback, and none of the mid fixtures.
         self.assertTrue((project / "src" / "system_verification").is_dir())
         self.assertFalse((project / "docs" / "bootcamp_recap.md").exists())

@@ -30,13 +30,13 @@ Tell the bootcamper, in your own words:
 "I'm going to do some quick administrative setup: creating your project directory and checking
 your environment."
 
-Read the plugin version from the plugin manifest (`.claude-plugin/plugin.json`, the `version`
+Read the plugin version from the plugin manifest (`{{host.manifest_path}}`, the `version`
 field) and hold it to display with the WELCOME banner (step 3) and to record in the recap.
 **Resolve the manifest in this order and stop at the first that reads (INV-252):**
 
-1. `{{host.plugin_root}}/.claude-plugin/plugin.json`, when `{{host.plugin_root_var}}` is set **and
+1. `{{host.plugin_root}}/{{host.manifest_path}}`, when `{{host.plugin_root_var}}` is set **and
    non-empty**.
-2. `<this-skill-dir>/../../.claude-plugin/plugin.json` — this skill's own directory, two levels
+2. `<this-skill-dir>/../../{{host.manifest_path}}` — this skill's own directory, two levels
    up. The harness supplies that directory at invocation, so by construction it belongs to the
    plugin whose files are running. This is the same skill-relative fallback INV-185 documents for
    bundled scripts.

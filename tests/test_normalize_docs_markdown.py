@@ -12,7 +12,7 @@ Two properties are enforced in code rather than promised in prose, and pinned he
   sole exception being an opening fence gaining an info string (MD040). Otherwise the
   original file is restored and the file is reported.
 * **Scope** — top-level `docs/*.md` only, never recursive, so
-  `docs/feedback/SENZING_BOOTCAMP_PLUGIN_FEEDBACK.md` cannot be touched (INV-015).
+  `docs/feedback/SENZING_BOOTCAMP_FEEDBACK.md` cannot be touched (INV-015).
 
 Run:  python3 -m unittest discover -s tests
 """
@@ -195,7 +195,7 @@ class ScopeCannotReachTheFeedbackFile(unittest.TestCase):
         (docs / "bootcamp_recap.md").write_text(MESSY, encoding="utf-8")
         (docs / "progress").mkdir()
         (docs / "progress" / "recap_checkpoint.md").write_text("# nested\ntext\n", encoding="utf-8")
-        feedback = docs / "feedback" / "SENZING_BOOTCAMP_PLUGIN_FEEDBACK.md"
+        feedback = docs / "feedback" / "SENZING_BOOTCAMP_FEEDBACK.md"
         feedback.write_text("# Feedback\nmust survive\n", encoding="utf-8")
         return docs, feedback
 

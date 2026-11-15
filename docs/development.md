@@ -238,7 +238,7 @@ not a file the guard fails to reach: the guard checks every file in `specs/`.
 
 ### Triage feedback
 
-1. `/feedback-to-issues` - File GitHub issues from SENZING_BOOTCAMP_PLUGIN_FEEDBACK.md files.
+1. `/feedback-to-issues` - File GitHub issues from SENZING_BOOTCAMP_FEEDBACK.md files.
 
 ### Development loop
 

@@ -1914,8 +1914,7 @@ to do here."
 Create the organized project layout that all subsequent modules use, following the file
 placement layout in `../bootcamp-onboarding/ground-rules.md` (`src/`, `src/scripts/`, `data/`,
 `database/`, `docs/`, `config/`, `licenses/`, `src/resources/`, `data/mapping/`, `data/temp/`).
-(The full Kiro agent-instructions directory-creation script is a later porting phase; create
-the layout directly per the ground-rules placement rules for now.)
+(No script creates the layout: create it directly, per the ground-rules placement rules.)
 
 After creation, inform the user: "I've set up the project directory structure. All files will
 be organized properly throughout the bootcamp."
@@ -2769,11 +2768,9 @@ call succeeds** (not merely a version query).
   `../module-03-system-verification/phase1-verification.md` → "Step 1a: Engine Initialization Check"
   (INV-300); its top hit is `java/snippets/information/GetRepositoryInfo.java`.)
 - Platform not supported? Use `search_docs` for alternative installation methods.
-- Database errors? Confirm path requirements against the file placement rules in ground-rules
-  (the Kiro `FILE_STORAGE_POLICY.md` reference is a later porting phase).
+- Database errors? Confirm path requirements against the file placement rules in ground-rules.
 - Permission issues? Ensure you have admin/sudo access for installation.
-- Missing dependencies? A Kiro preflight script (`preflight.py`) is a later porting phase; for
-  now, verify prerequisites directly and use `search_docs` for platform requirements.
+- Missing dependencies? Verify prerequisites directly and use `search_docs` for platform requirements.
 
 ## Module completion and transition
 

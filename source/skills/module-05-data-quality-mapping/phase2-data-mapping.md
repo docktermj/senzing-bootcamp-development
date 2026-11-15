@@ -178,8 +178,7 @@ ground-rules file-placement contract:
 
 The plugin's PreToolUse write-gate blocks every write outside the project (INV-200); the rule is
 stated once, in `../bootcamp-onboarding/ground-rules.md` → "File placement" (INV-300). File-type
-placement inside the project is your responsibility. (The Kiro `organize_mapping_files.py` and `generate_docs_index.py`
-scripts are a later porting phase: place files directly per the contract above for now.)
+placement inside the project is your responsibility. (No script organizes them: place files directly, per the contract above.)
 
 ## Calling `mapping_workflow` correctly (⛔ read before step 8)
 
@@ -1937,9 +1936,8 @@ If issues are found, go back to the relevant step. Retest after changes.
 - Sample output in `data/mapping/[name]_sample.jsonl`.
 - **Transformation lineage:** Create `docs/mapping/transformation_lineage_[name].md` for this
   data source, covering source file info, transformation program, output file info, field
-  mappings, format changes, filters, quality improvements, and before/after record counts. (The
-  Kiro `templates/transformation_lineage.md` template is a later porting phase; compose the
-  lineage document directly for now.)
+  mappings, format changes, filters, quality improvements, and before/after record counts. (No template is
+  bundled for it: compose the lineage document directly.)
 - **Entity specification reference:** The Senzing entity specification reference lives only at
   `docs/reference/senzing_entity_specification.md`: a single canonical copy. Do NOT create a
   copy in the `docs/` root; if one exists there, remove it.
@@ -2103,9 +2101,8 @@ is Module 5's only completion site, whether or not any source took the optional 
 > **Optional: baseline status summary (advisory, non-blocking):** When any source took the Phase 3
 > test load, you MAY surface which data sources still lack an ER baseline (compare the set of
 > `config/er_baseline_*.json` files against the mapped sources). It is read-only, never blocks
-> the workflow, and never creates, modifies, or deletes a baseline. (The Kiro
-> `baseline_status.py` helper is a later porting phase; report coverage directly if you choose
-> to.)
+> the workflow, and never creates, modifies, or deletes a baseline. (No helper script reports it: report coverage directly
+> if you choose to.)
 
 **The recap names each `skipped` source.** (INV-363) In the Module 5 recap section's **Actions Taken**, name
 each source whose `mapping_status` is `skipped` and why it was skipped: the mapping validator

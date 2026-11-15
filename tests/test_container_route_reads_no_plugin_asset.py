@@ -142,6 +142,10 @@ def plugin_assets():
         rel = path.relative_to(SCRIPTS).as_posix()
         if rel in hooks:
             continue
+        # The guide reads `bootcamp_host.json` itself, on the host, to name the assistant in a
+        # feedback entry; no generated program reads it (one-repository migration, 2026-11-14).
+        if rel == "bootcamp_host.json":
+            continue
         if path.suffix == ".py" and re.search(
                 r"""__name__\s*==\s*['"]__main__['"]""", path.read_text(encoding="utf-8")):
             continue

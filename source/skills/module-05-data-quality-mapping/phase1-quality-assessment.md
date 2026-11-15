@@ -246,8 +246,7 @@ obtained via the `get_sample_data` MCP tool in Module 4):
    - DATA_SOURCE and RECORD_ID are present or derivable.
 
    If ALL sampled records pass, classify as **structurally loadable**. If ANY sampled record
-   fails, classify as not structurally loadable. (The Kiro `check_cord_readiness.py` helper is a
-   later porting phase; perform the check directly against the sampled records for now.)
+   fails, classify as not structurally loadable. (No helper script does this: perform the check directly against the sampled records.)
 
    ⛔ **This is the entry condition, not the fast-path condition.** Structurally loadable means the
    engine will accept the record; it does not mean every field in it has been decided about. Step 3

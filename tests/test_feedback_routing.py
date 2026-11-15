@@ -58,7 +58,7 @@ HOOK = PLUGIN / "scripts" / "feedback-capture.py"
 GRADUATION = PLUGIN / "skills" / "graduation" / "SKILL.md"
 ONBOARDING = PLUGIN / "skills" / "bootcamp-onboarding" / "onboarding-flow.md"
 
-FEEDBACK_PATH = "docs/feedback/SENZING_BOOTCAMP_PLUGIN_FEEDBACK.md"
+FEEDBACK_PATH = "docs/feedback/SENZING_BOOTCAMP_FEEDBACK.md"
 #: The closed verdict set. `host` was added 2026-08-15; see the module docstring.
 VERDICTS = ("plugin", "mcp-server", "both", "host", "unclear")
 
@@ -317,7 +317,7 @@ class TriageStepExists(unittest.TestCase):
             "the verdict table has no `host` row; the discriminating question can name a "
             "verdict the table never defines, which is how a guide ends up guessing")
         self.assertRegex(
-            rows[0], r"(?i)Claude interface",
+            rows[0], r"(?i)(?:Claude|\{\{host\.assistant\}\}) interface",
             "the host row does not name the Claude interface as the owner, leaving it "
             "indistinguishable from `unclear`")
         self.assertRegex(
@@ -469,7 +469,7 @@ class LocalCaptureIsUnconditional(unittest.TestCase):
     def test_shipped_file_header_states_the_local_always_guarantee(self):
         """The artifact itself should tell the bootcamper what happened to their report."""
         t = read(FEEDBACK)
-        header = t[t.index("# Senzing Bootcamp Plugin Feedback") :][:600]
+        header = t[t.index("# Senzing Bootcamp Feedback") :][:600]
         self.assertIn("Every entry is saved here", header)
         self.assertIn("only ever with your explicit yes", header)
 
@@ -640,7 +640,7 @@ EXTERNAL_OFFER = re.compile(
 
 #: The Step 7 wording #783 removed, kept as the negative control.
 OLD_STEP_7 = (
-    "If `docs/feedback/SENZING_BOOTCAMP_PLUGIN_FEEDBACK.md` exists and contains at\n"
+    "If `docs/feedback/SENZING_BOOTCAMP_FEEDBACK.md` exists and contains at\n"
     "least one real feedback entry, remind the bootcamper it is there and offer to\n"
     "help them share it (see `../bootcamp-onboarding/feedback.md`). Do not send email\n"
     "or open issues automatically: wait for explicit confirmation.\n"

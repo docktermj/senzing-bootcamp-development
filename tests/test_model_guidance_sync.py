@@ -104,7 +104,7 @@ TABLE_HEADER = "| Stage | Recommended | CLI commands |"
 
 # Repo-level user-facing docs. Included because a rename or model refresh that
 # lands only inside plugins/ leaves these contradicting it — the exact
-# "renamed in one place" defect. `specs/`, `SENZING_BOOTCAMP_PLUGIN_FEEDBACK_*.md`,
+# "renamed in one place" defect. `specs/`, `SENZING_BOOTCAMP_FEEDBACK_*.md`,
 # and `specs/IMPLEMENTED.md` are deliberately NOT scanned: they are historical
 # records and must keep naming what was true when written.
 REPO_DOCS = [

@@ -292,7 +292,7 @@ class AnInRunEntryIsStillMachineReadable(unittest.TestCase):
     the triage tool reported nothing to do.
     """
 
-    ENTRY = """# Senzing Bootcamp Plugin Feedback
+    ENTRY = """# Senzing Bootcamp Feedback
 
 ## Your Feedback
 
@@ -323,7 +323,7 @@ meaning, not just for shared type.
 
     def test_the_ledger_parses_an_entry_this_path_writes(self):
         with tempfile.TemporaryDirectory() as tmp:
-            path = os.path.join(tmp, "SENZING_BOOTCAMP_PLUGIN_FEEDBACK.md")
+            path = os.path.join(tmp, "SENZING_BOOTCAMP_FEEDBACK.md")
             with open(path, "w", encoding="utf-8") as handle:
                 handle.write(self.ENTRY)
             result = subprocess.run(

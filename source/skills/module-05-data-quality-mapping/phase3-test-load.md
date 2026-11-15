@@ -183,8 +183,7 @@ datasource name).
 #### 24c. Compare against baseline
 
 When a baseline exists, compute the diff between `config/er_baseline_{datasource}.json` and
-`config/er_current_{datasource}.json` and present it. (The Kiro `compare_results.py` helper is a
-later porting phase; compute the per-metric deltas directly for now.) Show per-metric deltas
+`config/er_current_{datasource}.json` and present it. (No helper script computes it: compute the per-metric deltas directly.) Show per-metric deltas
 (entities gained/lost, matches gained/lost) and an overall quality assessment (improved,
 degraded, or unchanged). Explain what the changes mean:
 

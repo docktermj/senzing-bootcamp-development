@@ -35,7 +35,7 @@ Usage::
 been processed — a full duplicate) or 1 (bad input). It writes nothing.
 
 ``commit`` archives the candidate to
-``feedback/SENZING_BOOTCAMP_PLUGIN_FEEDBACK_<unixtime>.md`` and appends one ledger line
+``feedback/SENZING_BOOTCAMP_FEEDBACK_<unixtime>.md`` and appends one ledger line
 per entry. For a full duplicate it instead renames the candidate in place to
 ``…_<unixtime-of-the-file-it-duplicates>_DUPLICATE.md`` and appends nothing.
 """
@@ -53,7 +53,7 @@ from pathlib import Path
 
 LEDGER_NAME = "PROCESSED.jsonl"
 ARCHIVE_DIR = "feedback"
-ARCHIVE_STEM = "SENZING_BOOTCAMP_PLUGIN_FEEDBACK"
+ARCHIVE_STEM = "SENZING_BOOTCAMP_FEEDBACK"
 
 # An entry starts at a `## ` heading. The feedback template uses
 # `## Improvement: <title>`, but bootcampers do not always follow it, so any H2 that is

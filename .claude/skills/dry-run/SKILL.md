@@ -149,7 +149,7 @@ and its entire factual foundation. Start there unless the maintainer says otherw
    **What to exclude: top-level `docs/*.md`.** ⚠️ Take that set from what
    `source/scripts/normalize_docs_markdown.py` globs rather than
    maintaining a file list — it globs `docs/*.md` **non-recursively**, so
-   `docs/feedback/SENZING_BOOTCAMP_PLUGIN_FEEDBACK.md` is out of scope structurally
+   `docs/feedback/SENZING_BOOTCAMP_FEEDBACK.md` is out of scope structurally
    (INV-015) instead of by an exclusion someone has to remember, and
    `docs/REVISIT_BOOTCAMP.md` is **in** scope because it is a top-level `docs/*.md`.
    A hand-kept list drifts the moment the normalizer's scope changes; this one cannot.

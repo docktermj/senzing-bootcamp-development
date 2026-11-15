@@ -36,8 +36,7 @@ found during Phase 3 that may affect orchestration.
 
 If the bootcamper is using CORD sample data (downloaded via `get_sample_data`), remind them to
 confirm their data files haven't changed since download. This is advisory only, never block
-loading. If they are using their own data, skip silently. (The Kiro CORD-freshness helper
-`scripts/cord_metadata.py` is a later porting phase; give the reminder inline for now.)
+loading. If they are using their own data, skip silently. (No helper script does this: give the reminder inline.)
 
 ### Anti-pattern check
 
@@ -99,8 +98,7 @@ and `raw_value`) to `config/bootcamp_preferences.yaml` and checkpoint step 1 to
 "no count was given" — not a missing or unreadable value.** The tier still decides, and every step
 that reads `raw_value` has a branch for `null`.
 
-(The Kiro helpers `answer_binding.py` / `volume_utils.py` encode this parsing and persistence;
-the script port is a later phase, apply the logic inline for now.)
+(No helper script does this parsing and persistence: apply the logic inline.)
 
 **Handling each answer (INV-284).** Each option selects its tier by the classification above, with
 `raw_value: null`; then echo the consequence (below), frame the license, and continue to step 2.
@@ -669,8 +667,6 @@ question when it does, so the turn still ends on the question. (INV-331) It chan
 load. On PostgreSQL, or on a `demo`/`small` tier, say nothing.
 
 *(Internal: when this heads-up fires, end the turn on the pinned question in item 4 and wait.)* Use
-only synthetic/persisted values, never echo credentials or connection strings. (The Kiro
-helpers `volume_utils.py`, `preferences_utils.py` and `load_time_warning.py` are later porting
-phases; apply the logic inline for now.)
+only synthetic/persisted values, never echo credentials or connection strings. (No helper script does this: apply the logic inline.)
 
 Proceed to Phase B (`phaseB-load-first-source.md`).

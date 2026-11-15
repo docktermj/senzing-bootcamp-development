@@ -237,7 +237,7 @@ MAPPING_STATE = {
     "last_updated": "2026-01-01T12:00:00Z",
 }
 
-FEEDBACK = """# Senzing Bootcamp Plugin Feedback
+FEEDBACK = """# Senzing Bootcamp Feedback
 
 Feedback captured during the Senzing Bootcamp.
 
@@ -394,7 +394,7 @@ FIXTURE_MAP = [
      "suffix, so the chip is the bare 41-character title, and no real module title is "
      "long enough to clip. The chip-clip path is covered by unit test in "
      "tests/test_recap_pdf_font_safety.py. Measured 2026-09-24"),
-    ("docs/feedback/...FEEDBACK.md", "docs/feedback/SENZING_BOOTCAMP_PLUGIN_FEEDBACK.md", ALL_MODES,
+    ("docs/feedback/...FEEDBACK.md", "docs/feedback/SENZING_BOOTCAMP_FEEDBACK.md", ALL_MODES,
      "a precious entry the normalizer must leave byte-identical (INV-067)"),
     ("docs/loading_strategy.md", "docs/loading_strategy.md", frozenset({"mid"}),
      "deliberately messy Markdown for the normalizer (INV-060)"),
@@ -512,7 +512,7 @@ def build(root: Path, fresh: bool, seeded: bool = False) -> None:
         )
 
     # The feedback file exists in both modes: nothing may ever delete or empty it.
-    (root / "docs/feedback/SENZING_BOOTCAMP_PLUGIN_FEEDBACK.md").write_text(
+    (root / "docs/feedback/SENZING_BOOTCAMP_FEEDBACK.md").write_text(
         FEEDBACK, encoding="utf-8"
     )
 

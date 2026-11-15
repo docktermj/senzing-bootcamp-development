@@ -619,8 +619,9 @@ class EachCheckFailsWhenItsSiteIsBroken(unittest.TestCase):
             self.assertTrue(check(mutated), name)
 
     def test_restoring_the_porting_note_fails(self):
-        mutated = self.mutate(self.f["phaseA"], "`load_time_warning.py` are later porting",
-                              "`load_time_warning.py`, and the migration\nguide are later porting")
+        # The porting asides are gone from the source (one-repository migration, 2026-11-14), so
+        # the control plants the stale hand-off rather than extending a sentence that is no longer there.
+        mutated = self.f["phaseA"] + "\n(The migration guide are later porting phases.)\n"
         self.assertTrue(stale_problems(dict(self.f, phaseA=mutated)))
 
     def test_a_second_copy_of_the_record_is_caught(self):

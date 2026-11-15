@@ -13,7 +13,7 @@ three things, in this fixed order:
 Then the module asks its single transition question. Follow `ground-rules.md`
 throughout: `🛑`/`⛔` are internal, never rendered; one 👉 question ends the turn.
 
-This is the Claude-plugin port of the Kiro `module-completion*` / `module-completion-artifacts` steering. It is deliberately lightweight and non-blocking. If any write fails, name what failed, do not claim the module is complete, and let the bootcamper decide how to proceed. The one exception is the B-roll entry (2e), which never blocks completion.
+This workflow is deliberately lightweight and non-blocking. If any write fails, name what failed, do not claim the module is complete, and let the bootcamper decide how to proceed. The one exception is the B-roll entry (2e), which never blocks completion.
 
 ## Step 0: Catch a required step that never ran
 

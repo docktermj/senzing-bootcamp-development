@@ -72,9 +72,6 @@ steps it names, so the steps it leaves out are not skipped steps. **(INV-366) Wh
 SDK setup's [Receiving a `setup_detour`](../module-02-sdk-setup/SKILL.md#receiving-a-setup-detour),
 which finishes it and returns here.
 
-> **User reference:** Detailed background for this module lives in the Kiro Power at
-> `docs/modules/MODULE_4_DATA_COLLECTION.md` (the docs port is a later porting phase).
-
 **Prerequisites:** ✅ Module 1 complete (business problem defined, data sources identified).
 System verification is optional (a deselectable module); when selected it precedes Data
 collection, but Data collection does not require it.
@@ -1026,8 +1023,7 @@ writes no program.
 > `quality_score: null`, `mapping_status: pending`, `load_status: not_loaded`,
 > `validation_status: pending`, `validation_checks: {}`, and `added_at` and
 > `updated_at` to the current ISO 8601 timestamp. If an entry already exists for that
-> DATA_SOURCE key, update it and set `updated_at`. _(The Kiro registry helpers are a later
-> porting phase; write/update the YAML directly for now.)_
+> DATA_SOURCE key, update it and set `updated_at`. _(No helper script maintains the registry: write and update the YAML directly.)_
 >
 > `validation_status` (`pending` | `passed` | `failed`) and `validation_checks` (one key per check
 > with its outcome) are written by the Data File Validation step below and read back by Step 7 —
@@ -1121,15 +1117,13 @@ writes no program.
 > and move on to the next data source. If any check fails, show the failure details and
 > remediation guidance, then help the bootcamper resolve the issue (re-upload, convert format,
 > fix encoding, etc.) before proceeding. Re-check after each fix attempt until the file passes.
-> _(The Kiro `validate_data_files.py` validator is a later porting phase; perform the checks
-> directly for now.)_
+> _(No validator script is bundled: perform the checks directly.)_
 
 > **CORD Metadata Capture:** If the bootcamper chose their own data instead of CORD data, skip
 > this. Otherwise, after CORD data has been downloaded via `get_sample_data` and validated,
 > capture a metadata snapshot (dataset name, file paths, a content hash or size/mtime) so
 > Module 6 can detect if files changed between download and load time. Store it in
-> `config/cord_metadata.yaml`. _(The Kiro `cord_metadata.py` helper is a later porting phase;
-> record the snapshot directly for now.)_
+> `config/cord_metadata.yaml`. _(No helper script records it: record the snapshot directly.)_
 
 > **CORD Provenance Recording:** After each data source file is collected and its registry
 > entry created/updated in `config/data_sources.yaml`, set the `provenance` field based on the
@@ -1173,9 +1167,8 @@ in yourself — no question (INV-012). Create `docs/data_collection_checklist.md
   `validation_checks`.
 
 The Bootcamper fills in nothing and is asked nothing about it. Announce it as a produced file in
-the Step 9 end-of-module summary's "Files produced" list (INV-032). _(The Kiro
-`templates/data_collection_checklist.md` port is a later porting phase; compose the checklist
-directly for now.)_
+the Step 9 end-of-module summary's "Files produced" list (INV-032). _(No template is
+bundled for it: compose the checklist directly.)_
 
 Also create or update `docs/data_source_locations.md`:
 
@@ -1239,8 +1232,7 @@ Never generate SQL against `database/G2C.db`.
 
 ### 5. Handle sensitive data appropriately
 
-- Remind the bootcamper about data privacy (the Kiro `security-privacy` steering reference is a
-  later porting phase; use `search_docs` for Senzing's guidance in the meantime).
+- Remind the bootcamper about data privacy (use `search_docs` for Senzing's guidance).
 - If data contains PII, suggest anonymizing for testing.
 - Ensure `.gitignore` excludes `data/raw/*` to prevent committing sensitive data.
 - Document any data handling requirements in `docs/security_compliance.md`.
@@ -1753,9 +1745,7 @@ about a roughly half-hour load, for a load of about two minutes.
    sub-step 2 says nothing, write no marker: an absent one means "not asked" (INV-244).
 
 Refer to the Senzing MCP server by name only (never a URL). Use only synthetic/persisted values
-: never echo credentials or connection strings. _(The Kiro `volume_utils` and
-`load_time_warning` helpers, and the shared marker/identity logic, are a later porting phase;
-apply the behavior directly for now.)_
+: never echo credentials or connection strings. _(No helper script does this: apply the behavior directly.)_
 
 **Checkpoint:** write step 8b to `config/bootcamp_progress.json`.
 

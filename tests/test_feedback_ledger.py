@@ -32,7 +32,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = REPO_ROOT / ".claude" / "skills" / "feedback-to-issues" / "feedback_ledger.py"
 
-HEADER = "# Senzing Bootcamp Plugin Feedback\n\n**Started:** 2026-07-28\n\n## Your Feedback\n\n"
+HEADER = "# Senzing Bootcamp Feedback\n\n**Started:** 2026-07-28\n\n## Your Feedback\n\n"
 ALPHA = "## Improvement: Alpha defect\n\n**Source:** bootcamper-reported\n\nAlpha happened.\n\n"
 BRAVO = "## Improvement: Bravo defect\n\n**Source:** self-observed\n\nBravo was silent.\n\n"
 # A title containing "=" — the shape that broke --disposition parsing.
@@ -139,9 +139,9 @@ class CommitArchivesAndRecords(unittest.TestCase):
                               "--disposition", "Improvement: Alpha defect=specs/a.md")
         self.assertEqual(0, code)
         self.assertFalse((root / "candidate.md").exists())
-        archives = list((root / "feedback").glob("SENZING_BOOTCAMP_PLUGIN_FEEDBACK_*.md"))
+        archives = list((root / "feedback").glob("SENZING_BOOTCAMP_FEEDBACK_*.md"))
         self.assertEqual(1, len(archives), out)
-        self.assertRegex(archives[0].name, r"SENZING_BOOTCAMP_PLUGIN_FEEDBACK_\d+\.md")
+        self.assertRegex(archives[0].name, r"SENZING_BOOTCAMP_FEEDBACK_\d+\.md")
 
     def test_one_ledger_line_per_new_entry_with_its_disposition(self):
         root = project(HEADER + ALPHA + BRAVO)
@@ -197,7 +197,7 @@ class DuplicateCommitRenamesInPlace(unittest.TestCase):
     def test_it_renames_to_the_duplicated_archives_unixtime(self):
         code, out, _err = run(self.root, "commit", "candidate.md")
         self.assertEqual(3, code)
-        target = self.root / f"SENZING_BOOTCAMP_PLUGIN_FEEDBACK_{self.stamp}_DUPLICATE.md"
+        target = self.root / f"SENZING_BOOTCAMP_FEEDBACK_{self.stamp}_DUPLICATE.md"
         self.assertTrue(target.is_file(), out)
 
     def test_it_leaves_the_ledger_untouched(self):
