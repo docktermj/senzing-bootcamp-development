@@ -13,7 +13,7 @@ notes (INV-254) and verbosity (INV-011) — so the hook must run in that window 
 If the bootcamper's message asks to give feedback, to jot a note down, or to change
 verbosity, inject guidance so those "at any time" requests are handled the same way
 anywhere in the bootcamp. Emits nothing otherwise, so the plugin
-never alters unrelated Claude Code sessions.
+never alters unrelated sessions.
 
 Cross-platform: invoked as a ``type: command`` hook whose ``command`` names the
 interpreter and this script, quoted (``python3 "<path>"``), per INV-052.
@@ -27,7 +27,7 @@ import sys
 def plugin_version():
     """The version of the plugin THIS hook ships in, resolved from the hook's own path.
 
-    Claude Code substitutes ``{{host.plugin_root}}`` in the hook's ``args``, but not
+    The assistant substitutes ``{{host.plugin_root}}`` in the hook's ``args``, but not
     inside the text the hook injects -- so handing the guide that path leaves it to
     resolve the manifest with a variable that may be unset, and on a machine carrying
     two plugin roots (an installed plugin plus a clone, or an un-removed upgrade) a

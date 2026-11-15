@@ -26,7 +26,7 @@ Silent in Act 1 modules, onboarding and graduation, once the module's ``steer_tr
 an entry, once the bootcamp is complete, on a successful run, and on any input it cannot read
 decisively. It never blocks and never raises.
 
-Claude Code reports a Bash call that exits non-zero through ``PostToolUseFailure`` (with an
+The canonical payload reports a shell call that exits non-zero through ``PostToolUseFailure`` (with an
 ``error`` string) rather than ``PostToolUse`` (with a ``tool_response``), so the hook is
 registered on both and reads either shape.
 

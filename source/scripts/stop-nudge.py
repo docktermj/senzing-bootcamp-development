@@ -7,7 +7,7 @@ Gates, checked in order. The hook stays silent (exit 0, no output) unless every
 gate passes:
   1. stop_hook_active is true  -> return success immediately. This is the loop
      breaker: a Stop hook that blocks re-runs on the continuation it caused, so
-     without this guard the nudge re-fired every turn until Claude Code hit its
+     without this guard the nudge re-fired every turn until the assistant hit its
      block cap.
   2. No config/bootcamp_progress.json -> not a bootcamp; never touch unrelated
      sessions. This gate tests the file's EXISTENCE on purpose, not
@@ -26,11 +26,11 @@ gate passes:
   4. The current turn already ended with a 👉 question -> the closing question
      exists, so add nothing (honors the "ask each question only once" invariant).
 
-Gate 4 reads the turn's final text from the Stop payload first. Claude Code's Stop
+Gate 4 reads the turn's final text from the Stop payload first. The assistant's Stop
 input carries an optional ``last_assistant_message`` ("Text content of the last
 assistant message before stopping"); when it is a string, that string is the turn's
 final text and the transcript is not read at all. Only when the field is absent (an
-older Claude Code) does the gate fall back to reading the transcript, below. The
+older assistant version) does the gate fall back to reading the transcript, below. The
 payload comes first because the transcript loses the race: on 2026-11-06 the final
 text record was written about 40 ms before the hook ran and was not yet readable, so
 the transcript reading saw a thinking-only record, stayed silent as undecided, and
@@ -182,7 +182,7 @@ def current_turn_records(transcript_path):
 def payload_final_text(payload):
     """The turn's final assistant text from the Stop payload's
     ``last_assistant_message``, or None when the field is absent or not a string
-    (an older Claude Code), in which case the caller falls back to the transcript.
+    (an older assistant version), in which case the caller falls back to the transcript.
     An empty string is returned as is: the field is present and says the final
     message has no text, which the caller treats as silent."""
     value = payload.get("last_assistant_message")
@@ -259,7 +259,7 @@ if bootcamp_complete():
 
 # Gate 4: block ONLY when we can positively read the current turn's final assistant
 # message AND it ended without a 👉 question. The payload's last_assistant_message is
-# read first and is decisive when present: it is the final text as Claude Code holds
+# read first and is decisive when present: it is the final text as the assistant holds
 # it, with no flush race. Only when it is absent does the gate read the transcript,
 # and there every other case biases to silence, because a blocking Stop hook forces
 # another turn and a false block is how a duplicate 👉 question reaches the

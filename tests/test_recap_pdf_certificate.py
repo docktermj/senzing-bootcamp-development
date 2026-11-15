@@ -33,10 +33,10 @@ import tempfile
 import unittest
 import zlib
 from _fpdf2_support import requires_fpdf2
+from _built import built  # the Claude package, built from source/
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SCRIPT = os.path.join(
-    REPO_ROOT, "source", "scripts", "generate_recap_pdf.py"
+SCRIPT = os.path.join(str(built("claude")), "scripts", "generate_recap_pdf.py"
 )
 
 MM = 72.0 / 25.4

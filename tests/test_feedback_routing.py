@@ -49,9 +49,10 @@ from pathlib import Path
 
 import _corpus
 from _wrapped_text import collapsed_blocks, match_lines
+from _built import built  # the Claude package, built from source/
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-PLUGIN = REPO_ROOT / "source"
+PLUGIN = built("claude")
 FEEDBACK = PLUGIN / "skills" / "bootcamp-onboarding" / "feedback.md"
 COMMAND = PLUGIN / "commands" / "bootcamp-feedback.md"
 HOOK = PLUGIN / "scripts" / "feedback-capture.py"
@@ -690,7 +691,7 @@ class TheFeedbackFileIsNeverOfferedOffTheMachine(unittest.TestCase):
     """
 
     def test_no_shipped_sentence_offers_the_file_externally(self):
-        files = _corpus.corpus_files("source", suffixes={".md"})
+        files = _corpus.corpus_files(root=PLUGIN, suffixes={".md"})
         self.assertGreater(len(files), 20, "the shipped Markdown scan found too few files")
         for path in files:
             with self.subTest(file=str(path.relative_to(PLUGIN))):

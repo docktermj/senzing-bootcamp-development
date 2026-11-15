@@ -284,6 +284,7 @@ def _emit_host_file(build: HostBuild, declaration: dict) -> None:
         "host": host.id,
         "name": host.name,
         "product": host.vars.get("product", host.name),
+        "package_noun": host.vars.get("package_noun", "plugin"),
         "bootcamp_version": declaration["version"],
         "scripts_dir": scripts,
     }

@@ -23,7 +23,7 @@ BUILDS_OR_RUNS = re.compile(r"\b(?:python3?|javac|java|dotnet|cargo|tsc|node)\b"
 #: A project file under one of that section's ``src/<dir>`` program directories. The env
 #: script under ``src/scripts/`` is not one: every native-Windows call dot-sources it.
 PROGRAM_PATH = re.compile(r"(?:^|[\s'\"=:;(,/\\])src[/\\](?!scripts[/\\])\w")
-#: Claude Code's Bash result for a non-zero exit begins "Exit code N".
+#: A canonical shell result for a non-zero exit begins "Exit code N".
 EXIT_CODE = re.compile(r"^\s*(?:Error:\s*)?Exit code (-?\d+)")
 
 

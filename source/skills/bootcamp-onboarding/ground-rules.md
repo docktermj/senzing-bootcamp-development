@@ -143,6 +143,7 @@ skill should read and follow this file.
     ⛔ **Doing both ends the turn on two 👉, which INV-251 forbids** — the violation this file calls
     the #1 bootcamper complaint. A counter-question is still not a gate, and it never replaces the
     pending question; it only defers it by one turn.
+<!-- host:only claude -->
   - ⚠️ **Why this is a rule and not an assumption.** Observed twice on 2026-08-15: the Claude Code
     host prompt *"Set up auto mode for your environment?"* — the harness's own dialog, offering
     "Set it up" / "Not now" / "Don't show again" — appeared during the onboarding preface with
@@ -154,6 +155,15 @@ skill should read and follow this file.
     bootcamp never wrote. A question the guide improvised would be indistinguishable to them in
     exactly that way, which is why the rule binds you even though the observed prompt did not come
     from you.
+<!-- host:end -->
+<!-- host:except claude -->
+  - ⚠️ **Why this is a rule and not an assumption.** An assistant can show a prompt of its own,
+    such as an offer to turn on an automatic mode, while a bootcamp 👉 question is pending and
+    unanswered. **That prompt is host-rendered: no file in this bootcamp asks it.** It costs the run
+    its pending question, and the bootcamper cannot tell it from bootcamp content. A question the
+    guide improvised would be indistinguishable to them in exactly that way, which is why the rule
+    binds you even though such a prompt does not come from you.
+<!-- host:end -->
 - `🛑 STOP` and `⛔ MANDATORY GATE` are INTERNAL control directives - never render them to the
   bootcamper. Signal the stop by ending the turn after the single 👉 question.
 - **Acknowledge** the bootcamper's answer before proceeding: at most 2 sentences and 50 words,

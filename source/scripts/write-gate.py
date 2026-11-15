@@ -47,7 +47,7 @@ import sys
 data = sys.stdin.read()
 
 # Gate: only enforce when a bootcamp is active, so the plugin never blocks writes in
-# unrelated Claude Code sessions.
+# unrelated sessions.
 if not os.path.isfile(os.path.join("config", "bootcamp_progress.json")):
     sys.exit(0)
 

@@ -2,8 +2,7 @@
 
 The plugin ships these hooks (registered in `hooks.json`). Following the bootcamp
 convention, each hook's purpose is phrased beginning with the word "to", from the
-bootcamper's point of view. In the Kiro Power these were named hook files
-(e.g. "to review what you said"); in the Claude plugin they are `command`-type
+bootcamper's point of view (e.g. "to review what you said"). They are `command`-type
 hooks wired to small **Python** scripts under `../scripts/`, each invoked by a
 `command` string naming the interpreter and the script, quoted
 (`python3 "{{host.scripts_dir}}/<script>.py"`).
@@ -101,8 +100,7 @@ the expanded path can contain a space, and unquoted it would split into two argu
   question, and to continue to the next step that asks when the step it just presented
   asks nothing, rather than add a question to it (INV-225). The `UserPromptSubmit` hook injects guidance via
   `additionalContext`; `SessionStart` emits resume context. Everything else emits nothing.
-- **Hooks ship with the plugin.** There is no hook-install step (this replaces the
-  Kiro `install_hooks.py` / `.kiro/hooks/` workflow).
+- **Hooks ship with the plugin.** There is no hook-install step.
 - **Recap durability.** The recap (`docs/bootcamp_recap.md`) is finalized per
   module at completion, but an interrupted module (quit / compaction / new session) would
   otherwise lose its in-progress narrative. To close that gap the guide keeps an

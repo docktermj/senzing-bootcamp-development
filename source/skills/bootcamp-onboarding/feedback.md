@@ -132,7 +132,12 @@ upstream Senzing defect at all. `unclear` is wrong for it too: that verdict mean
 | `plugin` | The bootcamp's own skills, hooks, bundled scripts, questions, gates, banners, ordering, module content or generated deliverables | A question asked twice; a stale instruction; a PDF generator dropping a table off the page; a screenshot helper capturing the wrong tab; a module omitted from the Core path |
 | `mcp-server` | A Senzing MCP **tool** returned wrong, incomplete, truncated or unusable output, or its reference data does not match the installed SDK | `mapping_workflow` step-3 validation rejecting a payload with the reason truncated away; `get_sdk_reference` not covering parameter shapes; a flag documented for one language binding but absent from another; a tool unreachable or erroring |
 | `both` | The plugin's guidance propagated or failed to guard an upstream defect | The plugin's own docs repeated an incorrect flag claim that came from a tool |
+<!-- host:only claude -->
 | `host` | The bootcamper's **{{host.assistant}} interface** owns it — a harness prompt, dialog, toggle or session control that neither the bootcamp nor Senzing ships, and neither can fix | The Claude Code "Set up auto mode for your environment?" prompt appearing over a pending 👉 question during the onboarding preface (reported twice on 2026-08-15) |
+<!-- host:end -->
+<!-- host:except claude -->
+| `host` | The bootcamper's **{{host.assistant}} interface** owns it — a harness prompt, dialog, toggle or session control that neither the bootcamp nor Senzing ships, and neither can fix | A prompt of the assistant's own, such as an offer to turn on an automatic mode, appearing over a pending 👉 question |
+<!-- host:end -->
 | `unclear` | The symptom is real but the component cannot be identified from the evidence | Wrong entity-resolution results with no way to tell whether the mapping, the SDK, or the guidance caused it |
 
 ⛔ **The verdict never changes whether the entry is recorded locally.** Every submitted entry is

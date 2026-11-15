@@ -1,11 +1,11 @@
 {
   "_comment": "Ceilings for text that names an assistant. They only ever come down; see _ratchet in __main__.py.",
-  "source": 17,
+  "source": 0,
   "hosts": {
-    "chatgpt": 16,
-    "claude": 2,
-    "copilot": 16,
-    "gemini": 16,
-    "kiro": 16
+    "chatgpt": 1,
+    "claude": 0,
+    "copilot": 1,
+    "gemini": 1,
+    "kiro": 1
   }
 }

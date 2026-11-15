@@ -23,9 +23,10 @@ import sys
 import tempfile
 import unittest
 from _fpdf2_support import requires_fpdf2
+from _built import built  # the Claude package, built from source/
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PLUGIN = os.path.join(REPO_ROOT, "source")
+PLUGIN = os.path.join(str(built("claude")))
 SCRIPT = os.path.join(PLUGIN, "scripts", "generate_recap_pdf.py")
 EXAMPLE = os.path.join(PLUGIN, "docs", "examples", "bootcamp_recap.example.md")
 
