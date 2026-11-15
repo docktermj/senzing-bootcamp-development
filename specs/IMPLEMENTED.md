@@ -1,0 +1,231 @@
+# Implementation ledger
+
+Record of changes that have landed in this repository, newest first: one `## <name>` entry per
+implemented GitHub issue, review or maintainer run. Do not delete history; append or update in
+place.
+
+This ledger starts on 2026-11-14, when the bootcamp moved to one development repository for
+every AI assistant. Everything implemented before that is recorded in the ledger of the
+repository this one replaced, kept as an archive at
+<https://github.com/docktermj/senzing-bootcamp-claude-plugin-development/blob/195c17dcc2fe6af7cf8097cc10cdc80f5da18eb2/specs/IMPLEMENTED.md>.
+An invariant whose `(Source: …)` names an entry that is not below resolves there.
+
+**The `Commit:` field.** It holds a commit hash, `uncommitted`, or
+`committed (hash not recorded)`, and nothing else. An entry written before its commit exists
+records `uncommitted`, and the next run that touches the entry fills the hash in.
+
+<!-- New entries go directly below this line. Format:
+
+
+## <spec-name>
+
+- **Implemented:** YYYY-MM-DD
+- **Files changed:** `path/one`, `path/two`
+- **MCP re-check:** <server version + date + outcome, or "n/a (no Senzing fact)">
+- **Summary:** <what was done and how the acceptance criteria were satisfied>
+- **Commit:** <hash, "uncommitted", or "committed (hash not recorded)">
+
+-->
+
+## one-development-repository-for-every-assistant
+
+- **Implemented:** 2026-11-14
+- **Files changed:** `source/`, `hosts/`, `tools/bootcamp_build/`, `site/`, `tests/`, `specs/`, `.claude/`
+- **MCP re-check:** n/a (no Senzing fact)
+- **Summary:** The bootcamp is one host-neutral source, `source/`, imported from
+  `docktermj/senzing-bootcamp-claude-plugin-development` at commit `195c17dc` (0.7.0 plus 320
+  commits). A build writes each assistant's package from it, and the Claude package built at
+  import was identical to the plugin at that commit, file for file. The invariant register,
+  the declined-work record and the MCP coverage ledger came with it. The spec archive, the
+  earlier ledger, `BLUEPRINT.md` and the family workflow document stayed in the old repository.
+- **Establishes no invariant of its own** (INV-309).
+- **Commit:** uncommitted
+
+<!-- The three entries below were carried from the archived ledger on 2026-11-14, by the
+maintainer's decision, because each holds an invariant draft that is still on hold with a
+revisit condition. Four other held drafts were left in the archive: the maintainer had
+already decided each needs no invariant of its own. -->
+
+## production-readiness-audit-2026-10-22
+
+**Not a spec** — a dated record of an audit run, **attended**. It follows the 2026-10-12 audit (`aecbc38`) and roughly 300 commits since: the #530–#757 fixes, the 2026-10-13 to 2026-10-22 `/review-invariants` sessions (INV-360 to INV-410), and #770's review-queue change.
+
+- **Implemented:** 2026-10-22 (**63 distinct findings, filed in 23 root-cause groups as #776–#798; 4 unregistered rules queued as deferrals and 6 invariant corrections queued as amendments below; no shipped file modified by this audit**)
+- **Files changed:** this record only.
+- **MCP re-check:** server `sz-mcp-coworker` **1.39.1**, docs index 2026-10-15 22:11 UTC, 2026-10-22. Two filed groups assert a Senzing fact, and each was re-asked this session:
+  - #789 — **server now contradicts the plugin**: `search_docs(query='temporary evaluation license for a dataset larger than the default limit')` returns `eval_license.message` "Need a Senzing license to try this? Open Ask Senzing — the assistant pop-up on https://docs.senzing.com — and just ask it for a free evaluation license; it will give you one.", while Module 6 Phase A hardcodes `support@senzing.com`.
+  - #792 — **still reproduces**: `get_capabilities` describes `get_sample_data` record retrieval through the Connectors Directory as possibly "filtered at the platform layer with a 'Denied.' response"; `get_sample_data(dataset='list')` returned the four datasets unfiltered, so the exposure is record retrieval, not listing.
+  - Every other finding is internal consistency. ⚠️ No absence claim is made, so INV-213's `owner-checked:` clause is not owed.
+- **Baseline.** `main` at `b7085c53`, tree clean.
+  - **Suite green:** `Ran 8446 tests`, `OK (skipped=13)` (unittest).
+  - `citations.py verify` clean at **408** invariants.
+  - `rules`: **835** hard-rule lines (569 line-anchored + 266 mid-line), **0** in a section citing no invariant. `per-rule`: **291** citing no invariant at the rule. `enumerations`: **83 of 408**. `size`: 45 shipped files, **270,059** words. `duplication`: 245 repeated passages across 163 file pairs.
+  - `since --since-last-audit` resolved to **`aecbc38`** (the 2026-10-12 entry), no `SUSPECT-REF`: **173** hard-rule lines (130 plugin, 43 maintainer surface).
+  - `reverse-check`: **TESTED 130 (129 cited, 1 not)**, **UNTESTED 43 (34 cited, 9 not)**, **VERDICT: NOT CLEAN**. The one uncited tested line is `phaseD-validation.md:755`, whose INV-404 citation this run's own session placed at the sentence end on 2026-10-22 (#787).
+  - `pending_invariants.py list`: 0 pending, 6 held; the next free id is **411** — written as a bare number deliberately; read it off `INVARIANTS.md` at mint time.
+  - **Zero open issues** at the start of the run, so no finding is a duplicate.
+  - Environment: fpdf2 2.8.5, `pdftoppm`, `docker`, `google-chrome` and `libSz.so` present.
+- **Scope, stated rather than implied.** Four read-only sweeps run in parallel; the lead re-checked every high and medium finding at its site before filing.
+  - **(A)** The reverse contract: all 173 lines `since` reports, each classified (153 cited correctly, 10 wrongly, 6 partially, 2 deferred-in-effect, 1 unregistered, 1 not a durable rule), plus about 60 of the 587 citing lines added to `plugins/` since `aecbc38`, spot-checked for mis-attachment.
+  - **(B)** The forward contract for INV-360–INV-410 (id 385 was never minted) and the 66 dated notes added since `aecbc38` on 38 older invariants, at every site each binds, with each guard read against its text.
+  - **(C)** The per-module outcome blocks the previous audit did not read: Modules 0, 1, 4 and 7, bootcamp-onboarding and graduation, read in full, with every Markdown link and quoted section pointer resolved by script.
+  - **(D)** About 30 of the 83 enumerating invariants checked against what ships (subjects changed since `aecbc38` first), 22 of 57 duplication groups read side by side, and the maintainer surface changed since `aecbc38`.
+  - ⚠️ **Modules 2, 3, 3b, 5 and 6 were read only where a sweep's lines or invariants led there.** About 42 enumerating invariants (mostly MCP and SDK contract enumerations) were not checked and need an MCP re-check.
+- **Findings, filed.** No issue carries any label (INV-318).
+  - **High:** #776 (Phase D routes a never-computed UAT % to the strong branch; Module 5 step 16's gate is untotal; INV-404), #777 (the INV-146 #671 and INV-079 #683 amendments marked applied but absent from the registry).
+  - **Medium:** #778 (the review queue's decision words match a negated word; INV-409, introduced by #770 in this run's own session), #779 (Module 4 generation size), #780 (Module 4 Step 8a's license gate), #781 (Module 7 gate item 6 and Discover exits), #782 (`current_module` timing), #783 (external feedback sharing), #784 (registry sample shape), #785 (Module 1 Step 10a values), #786 (native-Windows build and run), #787 (wrong and off-line citations, INV-396), #788 (INV-408 clipping in the rich renderer and the video), #789 (Phase A's license channel, INV-403), #790 ("your data", INV-399), #791 (INV-394 and INV-393 at sibling sites), #792 (INV-378 and INV-160 at sibling sites), #793 (INV-401 and INV-370 at Module 5 and Module 4), #794 (auto-test walk failure and isolation), #795 (INV-402's rebuild and CORD fields).
+  - **Low:** #796 (guards narrower than their invariants), #797 (maintainer-surface stale claims and restatements), #798 (cross-reference and wording defects).
+- **Verdicts.** **Consistent:** no — Module 4 contradicts itself on generation size (#779), Module 1 and Module 4 disagree on the license gate (#780), the registry sample's shape (#784), and two "applied" amendments disagree with the registry (#777). **Coherent:** no — a gate routes a never-established reading to the strong branch (#776), `current_module` is decided before the choice it records (#782), and Module 7's gate asks after a no-question close (#781). **Complete:** no — native-Windows build and run (#786), five rules honored in Modules 2 and 3b only (#791, #792), and unregistered rules (below). **Concise:** unchanged; the generation-size rule sits about 290 lines below the action it governs (#779), and the error-handling block is restated across eight skill files (#798).
+- **Verified as correct, so the next audit need not re-check it.** INV-400 to INV-410 are cited on their rules' lines except INV-404 at `:755` (#787); all 31 INV-366 sites; INV-225, INV-264, INV-393 and INV-394 at their Module 2 and 3b sites; INV-360, 362, 363, 364, 366, 368, 369, 371, 372, 374, 375, 377, 379–383, 387, 388, 390–392, 395–398, 407, 409 (live ledger) and 410 fully honored; the INV-050 notes #616, #618, #685 and #686; every quoted section pointer in Modules 0, 1, 4 and 7, onboarding and graduation; every enforcer path named in `INVARIANTS.md` exists.
+- ⚠️ **Coverage limits.** The conversational invariants (INV-251, INV-006, INV-014, INV-005/008/009 and every gate-ordering rule) govern a live turn and were **not tested**; they need `dry-run` phase 3. #786's native-Windows route and #794's isolation question rest on behavior this environment cannot exercise (a Windows shell; how Claude Code loads `./.claude/CLAUDE.md`).
+- ⚠️ **This run's own mistakes, reported.** Two of its findings are defects the same session introduced earlier that day: #770's decision-word pattern (#778) and the INV-404 citation placed at a sentence end (#787).
+- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** The recap renderer draws a Markdown subset, and a diagram is referenced from the recap, never embedded. The rule already shipping, quoted:
+    - ⛔ **Do not embed the Mermaid source into `docs/bootcamp_recap.md`.** — in `source/skills/module-01-business-problem/phase2-document-confirm.md`
+
+  **Why it is not an existing invariant:** the `IMPLEMENTED.md` block for INV-389 quotes this line as "a pre-existing rule, and NOT the one being deferred … no registered invariant governs the recap renderer's Markdown subset"; INV-091 governs offline rendering, not what the recap may contain; INV-142 governs how a construct is drawn once it is present.
+
+  The drafted wording:
+
+  **INV-NNN** — Content written into `docs/bootcamp_recap.md` MUST stay within the Markdown subset the bundled recap renderer draws (headings, bullets, `**Label:**` lines, plain text, `![alt](path)` images); a diagram or other fenced block MUST be referenced from the recap by path, never embedded, because a construct the renderer does not handle reaches the PDF as literal source text. Enforced by no test today; `conformance.py reverse-check` counted the line as cited because INV-091 sits in the sentence before it.
+
+  *(written as NNN deliberately: this command cannot mint an id, and a literal id here would cite an invariant that does not exist and turn `citations.py verify` red. If the maintainer registers it, mint at the next free id — read it off `INVARIANTS.md` rather than trusting a number written here.)*
+
+  **HELD 2026-10-22:** the maintainer held it at review: no test enforces the rule, and the drafted wording lists the renderer's Markdown subset, which can go stale. Revisit when a test enforces the rule and `generate_recap_pdf.py` states its supported subset in one place the invariant can point to.
+- **DEFERRED INVARIANT (resolved INV-271, folded in at review 2026-10-22 as a dated note on the invariant it extends rather than minted as a new id).** Graduation offers to re-capture a missing visualization before rendering the recap. The rule already shipping, quoted:
+    - ⛔ **(INV-193) Offer the remedy — it is cheap while the artifacts are still on disk.** — in `source/skills/graduation/SKILL.md`
+
+  **Why it is not an existing invariant:** INV-193 governs where an external denominator comes from; INV-271 governs reporting a missing manifest. Neither says to offer a re-capture (#787 re-cites the line).
+
+  The drafted wording:
+
+  **INV-NNN** — When graduation's coverage check reports an expected visualization with no capture manifest, graduation MUST offer to re-start that module's app and re-run the bundled capture, then backfill the recap, before rendering it; declining MUST NOT block graduation.
+
+  *(written as NNN deliberately: this command cannot mint an id, and a literal id here would cite an invariant that does not exist and turn `citations.py verify` red. If the maintainer registers it, mint at the next free id — read it off `INVARIANTS.md` rather than trusting a number written here.)*
+- **DEFERRED INVARIANT (resolved INV-411, registered by the maintainer 2026-10-22, after an amendment).** Module Completion's recap structural check never blocks completion, and a check that cannot run is recorded. The rule already shipping, quoted:
+    - ⛔ **Non-blocking and Bootcamper-invisible (INV-012).** — in `source/skills/bootcamp-onboarding/module-completion.md`
+
+  **Why it is not an existing invariant:** INV-012 covers invisibility only; the non-blocking clause lost its INV-048 credit in `589a18d0` (#685), and no invariant states that the per-module `--check` never blocks. The same line says "If the script is missing or fails to execute, continue silently", which sits uneasily with INV-163 ("a verification check that cannot run … MUST be recorded as skipped").
+
+  The drafted wording:
+
+  **INV-NNN** — Module Completion's recap structural check MUST NOT block module completion: a finding is corrected in the just-appended recap section, and the module completes whether or not the check finds anything or can run. How an unrunnable check is reported is INV-163's to govern, not this invariant's. No test enforces it today.
+
+  *(written as NNN deliberately: this command cannot mint an id, and a literal id here would cite an invariant that does not exist and turn `citations.py verify` red. If the maintainer registers it, mint at the next free id — read it off `INVARIANTS.md` rather than trusting a number written here.)*
+- **DEFERRED INVARIANT (resolved INV-412, registered by the maintainer 2026-10-23, after an amendment).** Which module may write a source's `record_count`. The rule already shipping, quoted:
+    - ⛔ **`record_count` stays the measured count:** — in `source/skills/module-04-data-collection/SKILL.md`
+
+  **Why it is not an existing invariant:** the line cites INV-243, which governs reconciling a per-source figure shown to the Bootcamper, not who writes the field; INV-326 comes closest, for samples; INV-402 governs the registry entry's existence (#787 re-cites the line).
+
+  The drafted wording:
+
+  **INV-NNN** — A source's top-level `record_count` in `config/data_sources.yaml` MUST be written only by the module that collects or generates the source file and counts it (Data collection), as the measured count; no earlier module writes it, and it stays null until measured. A sample's or subset's own `record_count` is INV-326's, not this invariant's. No test enforces it today.
+
+  *(written as NNN deliberately: this command cannot mint an id, and a literal id here would cite an invariant that does not exist and turn `citations.py verify` red. If the maintainer registers it, mint at the next free id — read it off `INVARIANTS.md` rather than trusting a number written here.)*
+- **PROPOSED AMENDMENT to INV-094 — applied 2026-10-23 by the maintainer.**
+    - (a) a database backup under the reserved top-level `backups/` directory (a `pg_dump` for PostgreSQL — via `docker exec` when the database runs in a container — or a file copy of the SQLite repository) — in `specs/INVARIANTS.md`
+
+  The shipped backup runs `<runtime> exec` (`graduation/database-backup.md:47-49`), as INV-195's 2026-10-15 (#613) note requires, and that note forbids `docker exec` in shipped skills; INV-050's 2026-07-26 clarification removed "reserved" from `backups/`. **What breaks if it does not change:** a later edit can restore `docker exec` and cite INV-094 as permission.
+
+  **INV-094** — (⚠️ **Dated note, 2026-10-22 (production-readiness-audit-2026-10-22): the container command and the directory's status; the bundle's contents are unchanged.** A PostgreSQL backup in a container runs through the recorded container runtime (`<runtime> exec`, INV-195), never a hard-coded `docker exec`, and `backups/` is a top-level directory without the "reserved" status INV-050's 2026-07-26 clarification removed. The rules above still bind.)
+- **PROPOSED AMENDMENT to INV-059 — applied 2026-10-23 by the maintainer.**
+    - never rewriting a completed `## Module N:` section — in `specs/INVARIANTS.md`
+
+  Recap sections are now name-based, `## {Name} — {timestamp}` (`module-completion.md:78`; the example recap), and `recap_checkpoint.py` protects `## {module}` sections. The property holds; the literal heading is stale.
+
+  **INV-059** — (⚠️ **Dated note, 2026-10-22 (production-readiness-audit-2026-10-22): the protected heading is the module's named section; the property is unchanged.** "A completed `## Module N:` section" reads as a completed module section, headed `## {Name} — {timestamp}` since module numbers left bootcamper-facing text (INV-079). The rules above still bind.)
+- **PROPOSED AMENDMENT to INV-093 — applied 2026-10-23 by the maintainer.**
+    - at the start of Data collection (Module 4), after the Bootcamper's data volume is known and before any load — in `specs/INVARIANTS.md`
+
+  The prompt runs at Data collection Step 8a, after all sources are collected (`module-04-data-collection/SKILL.md:1241-1242`; `onboarding-flow.md:185-187`), not at the start of the module. `module-01-business-problem/phase1-discovery.md:414` and `module-02-sdk-setup/SKILL.md:1737` repeat "at the start".
+
+  **INV-093** — (⚠️ **Dated note, 2026-10-22 (production-readiness-audit-2026-10-22): where in Data collection the prompt runs; the once-only rule and its conditions are unchanged.** "At the start of Data collection" reads as Data collection Step 8a, after every source is collected and its volume measured, and before any load. The rules above still bind.)
+- **PROPOSED AMENDMENT to INV-047 — applied 2026-10-23 by the maintainer.**
+    - A banner is presented, "GRADUATION". — in `specs/INVARIANTS.md`
+
+  Graduation ships "BOOTCAMP GRADUATION" (`graduation/SKILL.md:47`, renamed 2026-08-12 in `3017e0e2`); no invariant records the rename.
+
+  **INV-047** — (⚠️ **Dated note, 2026-10-22 (production-readiness-audit-2026-10-22): the banner's text.** The banner reads "BOOTCAMP GRADUATION" since 2026-08-12 (`3017e0e2`). The rule above still binds.)
+- **PROPOSED AMENDMENT to INV-102 — applied 2026-10-23 by the maintainer.**
+    - after the GRADUATION banner and before the model/effort prompt it presents a journey map (all selected modules shown ✅ experienced, Graduation 🔄 as the current/final stage — in `specs/INVARIANTS.md`
+
+  The shipped banner and journey-map label are "BOOTCAMP GRADUATION" and "Bootcamp graduation 🔄" (`graduation/SKILL.md:47`).
+
+  **INV-102** — (⚠️ **Dated note, 2026-10-22 (production-readiness-audit-2026-10-22): the banner and stage names.** "The GRADUATION banner" reads as the BOOTCAMP GRADUATION banner, and "Graduation 🔄" as "Bootcamp graduation 🔄", since 2026-08-12 (`3017e0e2`). The rules above still bind.)
+- **PROPOSED AMENDMENT to INV-317 — applied 2026-10-23 by the maintainer, amended at review.**
+    - It ships today in `/dry-run` (its command, skill and phase 3) and in `/production-readiness-audit` (its command and Step 8, which says to follow dry-run's discipline). — in `specs/INVARIANTS.md`
+
+  The rule also ships in `/auto-test`, `/feedback-to-issues`, `/retrofit-from-public`, `/delegate-to-mcp-server` and `/release-cycle`, so the enumeration is stale.
+
+  **INV-317** — (⚠️ **Dated note, 2026-10-22 (production-readiness-audit-2026-10-22): the sites are every maintainer run that produces findings; the rule is unchanged.** The list above is a sample taken when the rule was registered; the rule binds every maintainer run that produces findings, whatever skill runs it. The rules above still bind.)
+- **Establishes no invariant of its own.** This audit modifies no shipped or maintainer-surface file beyond this record, so it adds no hard-rule line. It queues 4 new invariants and 6 amendments above for `/review-invariants` (INV-365); the maintainer runs it to decide them.
+- **Commit:** committed (hash not recorded)
+- **Archive commit:** ee4788d (a commit of the archived repository; see `specs/README.md`)
+
+## open-me-first-says-only-what-the-manifest-includes
+
+- **Implemented:** 2026-10-01 (**Not a spec** — a dated record of one issue-driven run, #321, spec revision 1; source: `/dry-run` 2026-10-01 phase 2, P2-1, `Source: self-observed (assistant dry run)`)
+- **Commit:** uncommitted
+- **Files changed:** `source/scripts/package_bootcamp.py` (`open_me_first()` and new helpers `included_parts()`, `_share_block()`, `_transfer_block()`, `_restore_step()`, `_para()`, `_series()`), `source/skills/bootcamp-onboarding/packaging.md` (Step 4's `OPEN_ME_FIRST.md` bullet), `source/skills/graduation/database-backup.md` ("Restore" opening sentence), `tests/test_open_me_first_matches_the_manifest.py` (new), `specs/IMPLEMENTED.md`. `specs/INVARIANTS.md` and `invariant-manifest.json` are unchanged.
+- **MCP re-check:** n/a (no Senzing fact), server `sz-mcp-coworker` 1.37.16 (Senzing "current"), 2026-10-01, `get_capabilities`. Re-confirmed, not assumed: the change is the packager's own text about its own archive. The restore steps it now prints (copy a SQLite file back to `database/`; `pg_restore`, or `psql <` for a plain dump, into a fresh database) are SQLite and PostgreSQL steps already stated in `graduation/database-backup.md`, quoted from there, not Senzing facts. No absence claim is made, so no `owner-checked:` is owed. Nothing is upstream-bound.
+- **Approach:** implemented directly (Phase 5a). The change is one function and its tests in one script, plus two one-sentence doc edits.
+- **Summary:** `OPEN_ME_FIRST.md` now says only what `PACKAGE_MANIFEST.json`'s `included` list carries. Before, its "Start here" and "What this package is" sections were static text. A pre-graduation `transfer` package told the recipient it carried "the revisit bundle (state snapshot and database backup)" and to open `docs/REVISIT_BOOTCAMP.md`, when neither was in the archive.
+  - **Parts.** `included_parts()` reads the manifest's posix paths only, never the disk, per the issue's table: the recap PDF, a database backup (under `backups/revisit/database/`), a state snapshot (`RESUME_STATE.json` or `backups/revisit/state/`), the restore guide, `config/`, `docs/mapping/`, `src/`, keepsakes (a `.pdf` directly under `docs/`), visualizations and `production/`.
+  - **Complete package.** With every part included, the text is byte-identical to the old static text: prose is wrapped at 85 columns, which reproduces the original line breaks. This was checked against the pre-change function on `tests/test_package_bootcamp.py`'s fixture for both profiles.
+  - **Start here.** Without the recap PDF, it says the recap PDF is written at graduation and is not in this package, and points at the manifest's `included` list.
+  - **Transfer, partial.** It says the package is partial, lists what it carries and what it does not. Then: with the guide, the "To resume" pointer, plus "no database backup" when there is none. With a backup and no guide, each backup's path and its restore step by file type (SQLite, `.dump`, or the path alone), and that no full restore guide is included. With neither, that the recipient must redo SDK setup, the database and the load.
+  - **Share, partial.** The keepsakes, visualizations and `production/` are each named only when included.
+  - **Docs.** `packaging.md` Step 4 and `database-backup.md` "Restore" now describe the recap-PDF and restore-guide pointers as conditional.
+  - **Tests.** `tests/test_open_me_first_matches_the_manifest.py`, 20 tests, stdlib only, loading the script as `tests/test_package_bootcamp.py` does. One fixture per acceptance case: no bundle and no guide, everything, database only, restore step by file type, guide without a backup, present but excluded (secret pattern and unreadable), recap PDF in both profiles, each share part. Each case also checks the issue's rule that every path the contents sections name is in `included`. Each partial case's predicate is also run against a static stand-in (the real function fed a complete package's `included` list) and must fail there. Replacing `open_me_first()` with the pre-#321 static function fails 13 tests. `test_open_me_first_points_at_the_restore_guide` is unchanged and passes.
+- **Verification:** the verdict lines of both CI legs (empty `HOME` outside `/tmp`) and of `citations.py verify` (run after this entry was written) are in the PR. `lint-workflows` was not run locally, because it is a remote reusable workflow and no workflow file changed.
+- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** `OPEN_ME_FIRST.md` says only what the manifest includes. The rule already shipping, quoted:
+    - ⛔ **Included means "listed in ``included``", never "exists on disk"** — in `source/scripts/package_bootcamp.py` (`included_parts()` docstring) — **cite INV-NNN**
+
+  **Every site a citation must reach:** the docstring above; `open_me_first()`'s docstring in the same file; and `packaging.md` Step 4's `OPEN_ME_FIRST.md` bullet, which states the conditional pointers. **Checked, not a site:** `graduation/database-backup.md` "Restore" names the condition but states no rule of its own.
+
+  ⚠️ **Why a new id, and why it may wait.** The packaging feature's own invariant, Draft 1 of 2 in `specs/the-bootcamp-cannot-leave-the-machine-it-was-built-on.md`, is HELD until `dry-run` phases 2 and 3 have exercised the flow. It says the manifest names what was included and excluded, and says nothing about what `OPEN_ME_FIRST.md` claims. Phase 2 of the 2026-10-01 dry run found exactly that gap. The maintainer may fold this wording into Draft 1 when registering it, or hold it with Draft 1.
+
+  The drafted wording:
+
+  **INV-NNN** — Every statement `OPEN_ME_FIRST.md` makes about what a package contains MUST be built from `PACKAGE_MANIFEST.json`'s `included` list, never from what exists on disk or from static text, so the two can never disagree. Every path it names as included MUST appear in that list. A part that is not included (the recap PDF, the database backup, the state snapshot, the restore guide, `config/`, the mappings, `src/`, the keepsakes, the visualizations, `production/`) MUST NOT be named as included, and the text MUST say plainly what is missing and what the recipient does instead: open the manifest's `included` list when there is no recap PDF; restore a backup by its file type when there is no restore guide; redo SDK setup, the database and the load when there is neither a backup nor a guide. The pointer to `docs/REVISIT_BOOTCAMP.md` MUST appear only when that file is included. Enforced by `tests/test_open_me_first_matches_the_manifest.py`. (Source: GitHub issue #321.)
+  *(written as NNN deliberately: a literal id here would cite an invariant that does not exist and turn `citations.py verify` red. If the maintainer registers it, mint at the next free id — read it off `INVARIANTS.md` rather than trusting a number written here.)*
+
+  **HELD 2026-10-02:** held with the packaging feature's Draft 1
+  (`the-bootcamp-cannot-leave-the-machine-it-was-built-on`, held 2026-08-27), whose manifest rule this
+  extends to `OPEN_ME_FIRST.md`. The 2026-10-01 dry run's phase 2 exercised packaging and found this
+  gap; phase 3 has not yet exercised it. Revisit with Draft 1 once `dry-run` phase 3 has exercised
+  packaging, and register the two together or fold this into it.
+
+- **Otherwise establishes no new invariant.** The restore steps quote `graduation/database-backup.md` (INV-094's single implementation, INV-048), and no exclusion rule, path or manifest field changed. No ⛔ rule is demoted in shipped text.
+
+## the-bootcamp-cannot-leave-the-machine-it-was-built-on
+
+- **Implemented:** 2026-08-26
+- **Files changed:** **new** — `source/scripts/package_bootcamp.py`, `source/scripts/secret_patterns.py`, `source/skills/bootcamp-onboarding/packaging.md`, `source/commands/package-bootcamp.md`, `source/skills/graduation/database-backup.md`, `tests/test_package_bootcamp.py`, `tests/test_secret_patterns_are_shared.py`, `tests/test_database_backup_has_one_implementation.py`; **changed** — `source/skills/graduation/SKILL.md` (Step 6a now cites the shared procedure; one discoverability line in the closing announcement), `specs/INVARIANTS.md` (INV-050's layout tree gains `backups/packages/`), `MIGRATION.md` — the Kiro `slash-backup-project.md` and `scripts/backup_project.py` entries are marked **superseded** by this flow (the packaging command/workflow and `scripts/package_bootcamp.py` respectively), while `hooks/backup-before-load.json` is left explicitly **open**: an automatic pre-load backup is a different decision from a bootcamper-invoked one that asks before it writes — `tests/test_invariant_layout_tree.py` (the pinned directory count).
+- **MCP re-check:** n/a (no Senzing fact). This spec asserts nothing about Senzing, the SDK, the entity specification or the MCP server — it concerns the plugin's own artifacts, file layout and interaction layer — so there is no server fact to re-verify and no absence claim to substantiate; the spec says so itself and exempts the `owner-checked:` clause on that basis. `get_capabilities` confirmed server **1.33.0** at the start of this session.
+- **Summary:** ⛔ **This is a NEW FEATURE, not a defect repair, and it is the one implementation in this run that a maintainer should review before trusting.** It adds a user-facing command, an any-time conversational flow and a bundled script. Everything below is verified and the suite is green, but the judgment that it should exist at all was the spec author's and mine, not the maintainer's — and the spec's own `## Invariants introduced` says the wording *"Requires maintainer-approved wording before implementation"*. Nothing is pushed. **Criterion walk — thirteen of fourteen met, one partial.** (1) `/package-bootcamp` reaches `packaging.md` from any point and writes `backups/packages/senzing-bootcamp-<profile>-<YYYYMMDD>.zip`; ⚠️ *"works at any point"* is verified structurally (an INV-254-style any-time flow, no module precondition) — a live bootcamp invocation is `dry-run` phase 3's. (2) One pinned numbered 👉 question precedes any write, its sizes come from `--dry-run`, and option 3 writes nothing; **that the dry run writes nothing is tested**, including that it does not even create the output directory. (3) The `share` archive is asserted over a fixture to carry no `*.db`/`*.sqlite`, no `data/raw/`, no `data/temp/`, no `.env`, no `licenses/`, no `config/license.json`, no `logs/`, no `.git/`, no caches — **and** a positive test that it does carry the results, so the exclusions are not passing vacuously. (4) `transfer` carries the revisit state snapshot **and** the database backup, and `OPEN_ME_FIRST.md` points at `docs/REVISIT_BOOTCAMP.md`; it is also asserted **not** to carry the live `database/G2C.db` — the backup travels, the working repository does not. (5) Step 6a's procedure is factored into `graduation/database-backup.md`, both callers cite it, and a test asserts **neither kept a copy of the branch** (Step 6a is sliced out and checked for `pg_dump`, with an anti-vacuity assertion that the slice is non-empty and does cite the file). (6) Running the packager twice shows the second archive contains neither the first nor any `packages/` member. (7) A file containing a PEM private key is excluded and **named with its class** in the manifest, a clean sibling in the same directory still travels, the manifest does **not** echo the secret, and `tests/test_secret_patterns_are_shared.py` asserts the packager's pattern string and `write-gate.py`'s inline copy are byte-identical. (8) A symlink resolving outside the project root is skipped and named (resolve-then-compare, the INV-200 rule). (9) One top-level directory, both orientation files at its root, and the manifest records profile, plugin version, date, `modules_completed`, per-file SHA-256 and size, and the exclusion rules — all asserted. (10) `testzip()` runs, the one-directory shape is re-checked, a `.sha256` sidecar is written, and the digest is asserted to appear in stdout — the archive is never announced unread (INV-067). (11) Nothing is transmitted; the closing line says so and a test asserts it. (12) Graduation gains exactly one discoverability line, as a **statement** with no 👉 and no output path — INV-251 untouched. (13) ⚠️ **Partial:** `backups/packages/` is in INV-050's tree; the **new invariant is deferred** (below). (14) stdlib `zipfile` only, no `tar`/`zip` binary, no assumption about the Bootcamper's language. **Exercised, not merely unit-tested:** the packager was run against a realistic fixture project carrying one of everything it must and must not take — both profiles, dry run and real write, twice for self-exclusion — and the finished archive was extracted and read as a recipient would. That is how the `docs/mapping/` leak was found (see deviations). Suite green at **3,605 passed, 3 skipped** (+48 tests); `conformance.py rules` **0** sections citing no invariant; `citations.py verify` clean; `coverage_reports.py shipped` clean. ⚠️ **A pre-existing test brittleness surfaced and was worked around rather than papered over:** `test_conformance_sees_a_rule_beside_a_citation` validates the **truncated display string** `since` prints rather than the source line, so a stop sign ~800 characters into a 991-character line was reported and then rejected as "not a hard rule". `classify()` accepts the full line. Rather than change the test, the discoverability rule was moved onto its own line — better prose, line-anchored, and legible to every conformance view.
+- ⛔ **DEFERRED INVARIANT — and this one the spec itself says must be approved before implementation.** The spec's `## Invariants introduced` carries a fully drafted statement with `INV-NNN` unassigned and the note *"Requires maintainer-approved wording before implementation."* Step 5 requires sign-off and the maintainer is away, so **no ID was minted and nothing was appended to INVARIANTS.md's invariant list**. ⛔ **SPLIT IN TWO on 2026-08-27** by the maintainer's decision (`invariant-review-2026-08-27`), so this is now **two** drafts needing **two** consecutive IDs, not one: *Draft 1 of 2* — what the archive **is** (profiles, contents, exclusion set, byte-level secret scan with no file-type allowlist, symlink resolution, `testzip()` + SHA-256 verification, non-transmission, INV-094 reuse); *Draft 2 of 2* — what the Bootcamper **consents to** (exactly one pinned numbered 👉 question before any write, sizes from a `--dry-run` measurement rather than an estimate, cancel writes nothing). Both are in the spec's `## Invariants introduced`. On approval of either or both, mint the next free ID(s), append with index entries in the same edit, cite Draft 1 at the contents/verification rules and Draft 2 at `packaging.md:25` and `:58`, then re-run `coverage_reports.py shipped`. ⚠️ **This sentence was itself stale for one day** — it said "mint the next free ID" singular, having been written before the split, and a review on 2026-08-27 read the wrong count off it. That is the **third** instance of the class the note below records: a deferral bullet that stops tracking the diff. Corrected rather than annotated because a wrong instruction is worse than a missing one. ⚠️ **Amended 2026-08-26** by `production-readiness-audit-2026-08-26` / `specs/the-packaging-consent-gate-is-an-unregistered-guarantee.md`: this bullet originally said the drafted wording *"is already in the spec file and needs no restating here"*, which pointed at a draft written **before the conversational layer existed** and so silently omitted the consent gate. The draft has been extended to cover it, and the rules this feature ships are now listed individually — a deferral written against a pre-existing draft inherits that draft's blind spots, which is the lesson.
+  - **The rules this feature ships, each unregistered pending the ID above:**
+    - `skills/bootcamp-onboarding/packaging.md:8` — ⛔ the plugin writes the archive and stops; it never uploads, emails or attaches it *(covered: "MUST NOT be transmitted anywhere by the plugin")*.
+    - `skills/bootcamp-onboarding/packaging.md:25` — ⛔ run the dry run first; the question quotes a measured size, never an estimate *(**was uncovered**; now in the draft's consent-gate clause)*.
+    - `skills/bootcamp-onboarding/packaging.md:58` — ⛔ option 3 writes nothing at all *(**was uncovered**; now in the draft's consent-gate clause)*.
+    - `skills/bootcamp-onboarding/packaging.md:63` — ⛔ run the shared database-backup procedure, never a second SQLite-vs-PostgreSQL branch *(covered by the reuse clause; cites INV-094/INV-048 at the rule)*.
+    - `skills/bootcamp-onboarding/packaging.md:96` — ⛔ there is no file-type allowlist; every member is scanned and an unexamined member is excluded *(added 2026-08-26 by `specs/the-packager-secret-scan-skips-the-files-most-likely-to-be-secrets.md`; covered by the draft's corrected secret-scan clause. ⚠️ **This line was missing from this list for one iteration** — the rule shipped in iteration 4 and the list was not extended, which is the same deferral-not-written-against-the-diff mistake this very bullet was rewritten to fix. Caught by `production-readiness-audit-2026-08-26d` reading the one hard-rule line `since` attributed to that round)*.
+    - `skills/graduation/database-backup.md:3` — ⛔ this file is the one implementation, two callers cite it *(covered by the reuse clause)*.
+    - `skills/graduation/database-backup.md:21` — ⛔ when `database_type` is indeterminate, do not guess a branch *(**relocated**, not new — INV-094 governs it and the file cites INV-094)*.
+    - `skills/graduation/SKILL.md` Step 6a — ⛔ follow `database-backup.md` *(covered by the reuse clause)*.
+    - `skills/graduation/SKILL.md` closing — ⛔ the discoverability line is a statement naming no output path *(cites INV-251 at the rule)*.
+
+  **HELD 2026-08-27:** ⛔ **Held, not merely unapproved.** The maintainer's stated reason: every
+  other invariant registered on 2026-08-27 describes behavior that shipped and was exercised,
+  whereas **this feature has never run in a live bootcamp** — and its most serious defect, a
+  `.pem` private key packaged into an archive meant for someone else, was found only by executing
+  it against a hostile fixture after static reading had passed it twice. Registering it now would
+  mean amending a fresh invariant rather than approving a settled one. Revisit after `dry-run`
+  phases 2 and 3 have exercised the flow.
+
+  ⚠️ **Moved here from `specs/the-bootcamp-cannot-leave-the-machine-it-was-built-on.md` on
+  2026-09-21 (#58), verbatim.** That file still carries the same paragraph and is no longer read
+  by anything: `specs/` is frozen under INV-307, so it cannot be edited to say so. The ledger is
+  the live copy; the spec is the 2026-08-27 record.
+- **Commit:** committed (hash not recorded)
+- **Archive commit:** e744eac (a commit of the archived repository; see `specs/README.md`)

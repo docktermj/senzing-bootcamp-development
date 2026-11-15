@@ -1,0 +1,198 @@
+"""One commit convention is documented, and no normal path needs the hook bypassed.
+
+This repository ran **two** commit conventions on purpose. `.claude/memory/` required
+`#<issue-number> <description>` subjects for *"the `implement-spec` skill, or any change made
+while processing a spec under `specs/`"* — deliberately **not** Conventional Commits — with the
+reminder hook bypassed via `SKIP_GIT_CONVENTIONS=1`. Everything else used Conventional Commits.
+
+⛔ **That scope stopped describing anything.** `specs/` froze at the 2026-09-15 cutover (INV-307)
+and `/implement-spec` was retired under #60, so issue work fell in the gap between the two rules
+(#56).
+
+⚠️ **And the stale rule went unnoticed because behavior had already moved.** Commits were being
+written as Conventional Commits with an `issue: #<n>` trailer — correctly, per the `commit`
+skill — while the memory said otherwise. Guidance and behavior diverged **silently**, which is
+the failure this guard exists to make loud.
+
+⚠️ **`Refs: #n` was proposed and is not what shipped.** #56's 2026-09-15 decision named that
+footer; `issue: #n` was already in use and is what the `commit` skill mandates, so the repo
+writes `issue:`. Both link identically — GitHub scans the whole message for `#<number>`. A second
+trailer form would have split the history for nothing, so this guard pins the **property** (an
+issue reference in a trailer, not the subject) rather than one spelling of it.
+
+⛔ **This asserts what the documents INSTRUCT, never what a commit contains.** No offline test
+reads git history here, and a repository can document one convention while its commits use
+another — which is exactly what happened. `tests/test_spec_ledger_invariants.py` checks recorded
+hashes; nothing checks message shape, and this does not either.
+
+Stdlib only; every file is read as text (INV-108).
+
+Source issue: #56.
+
+Run:  python3 -m unittest discover -s tests
+"""
+import re
+import unittest
+from pathlib import Path
+
+from _corpus import corpus_files
+from _wrapped_text import match_lines
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+MEMORY = REPO_ROOT / ".claude" / "memory"
+DOCS = corpus_files(".claude", suffixes={".md"}) + corpus_files("docs", suffixes={".md"})
+
+#: An instruction to put the issue number in the SUBJECT, which is the retired convention. The
+#: matcher targets the act -- prefixing a title/subject with `#n` -- not the phrasings that
+#: shipped (INV-282).
+#: Both orders occur -- "the title must be prefixed with `#n`" and "use `#n ...` as the subject"
+#: -- so the claim is matched rather than one sentence shape: an instruction, the issue token,
+#: and the words subject/title, in either arrangement. ⚠️ The verbs are \b-anchored so "used to
+#: require" (history) does not read as "use". ⚠️ And `prefix` after "a", "the", "subject" or
+#: "title" is the NOUN, not the verb: read across a line wrap (#425), "**Why the trailer rather
+#: than a subject prefix:** GitHub scans the whole commit message for `#<number>`, so ... a
+#: subject" matched as an instruction, though it explains why the rule was retired (INV-282).
+SUBJECT_PREFIX_RULE = re.compile(
+    r"(?:title|subject)[^.]{0,80}?prefix[^.]{0,40}?`?#<?(?:issue[- ]?number|n)>?"
+    r"|\b(?:(?<!\ba )(?<!\bthe )(?<!\bsubject )(?<!\btitle )prefix|prefixed|use|must be)\b"
+    r"[^.]{0,80}?#<?(?:issue[- ]?number|n)>?"
+    r"[^.]{0,80}?(?:subject|title)"
+    # ⛔ A third arrangement, found in `retrofit-from-public/SKILL.md` the same day this guard
+    # shipped: "commit subjects in these repos start with `#<issue-number>`". It states the rule
+    # with no instruction verb at all, so both alternatives above missed it and the guard passed
+    # over a live instance of the claim it polices (#54).
+    r"|(?:title|subject)s?[^.]{0,60}?\b(?:start|starts|begin|begins)\s+with[^.]{0,40}?"
+    r"`?#<?(?:issue[- ]?number|n)>?",
+    re.I)
+
+#: An instruction to bypass the reminder hook. Prose ABOUT the bypass existing is legitimate;
+#: telling a normal path to use it is not, so the matcher requires an imperative near it.
+BYPASS_INSTRUCTION = re.compile(
+    r"(?:use|prefix|run|add)[^.]{0,60}?SKIP_GIT_CONVENTIONS", re.I)
+
+#: Pinned so the matchers cannot be narrowed until they stop catching what actually shipped.
+RETIRED_WORDINGS = (
+    "the commit **title** must be prefixed with `#<issue-number> ` followed by a plain description",
+    "use `#n <description>` as the subject",
+    "prefix the commit command with `SKIP_GIT_CONVENTIONS=1` to bypass that reminder",
+    # ⛔ The wording this guard missed on the day it shipped.
+    "commit subjects in these repos start with `#<issue-number>`",
+)
+
+#: Constructions that must stay legal. A guard that flags these is relaxed rather than fixed.
+LEGITIMATE = (
+    "Keep the `#` (`issue: #42`, not `issue: 42`), or it links nothing.",
+    "The `SKIP_GIT_CONVENTIONS=1` escape exists for genuinely non-conforming commits",
+    "The alternative was to instruct a `SKIP_GIT_CONVENTIONS=1` bypass of the convention",
+    "this memory used to require `#<issue-number> <description>` subjects",
+    # The shipped sentence #425's wrap-aware read first flagged: `prefix` is a noun here.
+    "**Why the trailer rather than a subject prefix:** GitHub scans the whole commit message "
+    "for `#<number>`, so a trailer collates the commit with its issue just as a subject prefix "
+    "did — while the subject stays scannable by type.",
+)
+
+
+def hits(text):
+    return [m.group(0) for p in (SUBJECT_PREFIX_RULE, BYPASS_INSTRUCTION)
+            for m in p.finditer(text)]
+
+
+def hit_lines(text):
+    """The lines where either matcher's hit starts, in order, matched across line wraps (#425).
+
+    "prefix the commit\ncommand with `SKIP_GIT_CONVENTIONS=1`" is the same instruction as one
+    line, so each Markdown block is read with its whitespace collapsed, through ``match_lines``.
+    """
+    return sorted(n for p in (SUBJECT_PREFIX_RULE, BYPASS_INSTRUCTION)
+                  for n in match_lines(text, p))
+
+
+class TheMatchersAreCalibrated(unittest.TestCase):
+    """⛔ INV-282 — pinned in both directions, or the sweep below proves nothing."""
+
+    def test_every_retired_wording_is_caught(self):
+        for wording in RETIRED_WORDINGS:
+            with self.subTest(wording=wording[:46]):
+                self.assertTrue(
+                    hits(wording),
+                    "a wording that actually shipped is not matched: %r" % wording)
+
+    def test_no_legitimate_construction_is_caught(self):
+        for wording in LEGITIMATE:
+            with self.subTest(wording=wording[:46]):
+                self.assertEqual(
+                    [], hits(wording),
+                    "correct prose is flagged: %r. Naming the bypass, or recording that the old "
+                    "rule existed, must stay sayable -- a guard that forbids describing history "
+                    "deletes the reason with the error" % wording)
+
+
+class TheSweepReadsAcrossLineWraps(unittest.TestCase):
+    """Negative controls (#425): a wrapped instruction is still the instruction."""
+
+    def test_a_wrapped_instruction_is_found_at_its_first_line(self):
+        wrapped = ("For spec work, use `#n <description>` as\nthe subject, and prefix the commit\n"
+                   "command with `SKIP_GIT_CONVENTIONS=1`.\n")
+        self.assertEqual([1, 2], hit_lines(wrapped))
+        # The old line-at-a-time read, kept only to show the fixture is the hard case.
+        self.assertFalse(any(hits(l) for l in wrapped.split("\n")))
+
+    def test_wrapped_legitimate_prose_is_not_flagged(self):
+        """Must not flag (INV-282): naming the escape, or the old rule, stays sayable wrapped."""
+        self.assertEqual([], hit_lines("The `SKIP_GIT_CONVENTIONS=1` escape exists for\n"
+                                       "genuinely non-conforming commits; this memory used to\n"
+                                       "require `#<issue-number> <description>` subjects.\n"))
+
+
+class OnlyOneConventionIsDocumented(unittest.TestCase):
+    def test_the_scan_has_files_to_read(self):
+        """INV-265 — the sweep passes trivially over an empty file list."""
+        self.assertGreater(
+            len([f for f in DOCS if f.is_file()]), 20,
+            "fewer than 20 documents found under .claude/ and docs/; the paths have moved")
+
+    def test_no_document_instructs_the_retired_convention(self):
+        offenders = []
+        for f in DOCS:
+            text = f.read_text(encoding="utf-8")
+            lines = text.split("\n")
+            for n in hit_lines(text):
+                offenders.append("%s:%d  %s" % (f.relative_to(REPO_ROOT), n,
+                                                lines[n - 1].strip()[:110]))
+        self.assertEqual(
+            [], offenders,
+            "a document still instructs the retired convention -- an issue number in the "
+            "subject, or bypassing the reminder hook on a normal path. One convention covers "
+            "this repository (#56):\n  " + "\n  ".join(offenders))
+
+
+class TheCurrentRuleIsStatedWhereItIsRead(unittest.TestCase):
+    """⛔ Removing the old rule without stating the new one leaves nothing to follow."""
+
+    def test_the_memory_states_conventional_commits_and_the_trailer(self):
+        names = [f.name for f in MEMORY.glob("*.md")]
+        self.assertIn(
+            "commit-message-format.md", names,
+            "the commit-convention memory is gone. It is the file that tells a run how to "
+            "write a commit here; deleting it leaves the rule in a skill shared with other "
+            "projects and nothing repository-specific. Found: %s" % names)
+        text = re.sub(r"\s+", " ", (MEMORY / "commit-message-format.md").read_text(encoding="utf-8"))
+        self.assertIn("Conventional Commits", text, "the memory no longer names the convention")
+        self.assertRegex(
+            text, r"issue: #<?n?",
+            "the memory no longer names the issue trailer, so nothing says how a commit is "
+            "linked to its issue now that the subject does not carry the number")
+
+    def test_the_index_points_at_the_renamed_file(self):
+        index = (MEMORY / "MEMORY.md").read_text(encoding="utf-8")
+        self.assertIn(
+            "commit-message-format.md", index,
+            "MEMORY.md does not point at the commit-convention memory; the index is what is "
+            "loaded each session, so a memory missing from it is one nobody reads")
+        self.assertNotIn(
+            "spec-commit-message-format.md", index,
+            "MEMORY.md still points at the pre-#56 filename, which no longer exists")
+
+
+if __name__ == "__main__":
+    unittest.main()

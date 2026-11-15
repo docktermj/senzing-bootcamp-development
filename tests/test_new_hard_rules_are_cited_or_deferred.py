@@ -1,0 +1,464 @@
+"""Every hard rule added since the last audit is cited at its line, or deferred by name.
+
+The reverse contract has two legitimate states for a hard rule the plugin ships, and
+silence is neither:
+
+- **Cited** — an `INV-nnn` at the rule's own line, so a reader standing there can look the
+  governing rule up (INV-183).
+- **Deferred** — the rule is named in a `DEFERRED INVARIANT` block in `IMPLEMENTED.md`, with
+  drafted wording, because only the maintainer may sign off on an invariant. The citation is
+  then *un-writable* until the id is minted, which is exactly the queued-approval hazard
+  `implement-spec` Step 5 names.
+
+⛔ **INV-282 governs how this guard matches** — from the claim, not from phrasings already seen.
+
+⛔ **This guard exists because the manual version of the check failed twice.** On 2026-08-28 a
+ledger entry claimed *"all four hard-rule lines cite one of those at the line"* when two did
+not — written from a `per-rule --uncited | grep` narrowed to two phrases, three cycles after
+an audit had already recorded that method as unsound. A grep can only confirm lines you
+already suspect; the uncited ones are by construction the ones you did not. The check has to
+be a set difference, and a set difference is a thing a test can do.
+
+⚠️ **Scope: rules added since the newest audit entry's recorded commit** — the set a run is
+answerable for, resolved from the ledger rather than guessed. It does **not** police the
+standing backlog of uncited rules across the corpus; that is `per-rule --uncited`'s worklist
+and is far larger.
+
+⚠️ **A rule REVERTED to its pre-audit wording leaves this guard's scope, and that is not a
+hole to plug.** `since` diffs against the newest audit's commit, so deleting a citation that
+was added *after* that commit makes the line identical to the committed one and it stops
+being reported. Verified by negative control: the guard is unmoved by that edit and fails
+correctly on a genuinely new uncited rule, which is what it claims to cover. The standing
+backlog is `per-rule --uncited`'s job, and it is far larger.
+
+⛔ **The parser reads `conformance.py`'s own `SCAN_ROOTS`, and a line it cannot place is a
+FAILURE, never a drop.** This guard consumes a report it does not produce, and for its whole
+life it carried a private idea of which roots that report mentions: it keyed file headings on
+`source/`, so when the `since` view was widened to the maintainer surface (#38) all 112 lines
+it reported under `.claude/` were dropped between the two halves of this file. `added` came out
+empty, and empty took the "nothing added" skip — the guard reported the *absence of new rules*
+while looking at 112 of them. ⚠️ The plugins-keyed read was not an oversight in the dark: a
+2026-09-03 ledger entry states it outright, reasoning about which lines could confuse the
+parser, and nobody asked what the key would do to a root added later.
+
+⛔ **Every scanned root is CHECKED, the maintainer surface included, with the same predicate
+(#233).** Until #233 the `.claude/` roots were counted and not checked, on the premise that
+command files restate their skill's rules and cite nothing, so checking them would turn roughly
+49 restatements into failures. The 2026-09-28 audit then found 16 uncited maintainer-surface
+rules that nothing had flagged (#228), and the premise no longer held, measured at `f81e890`
+against the range from `0d7bbe1`:
+
+- command files already cite: `.claude/commands/*.md` carried 39 `INV-` ids;
+- a rule letting a restatement inherit its skill twin's state would have cleared **0 of the 16**
+  failing lines (only 3 were command lines matching a skill line, and all 3 twins were uncited),
+  and the ~49 figure was measured at an older ref (`7b43eee`);
+- `since` reports only lines added or edited in the range, so a long-standing restatement never
+  appears. The cost falls on a command rule someone edits, and citing it then is the INV-183
+  duty the shipped corpus already carries;
+- a twin matcher would be a new phrase-derived matcher under INV-282, for no measured benefit.
+
+So a restatement gets no special treatment: a `.claude/` rule cites at its own line or is named
+in a deferral, exactly as a shipped rule is. The breakdown is still printed on every run,
+including zeroes (INV-308). The fixtures that prove the check reaches every `.claude/` root,
+independent of the live range, are in `test_reverse_contract_flags_the_maintainer_surface.py`.
+
+⚠️ **Skips rather than fails when the range cannot be resolved** — no git, a shallow clone, an
+audit entry whose `Commit:` is `uncommitted`. A guard that hard-failed there would fail on
+checkouts that have nothing wrong with them.
+
+Source spec:
+`specs/three-hard-rules-from-the-2026-08-28-loop-carry-no-citation-at-the-line.md`.
+
+Source issue: #74 (the reverse-contract gate silently discards every rule outside `source/`).
+
+Run:  python3 -m unittest discover -s tests
+"""
+import collections
+import importlib.util
+import re
+import subprocess
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+CONFORMANCE = REPO_ROOT / ".claude" / "skills" / "production-readiness-audit" / "conformance.py"
+IMPLEMENTED = REPO_ROOT / "specs" / "IMPLEMENTED.md"
+
+
+def _scan_roots():
+    """The producer's own root list (INV-308), imported rather than restated.
+
+    ⛔ Returns `()` when it cannot be read, and the callers say so. **There is deliberately no
+    fallback literal**: a private copy that silently disagrees with the producer is the entire
+    defect this module was rebuilt around, and a fallback is just that copy with a nicer name.
+    """
+    if not CONFORMANCE.is_file():
+        return ()
+    try:
+        spec = importlib.util.spec_from_file_location("conformance_for_the_gate", CONFORMANCE)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules["conformance_for_the_gate"] = module
+        spec.loader.exec_module(module)
+        roots = getattr(module, "SCAN_ROOTS", ())
+    except Exception:
+        return ()
+    return tuple(str(r) for r in roots)
+
+
+SCAN_ROOTS = _scan_roots()
+
+
+def conformance(*args):
+    """Run a conformance view, or return None when it cannot run here."""
+    if not CONFORMANCE.is_file():
+        return None
+    try:
+        r = subprocess.run(["python3", str(CONFORMANCE), *args],
+                           capture_output=True, text=True, cwd=str(REPO_ROOT), timeout=180)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return r.stdout if r.returncode == 0 else None
+
+
+def normalize(line):
+    """A rule line reduced to a comparable key, matching how `per-rule` prints it."""
+    s = re.sub(r"^[-\d.\s]*", "", line).replace("⛔", "").strip()
+    return re.sub(r"\s+", " ", s)[:60]
+
+
+#: The producer's OUTSIDE count (#108). ⛔ A zero from `since` means "nothing in THIS corpus";
+#: this line is how the consumer learns whether the range shipped a rule somewhere the corpus
+#: never looks -- `docs/`, or a non-`.md` file inside the scanned roots.
+OUTSIDE_LINE = re.compile(r"OUTSIDE the corpus, and therefore NOT counted above: (\d+) line")
+
+
+def outside_count(report):
+    """How many hard-rule lines the range added where the corpus does not look, or 0."""
+    m = OUTSIDE_LINE.search(report)
+    return int(m.group(1)) if m else 0
+
+
+def outside_lines(report):
+    """The outside-corpus rule lines themselves (#143).
+
+    ⛔ **Until `since` printed these, this guard could only compare the COUNT against zero.**
+    That made any hard rule shipped in `docs/` or a non-`.md` file an unconditional failure
+    whose own message prescribed a remedy the assertion could not observe -- *"account for each
+    one in the ledger entry"* -- so accounting for it changed nothing and the suite stayed red.
+    A guard that cannot be satisfied teaches people to disable it.
+
+    ⚠️ **The fix is not to stop failing; it is to apply the SAME test.** These lines get the
+    cited-or-deferred predicate the in-corpus ones get. What is lost relative to the in-corpus
+    path is only the file attribution -- the report groups them under a filename header this
+    parser does not need, because the predicate is per line.
+    """
+    out, inside = [], False
+    for raw in report.splitlines():
+        if OUTSIDE_LINE.search(raw):
+            inside = True
+            continue
+        if inside:
+            stripped = raw.strip()
+            if stripped.startswith("! "):
+                out.append(stripped[2:])
+            elif stripped.startswith("These shipped a hard rule"):
+                break
+    return out
+
+
+def is_an_empty_range(reported, outside):
+    """⛔ Whether 'no hard rules added' really means the range added none (#108).
+
+    Extracted so it can be exercised directly: the branch that consumes it runs only when the
+    live range happens to be empty, and an assertion that never runs is a guard in name only.
+    `tests/test_since_states_its_corpus.py` tests this function against both answers.
+    """
+    return not reported and not outside
+
+
+def deferred_rule_text():
+    """All prose inside `DEFERRED INVARIANT` bullets, flattened.
+
+    A deferral names the rule and its site, so a rule whose wording appears here is
+    accounted for even though no id exists to cite yet.
+    """
+    text = IMPLEMENTED.read_text(encoding="utf-8")
+    out = []
+    for m in re.finditer(r"DEFERRED INVARIANT", text):
+        out.append(text[m.start():m.start() + 4000])
+    return re.sub(r"\s+", " ", " ".join(out)).lower()
+
+
+#: ⛔ The citation must be on the RULE'S OWN LINE, not merely near it.
+#:
+#: This check used to ask `conformance.py per-rule --uncited` whether a rule was cited, and
+#: `per-rule` counts an invariant cited in the **sentence beside** a rule as citing it. That is
+#: right for `per-rule`'s own question — can a reader at this line name the governing rule — and
+#: wrong as an accounting test, because the neighbor's citation can be about something else.
+#:
+#: Found by the 2026-09-01 audit: `module-04-data-collection/SKILL.md:469` ships
+#: ⛔ "Prefer `download_url` (MCP-hosted) over `source_download_url` for every CORD fetch" with no
+#: invariant at its line and no deferral naming it, and this test passed — because the paragraph
+#: two lines below reads "Observation, not an MCP-sourced fact (INV-080/INV-149)", which govern the
+#: provenance of a 403 observation and say nothing about route preference. The reverse-contract
+#: defense reported an unregistered guarantee as accounted for.
+#:
+#: ⚠️ `per-rule`'s own counting is deliberately NOT changed — every past ledger figure was measured
+#: against it, and widening it would move a number nobody would re-measure. The guard is stricter
+#: than the report instead.
+#:
+#: ⛔ And the check must run on the SOURCE line, not the reported one: `since` truncates its
+#: display at 110 characters, so a citation past the cut is invisible. Checked against the
+#: truncated text this flagged four rules that ARE cited — including a 638-character bullet
+#: carrying INV-146 and INV-242 — which is the same truncation defect the 2026-09-01 audit
+#: found in `test_conformance_sees_a_rule_beside_a_citation.py`, reintroduced here within the
+#: hour by the fix for the audit's own finding.
+INV_ON_THE_LINE = re.compile(r"INV-\d+")
+
+
+def _comparable(text):
+    """Both sides of the deferral match, reduced the same way.
+
+    ⚠️ `normalize()` strips the ⛔ from a rule line; the deferral quotes the rule WITH it. For a
+    rule whose ⛔ leads the line that still matched, because the probe was a substring of
+    "⛔ <same text>". For a rule whose ⛔ sits mid-line — `- **6d (desired outcome).** ⛔ **This
+    one is MULTI-select…** — the stop sign lands between the two halves of the probe and the
+    match fails against a deferral that names the rule correctly. Strip it from both sides.
+    """
+    return re.sub(r"\s+", " ", re.sub(r"[`*⛔]", "", text)).lower().strip()
+
+
+#: What `since` prints, split into the two populations a consumer must tell apart. Every
+#: reported line lands in exactly one of them, and `reported` is the producer's own total -- so
+#: `checked + unresolved != reported` is arithmetic that cannot be argued with. There is no
+#: third, counted-but-unchecked population: every `SCAN_ROOTS` entry is checked (#233).
+Parsed = collections.namedtuple(
+    "Parsed", "checked unresolved unknown_headings reported")
+
+
+def _is_heading(stripped):
+    """A file heading in `since`'s output: a path, alone on its line."""
+    return stripped.endswith(".md") and " " not in stripped and not stripped.startswith("+")
+
+
+def _root_of(heading):
+    """The `SCAN_ROOTS` entry a heading sits under, or None if it sits under none."""
+    if heading is None:
+        return None
+    for root in SCAN_ROOTS:
+        if heading == root or heading.startswith(root + "/"):
+            return root
+    return None
+
+
+def _full_source_line(relpath, body):
+    """`since` truncates its display at 110 characters; resolve back to the whole line.
+
+    A citation past the cut is invisible, which once flagged four cited rules as uncited --
+    including a 638-character bullet carrying two ids.
+
+    Line-scoped by design (#425): the contract is a citation on the rule's OWN line (INV-183),
+    and `since` reports source lines, so the unit read here is one line.
+    """
+    path = REPO_ROOT / relpath
+    if path.exists():
+        for line in path.read_text(encoding="utf-8").split("\n"):
+            if line.startswith(body):
+                return line
+    return body
+
+
+def parse_since(since_output):
+    """Every rule `since` reported, placed under the root it came from.
+
+    ⛔ **Nothing is discarded.** A line whose heading matches no known root is `unresolved` and
+    fails the guard; it is never skipped past, because a silently skipped line is indis-
+    tinguishable from a line that was never reported.
+    """
+    heading = None
+    checked, unresolved = [], []
+    unknown_headings, reported = [], 0
+    for raw in since_output.splitlines():
+        stripped = raw.strip()
+        # ⛔ (#143) The in-corpus block ENDS at the corpus footer, and this parser stops there.
+        # `since` now prints the outside-corpus rules as `+ ` lines too, under filename
+        # headers that are not scanned roots -- so without this bound every one of them
+        # arrived here as `unresolved` and failed the guard. ⚠️ Bounding is right rather than
+        # widening `_root_of`: those lines are a different population with a different check
+        # (`outside_lines` reads them), and letting one parser claim both is what would make
+        # the two counts disagree later.
+        if stripped.startswith("CORPUS:") or OUTSIDE_LINE.search(stripped):
+            break
+        if _is_heading(stripped):
+            heading = stripped
+            if _root_of(heading) is None and heading not in unknown_headings:
+                unknown_headings.append(heading)
+            continue
+        if not stripped.startswith("+ "):
+            continue
+        reported += 1
+        body = stripped[2:]
+        root = _root_of(heading)
+        if root is None:
+            unresolved.append((heading, body))
+        else:
+            checked.append((heading, _full_source_line(heading, body)))
+    return Parsed(checked, unresolved, unknown_headings, reported)
+
+
+def announce(parsed):
+    """⛔ Report the breakdown on every run, **including the zeroes**.
+
+    A count that appears only when it is non-zero makes its absence ambiguous: the reader
+    cannot tell "no rules were added" from "the line was dropped again". One line, always, names
+    the roots checked, so the scope is a decision on the record (INV-308). Written to stderr
+    like the fpdf2 notice, for the same reason -- it is a notice, not output.
+    """
+    sys.stderr.write(
+        "[new-hard-rules] %d line(s) reported since the last audit: %d checked (%s), "
+        "%d unresolved\n"
+        % (parsed.reported, len(parsed.checked), ", ".join(SCAN_ROOTS) or "no scanned root",
+           len(parsed.unresolved)))
+    sys.stderr.flush()
+
+
+class EveryNewHardRuleIsAccountedFor(unittest.TestCase):
+    @staticmethod
+    def _unaccounted(lines):
+        """The rules among `lines` that are neither cited at the line nor named in a deferral.
+
+        ⚠️ **One predicate, two call sites (#143).** The in-corpus and outside-corpus paths used
+        to differ in kind -- one checked each line, the other compared a count against zero --
+        and the difference was not a decision anybody took. Sharing the body is what stops them
+        drifting apart again; the reverse contract has the same two legitimate states wherever
+        the rule happens to live.
+        """
+        deferred = _comparable(deferred_rule_text())
+        out = []
+        for line in lines:
+            key = normalize(line)
+            if not key:
+                continue
+            if INV_ON_THE_LINE.search(line):
+                continue                                   # cited ON its own line
+            probe = _comparable(key)[:44]
+            if probe and probe in deferred:
+                continue                                   # named in a deferral
+            out.append(line[:110])
+        return out
+
+    def test_the_check_can_run(self):
+        """⛔ INV-265 — say so when the scan cannot run, rather than passing silently."""
+        if conformance("rules") is None:
+            self.skipTest("conformance.py unavailable here (no git range, or not executable)")
+        self.assertTrue(True)
+
+    def test_each_rule_added_since_the_last_audit_is_cited_or_deferred(self):
+        since = conformance("since", "--since-last-audit")
+        uncited = conformance("per-rule", "--uncited")
+        if since is None or uncited is None:
+            self.skipTest("conformance.py could not resolve the since-last-audit range")
+        if not SCAN_ROOTS:
+            self.skipTest(
+                "conformance.py's scanned-root list could not be imported, so this guard "
+                "cannot know which headings the report contains. It refuses to guess -- see "
+                "TheParserAgreesWithTheProducer, which FAILS on this rather than skipping")
+
+        parsed = parse_since(since)
+        announce(parsed)
+
+        # ⛔ A line the parser cannot place is reported, never dropped. This is the defect
+        # itself: 112 placeable lines were dropped here and the emptiness read as "none".
+        self.assertEqual(
+            [], parsed.unknown_headings,
+            "`since` reported rules under %d heading(s) matching no scanned root: %s. The "
+            "producer and this consumer disagree about which roots exist, and every rule "
+            "under those headings goes unchecked"
+            % (len(parsed.unknown_headings), ", ".join(parsed.unknown_headings)))
+        self.assertEqual(
+            [], [line for _h, line in parsed.unresolved],
+            "%d reported rule line(s) could not be attributed to any file, so nothing can be "
+            "checked at their source line" % len(parsed.unresolved))
+
+        if not parsed.reported:
+            # ⛔ **Say WHICH kind of nothing this is.** An empty range and a range that never
+            # covered the work both arrive here as "no hard rules added", and until 2026-09-03
+            # the skip message asserted the first. It was the second: the newest audit entry
+            # recorded the commit that carried the implementations, so the range started AT
+            # them and six added rules sat outside it while this guard reported green by not
+            # running. The resolver now widens past such a ref and says so; this repeats it,
+            # because a skip line is what a reader actually sees.
+            # (Source: `since-last-audit-reports-zero-when-the-audit-record-shares-the-work-commit`.)
+            if "SUSPECT-REF" in since:
+                self.skipTest(
+                    "the range's recorded ref carried shipped work, so it was widened past it "
+                    "and STILL reports nothing added -- read the widened range in the "
+                    "conformance output before believing this skip")
+            # ⛔ **A FOURTH kind of nothing (#108): the range shipped rules where the
+            # corpus does not look.** `added_rule_lines` filters to SCAN_ROOTS and to `.md`, so
+            # a run that put a ⛔ rule in `docs/` or in a `.py` file under those roots is told
+            # it added none -- and this skip then called that an empty range. Four runs in one
+            # session did exactly that. The producer now reports the outside count; an empty
+            # range is only empty when that count is zero too.
+            outside = outside_count(since)
+            if not is_an_empty_range(parsed.reported, outside):
+                # ⛔ (#143) Rules shipped where the corpus does not look. This used to fail
+                # outright and tell the reader to account for them in the ledger -- which the
+                # assertion could not observe, so the instruction cleared nothing. They now
+                # get the SAME cited-or-deferred predicate as the in-corpus lines.
+                stray = self._unaccounted(outside_lines(since))
+                self.assertEqual(
+                    [], stray,
+                    "%d hard-rule line(s) shipped where the checked corpus does not look "
+                    "(`docs/`, or a non-`.md` file under the scanned roots), and %d of them "
+                    "cite no invariant at the line AND appear in no DEFERRED INVARIANT block:"
+                    "\n  %s" % (outside, len(stray), "\n  ".join(stray)))
+                self.skipTest(
+                    "%d hard-rule line(s) shipped outside the checked corpus; each cites an "
+                    "invariant at its line or is named in a deferral. ⚠️ Accounted for, NOT "
+                    "verified: no regex establishes that a cited invariant governs the rule "
+                    "beside it, and the in-corpus path carries the same caveat" % outside)
+            self.skipTest(
+                "the report lists no hard-rule lines at all since the newest audit entry. The "
+                "ref was accepted as recorded (no SUSPECT-REF), and the outside count is zero "
+                "too, so this is an empty range rather than a range that missed the work")
+
+        unaccounted = self._unaccounted(line for _path, line in parsed.checked)
+
+        self.assertEqual(
+            [], unaccounted,
+            "a hard rule added since the last audit cites no invariant at its line AND is "
+            "named in no DEFERRED INVARIANT block. Those are the only two legitimate states; "
+            "silence is the reverse-contract defect. Either add the citation, or record the "
+            "deferral with its drafted wording:\n  " + "\n  ".join(unaccounted))
+
+    def test_the_deferral_scan_is_not_vacuous(self):
+        """⛔ INV-265 — an empty deferral corpus would make the escape hatch match nothing."""
+        # Adapted (one-repository migration, 2026-11-14): the ledger starts fresh and may hold
+        # no deferral, so the scan is proven on a scratch ledger, not by a floor on the history.
+        global IMPLEMENTED
+        with tempfile.TemporaryDirectory() as tmp:
+            scratch = Path(tmp) / "IMPLEMENTED.md"
+            scratch.write_text(
+                "## a-spec\n\n- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT "
+                "minted.**\n    - ⛔ **A rule that ships with no id.** — in "
+                "`docs/development.md`\n\n  **INV-NNN** — the drafted wording.\n",
+                encoding="utf-8")
+            live, IMPLEMENTED = IMPLEMENTED, scratch
+            try:
+                deferred = deferred_rule_text()
+            finally:
+                IMPLEMENTED = live
+        self.assertIn(
+            "a rule that ships with no id", deferred,
+            "no DEFERRED INVARIANT prose was found in IMPLEMENTED.md, so the deferral escape "
+            "hatch above can never match and this guard is stricter than the contract")
+        self.assertIn("inv-nnn", deferred,
+                      "no deferral carries drafted `INV-NNN` wording, which is what makes a "
+                      "deferral an answer rather than a label")
+
+
+if __name__ == "__main__":
+    unittest.main()

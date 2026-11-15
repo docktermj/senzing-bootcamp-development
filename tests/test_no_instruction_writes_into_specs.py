@@ -1,0 +1,208 @@
+"""No maintainer instruction tells anyone to bring a new file into existence under `specs/`.
+
+`specs/` froze on 2026-09-15 (INV-307) and `tests/test_specs_are_frozen.py` rejects a new
+file anywhere in `specs/`: since #257 it checks every file there, not only `*.md`.
+⛔ **That guard catches a file LANDING; it cannot catch prose telling a maintainer
+to create one.** The two failures are a long way apart: the instruction is written once and read
+much later, and the person who finally follows it is the one who gets the red suite.
+
+⛔ **That is not hypothetical.** `/compact-dev-environment`'s renumbering procedure required
+shipping a `specs/RENUMBERING.md` map. It survived the cutover by **nine days** and was found by
+a production-readiness audit reading the procedure, not by any guard — because nobody had
+renumbered, so nobody had tried to follow it. A documented procedure that turns the suite red is
+a procedure that cannot be executed, and it reads as authoritative right up until someone needs
+it (#142).
+
+⚠️ **The matcher is derived from the CLAIM, not from the phrasings that prompted it** (INV-282).
+The claim is *"an instruction to bring a file into existence at a path under `specs/`"*. Keying
+on `Ship a ...` and `Write nothing under ...` — the two constructions visible on the day this was
+written — is the trap this repository keeps recording: a guard repaired from the instances in
+front of you passes on them forever and misses the next one. So the verbs are a set, the path
+shape is matched generically, and `FIXTURES_THAT_MUST_FLAG` pins constructions nobody has
+written yet.
+
+⚠️ **What this does NOT establish.** That an instruction naming an *existing* frozen spec is
+fine — it is, and those are deliberately not flagged. That the live exceptions are the right
+ones; INV-307 and the table in `specs/README.md` decide that, and this guard reads the exception
+list rather than restating it. Nor does it reach a natural-language instruction that names no
+path at all ("record it in the archive"), which no regex resolves.
+
+Source issue: #142.
+
+Stdlib only; the tree is read as text (INV-108).
+
+Run:  python3 -m unittest discover -s tests
+"""
+import re
+import unittest
+from pathlib import Path
+
+from _corpus import corpus_files
+from _wrapped_text import blocks, match_lines
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+
+#: Where maintainer instructions live. ⛔ `tests/` is excluded deliberately: this very file
+#: quotes the offending construction, and a guard that flags its own fixtures is one that gets
+#: deleted. `specs/` is excluded because the archive describes itself.
+INSTRUCTION_ROOTS = (".claude", "docs")
+
+#: Files whose whole subject is the freeze, and which therefore quote what must not be done.
+#: ⚠️ Kept to named files rather than a pattern -- an exemption that grows by glob is how a
+#: guard stops covering the thing it was written for. (Dated note, 2026-09-30, #262: the second
+#: entry, the `delegate-to-mcp-server` command file, was deleted with every other command file,
+#: and its exemption went with it; the skill it fronted was never exempt.)
+#: Adapted (one-repository migration, 2026-11-14): its one entry, `docs/FAMILY_WORKFLOW.md`, was
+#: not carried here, so no file is exempt.
+QUOTING_THE_RULE = set()
+
+#: The live exceptions, read from the rule rather than restated here (INV-308: one definition
+#: every consumer reads). An instruction may legitimately say "append to specs/IMPLEMENTED.md".
+#: Adapted (one-repository migration, 2026-11-14): the list was `docs/FAMILY_WORKFLOW.md` §8;
+#: it is now the table in `specs/README.md`, "the one authoritative list of the files that
+#: belong here".
+FREEZE_NOTICE = REPO_ROOT / "specs" / "README.md"
+
+#: Bringing a file into existence. ⛔ A SET derived from the claim, not the two verbs observed:
+#: "ship", "write" and "create" are what the corpus happens to use today, and the others are
+#: here because they are how the same instruction would be phrased by someone else.
+CREATION_VERB = (r"ship|creat|writ|add|produc|generat|emit|place|put|save|output|author|"
+                 r"maintain|record")
+
+#: `<verb> ... specs/<name>.<ext>` within one sentence. The path is matched generically -- any
+#: name, any extension -- because pinning `.md` would miss the exact evasion the
+#: `.jsonl` justification relied on.
+INSTRUCTION = re.compile(
+    r"\b(?:%s)\w*\b[^.;\n]{0,80}?`?specs/([A-Za-z0-9_.-]+\.[A-Za-z0-9]+)`?" % CREATION_VERB,
+    re.IGNORECASE)
+
+#: ⛔ Constructions the matcher MUST flag, including ones nobody has written. A guard whose
+#: fixtures are only the instances it was built from proves it can find what it already found.
+FIXTURES_THAT_MUST_FLAG = [
+    "Ship a permanent, machine-readable `specs/RENUMBERING.md` map",
+    "create specs/audit-log.md when the run finishes",
+    "The run writes `specs/findings.yaml` before reporting",
+    "generate a specs/coverage.txt summary",
+    "and save specs/notes.json alongside it",
+]
+
+#: ⛔ Constructions it must NOT flag. Every one of these is legitimate today, and a guard that
+#: flags correct prose is relaxed rather than fixed (INV-282).
+FIXTURES_THAT_MUST_NOT_FLAG = [
+    "see `specs/no-license-path-environment-variable.md`, in the frozen archive",
+    "append the outcome to `specs/IMPLEMENTED.md`",
+    "record the decision in specs/DECLINED.md with a revisit condition",
+    "`specs/INVARIANTS.md` is append-only",
+    "read specs/mcp-coverage.jsonl before filing",
+    "the spec at specs/todo.md is frozen with the rest of the archive",
+]
+
+
+def live_exceptions():
+    """The filenames the notice's table lists as belonging in `specs/`, read from the page."""
+    text = FREEZE_NOTICE.read_text(encoding="utf-8")
+    return set(re.findall(r"(?m)^\| \[`([A-Za-z0-9_.-]+\.[A-Za-z0-9]+)`\]\(\1\) \|", text))
+
+
+def instructions(text):
+    """[(line_no, name)] for each `<verb> ... specs/<name>` in ``text``, across line wraps.
+
+    Matched across line wraps (#425): "create\nspecs/audit-log.md" is the same instruction. The
+    lines come from ``match_lines``, at the line the verb is on; the names come from the same
+    blocks, collapsed the same way and searched in the same order, so the two lists line up. The
+    gap still stops at `.` and `;`, so a match stays inside one sentence.
+    """
+    names = []
+    for block in blocks(text):
+        flat = " ".join(" ".join(line for _n, line in block).split())
+        names += [m.group(1) for m in INSTRUCTION.finditer(flat)]
+    starts = match_lines(text, INSTRUCTION)
+    assert len(starts) == len(names), "match_lines and the block scan disagree"
+    return list(zip(starts, names))
+
+
+def offenders():
+    """[(path, line_no, text)] for each instruction to create a file under `specs/`."""
+    allowed = live_exceptions()
+    out = []
+    for root in INSTRUCTION_ROOTS:
+        for path in corpus_files(root, suffixes={".md", ".py", ".sh"}):
+            rel = path.relative_to(REPO_ROOT).as_posix()
+            if rel in QUOTING_THE_RULE:
+                continue
+            try:
+                text = path.read_text(encoding="utf-8")
+            except (OSError, UnicodeDecodeError):
+                continue
+            lines = text.split("\n")
+            for n, name in instructions(text):
+                if name not in allowed:
+                    out.append((rel, n, lines[n - 1].strip()[:110]))
+    return out
+
+
+class TheScanCanRun(unittest.TestCase):
+    """INV-265 -- an empty corpus or an empty exception list satisfies the check trivially."""
+
+    def test_the_instruction_roots_exist(self):
+        missing = [r for r in INSTRUCTION_ROOTS if not (REPO_ROOT / r).is_dir()]
+        self.assertEqual([], missing, "instruction root(s) absent: %s" % ", ".join(missing))
+
+    def test_the_live_exceptions_were_read(self):
+        found = live_exceptions()
+        self.assertIn(
+            "IMPLEMENTED.md", found,
+            "the table in %s did not parse into a list of live exceptions (%s). Without it "
+            "every legitimate 'append to the ledger' instruction reads as a violation"
+            % (FREEZE_NOTICE, sorted(found)))
+
+
+class TheMatcherIsDerivedFromTheClaim(unittest.TestCase):
+    """⛔ INV-282 -- pinned in both directions, including phrasings nobody has written."""
+
+    def test_it_flags_every_creation_construction(self):
+        allowed = live_exceptions()
+        missed = [f for f in FIXTURES_THAT_MUST_FLAG
+                  if not [m for m in INSTRUCTION.finditer(f) if m.group(1) not in allowed]]
+        self.assertEqual(
+            [], missed,
+            "the matcher does not see instruction(s) to create a file under specs/: %s. It has "
+            "been narrowed to the phrasings already observed, which is the defect INV-282 names"
+            % "; ".join(missed))
+
+    def test_it_flags_none_of_the_legitimate_ones(self):
+        allowed = live_exceptions()
+        wrong = [f for f in FIXTURES_THAT_MUST_NOT_FLAG
+                 if [m for m in INSTRUCTION.finditer(f) if m.group(1) not in allowed]]
+        self.assertEqual(
+            [], wrong,
+            "the matcher flags correct prose: %s. A guard that fires on legitimate text is "
+            "relaxed rather than fixed, and this one would train its reader to ignore it"
+            % "; ".join(wrong))
+
+
+class InstructionsAreMatchedAcrossLineWraps(unittest.TestCase):
+    """Negative controls (#425): a wrapped instruction is still an instruction."""
+
+    def test_a_wrapped_instruction_is_found_at_the_verbs_line(self):
+        wrapped = "When the run finishes,\ncreate a summary at\n`specs/audit-log.md` for the record.\n"
+        self.assertEqual([(2, "audit-log.md")], instructions(wrapped))
+        # The old line-at-a-time read, kept only to show the fixture is the hard case.
+        self.assertFalse(any(INSTRUCTION.search(l) for l in wrapped.split("\n")))
+
+    def test_a_wrapped_live_record_is_still_allowed(self):
+        """Must not flag (INV-282): recording in the ledger is legitimate however it wraps."""
+        wrapped = "Record the outcome in\n`specs/IMPLEMENTED.md` before the commit.\n"
+        self.assertEqual([(1, "IMPLEMENTED.md")], instructions(wrapped))
+        self.assertIn("IMPLEMENTED.md", live_exceptions())
+
+
+class NoInstructionCreatesASpecFile(unittest.TestCase):
+    def test_no_instruction_directs_a_write_into_specs(self):
+        found = offenders()
+        self.assertEqual(
+            [], found,
+            "instruction(s) direct a file to be created under `specs/`, which INV-307 freezes "
+            "and tests/test_specs_are_frozen.py rejects. Following them turns the suite red, so "
+            "the procedure cannot be executed as documented:\n  %s"
+            % "\n  ".join("%s:%d  %s" % row for row in found))

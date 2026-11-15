@@ -1,0 +1,173 @@
+"""The unattended loop works only issues the maintainer labeled, and defaults to doing nothing.
+
+`/unattended-spec-loop` worked the `specs/` backlog to empty. That backlog froze under
+INV-307, so #51 renamed it `/unattended-issue-loop` and pointed it at GitHub issues — but
+"every open issue" is not a safe default. The tracker carries parity deltas, escalations and
+customer-derived feedback, and every one of those needs judgment this loop explicitly does
+not have.
+
+⛔ **So the gate is an opt-in label, and its failure direction is DOING NOTHING.** No label,
+no work. An unlabeled backlog is a **no-op**, not an error and not a license to widen the
+query. ⚠️ That is the whole safety property: a missing gate must mean "assume nothing", never
+"assume everything".
+
+⚠️ **Re-pointed 2026-09-28 (#215): the procedure no longer lives in this repository.** The
+governing copy is `~/.claude/skills/unattended-issue-loop/SKILL.md`, and since #239 the repo
+overlay is `.claude/skill-overlays/unattended-issue-loop.md`; this repository defines no skill
+or command of that name. ⛔ **The
+governing text under `~/.claude/skills/` is NOT checked in CI** -- a runner checks out only the
+repository, so a test reading it would pass on one machine and fail everywhere else (INV-308).
+What this module now asserts:
+
+* (retired in the one-repository migration, 2026-11-14: the label gate against the
+  `docs/FAMILY_WORKFLOW.md` §2 row. That document was not carried here, so
+  `OnlyLabeledIssuesAreWorked` and its three cases are gone, and the gate is asserted nowhere
+  in this repository until it is restated);
+* the repository-only obligations (INV-309, INV-307, no `submit_feedback`, no declining) against
+  the overlay, where they moved;
+* that the overlay does not instruct writing into the frozen archive.
+
+`test_the_skill_declares_its_new_name` was **removed** at #239: it read the project
+`SKILL.md`'s frontmatter, and that stub is gone. The name is declared by the governing copy.
+
+Assertions **removed** at #215, each because the text it pinned no longer exists in the
+repository and the rule is the governing copy's, not this repository's:
+
+* `--label unattended-ok` in both files -- the governing copy deliberately lists open issues
+  and filters by label itself, because `--label` goes through GitHub's lagging search index;
+* "comment on the issue" and "remove the `unattended-ok` label" for a blocked issue -- the
+  governing copy's blocked-issue procedure;
+* the whole `TheUnattendedAuditFilesNothing` class -- the loop that runs has no audit cycle, so
+  there is no unattended audit whose filing to forbid. The audit skill keeps its own rule
+  (`tests/test_audit_files_issues_not_specs.py`).
+
+⛔ **This asserts what the repository's text INSTRUCTS, never what a run does.** No offline test
+can watch an unattended run query GitHub.
+
+Stdlib only; every file is read as text (INV-108).
+
+Source issues: #51 (rename to `/unattended-issue-loop`, label-gated); #215 (the user-level copy
+governs); #239 (the overlay moves to `.claude/skill-overlays/`, and the stub is removed).
+
+Run:  python3 -m unittest discover -s tests
+"""
+import re
+import unittest
+from pathlib import Path
+
+from _wrapped_text import match_lines
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+OVERLAY = REPO_ROOT / ".claude" / "skill-overlays" / "unattended-issue-loop.md"
+
+OLD_SKILL_DIR = REPO_ROOT / ".claude" / "skills" / "unattended-spec-loop"
+OLD_COMMAND = REPO_ROOT / ".claude" / "commands" / "unattended-spec-loop.md"
+
+#: An instruction to WRITE into the frozen archive, as opposed to reading or forbidding it.
+WRITES_A_SPEC = re.compile(r"(?i)append a `?## Blocked|write .{0,20}into `?specs/ as you find")
+
+
+def texts():
+    return {"overlay": OVERLAY.read_text(encoding="utf-8")}
+
+
+def overlay():
+    return flat(OVERLAY.read_text(encoding="utf-8"))
+
+
+def flat(s):
+    return re.sub(r"\s+", " ", s).lower()
+
+
+class TheRenameIsCompleteInBothDirections(unittest.TestCase):
+    """Anti-vacuity: every assertion below reads these files, so they must be the real ones."""
+
+    def test_the_overlay_exists(self):
+        self.assertTrue(
+            OVERLAY.is_file(),
+            "the overlay is missing at %s; every assertion in this module would pass on an "
+            "empty read" % OVERLAY)
+
+    def test_the_old_paths_are_gone(self):
+        """A leftover copy is worse than none: two loops, one working a frozen backlog."""
+        for label, path in (("skill directory", OLD_SKILL_DIR), ("command", OLD_COMMAND)):
+            with self.subTest(what=label):
+                self.assertFalse(
+                    path.exists(),
+                    "the old %s still exists at %s. Both names would resolve, and the stale "
+                    "one still works the frozen `specs/` backlog" % (label, path))
+
+
+class TheArchiveStaysFrozen(unittest.TestCase):
+    """The old blocked path wrote into `specs/`, which INV-307 forbids."""
+
+    def test_it_does_not_write_into_the_frozen_archive(self):
+        for name, text in texts().items():
+            # Matched across line wraps (#425): "write it\ninto `specs/` as you find it".
+            hits = match_lines(text, WRITES_A_SPEC)
+            with self.subTest(file=name):
+                self.assertEqual(
+                    [], hits, "%s still instructs writing into the frozen archive, at line(s) "
+                              "%s. `specs/` is read-only (INV-307) and the freeze guard rejects "
+                              "the output" % (name, hits))
+
+    def test_a_wrapped_write_into_the_archive_is_found(self):
+        """Negative control (#425): "into" ends line 1 and "`specs/` as you find" begins line 2."""
+        wrapped = "When blocked, write the finding into\n`specs/ as you find it.\n"
+        self.assertEqual([1], match_lines(wrapped, WRITES_A_SPEC))
+        # The old raw-text search, kept only to show the fixture is the hard case.
+        self.assertIsNone(WRITES_A_SPEC.search(wrapped))
+
+    def test_the_overlay_names_the_one_file_it_may_write(self):
+        """#215: the old copy said "never write into specs/" beside a required ledger entry."""
+        self.assertRegex(
+            overlay(), r"inv-307.{0,120}except the issue's own `specs/implemented\.md` entry",
+            "the overlay does not say which file under specs/ an unattended run may write. "
+            "Its predecessor forbade all of specs/ while requiring a ledger entry there")
+
+
+class TheRepositoryOnlyGatesSurvive(unittest.TestCase):
+    """What an unattended run must never decide here, asserted on the overlay."""
+
+    def test_it_does_not_call_submit_feedback(self):
+        self.assertRegex(overlay(), r"never call `submit_feedback`")
+
+    def test_it_does_not_decline(self):
+        """INV-332 -- declining is the maintainer's alone.
+
+        Asserts the rule is stated in the loop overlay. It cannot establish that a live
+        unattended run refrains from declining; only the run's own handoff shows that.
+        """
+        self.assertRegex(overlay(), r"never decline",
+                         "the overlay no longer forbids declining; that is the maintainer's alone")
+
+
+class TheInvariantGateSurvives(unittest.TestCase):
+    """#51's second acceptance criterion: unattended work must not skip INV-309."""
+
+    def test_the_loop_points_at_the_sanctioned_deferral_path(self):
+        self.assertIn(
+            "inv-309", overlay(),
+            "the loop overlay no longer cites INV-309, so nothing binds an unattended run to the "
+            "invariant-capture gate — and an unattended run is exactly where a shipped rule "
+            "goes unrecorded, which is the 2026-08-17 defect this skill was written about")
+
+    def test_it_forbids_signing_off_an_invariant(self):
+        self.assertRegex(
+            overlay(), r"never sign off an invariant",
+            "the loop overlay no longer forbids signing off an invariant. Minting an ID is the "
+            "maintainer's alone, and an unattended run has no maintainer to ask")
+
+    def test_declining_to_mint_does_not_decline_to_record(self):
+        """The 2026-08-17 defect was the *safe-looking* move, so the trap is named."""
+        self.assertRegex(
+            overlay(),
+            r"declining to\s+\*?\*?mint (?:it|one) "
+            r"(?:does not decline|is not declining) to ship the rule",
+            "the loop overlay no longer warns that declining to mint is not declining to ship. "
+            "That distinction IS the 2026-08-17 defect: 'do not record an invariant the "
+            "maintainer has not agreed to' shipped the rule and registered nothing")
+
+
+if __name__ == "__main__":
+    unittest.main()
