@@ -259,6 +259,40 @@ class Transcripts(unittest.TestCase):
         self.assertEqual(adapter.canonical_transcript("/x/t.jsonl", "mystery"), (None, False))
 
 
+class FinalMessage(unittest.TestCase):
+    """The stop hook can run before the turn's last message is written (Copilot CLI)."""
+
+    def transcript(self, *events):
+        handle = tempfile.NamedTemporaryFile("w", suffix=".jsonl", delete=False, encoding="utf-8")
+        with handle:
+            for event in events:
+                handle.write(json.dumps(event) + "\n")
+        self.addCleanup(os.unlink, handle.name)
+        return handle.name
+
+    def test_the_last_message_of_the_current_turn_is_returned(self):
+        path = self.transcript(
+            {"type": "user.message", "data": {"content": "earlier"}},
+            {"type": "assistant.message", "data": {"content": "old reply"}},
+            {"type": "user.message", "data": {"content": "hello"}},
+            {"type": "assistant.message", "data": {"content": ""}},
+            {"type": "assistant.message", "data": {"content": "Welcome back!"}})
+        self.assertEqual(adapter.final_message(path, "event-data", 0), "Welcome back!")
+
+    def test_a_message_that_is_not_there_yet_is_waited_for_then_given_up_on(self):
+        path = self.transcript({"type": "user.message", "data": {"content": "hello"}})
+        self.assertIsNone(adapter.final_message(path, "event-data", 0.1))
+
+    def test_a_reply_from_an_earlier_turn_is_never_used(self):
+        path = self.transcript(
+            {"type": "assistant.message", "data": {"content": "old reply"}},
+            {"type": "user.message", "data": {"content": "hello"}})
+        self.assertIsNone(adapter.final_message(path, "event-data", 0))
+
+    def test_other_dialects_are_left_to_the_scripts(self):
+        self.assertIsNone(adapter.final_message("/x/t.jsonl", "canonical", 0))
+
+
 class ProjectDirectory(unittest.TestCase):
     def test_the_payload_wins_over_the_working_directory(self):
         with tempfile.TemporaryDirectory() as project, tempfile.TemporaryDirectory() as package:

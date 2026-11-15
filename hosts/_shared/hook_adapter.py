@@ -25,6 +25,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import time
 import traceback
 from pathlib import Path
 
@@ -32,6 +33,7 @@ HERE = Path(__file__).resolve().parent
 CONFIG = HERE / "bootcamp_host.json"
 DEBUG_ENV = "SENZING_BOOTCAMP_HOOK_DEBUG"
 SCRIPT_TIMEOUT_SECONDS = 30
+FINAL_MESSAGE_WAIT_SECONDS = 2.0
 
 #: The canonical name of each event, as the hook scripts read it in ``hook_event_name``.
 CANONICAL_EVENT = {
@@ -273,6 +275,47 @@ def canonical_transcript(path, dialect):
     return handle.name, True
 
 
+def final_message(path, dialect, wait_seconds=FINAL_MESSAGE_WAIT_SECONDS):
+    """The assistant's final text for the turn that is ending, read from an ``event-data`` transcript.
+
+    Some assistants run the stop hook before the turn's last message is on disk, so a single
+    read finds nothing and the closing-question check stays silent (seen on Copilot CLI, where
+    the same transcript read a moment later holds the message). This waits briefly for it.
+    Returns None when the dialect is not one this reads, or no message appears in time.
+    """
+    if dialect != "event-data" or not path:
+        return None
+    deadline = time.monotonic() + wait_seconds
+    while True:
+        text = None
+        try:
+            with open(path, encoding="utf-8") as handle:
+                events = []
+                for line in handle:
+                    try:
+                        event = json.loads(line)
+                    except ValueError:
+                        continue
+                    if isinstance(event, dict):
+                        events.append(event)
+        except OSError:
+            events = []
+        last_user = max((i for i, e in enumerate(events) if e.get("type") == "user.message"), default=-1)
+        for event in events[last_user + 1:]:
+            if event.get("type") != "assistant.message":
+                continue
+            content = (event.get("data") or {}).get("content")
+            if isinstance(content, list):
+                content = "\n".join(
+                    block.get("text", "") for block in content
+                    if isinstance(block, dict) and block.get("type") == "text")
+            if isinstance(content, str) and content.strip():
+                text = content
+        if text is not None or time.monotonic() >= deadline:
+            return text
+        time.sleep(0.05)
+
+
 # --- canonical payloads -----------------------------------------------------------------
 
 
@@ -432,6 +475,10 @@ def run(event, raw, environ, out, err, config=None):
         debug("the assistant did not say which project this is")
         return write_result(event, result, dialect, out, err)
 
+    if event == "stop" and first(payload, LAST_MESSAGE_KEYS) is None:
+        message = final_message(first(payload, TRANSCRIPT_KEYS), config.get("transcript_dialect"))
+        if message is not None:
+            payload = dict(payload, last_assistant_message=message)
     transcript, temporary = canonical_transcript(
         first(payload, TRANSCRIPT_KEYS), config.get("transcript_dialect"))
     try:
