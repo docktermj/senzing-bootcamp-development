@@ -1,0 +1,225 @@
+"""The shared wrap-aware matcher, `tests/_wrapped_text.py`, reads Markdown blocks as #426 defines.
+
+`match_lines(text, pattern)` returns the 1-based line where each match starts. These tests pin
+each acceptance case of #426: a wrapped match is found at its start line; every block boundary
+(blank line, fence line, table row, heading, front matter) stops a phrase; a pattern that could
+cross a boundary matches only within one block; blockquote markers are stripped; indented and
+`~~~` fences are fences; a `#` line inside a fence is content; two matches are reported at their
+own lines, in order.
+
+⚠️ Each "not matched across a boundary" test has a positive twin with the boundary removed, so a
+matcher that matched nothing at all would fail here rather than pass every negative.
+
+`collapsed_blocks(text)` is the same read one step earlier, for a guard that needs the matched
+text and not only its line (#683). It is pinned here as what `match_lines` is built from: the
+blocks it yields are the blocks `match_lines` matches on, and `line_of` maps an index in one back
+to its line.
+
+Enforces **INV-346** (a guard whose rule is about a phrase or a sentence matches it across a line
+wrap): it pins the block rules of the shared reader every such guard uses. It does **not** establish
+that every guard in `tests/` uses that reader, or says why it reads single lines; #424 and #425
+recorded that sweep, and nothing re-checks it here.
+
+Stdlib only (INV-108).
+
+Source issue: #426.
+
+Run:  python3 -m unittest discover -s tests
+"""
+import re
+import unittest
+
+from _wrapped_text import collapsed_blocks, collapsed_items, line_of, match_lines
+
+PHRASE = re.compile(r"no flag is documented")
+
+
+class AWrappedMatchIsFoundAtItsStart(unittest.TestCase):
+    def test_a_match_wrapped_across_two_lines_is_reported_at_its_start_line(self):
+        self.assertEqual([2], match_lines("intro line\nsays no flag\nis documented here.", PHRASE))
+
+    def test_a_match_at_the_start_of_a_block_is_reported_at_its_first_non_blank_line(self):
+        self.assertEqual([3], match_lines("before\n\n   no flag is\ndocumented.", PHRASE))
+
+    def test_two_matches_are_reported_at_their_own_lines_in_order(self):
+        text = "a no flag is\ndocumented b\n\nc\nd no flag is documented e"
+        self.assertEqual([1, 5], match_lines(text, PHRASE))
+
+    def test_two_matches_in_one_block_are_both_reported(self):
+        text = "no flag is documented, and\nagain no flag\nis documented."
+        self.assertEqual([1, 2], match_lines(text, PHRASE))
+
+    def test_no_match_is_an_empty_list(self):
+        self.assertEqual([], match_lines("nothing to see\nhere", PHRASE))
+
+    def test_carriage_returns_are_whitespace(self):
+        self.assertEqual([1], match_lines("no flag\r\nis documented\r\n", PHRASE))
+
+
+class ABlockBoundaryStopsAPhrase(unittest.TestCase):
+    """Each boundary, with its control: the same phrase without the boundary matches."""
+
+    def assert_split_only_by(self, joined, split):
+        self.assertEqual([1], match_lines(joined, PHRASE), "control: the joined text matches")
+        self.assertEqual([], match_lines(split, PHRASE))
+
+    def test_a_blank_line(self):
+        self.assert_split_only_by("no flag\nis documented", "no flag\n\nis documented")
+
+    def test_a_blank_line_holding_only_whitespace(self):
+        self.assert_split_only_by("no flag\nis documented", "no flag\n   \t\nis documented")
+
+    def test_a_code_fence_line(self):
+        self.assert_split_only_by("no flag\nis documented",
+                                  "no flag\n```\nis documented\n```")
+
+    def test_a_fenced_block_never_joins_the_prose_after_it(self):
+        self.assertEqual([], match_lines("```\nno flag\n```\nis documented", PHRASE))
+
+    def test_a_table_row_boundary(self):
+        self.assert_split_only_by("no flag\nis documented",
+                                  "| no flag |\n| is documented |")
+
+    def test_a_table_row_does_not_join_the_prose_before_it(self):
+        self.assertEqual([], match_lines("no flag\n| is documented |", PHRASE))
+
+    def test_a_heading_line(self):
+        self.assert_split_only_by("no flag\nis documented", "no flag\n## is documented")
+
+    def test_a_heading_is_a_block_of_its_own(self):
+        self.assertEqual([], match_lines("## no flag\nis documented", PHRASE))
+        self.assertEqual([1], match_lines("## no flag is documented\nmore", PHRASE))
+
+    def test_the_front_matter_boundary(self):
+        self.assert_split_only_by("no flag\nis documented",
+                                  "---\ntitle: no flag\n---\nis documented")
+
+    def test_the_front_matter_is_matched_inside_itself(self):
+        self.assertEqual([2], match_lines("---\nnote: no flag\n  is documented\n---\nbody", PHRASE))
+
+    def test_a_dash_line_after_the_first_line_is_not_front_matter(self):
+        """A thematic break is not a boundary by itself; the blank lines around it are."""
+        self.assertEqual([1], match_lines("no flag\n---\nis documented", re.compile(
+            r"no flag --- is documented")))
+        self.assertEqual([], match_lines("intro\n\n---\nno flag\n---\n\nis documented", PHRASE))
+
+    def test_an_unclosed_opening_dash_line_is_not_front_matter(self):
+        self.assertEqual([2], match_lines("---\nno flag\nis documented", PHRASE))
+
+
+class APatternRunsOnOneBlockAtATime(unittest.TestCase):
+    def test_a_pattern_that_could_cross_a_boundary_matches_only_within_one_block(self):
+        greedy = re.compile(r"a[\s\S]*b")
+        self.assertEqual([], match_lines("a\n\nb", greedy))
+        self.assertEqual([1], match_lines("a\nb", greedy))
+        self.assertEqual([1, 4], match_lines("a b\n\nc\na\nb", greedy))
+
+    def test_anchors_bind_at_block_edges(self):
+        anchored = re.compile(r"^no flag is documented$")
+        self.assertEqual([3], match_lines("before\n\nno flag is\n  documented  \n\nafter", anchored))
+        self.assertEqual([], match_lines("before\nno flag is documented", anchored))
+
+
+class BlockquoteMarkersAreStripped(unittest.TestCase):
+    def test_a_phrase_wrapped_across_two_blockquote_lines_is_matched_at_its_start(self):
+        self.assertEqual([2], match_lines("> intro\n> no flag\n> is documented", PHRASE))
+
+    def test_nested_markers_are_stripped(self):
+        self.assertEqual([1], match_lines("> > no flag\n> > is documented", PHRASE))
+
+    def test_entering_a_blockquote_is_not_a_boundary(self):
+        self.assertEqual([1], match_lines("no flag\n> is documented", PHRASE))
+
+    def test_a_marker_only_line_is_a_blank_line(self):
+        self.assertEqual([], match_lines("> no flag\n>\n> is documented", PHRASE))
+
+
+class FencesAreRecognized(unittest.TestCase):
+    def test_a_fence_indented_inside_a_list_item_is_a_fence(self):
+        text = "- item says no flag\n   ```bash\n   is documented\n   ```"
+        self.assertEqual([], match_lines(text, PHRASE))
+        self.assertEqual([1], match_lines("- item says no flag\n   is documented", PHRASE))
+
+    def test_a_tilde_fence_is_a_fence(self):
+        self.assertEqual([], match_lines("no flag\n~~~\nis documented\n~~~", PHRASE))
+
+    def test_a_backtick_line_inside_a_tilde_fence_is_content(self):
+        text = "~~~\n```\nno flag\nis documented\n```\n~~~"
+        self.assertEqual([3], match_lines(text, PHRASE))
+
+    def test_a_hash_line_inside_a_fence_is_not_a_heading(self):
+        text = "```bash\nno flag\n# is documented\n```"
+        self.assertEqual([2], match_lines(text, re.compile(r"no flag # is documented")))
+        self.assertEqual([], match_lines("no flag\n# is documented", re.compile(
+            r"no flag # is documented")), "control: outside a fence the line is a heading")
+
+    def test_table_and_dash_lines_inside_a_fence_are_content(self):
+        self.assertEqual([2], match_lines("```\nno flag\n| is documented\n```", re.compile(
+            r"no flag \| is documented")))
+        self.assertEqual([2], match_lines("```\nno flag\n---\n```", re.compile(r"no flag ---")))
+
+    def test_inside_a_fence_a_blank_line_ends_a_block(self):
+        self.assertEqual([], match_lines("```\nno flag\n\nis documented\n```", PHRASE))
+
+    def test_prose_after_a_closed_fence_is_matched(self):
+        self.assertEqual([4], match_lines("```\ncode\n```\nno flag\nis documented", PHRASE))
+
+
+class ListItemsJoinIntoOneBlock(unittest.TestCase):
+    def test_lines_of_one_list_with_no_blank_line_are_one_block(self):
+        """Accepted (#426 edge case): a phrase across two items can match."""
+        self.assertEqual([1], match_lines("- no flag\n- is documented", re.compile(
+            r"no flag - is documented")))
+
+
+class CollapsedItemsSplitsAListIntoItems(unittest.TestCase):
+    """#796: one unit per list item, wrapped lines joined, other blocks as `collapsed_blocks`."""
+
+    def test_each_item_is_its_own_unit(self):
+        text = "- one item\n  wrapped\n- two\n1. three\n\nA paragraph\nwrapped."
+        self.assertEqual(["- one item wrapped", "- two", "1. three", "A paragraph wrapped."],
+                         [flat for flat, _ in collapsed_items(text)])
+
+    def test_each_item_reports_its_own_line(self):
+        (_, first), (_, second) = collapsed_items("- a\n- b\n  c")
+        self.assertEqual(1, line_of(first, 0))
+        self.assertEqual(2, line_of(second, 0))
+        self.assertEqual(3, line_of(second, len("- b c") - 1))
+
+    def test_a_block_without_a_list_is_read_as_collapsed_blocks_reads_it(self):
+        text = "a\nb\n\n# head\n\n| x |\n"
+        self.assertEqual([flat for flat, _ in collapsed_blocks(text)],
+                         [flat for flat, _ in collapsed_items(text)])
+
+
+class CollapsedBlocksIsWhatMatchLinesMatchesOn(unittest.TestCase):
+    """#683: a guard that reports the matched text reads the same blocks, not its own."""
+
+    def test_each_block_is_collapsed_and_trimmed(self):
+        text = "  no flag\n  is documented  \n\nsecond\nblock"
+        self.assertEqual(["no flag is documented", "second block"],
+                         [flat for flat, _ in collapsed_blocks(text)])
+
+    def test_a_blank_block_is_skipped(self):
+        self.assertEqual(["a", "b"], [flat for flat, _ in collapsed_blocks("a\n\n   \n\nb")])
+
+    def test_origin_maps_each_character_back_to_its_line(self):
+        (flat, origin), = collapsed_blocks("no flag\nis documented")
+        self.assertEqual(1, line_of(origin, flat.index("no")))
+        self.assertEqual(2, line_of(origin, flat.index("documented")))
+
+    def test_line_of_clamps_an_index_at_the_end(self):
+        (flat, origin), = collapsed_blocks("no flag\nis documented")
+        self.assertEqual(2, line_of(origin, len(flat) + 5))
+
+    def test_match_lines_agrees_with_it(self):
+        text = "intro\n\n> no flag\n> is documented\n\n- no flag is documented"
+        self.assertEqual(
+            match_lines(text, PHRASE),
+            [line_of(origin, m.start())
+             for flat, origin in collapsed_blocks(text)
+             for m in PHRASE.finditer(flat)])
+
+
+if __name__ == "__main__":
+    unittest.main()

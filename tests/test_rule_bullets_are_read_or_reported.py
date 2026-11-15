@@ -1,0 +1,270 @@
+"""Every rule bullet is read as a rule, read as a description, or reported as unparsed.
+
+`parse()` read a bullet by taking the first `**…**` on the line. That is right for the shape
+the parser was written against -- ``- ⛔ **Rule.** — in `path` `` -- and wrong for the older
+shape, where the path leads, the rule is plain prose, and the only bold is an editorial
+parenthetical:
+
+    - `skills/graduation/SKILL.md` Step 6a — ⛔ follow `database-backup.md` *(covered by …)*.
+
+⛔ **The held block ships 9 such bullets. `parse()` presented 4**, and all four were annotation
+fragments -- *"was uncovered"*, *"relocated"* -- each located as `(same section as the rule
+above)` because `LOC` wants a trailing path. The other five vanished. `check` reported
+`1 checked, 0 mismatched, 0 unresolved, 4 no-prose-site`, which reads clean: a parse failure
+had been filed under the category that means *nothing is owed* (#110).
+
+⛔ **(INV-308) The two shapes are not interchangeable, and the fix is not one more pattern
+feeding the same verifier.** A modern bullet's bold is a **verbatim quote** that `check`
+compares against the source. The older bullet's prose is a **description** of the rule at that
+location: measured 2026-09-22, 9 of 9 resolve their path and **0 of 9** appear verbatim in the
+file they name. Checking them as quotes would print nine mismatches, every one false. So a
+rule carries a `kind`, `check` verifies only `quoted`, and `described` is counted apart --
+never folded into `no-prose-site`, which is the mistake being fixed.
+
+⚠️ **`DESCRIBED` is tried BEFORE `QUOTE`.** It is the more specific shape, and an older bullet
+whose annotation holds the only bold matches `QUOTE` perfectly well -- which is exactly how
+the four fragments were produced. `OrderOfShapesMatters` pins it, because the ordering is the
+whole defect and a later edit could reverse it without any other test noticing.
+
+⚠️ **What this does NOT establish:** that a described rule's summary is faithful to the rule it
+describes. Nothing checks that, by construction -- it is prose about prose. `show` labels such
+rules unverified rather than implying otherwise.
+
+⛔ **Enforces INV-315** — a rule statement carries its kind (quoted or described); only
+quotations are compared against source; a description is labeled unverified where it is
+shown, not merely counted; an unmatched statement is reported as unparsed, never dropped;
+and the more specific shape is matched first.
+
+⚠️ **What an `Enforced by` clause here does NOT claim.** This module pins the
+classification, the counts and the matching order. It **cannot** establish that a described
+rule is a *faithful* summary of the rule at the location it names — nothing can, by
+construction, since that is a judgment about meaning. That is exactly why the rule requires
+the label rather than a check: the honest output is *unverified*, not *verified*.
+
+Source issue: #110.
+
+Stdlib only; the helper is loaded by path, since it takes no `--repo` argument (INV-108).
+
+No phrase-level pattern (#438): its line reads only count a ledger block's bullet lines, as #425
+recorded (INV-346).
+
+Run:  python3 -m unittest discover -s tests
+"""
+import ast
+import importlib.util
+import io
+import contextlib
+import re
+import tempfile
+import unittest
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+HELPER = REPO_ROOT / ".claude" / "skills" / "review-invariants" / "pending_invariants.py"
+
+#: Retired (one-repository migration, 2026-11-14): `HELD_BLOCK`, `live()` and the four cases
+#: that read the held `the-bootcamp-cannot-leave-the-machine-it-was-built-on` block out of the
+#: live ledger. That block is in the archived ledger, which was not carried here; the fixtures
+#: below drive the same parser.
+
+#: The modern shape: the bold IS the rule, and the path trails it.
+QUOTED_BULLET = "    - ⛔ **The script writes nothing.** — in `.claude/skills/x/SKILL.md`"
+
+#: The older shape: the path leads, the rule is prose, the bold is an annotation.
+#: ⛔ This line is the regression fixture -- under the old ordering its `**was uncovered**`
+#: became the rule and the actual rule was discarded.
+DESCRIBED_BULLET = ("    - `skills/demo/packaging.md:25` — ⛔ run the dry run first; the question "
+                    "quotes a measured size *(**was uncovered**; now in the draft)*.")
+
+#: Neither shape: a ⛔ bullet with no bold and no leading path.
+UNPARSABLE_BULLET = "    - ⛔ something nobody wrote in either shape"
+
+
+def helper():
+    spec = importlib.util.spec_from_file_location("pending_invariants", HELPER)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def parse_bullets(*lines):
+    return helper().parse({"text": "\n".join(lines), "line": 0, "spec": "s"})
+
+
+class TheOlderShapeIsRead(unittest.TestCase):
+    def test_a_described_bullet_becomes_a_rule(self):
+        r = parse_bullets(DESCRIBED_BULLET)["rules"]
+        self.assertEqual(1, len(r), "the older bullet shape was not read at all")
+        self.assertEqual("described", r[0]["kind"])
+        self.assertIn("run the dry run first", r[0]["text"])
+
+    def test_the_annotation_is_not_the_rule(self):
+        """The exact regression: the bold parenthetical must not become the rule."""
+        r = parse_bullets(DESCRIBED_BULLET)["rules"][0]
+        self.assertNotIn("was uncovered", r["text"],
+                         "the editorial annotation was presented as the rule -- this is the "
+                         "defect #110 reported, reproduced")
+
+    def test_a_line_suffix_is_not_part_of_the_filename(self):
+        r = parse_bullets(DESCRIBED_BULLET)["rules"][0]
+        self.assertEqual("skills/demo/packaging.md", r["site"])
+        self.assertEqual("skills/demo/packaging.md:25", r["where"],
+                         "the maintainer should still read the line number")
+
+
+class OrderOfShapesMatters(unittest.TestCase):
+    """⛔ DESCRIBED is the more specific shape and must be tried first."""
+
+    def test_a_described_bullet_is_never_classified_quoted(self):
+        kinds = {r["kind"] for r in parse_bullets(DESCRIBED_BULLET)["rules"]}
+        self.assertEqual({"described"}, kinds,
+                         "a bullet in the older shape was classified as quoted, so its "
+                         "annotation will be verbatim-checked against the file it names")
+
+    def test_the_modern_shape_is_still_quoted(self):
+        r = parse_bullets(QUOTED_BULLET)["rules"]
+        self.assertEqual(1, len(r))
+        self.assertEqual("quoted", r[0]["kind"])
+        self.assertEqual("The script writes nothing.", r[0]["text"])
+        self.assertEqual(".claude/skills/x/SKILL.md", r[0]["site"])
+
+    def test_both_shapes_together_keep_their_kinds(self):
+        rules = parse_bullets(QUOTED_BULLET, DESCRIBED_BULLET)["rules"]
+        self.assertEqual(["quoted", "described"], [r["kind"] for r in rules])
+
+
+class NothingIsDropped(unittest.TestCase):
+    """⛔ (INV-308) A bullet matching neither shape is reported, never skipped."""
+
+    def test_an_unparsable_bullet_is_recorded(self):
+        p = parse_bullets(UNPARSABLE_BULLET)
+        self.assertEqual([], p["rules"])
+        self.assertEqual(1, len(p["unparsed"]),
+                         "a bullet matching neither shape was dropped silently, which is "
+                         "indistinguishable from a block that had no bullets")
+
+    def test_an_unparsable_bullet_does_not_suppress_its_neighbors(self):
+        p = parse_bullets(QUOTED_BULLET, UNPARSABLE_BULLET, DESCRIBED_BULLET)
+        self.assertEqual(2, len(p["rules"]))
+        self.assertEqual(1, len(p["unparsed"]))
+
+
+class CheckCountsThemApart(unittest.TestCase):
+    """The category that hid the failure must no longer absorb it."""
+
+    def report(self, ledger=None):
+        mod = helper()
+        if ledger is not None:
+            mod.LEDGER = ledger
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            mod.cmd_check()
+        return buf.getvalue()
+
+    def counts(self, ledger=None):
+        """The reported numbers, not merely the labels. ⛔ Asserting the label matches is
+        satisfied by a counter wired to the wrong variable printing zero -- which a negative
+        control caught this test doing, and which is the very defect #110 reports."""
+        out = self.report(ledger)
+        return {k: int(v) for v, k in re.findall(
+            r"(\d+) (checked|mismatched|unresolved|no-prose-site|described-not-quoted|unparsed)",
+            out.replace("rule quotes checked", "checked"))}
+
+    def parsed_kinds(self):
+        mod = helper()
+        n = {"described": 0, "quoted": 0}
+        for b in mod.blocks():
+            for r in mod.parse(b)["rules"]:
+                n[r["kind"]] += 1
+        return n
+
+    def test_described_rules_have_their_own_count(self):
+        reported = self.counts().get("described-not-quoted")
+        self.assertEqual(
+            self.parsed_kinds()["described"], reported,
+            "`check` reports %r described-not-quoted while the parser sees %d. The counter is "
+            "wired to a different category, so those rules are being absorbed by it"
+            % (reported, self.parsed_kinds()["described"]))
+        # Adapted (one-repository migration, 2026-11-14): the ledger starts fresh and holds no
+        # block in the older shape, so the non-vacuity floor (INV-265) is measured on a scratch
+        # ledger holding one described bullet instead of on the archived held block.
+        with tempfile.TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "IMPLEMENTED.md"
+            ledger.write_text(
+                "# Implemented\n\n## a-spec\n\n- **DEFERRED INVARIANT — awaiting the "
+                "maintainer's sign-off; NOT minted.**\n%s\n" % DESCRIBED_BULLET, encoding="utf-8")
+            fixture = self.counts(ledger)
+        self.assertEqual(
+            1, fixture.get("described-not-quoted"),
+            "no described rule was counted, so this assertion is vacuous (INV-265): the "
+            "older bullet shape is no longer counted and the branch is untested")
+        self.assertEqual(
+            0, fixture.get("no-prose-site"),
+            "a described rule was counted as no-prose-site -- the category that means "
+            "nothing is owed, and the precise misfiling #110 reported")
+
+    def test_check_reports_no_mismatch(self):
+        """Verbatim-checking a described rule produces mismatches that mean nothing."""
+        self.assertEqual(
+            0, self.counts().get("mismatched"),
+            "`check` reports mismatches. If described rules are being compared verbatim, every "
+            "one is a false accusation -- their text summarizes a rule and never quoted it")
+
+    def test_the_unparsed_count_is_reported(self):
+        self.assertIn("unparsed", self.counts())
+
+
+class OneParserReadsTheRules(unittest.TestCase):
+    """One corpus, one reader. #59's lesson was three copies of the resolution roots.
+
+    Until #236 this class compared the quote guard's own rule regex against `parse()`, so the
+    two readers could not drift apart unnoticed. The guard now reads through `parse()`, which
+    leaves nothing to compare, so what is asserted is that it stays that way.
+    ⛔ (INV-315) A second classifier of the same bullets is the drift this class exists to stop.
+    """
+
+    QUOTE_GUARD = REPO_ROOT / "tests" / "test_deferral_quotes_match_their_source.py"
+
+    #: What only a rule-classifying pattern contains: the stop sign, the bold that carries the
+    #: quote, or the em-dash before `in`. A normalizing pattern (whitespace, `(INV-NNN)`) has none.
+    RULE_MARKS = ("⛔", r"\*\*", "—")
+
+    def guard(self):
+        spec = importlib.util.spec_from_file_location("deferral_quote_guard", self.QUOTE_GUARD)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def test_the_quote_guard_reads_rules_through_parse(self):
+        mod = self.guard()
+        parse = getattr(mod, "parse", None)
+        self.assertIsNotNone(parse, "the quote guard no longer takes `parse` from the helper")
+        self.assertEqual(
+            HELPER.resolve(), Path(parse.__code__.co_filename).resolve(),
+            "the quote guard's `parse` is not pending_invariants.parse, so it reads the ledger's "
+            "rules with a parser of its own")
+        calls = {n.func.id for n in ast.walk(ast.parse(self.QUOTE_GUARD.read_text(encoding="utf-8")))
+                 if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)}
+        self.assertIn("parse", calls, "the quote guard imports `parse` and never calls it")
+
+    def test_the_quote_guard_defines_no_rule_regex_of_its_own(self):
+        """⛔ (INV-315) Checked as compiled patterns and as inline `re` calls, so both ways back fail."""
+        mod = self.guard()
+        own = [f"{name} = {v.pattern!r}" for name, v in vars(mod).items()
+               if isinstance(v, re.Pattern) and any(m in v.pattern for m in self.RULE_MARKS)]
+        tree = ast.parse(self.QUOTE_GUARD.read_text(encoding="utf-8"))
+        own += [f"line {n.lineno}: re.{n.func.attr}({n.args[0].value!r})" for n in ast.walk(tree)
+                if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
+                and isinstance(n.func.value, ast.Name) and n.func.value.id == "re"
+                and n.args and isinstance(n.args[0], ast.Constant)
+                and isinstance(n.args[0].value, str)
+                and any(m in n.args[0].value for m in self.RULE_MARKS)]
+        self.assertEqual(
+            [], own,
+            "tests/test_deferral_quotes_match_their_source.py classifies rule bullets with a "
+            "pattern of its own again. Two readers of one corpus drift, and one of them then "
+            "verifies nothing. Read the rules through pending_invariants.parse()")
+
+
+if __name__ == "__main__":
+    unittest.main()

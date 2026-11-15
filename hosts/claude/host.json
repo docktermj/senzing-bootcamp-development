@@ -1,0 +1,75 @@
+{
+  "id": "claude",
+  "name": "Claude",
+  "package_format": "claude-plugin",
+  "vars": {
+    "product": "Claude Code",
+    "plugin_root": "${CLAUDE_PLUGIN_ROOT}",
+    "plugin_root_var": "CLAUDE_PLUGIN_ROOT",
+    "scripts_dir": "${CLAUDE_PLUGIN_ROOT}/scripts",
+    "docs_dir": "${CLAUDE_PLUGIN_ROOT}/docs",
+    "scripts_fallback": "<this-skill-dir>/../../scripts",
+    "manifest_path": ".claude-plugin/plugin.json",
+    "package_noun": "plugin",
+    "command_prefix": "/",
+    "assistant": "Claude",
+    "scripts_relative": "../../scripts",
+    "docs_relative": "../../docs",
+    "model_balanced": "Sonnet 5.5",
+    "model_capable": "Opus 5.5",
+    "model_top": "Fable 5.1",
+    "model_controls": "the model and effort controls in your Claude interface",
+    "skills_dir": "${CLAUDE_PLUGIN_ROOT}/skills"
+  },
+  "layout": {
+    "skills": "skills",
+    "commands": "commands",
+    "scripts": "scripts",
+    "docs": "docs",
+    "hooks/README.md": "hooks/README.md",
+    "hooks/fallbacks": null
+  },
+  "hooks": {
+    "command": "python3 \"{{host.plugin_root}}/scripts/{script}\"",
+    "events": {
+      "session_start": "SessionStart",
+      "prompt_submit": "UserPromptSubmit",
+      "pre_tool_use": "PreToolUse",
+      "post_tool_use": "PostToolUse",
+      "post_tool_use_failure": "PostToolUseFailure",
+      "stop": "Stop",
+      "pre_compact": "PreCompact",
+      "session_end": "SessionEnd"
+    },
+    "tools": {
+      "write": "Write",
+      "edit": "Edit",
+      "shell": "Bash"
+    },
+    "guaranteed": true
+  },
+  "foreign_terms": [
+    "Copilot",
+    "Kiro",
+    "Codex",
+    "ChatGPT",
+    "Gemini",
+    "Antigravity"
+  ],
+  "catalog": {
+    "path": ".claude-plugin/marketplace.json",
+    "style": "claude",
+    "name": "senzing-bootcamp"
+  },
+  "site": {
+    "order": 1,
+    "name": "Claude",
+    "kind": "Claude Code plugin",
+    "plan": "Claude Max 5x",
+    "plan_url": "https://claude.com/pricing",
+    "note": "Claude Pro works across several 5-hour windows, but not in one session.",
+    "lead": "From nothing installed to a running bootcamp, in Claude Desktop or the Claude Code CLI.",
+    "description": "Install the Senzing Bootcamp plugin for Claude Code and start the bootcamp, in Claude Desktop or the Claude Code CLI.",
+    "commands_note": "Each also has a slash command: /start-bootcamp, /bootcamp-feedback, /bootcamp-note, /graduate and /package-bootcamp."
+  }
+}

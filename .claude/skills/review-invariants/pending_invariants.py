@@ -1,0 +1,712 @@
+#!/usr/bin/env python3
+"""Read the pending `DEFERRED INVARIANT` and `PROPOSED AMENDMENT` blocks out of `specs/IMPLEMENTED.md`.
+
+This exists because the by-hand version failed twice on 2026-09-01, in both directions:
+
+* A count taken by grepping for the phrase returned **29** pending blocks when there were
+  **11** — ledger prose that merely mentions the term matched too.
+* A block the maintainer had **already held**, twice, with a recorded revisit condition,
+  was presented as awaiting a first decision. Nothing in a grep distinguishes *"not yet
+  decided"* from *"decided: wait"*, and re-offering a settled decision wastes the one
+  thing this workflow is short of.
+
+So the queue is computed here rather than assembled by reading, and `held` is a first-class
+state with its reason carried beside it.
+
+Read-only. Stdlib only. Exit 0 whatever it finds.
+
+Subcommands
+    list                 the review queue, numbered, with held blocks listed separately
+    show <n>             one block in full: rules, drafted wording, enforcer, sites
+    sites <n>            where the rule ships, and candidate sites a citation must reach
+    next-id              the next free INV id, read off INVARIANTS.md
+    check                every rule quote matches the file it names
+"""
+
+import re
+import sys
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parents[3]
+LEDGER = REPO / "specs" / "IMPLEMENTED.md"
+INVARIANTS = REPO / "specs" / "INVARIANTS.md"
+SPECS = REPO / "specs"
+PLUGIN = REPO / "source"
+
+#: The header wording the skill documents for a block still waiting. ⚠️ Since #770 it is a
+#: convention for writers, not what admits a block to the queue -- `DECIDED_IN_HEADER` below is.
+AWAITING = "awaiting the maintainer's sign-off; NOT minted"
+HELD_IN_BLOCK = "must be approved before implementation"
+
+#: ⛔ **A fourth thing the queue must hold (#79): a change to an invariant ALREADY REGISTERED.**
+#: Both markers above describe an invariant that does not exist yet. `INVARIANTS.md` is
+#: append-only, so a wrong or outgrown invariant is corrected by a dated note appended beneath
+#: it -- and **11 of 311** invariants carry one, 13 markers in all. None was ever queued: the
+#: proposed wording reached the maintainer through a pull-request body and the conversation, and
+#: `list` reported `pending: 0` throughout, which is true to its own definition and misleading
+#: as a worklist.
+#:
+#: ⚠️ **The precedent that decided the shape.** INV-207's correction claimed its pinned site had
+#: **moved** to another file, and the content it pins was never written there. A test caught it
+#: days later; review did not, because nothing scanned the claim. So an amendment carries the
+#: same three things a deferral does -- the exact proposed text, the sites it affects, and why --
+#: and `sites` scans it like any other block. ⚠️ Since #770 the wording below is, like `AWAITING`,
+#: a convention for writers: `BLOCK_HEADER` admits an amendment and `DECIDED_IN_HEADER` decides it.
+AMENDMENT_AWAITING = "awaiting the maintainer's sign-off; NOT applied"
+
+#: The registered invariant an amendment proposes to change.
+AMENDMENT_TARGET = re.compile(r"PROPOSED AMENDMENT to (INV-\d{3})")
+
+#: ⛔ The maintainer's hold, recorded in the ledger block itself. `HELD <date>:` then the reason,
+#: and a `Revisit ...` sentence if one was set.
+#:
+#: Until #58 this was read out of `specs/<spec>.md`, which an issue-driven deferral does not have
+#: and — `specs/` being frozen under INV-307 — cannot be given. So the only reachable held state
+#: for such a block was the generic HELD_IN_BLOCK string, which records a property of the work
+#: rather than a decision: a maintainer who held one either got their reason written where
+#: nothing reads it, and the block reported as **pending** on the next run, or wrote it nowhere
+#: durable. Both outcomes are silent.
+#:
+#: ⚠️ One route, not two. The spec-file route was used by exactly one file of 519 and that block
+#: is migrated here; two mechanisms for one fact is how the old fallback came to report something
+#: other than a reason.
+HELD_IN_LEDGER = re.compile(r"\*\*HELD\s+(\d{4}-\d{2}-\d{2}):\*\*\s*(.+?)(?=\n\s*\n|\Z)", re.S)
+BOILER = re.compile(r"\*\(written as NNN deliberately.*?\)\*\s*", re.S)
+
+#: An `Enforced by` clause. ⚠️ `\s+`, never a literal space: Markdown wraps prose wherever the
+#: column runs out, and a clause broken between `Enforced` and `by`, or before its path, is the
+#: same clause. Until #105 this required single spaces, and the ledger held 27 clauses of which
+#: it matched 25 -- the two it could not see were BOTH blocks reviewed on 2026-09-22, each of
+#: which named an enforcer and each of which was presented as naming none.
+ENFORCER = re.compile(r"Enforced\s+by\s+`([^`]+)`")
+
+#: The same clause's opening, with no requirement that it close. ⛔ (INV-308) This is what
+#: separates a block that names NO enforcer from one whose clause is present and unreadable --
+#: an unclosed backtick matches nothing above, and reporting that as `(none named)` states a
+#: fact about the block that is false. *Nothing to read* and *could not read* are different
+#: answers and the output owes the maintainer the difference.
+ENFORCER_OPENS = re.compile(r"Enforced\s+by\s+`")
+# A rule bullet is an indented list item carrying a stop sign. Three shapes occur, and a
+# pattern fitted to one silently drops the others -- `⛔ **rule**`, `**⛔ rule**`, and a
+# rule whose location reads "same section" instead of naming a path. Fitting only the
+# first reported 1 rule for a block that ships 3.
+BULLET = re.compile(r"^\s+- .*⛔")
+QUOTE = re.compile(r"\*\*(?:⛔\s*)?(.+?)\*\*", re.S)
+LOC = re.compile(r"—\s*in `([^`]+)`")
+
+#: The OLDER rule-bullet shape: the path leads, the rule follows as prose, and the only bold on
+#: the line is an editorial parenthetical.
+#:
+#:     - `skills/bootcamp-onboarding/packaging.md:8` — ⛔ the plugin writes the archive and stops *(covered: …)*.
+#:
+#: ⛔ (#110) Its text is a DESCRIPTION of the rule at that location, never a quote of it. Measured
+#: 2026-09-22 over the one block still using it: 9 of 9 bullets resolve their path and **0 of 9**
+#: texts appear verbatim in the file they name. Checking it like a quote would print nine
+#: mismatches, every one a false accusation -- which is why `kind` exists rather than a second
+#: pattern feeding the same verifier.
+DESCRIBED = re.compile(r"^\s+- `([^`]+)`[^—]*—\s*⛔\s*(.+?)(?:\s*\*\(.*)?$")
+CITED = re.compile(r"\(INV-\d{3}\)")
+
+
+def flat(s):
+    return re.sub(r"\s+", " ", s).strip()
+
+
+#: Every block's own header, whatever became of it: a deferral, an amendment, or the older
+#: `- ⛔ **DEFERRED INVARIANT` form one held block still carries. ⚠️ Anchored to the header's
+#: opening, never found anywhere on the line: ledger prose ABOUT deferrals quotes both phrases
+#: (a `- **Queues one new invariant**` bullet naming "the `DEFERRED INVARIANT` above", a
+#: `- **Summary:**` that wrote a PROPOSED AMENDMENT), and counting those is the 25-against-9
+#: overcount this module's docstring records.
+BLOCK_HEADER = re.compile(r"^- (?:⛔ )?\*\*(?:DEFERRED INVARIANT|PROPOSED AMENDMENT)\b")
+
+#: The header's bold text -- the only part of a block that states what became of it.
+HEADER_TEXT = re.compile(r"^- (?:⛔ )?\*\*(.+?)\*\*", re.S)
+
+#: ⛔ (#770, INV-409) What makes a block DECIDED, read off its bold header and nothing else. **Every
+#: other block is in the queue**, held or pending. The six forms the ledger writes a decision in:
+#:
+#: * `(resolved INV-NNN, …)` -- registered under a new id;
+#: * `resolved as an amendment` / `(resolved by amendment, …)` -- decided as a change to an existing id;
+#: * `(resolved <date> — …)` -- decided with no id minted;
+#: * `— applied <date>` -- an amendment written into `specs/INVARIANTS.md`;
+#: * `— superseded by …` -- replaced by a later block.
+#:
+#: ⚠️ (#778) **A form, never a bare word.** #770 matched `resolved` and `superseded` anywhere in the
+#: header, so an undecided block headed "not yet resolved" or "would be superseded if …" read as
+#: decided and silently left the queue -- the very failure the decision list exists to prevent.
+#: A decided header in a seventh form now shows as pending, which is the loud direction: the
+#: maintainer rewrites the header in one of the six.
+#:
+#: ⚠️ Until #770 the rule ran the other way: a block was queued only when its body carried one of
+#: three exact markers (`AWAITING`, `HELD_IN_BLOCK`, `AMENDMENT_AWAITING`), so a run that worded
+#: its header differently -- seven blocks written 2026-10-15/16 said "a new id is owed …; NOT
+#: minted" -- dropped out of the queue, and `list` reported `pending: 0` over undecided rules
+#: for at least one full review. A marker list fails silent on any wording nobody listed; a
+#: decision list fails loud, because a decided block worded unfamiliarly reappears as pending
+#: and the maintainer corrects its header.
+DECIDED_IN_HEADER = re.compile(
+    r"\(resolved INV-\d{3}"
+    r"|resolved as an amendment"
+    r"|resolved by amendment"
+    r"|\(resolved \d{4}-"
+    r"|— applied \d{4}-\d{2}-\d{2}"
+    r"|— superseded by")
+
+
+def blocks(include_resolved=False):
+    """Every DEFERRED INVARIANT or PROPOSED AMENDMENT block whose header records no decision.
+
+    ``include_resolved=True`` also returns every block already decided, each with
+    ``resolved: True``. The review queue never shows them, but their quotes still name shipping
+    rules (#236).
+    ⛔ (INV-308) It exists so the block boundaries below stay the ONE definition:
+    `tests/test_deferral_quotes_match_their_source.py` checks every block's quotes, and a second
+    scanner there would be a second reader of the same corpus. The default is the queue,
+    unchanged, so `list`, `show`, `check` and `queue()` never see a decided block.
+    """
+    lines = LEDGER.read_text(encoding="utf-8").splitlines()
+    spec, out, i = None, [], 0
+    while i < len(lines):
+        line = lines[i]
+        if line.startswith("## "):
+            spec = line[3:].strip()
+        # ⛔ A block is found by its HEADER, never by the phrase appearing in prose. The first
+        # version of this filter kept any bullet containing "DEFERRED INVARIANT" and reported
+        # 25 pending against a true 9: audit summaries and "INVARIANT REGISTERED" entries
+        # quoting the term matched too, and `PROPOSED AMENDMENT` prose would do the same.
+        if BLOCK_HEADER.match(line):
+            buf, j = [line], i + 1
+            while j < len(lines) and not (
+                    lines[j].startswith("## ") or re.match(r"^- \*\*", lines[j])):
+                buf.append(lines[j])
+                j += 1
+            body = "\n".join(buf).rstrip()
+            # ⛔ (#770) One arbiter: the header's own decision words. No marker list beside
+            # it -- a second test here is how the next reader trusts the wrong one (#79, #108).
+            header = HEADER_TEXT.match(body)
+            decided = bool(header and DECIDED_IN_HEADER.search(header.group(1)))
+            if include_resolved or not decided:
+                out.append({"spec": spec, "line": i + 1, "text": body,
+                            "resolved": decided})
+            i = j
+            continue
+        i += 1
+    return out
+
+
+def hold_reason(block_text):
+    """The maintainer's recorded reason for holding, from the block. None if not held.
+
+    ⚠️ Returns the **revisit condition** when one was recorded, because that is the part a later
+    run can act on — the skill's own rule is that a hold is worth as much as its revisit
+    condition. A hold without one is still a hold and is reported as such, never rejected.
+    """
+    m = HELD_IN_LEDGER.search(block_text)
+    if not m:
+        return None
+    reason = flat(m.group(2))
+    revisit = re.search(r"Revisit (?:after|when|if)[^.]*\.", reason)
+    return revisit.group(0) if revisit else reason[:160]
+
+
+def parse(b):
+    """Split a block into its rules, its drafted wording, and its trailing notes."""
+    text = BOILER.sub("", b["text"])
+    rules, sites, unparsed = [], [], []
+    for line in text.split("\n"):
+        if not BULLET.match(line):
+            continue
+        # ⛔ **(INV-315)** DESCRIBED is tried FIRST because it is the more specific shape. An older bullet
+        # whose only bold is its editorial annotation otherwise matches QUOTE -- which is
+        # exactly how four annotation fragments came to be presented as a block's rules.
+        d = DESCRIBED.match(line)
+        if d:
+            # ⛔ The path may carry a `:line` suffix, which names a location and is not part of
+            # the filename. `site` is what resolves; `where` is what the maintainer reads.
+            where = d.group(1)
+            site = where.split(":")[0]
+            rules.append({"text": flat(d.group(2)), "where": where,
+                          "site": site, "kind": "described"})
+            sites.append(site)
+            continue
+        q = QUOTE.search(line)
+        if q:
+            loc = LOC.search(line)
+            where = loc.group(1) if loc else "(same section as the rule above)"
+            rules.append({"text": flat(q.group(1)), "where": where,
+                          "site": loc.group(1) if loc else None, "kind": "quoted"})
+            if loc:
+                sites.append(loc.group(1))
+            continue
+        # ⛔ (INV-308) Neither shape matched. Recorded, never dropped: a bullet silently skipped
+        # is indistinguishable from a block that had none, and that is the defect #110 reported
+        # -- five bullets vanished while `check` printed a line that read clean.
+        unparsed.append(line.strip())
+    # ⚠️ An amendment's proposed text names the id it changes, not `INV-NNN`: the invariant
+    # already exists, so writing NNN there would be false rather than deliberate (#79).
+    m = re.search(r"\*\*INV-(?:NNN|\d{3})\*\*\s*—?\s*(.+?)(?=\n\s*⛔ \*\*Nothing was written|\Z)",
+                  text, re.S)
+    wording = flat(m.group(1)) if m else ""
+    target = AMENDMENT_TARGET.search(b["text"])
+    enf = ENFORCER.search(text)
+    enforcer = enf.group(1) if enf else None
+    if enforcer is not None and "\n" in enforcer:
+        # The backticks closed, but across a line break, so what they enclose is not a path.
+        # Treated as unreadable rather than returned: a newline-bearing path resolves nowhere
+        # and would be reported as a missing file rather than as a clause nobody can read.
+        enforcer = None
+    return {**b, "rules": rules, "sites": sites, "unparsed": unparsed, "wording": wording,
+            "amends": target.group(1) if target else None,
+            "enforcer": enforcer,
+            "enforcer_unreadable": enforcer is None and bool(ENFORCER_OPENS.search(text)),
+            "held": hold_reason(b["text"]) or (
+                "spec requires approval before implementation"
+                if HELD_IN_BLOCK in b["text"] else None)}
+
+
+def enforcer_label(p):
+    """How a parsed block's enforcer reads on screen. ⛔ (INV-308) THREE states, never two.
+
+    A named path, `(none named)` when the block names none, and an explicit unreadable marker
+    when a clause is present and its path could not be parsed. Collapsing the third into the
+    second is exactly what #105 was: two blocks that named an enforcer were shown to the
+    maintainer as naming none, which argues for holding a rule that is in fact guarded.
+    """
+    if p["enforcer"]:
+        return p["enforcer"]
+    if p.get("enforcer_unreadable"):
+        return "⛔ UNREADABLE (a clause is present; its path could not be read)"
+    return "(none named)"
+
+
+def queue():
+    parsed = [parse(b) for b in blocks()]
+    return ([p for p in parsed if not p["held"]], [p for p in parsed if p["held"]])
+
+
+def next_id():
+    ids = [int(m) for m in re.findall(r"\*\*INV-(\d{3})\*\*",
+                                      INVARIANTS.read_text(encoding="utf-8"))]
+    return max(ids) + 1
+
+
+#: Where a rule location may live, in order. ⛔ THE ONE DEFINITION -- `cmd_check` calls
+#: `resolve` rather than repeating the lookup, and `tests/test_deferral_quotes_match_their_source.py`
+#: imports this module rather than keeping a copy. Three implementations existed until #59;
+#: `conformance.py`'s 2026-09-14 widening is the cautionary case, where a second copy of the
+#: roots stayed at the old scope and its guard passed only because nothing had yet used the new.
+#:
+#: ⚠️ `REPO` is last and is what makes a repo-relative path resolve -- `tests/test_x.py`,
+#: `.claude/skills/y/SKILL.md`, `specs/INVARIANTS.md`. Before #59 the roots were the three PLUGIN
+#: bases alone, so every rule outside `source/` failed to resolve and was **skipped without
+#: being counted**. It is a root rather than an allowlist of directories deliberately: a list
+#: goes stale as the repo grows, and going stale here is silent.
+RESOLUTION_ROOTS = (PLUGIN / "skills", PLUGIN / "scripts", PLUGIN, REPO)
+
+
+#: ⚠️ **A maintainer command file that no longer ships resolves to the skill it fronted (#262).**
+#: Registered blocks still name locations under `.claude/commands/`, and the ledger is
+#: append-only, so those locations cannot be rewritten. `/<name>` runs the skill when a skill
+#: and a command share a name (measured 2026-09-29, Claude Code 2.1.284), #241 moved every rule
+#: a command carried into its same-name skill, and #262 deleted the command files. So such a
+#: location resolves to `.claude/skills/<name>/SKILL.md`, and its quote is compared there,
+#: verbatim as before. A command file that still ships resolves to itself, above; a name with no
+#: skill behind it stays unresolved and is reported.
+RETIRED_COMMAND = re.compile(r"\.claude/commands/([a-z0-9][a-z0-9-]*)\.md")
+
+
+def resolve(loc):
+    """Resolve a ledger location to a real file, by PATH not basename. None if nowhere."""
+    for base in RESOLUTION_ROOTS:
+        if (base / loc).is_file():
+            return base / loc
+    retired = RETIRED_COMMAND.fullmatch(loc)
+    if retired:
+        skill = REPO / ".claude" / "skills" / retired.group(1) / "SKILL.md"
+        if skill.is_file():
+            return skill
+    return None
+
+
+#: The suffixes a candidate site can have. Named once so the scanned and unscanned counts
+#: below are measuring the same population -- two spellings would make the pair meaningless.
+SITE_SUFFIXES = (".md", ".py")
+
+
+def shipped_files():
+    return sorted(p for p in PLUGIN.rglob("*")
+                  if p.suffix in SITE_SUFFIXES and p.is_file())
+
+
+#: The frozen archive's own manifest. A file pinned here is read-only under INV-307, so a
+#: citation can never land in it -- it is unscanned AND ineligible, which are different facts.
+#:
+#: ⛔ Read from the manifest rather than by testing for a `specs/` prefix. The manifest is the
+#: repository's own authority on what the freeze covers, and it already excludes the live
+#: records that a prefix test would wrongly sweep in. They are named in one place, the
+#: "What stays live" table in `specs/README.md`, and are not listed here. A prefix is a second
+#: definition of the freeze; this is the first one.
+FROZEN_MANIFEST = SPECS / "FROZEN-MANIFEST.txt"
+
+
+def frozen_names():
+    """Filenames the freeze pins, or an empty set when the manifest is unreadable.
+
+    ⚠️ An empty set means every unscanned file is reported as eligible -- an over-count, which
+    is the safe direction: it can only make the gap look larger than it is, never smaller.
+    """
+    if not FROZEN_MANIFEST.is_file():
+        return set()
+    return {ln.strip() for ln in FROZEN_MANIFEST.read_text(encoding="utf-8").splitlines()
+            if ln.strip() and not ln.startswith("#")}
+
+
+def scan_scope():
+    """(scanned, unscanned_by_directory, ineligible) -- read, not read, and not eligible.
+
+    ⚠️ **"Not scanned" and "could be a site" are different sets, and reporting them as one
+    overstated the gap by more than half** (#92): of 889 unscanned files, 523 were the frozen
+    archive, which INV-307 makes read-only so a citation can never land there. A figure a reader
+    checks once and finds mostly irrelevant is a figure they learn to discount -- and the
+    eligible remainder is inside it.
+
+    ⛔ **Counted, never listed.** The obvious version of this names `tests/`, `.claude/` and
+    `specs/` in prose, which is the shape the comment above RESOLUTION_ROOTS rejects: a list
+    goes stale as the repo grows and going stale here is silent. A directory that appears
+    tomorrow shows up in this count on its own.
+
+    ⚠️ Measures the same suffixes `shipped_files()` does, over the whole repository minus the
+    scanned root, so the two numbers are halves of one population rather than two unrelated
+    figures. `.git` is skipped: it is not source and would dominate the count.
+    """
+    scanned = shipped_files()
+    seen = set(scanned)
+    frozen = frozen_names()
+    unscanned, ineligible = {}, 0
+    for f in REPO.rglob("*"):
+        if f.suffix not in SITE_SUFFIXES or not f.is_file() or f in seen:
+            continue
+        try:
+            parts = f.relative_to(REPO).parts
+        except ValueError:
+            continue
+        if parts and parts[0] == ".git":
+            continue
+        if f.name in frozen and f.parent == SPECS:
+            ineligible += 1
+            continue
+        top = parts[0] if len(parts) > 1 else "(repo root)"
+        unscanned[top] = unscanned.get(top, 0) + 1
+    return scanned, unscanned, ineligible
+
+
+def print_scan_scope(scanned, unscanned, ineligible):
+    """⛔ (INV-308) Say what the scan read and what it did not, on EVERY run.
+
+    Until #77 this was said only when the scan found nothing. A non-empty candidate list is
+    exactly the output that reads as *the* set, and it carried no statement that 887 of the
+    repository's 950 candidate files were never opened. ⚠️ The two halves of this command
+    disagree by design and now say so: a path named in the block's prose resolves anywhere
+    under RESOLUTION_ROOTS, while this scan reads one root.
+    """
+    total = sum(unscanned.values())
+    print(f"\n  SCANNED {rel_to_repo(PLUGIN)}: {len(scanned)} file(s)")
+    listed = ", ".join(f"{d}/ {n}" for d, n in
+                       sorted(unscanned.items(), key=lambda kv: -kv[1])[:5])
+    print(f"  NOT SCANNED {total} file(s) that COULD hold a site"
+          + (f" -- {listed}" if listed else ""))
+    # ⚠️ Printed even at zero, like the count above it: a figure that appears only when it is
+    # non-zero makes its absence something to interpret (#77, #83).
+    print(f"  EXCLUDED {ineligible} frozen file(s): pinned in the archive manifest, read-only")
+    print("  under INV-307, so a citation cannot land in one. Counted apart from the figure")
+    print("  above because unscanned and ineligible are different facts (#92).")
+    print("  A rule shipping there is invisible to this scan. A site NAMED in the block still")
+    print("  resolves, because resolution reads the repository root and this scan does not.")
+
+
+def rel_to_repo(path):
+    try:
+        return str(path.relative_to(REPO))
+    except ValueError:
+        return str(path)
+
+
+def cmd_list():
+    pending, held = queue()
+    print(f"== Invariants awaiting your review ==\n")
+    print(f"pending: {len(pending)}   held: {len(held)}   "
+          f"next free id: INV-{next_id():03d}\n")
+    if not pending:
+        print("  (none — every deferred invariant has been decided)")
+    for i, p in enumerate(pending, 1):
+        n = len(p["rules"])
+        print(f"  {i:2}. {p['spec']}")
+        kind = ("AMENDS %s — already registered" % p["amends"]) if p["amends"] else "new invariant"
+        print(f"      {n} rule{'s' if n != 1 else ''} · {kind} · "
+              f"IMPLEMENTED.md:{p['line']} · enforcer: {enforcer_label(p)}")
+    if held:
+        print("\n-- HELD: already decided, NOT for review --")
+        for p in held:
+            print(f"   · {p['spec']}")
+            print(f"     {p['held']}")
+    print("\nRun `show <n>` for the full block, `sites <n>` before citing.")
+
+
+def _pick(n):
+    pending, _ = queue()
+    if not (1 <= n <= len(pending)):
+        print(f"no pending invariant {n} (there are {len(pending)})")
+        raise SystemExit(0)
+    return pending[n - 1]
+
+
+def cmd_show(n):
+    p = _pick(n)
+    print(f"== {n}. {p['spec']} ==\n")
+    print(f"ledger    : specs/IMPLEMENTED.md:{p['line']}")
+    if p["amends"]:
+        # ⛔ (#79) Say plainly that this is NOT a new invariant. The two decisions differ:
+        # minting adds an id that binds future work, while amending changes a rule already in
+        # force -- and `INVARIANTS.md` is append-only, so the change lands as a dated note
+        # beneath the original rather than replacing it.
+        print(f"amends    : {p['amends']}  ⛔ ALREADY REGISTERED — this proposes a dated")
+        print(f"            correction beneath it, not a new id. Nothing is renumbered,")
+        print(f"            nothing is deleted, and the original text stays.")
+    print(f"spec      : specs/{p['spec']}.md")
+    print(f"enforcer  : {enforcer_label(p)}")
+    if p.get("enforcer_unreadable"):
+        print("            ⛔ the clause is there and cannot be read -- fix the wording in "
+              "IMPLEMENTED.md before judging whether this rule ships guarded")
+    if p["amends"]:
+        print("would be  : no new id — the correction is appended beneath "
+              f"{p['amends']}\n")
+    else:
+        print(f"would be  : INV-{next_id():03d}   <- read again at mint time; only the first "
+              f"one minted gets it\n")
+    print("-- RULES ALREADY SHIPPING, bound by nothing --")
+    for r in p["rules"]:
+        # ⚠️ The kind is shown, not inferred: only a `quoted` rule has been checked against
+        # the file it names. A `described` rule is one author's summary of the rule at that
+        # location, and nothing has verified that the summary is faithful.
+        # ⛔ **(INV-315)** The kind is labeled AT the point of presentation, not only counted
+        # in a summary: a reader deciding from this screen must see that nothing verified it.
+        mark = "quoted" if r["kind"] == "quoted" else "described, NOT quoted — unverified"
+        print(f"  ⛔ {r['text']} — in {r['where']}  [{mark}]")
+    if p["unparsed"]:
+        print(f"\n  ⛔ {len(p['unparsed'])} rule bullet(s) matched NEITHER shape and are shown "
+              f"raw. They are not\n     in the list above, and nothing has read them:")
+        for line in p["unparsed"]:
+            print(f"       {line[:100]}")
+    print("\n-- DRAFTED WORDING --")
+    body = p["wording"] or "(not in the ledger — read the spec's `## Invariants introduced`)"
+    for line in _wrap(body, 92):
+        print(f"  {line}")
+
+
+def _wrap(s, w):
+    out, cur = [], ""
+    for word in s.split():
+        if len(cur) + len(word) + 1 > w:
+            out.append(cur)
+            cur = word
+        else:
+            cur = f"{cur} {word}".strip()
+    if cur:
+        out.append(cur)
+    return out
+
+
+def cmd_sites(n):
+    """Where the rule ships, plus candidates a citation must reach.
+
+    ⛔ (INV-246) The deferral's own list is where the author NOTICED the rule, which is
+    exactly what is unreliable when a rule is applied in several places. On 2026-09-01
+    INV-286's block named two sites and the rule shipped in THREE; the third was found by
+    scanning and would have been missed by reading the list. So the named sites and the
+    scan are printed separately, and the scan is a LEAD GENERATOR — a candidate is a line
+    to read, never a site to cite blind.
+    """
+    p = _pick(n)
+    print(f"== sites for {n}. {p['spec']} ==\n")
+    print("-- NAMED by the deferral (definite) --")
+    # ⚠️ An empty NAMED set printed as a bare heading reads as absence of OUTPUT rather than
+    # as a measured result, and the candidate note below then told the maintainer the named
+    # sites were "likely the whole set" -- over a set with nothing in it (#59).
+    for s in sorted(set(p["sites"])):
+        n = p["sites"].count(s)
+        print(f"  {s}" + (f"   ({n} rules)" if n > 1 else ""))
+    if not p["sites"]:
+        print("  (none — this block names no site; its rule is stated in the "
+              "no-prose-site form)")
+
+    # Terms weighted by RARITY. An unweighted overlap matches on "module", "whether",
+    # "already" -- words in almost every shipped file -- and buries the real candidate in
+    # noise. Only terms appearing in a small minority of files discriminate.
+    files = shipped_files()
+    texts = {f: f.read_text(encoding="utf-8").lower() for f in files}
+    def rare(term):
+        return sum(1 for s in texts.values() if term in s) <= max(2, len(files) // 8)
+    terms = {w for w in re.findall(r"[a-z_]{6,}", p["wording"].lower()) if rare(w)}
+    named = set(p["sites"])
+
+    # ⚠️ A path the block mentions in PROSE is a named site whose bullet nobody wrote.
+    # Both third sites found on 2026-09-01 -- INV-286's `phase2-document-confirm.md` and
+    # this block's `module-04-data-collection/SKILL.md` -- were named exactly this way.
+    # Only paths that RESOLVE under plugins/ are candidate sites. A block also names its
+    # enforcer test, `specs/INVARIANTS.md` and generated artifacts; none of those is a
+    # place a citation goes, and listing them buries the one that is.
+    # ⛔ The exclusion below was IMPLICIT until #59 and broke the moment resolution widened.
+    # This comment already said the enforcer test, `specs/INVARIANTS.md` and generated
+    # artifacts are not citation sites -- but nothing enforced it: `resolve()` searched
+    # `source/` only, so those paths simply failed to resolve and fell out for the wrong
+    # reason. Widening the roots made all three appear, burying the one candidate that
+    # matters. That is the same shape as the stale second copy of roots this widening was
+    # filed to remove, one level further in: a behavior resting on a narrow root rather
+    # than on a stated rule. It is now stated.
+    NOT_A_SITE = {"specs/IMPLEMENTED.md", "specs/INVARIANTS.md", "specs/DECLINED.md"}
+    prose = {m for m in re.findall(r"`([a-z0-9][\w./-]*\.(?:md|py))`", p["text"])
+             if m not in named and "/" in m and resolve(m) is not None
+             and m not in NOT_A_SITE
+             and m != (f"tests/{p['enforcer']}" if p["enforcer"] else None)
+             and m != p["enforcer"]}
+    if prose:
+        print("\n-- NAMED in the block's PROSE but not as a bullet (check these first) --")
+        for s in sorted(prose):
+            print(f"  {s}")
+
+    print("\n-- CANDIDATES from scanning (read each; do not cite blind) --")
+    hits = 0
+    for f in files:
+        rel = str(f.relative_to(PLUGIN))
+        if rel in named or rel in prose:
+            continue
+        for i, line in enumerate(texts[f].splitlines(), 1):
+            if "⛔" not in line or CITED.search(line):
+                continue
+            overlap = terms & set(re.findall(r"[a-z_]{6,}", line))
+            if len(overlap) >= 2:
+                hits += 1
+                print(f"  {rel}:{i}   shares: {', '.join(sorted(overlap)[:5])}")
+    if not hits:
+        # ⛔ This line used to read "the named sites are likely the whole set". That is a
+        # reassurance the scan cannot support and is FLATLY WRONG when nothing was named
+        # either -- the one case where it was certain to mislead (#59). The scan reads one
+        # root, so finding nothing is evidence about that root, not about the set.
+        print("  (none found)")
+        if not p["sites"]:
+            print("\n  ⛔ NOTHING was named and NOTHING was found. That is not evidence the "
+                  "site set is\n     complete -- see the scope below, and derive the sites "
+                  "by reading.")
+    # ⛔ (#77) Printed on EVERY branch, including the one that found candidates. That branch
+    # is the one this was missing from, and it is the one whose output reads as an answer.
+    print_scan_scope(*scan_scope())
+
+
+def cmd_check():
+    """Every rule quote must appear verbatim in the file it names.
+
+    ⛔ **A count of what was checked is not a result** unless what was NOT checked is
+    reported beside it. Until #59 this printed `checked` and `mismatched` only, and both
+    skip paths below incremented neither -- so a run that verified nothing printed
+    `0 rule quotes checked, 0 mismatched`, which is typographically identical to a clean
+    run over a full queue. That reached the maintainer as a clean check three reviews
+    running (2026-09-02, 2026-09-14, 2026-09-16), each time over a queue it had not read.
+
+    ⚠️ **The two skip causes mean opposite things and are counted apart.**
+
+    * `no_site` -- the bullet names no path (`(no prose site: ...)`). Legitimate: the rule
+      is encoded in code or tests rather than stated in prose, which is the form INV-301
+      and INV-304..307 all use. Nothing is owed and nothing is wrong.
+    * `unresolved` -- a path WAS named and does not resolve under any of RESOLUTION_ROOTS.
+      ⛔ This is the alarming one: the block asserts its rule lives somewhere, and the
+      quote behind that assertion is unverified. Reported as a warning, by name.
+
+    Collapsing the two would either cry wolf on every no-prose-site block or keep hiding
+    the real failure, which is how the defect survived this long.
+    """
+    bad = checked = unresolved = no_site = described = unparsed = 0
+    amendment_rules = 0
+    for p in [parse(b) for b in blocks()]:
+        # ⚠️ (#79) Counted separately, not because they are checked differently -- they are
+        # checked identically -- but because a reader must be able to tell whether any of the
+        # verified quotes belonged to a change to an invariant ALREADY IN FORCE. Folding them
+        # into one total hides the distinction that makes the decision different.
+        if p["amends"]:
+            amendment_rules += len(p["rules"])
+        unparsed += len(p["unparsed"])
+        for line in p["unparsed"]:
+            print(f"  UNPARSED {p['spec']}\n    {line[:110]}")
+        for r in p["rules"]:
+            quote, loc = r["text"], r["site"]
+            if r["kind"] == "described":
+                # ⛔ (#110) NOT checked, and counted apart rather than folded into any
+                # category above. Its text is a summary of the rule at that location and was
+                # never a quote of it, so a verbatim comparison would report a mismatch that
+                # says nothing about the ledger's honesty.
+                described += 1
+                continue
+            if loc is None:
+                no_site += 1
+                continue
+            f = resolve(loc)
+            if f is None:
+                unresolved += 1
+                print(f"  UNRESOLVED {p['spec']}\n    names `{loc}` — no such file under "
+                      f"any resolution root")
+                continue
+            checked += 1
+            src = CITED.sub("", flat(f.read_text(encoding="utf-8")))
+            if CITED.sub("", quote).strip() not in src:
+                bad += 1
+                print(f"  MISMATCH {p['spec']}\n    {quote[:110]}")
+    print(f"{checked} rule quotes checked, {bad} mismatched, "
+          f"{unresolved} unresolved, {no_site} no-prose-site, "
+          f"{described} described-not-quoted, {unparsed} unparsed")
+    print(f"   of those, {amendment_rules} belong to a PROPOSED AMENDMENT — a change to an "
+          f"invariant already in force")
+    if unparsed:
+        print(f"\n  ⛔ WARNING: {unparsed} rule bullet(s) matched NO known shape, so nothing "
+              f"read them.\n     They are absent from every count above except this one — "
+              f"which is the whole\n     point of the count (#110). Fix the bullet, or teach "
+              f"the parser its shape.")
+    if unresolved:
+        print(f"\n  ⛔ WARNING: {unresolved} rule(s) name a path that did not resolve, so "
+              f"their quotes are UNVERIFIED.\n     This is not a clean check. Fix the path, "
+              f"or state the rule in the no-prose-site form.")
+    elif not checked:
+        # ⚠️ (#110) The reason is named, not assumed. Until this ran, the note said "no prose
+        # site" whatever the cause -- so a run whose rules were all DESCRIBED, and therefore
+        # deliberately unverifiable, read as a run whose rules named no file at all.
+        why = ", ".join(w for w in (
+            f"{no_site} name no prose site" if no_site else "",
+            f"{described} are described rather than quoted, so none is verifiable" if described else "",
+            f"{unparsed} matched no known shape" if unparsed else "") if w) or "there were none"
+        print(f"\n  ⚠️  NOTE: no quote was verified — {why}. This is an empty check, not a "
+              f"clean one.")
+
+
+def main(argv):
+    if not argv or argv[0] in ("-h", "--help", "help"):
+        print(__doc__)
+        return 0
+    cmd, rest = argv[0], argv[1:]
+    if cmd == "list":
+        cmd_list()
+    elif cmd == "next-id":
+        print(f"INV-{next_id():03d}")
+    elif cmd == "check":
+        cmd_check()
+    elif cmd in ("show", "sites"):
+        if not rest or not rest[0].isdigit():
+            print(f"usage: {cmd} <n>   (see `list`)")
+            return 0
+        (cmd_show if cmd == "show" else cmd_sites)(int(rest[0]))
+    else:
+        print(f"unknown subcommand {cmd!r}")
+        print(__doc__)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

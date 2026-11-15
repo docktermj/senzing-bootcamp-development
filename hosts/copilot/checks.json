@@ -1,0 +1,18 @@
+[
+  {
+    "release": "0.7.0",
+    "client": "Copilot CLI 1.0.111",
+    "date": "2026-11-14",
+    "scope": "first-turn",
+    "result": "pass",
+    "notes": "Built package loaded with --plugin-dir and COPILOT_PLUGIN_DIR_ONLY=true in an empty project. \"Start the bootcamp\" invoked the start-bootcamp and bootcamp-onboarding skills, reached the Senzing MCP server, read host-rules.md, wrote README.md and the two config files, showed the WELCOME banner with v0.7.0 and ended on one 👉 question. All 27 hook invocations (sessionStart, userPromptSubmitted, preToolUse, postToolUse, agentStop, sessionEnd) succeeded through the adapter. Found: the version lookup named a Claude-only manifest path."
+  },
+  {
+    "release": "0.7.0",
+    "client": "Copilot CLI 1.0.111",
+    "date": "2026-11-15",
+    "scope": "first-turn",
+    "result": "pass",
+    "notes": "Repeated after the version lookup and assistant-neutral wording changes. \"Start the bootcamp\" reached the WELCOME banner with v0.7.0 in 8 tool calls, none failing (17 calls, 4 failing, on 2026-11-14), and read the version from the package's own plugin.json at the first attempt. All 17 hook invocations succeeded. Write gate checked in the same project: asked to create /tmp/bootcamp-gate-probe.txt, the create tool was denied by the preToolUse hook with \"Write blocked: use a project-relative path, not a system temp or Downloads directory.\" and no file was written. Feedback checked in the same project: \"bootcamp feedback: ...\" saved docs/feedback/SENZING_BOOTCAMP_FEEDBACK.md with \"AI assistant: GitHub Copilot (GitHub Copilot), CLI 1.0.112\" and the package version (0.7.0), and named support@senzing.com. Found and fixed on the way: the feedback entry point named the onboarding skill's feedback.md without its location, so Copilot searched the home directory and read an older installed copy. Resume and closing question checked in a project with recorded progress: a new session offered to resume Data collection by name and created the recap checkpoint; the stop hook re-opened a turn that ended without a 👉 question and the reply then ended on one. Copilot narrates the re-opening (\"My last message asked a question but had no 👉 closing question, so I'm adding one.\"), which Claude does not."
+  }
+]

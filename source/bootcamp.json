@@ -1,0 +1,30 @@
+{
+  "name": "senzing-bootcamp",
+  "version": "0.7.0",
+  "description": "Guided bootcamp for learning Senzing entity resolution with {{host.product}}, from first demo to production deployment.",
+  "author": {
+    "name": "Senzing"
+  },
+  "homepage": "https://github.com/Senzing/bootcamp",
+  "repository": "https://github.com/Senzing/bootcamp",
+  "license": "Apache-2.0",
+  "keywords": ["senzing", "bootcamp", "entity-resolution", "tutorial", "guided-learning"],
+  "mcp_servers": {
+    "senzing": {
+      "url": "https://mcp.senzing.com/mcp"
+    }
+  },
+  "hooks": [
+    {"event": "session_start", "script": "session-start.py"},
+    {"event": "prompt_submit", "script": "feedback-capture.py"},
+    {"event": "prompt_submit", "script": "checkpoint-tick.py"},
+    {"event": "prompt_submit", "script": "module-start-reminder.py"},
+    {"event": "prompt_submit", "script": "module-number-reminder.py"},
+    {"event": "pre_tool_use", "tools": ["write", "edit", "shell"], "script": "write-gate.py"},
+    {"event": "post_tool_use", "tools": ["shell"], "script": "failed-run-net.py"},
+    {"event": "post_tool_use_failure", "tools": ["shell"], "script": "failed-run-net.py"},
+    {"event": "stop", "script": "stop-nudge.py"},
+    {"event": "pre_compact", "script": "precompact-recap.py"},
+    {"event": "session_end", "script": "session-end.py"}
+  ]
+}

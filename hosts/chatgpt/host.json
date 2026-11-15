@@ -1,0 +1,112 @@
+{
+  "id": "chatgpt",
+  "name": "ChatGPT",
+  "package_format": "codex-plugin",
+  "vars": {
+    "product": "Codex",
+    "plugin_root": "${PLUGIN_ROOT}",
+    "plugin_root_var": "PLUGIN_ROOT",
+    "scripts_dir": "${PLUGIN_ROOT}/scripts",
+    "docs_dir": "${PLUGIN_ROOT}/docs",
+    "scripts_fallback": "<this-skill-dir>/../../scripts",
+    "manifest_path": ".codex-plugin/plugin.json",
+    "package_noun": "plugin",
+    "command_prefix": "$",
+    "assistant": "ChatGPT",
+    "scripts_relative": "../../scripts",
+    "docs_relative": "../../docs",
+    "model_balanced": "a balanced Codex model",
+    "model_capable": "a high-capability Codex model",
+    "model_top": "the highest-capability Codex model available",
+    "model_controls": "the model and effort controls in the Codex desktop app",
+    "skills_dir": ".."
+  },
+  "layout": {
+    "skills": "skills",
+    "commands": null,
+    "scripts": "scripts",
+    "docs": "docs",
+    "hooks/README.md": null,
+    "hooks/fallbacks": null,
+    "docs/model-selection.md": null
+  },
+  "hooks": {
+    "command": "python3 \"{{host.plugin_root}}/scripts/{script}\" {event}",
+    "entry": {
+      "statusMessage": "Checking the Senzing Bootcamp"
+    },
+    "events": {
+      "session_start": "SessionStart",
+      "prompt_submit": "UserPromptSubmit",
+      "pre_tool_use": "PreToolUse",
+      "post_tool_use": "PostToolUse",
+      "post_tool_use_failure": null,
+      "stop": "Stop",
+      "pre_compact": "PreCompact",
+      "session_end": "SessionEnd"
+    },
+    "tools": {
+      "write": "Write",
+      "edit": "Edit",
+      "shell": "Bash"
+    },
+    "guaranteed": false,
+    "note": "Codex runs the bootcamp's hooks only after the bootcamper has reviewed and trusted them."
+  },
+  "options": {
+    "manifest": {
+      "interface": {
+        "displayName": "Senzing Bootcamp",
+        "shortDescription": "Learn Senzing entity resolution in Codex.",
+        "longDescription": "A guided, hands-on Senzing entity-resolution bootcamp for Codex.",
+        "developerName": "Senzing",
+        "category": "Developer Tools",
+        "capabilities": [
+          "Interactive",
+          "Write"
+        ],
+        "websiteURL": "https://senzing.com",
+        "defaultPrompt": [
+          "Start the Senzing Bootcamp.",
+          "Resume my Senzing Bootcamp.",
+          "Check my bootcamp progress."
+        ]
+      }
+    },
+    "adapter": {
+      "result_dialect": "canonical",
+      "transcript_dialect": null,
+      "tool_categories": {
+        "apply_patch": "patch",
+        "Write": "write",
+        "Edit": "edit",
+        "Bash": "shell",
+        "shell": "shell"
+      }
+    }
+  },
+  "catalog": {
+    "path": ".agents/plugins/marketplace.json",
+    "style": "codex",
+    "name": "senzing"
+  },
+  "foreign_terms": [
+    "Claude",
+    "CLAUDE_",
+    "Copilot",
+    "Kiro",
+    "Gemini",
+    "Antigravity"
+  ],
+  "site": {
+    "order": 4,
+    "name": "ChatGPT",
+    "kind": "ChatGPT plugin for Codex",
+    "plan": "ChatGPT Pro",
+    "plan_url": "https://chatgpt.com/pricing/",
+    "note": "ChatGPT Plus works across several 5-hour windows, but not in one session.",
+    "lead": "From nothing installed to a running bootcamp, in the Codex desktop app.",
+    "description": "Install the Senzing Bootcamp plugin for Codex and start the bootcamp in the Codex desktop app.",
+    "commands_note": "Codex runs each from the request itself; there is nothing to memorize."
+  }
+}

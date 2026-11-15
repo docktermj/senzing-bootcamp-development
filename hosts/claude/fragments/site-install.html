@@ -1,0 +1,103 @@
+          <p class="intro">Choose one path. Both end with the bootcamp running in Claude Code. In the Claude web app or a Claude IDE extension, see <a href="#other-claude-code-clients">other Claude Code clients</a>.</p>
+          <ul class="paths">
+            <li><a href="#claude-desktop">Claude Desktop (no terminal)</a></li>
+            <li><a href="#claude-code-cli">Claude Code CLI</a></li>
+          </ul>
+
+          <div class="path" id="claude-desktop">
+            <h3>Claude Desktop</h3>
+            <p class="path__kind">Claude Code inside the desktop application. No terminal needed.</p>
+            <ol class="steps">
+              <li>Download and install <a href="https://claude.ai/download">Claude Desktop</a>.</li>
+              <li>
+                Start Claude Desktop.
+                <p class="step__alt">If asked, install <code>git</code>.</p>
+              </li>
+              <li>
+                Open a new Claude Code session:
+                <ol class="substeps" type="a">
+                  <li>In the left-hand pane, choose <strong>&lt;/&gt; Code</strong>.</li>
+                  <li>In the <em>Code</em> pane, click <strong>New</strong>.</li>
+                </ol>
+              </li>
+              <li>Near the bottom, choose the working directory (it might say <strong>Select folder...</strong>), and select your new, empty folder for the bootcamp.</li>
+              <li>
+                Install the Senzing Bootcamp plugin:
+                <p class="step__alt"><strong>Note:</strong> These steps may change with the version of Claude Desktop.</p>
+                <ol class="substeps" type="a">
+                  <li>On the bottom, click the <strong>Add</strong> icon (<strong>+</strong>), then <strong>Plugins</strong> &gt; <strong>Manage plugins</strong>.</li>
+                  <li>Select the <strong>Yours</strong> tab.</li>
+                  <li>In the upper-right of the <em>Plugins</em> pane, click <strong>Add</strong> &gt; <strong>Add Marketplace</strong>. If the plus sign is missing, see <a href="#claude-desktop-inoperative">Troubleshooting</a>.</li>
+                  <li>
+                    In the <em>Add marketplace</em> pane, for <strong>URL:</strong>, enter:
+                    <div class="cmd"><pre><code>https://github.com/Senzing/bootcamp</code></pre></div>
+                  </li>
+                  <li>Click <strong>Sync</strong>.</li>
+                  <li>To the right of <strong>Senzing bootcamp</strong>, click <strong>Add</strong> &gt; <strong>install for project (personal)</strong>.</li>
+                  <li>Close the <em>Plugins</em> dialog.</li>
+                </ol>
+              </li>
+              <li>
+                On the bottom, set the mode, model and effort:
+                <ol class="substeps" type="a">
+                  <li>Choose the Mode <strong>auto</strong> for a smooth ride.</li>
+                  <li>Choose the Model <strong>Sonnet 5.5</strong>.</li>
+                  <li>Choose the Effort <strong>medium</strong>.</li>
+                </ol>
+              </li>
+              <li>
+                Near the bottom, in the agentic chat, enter:
+                <div class="cmd"><pre><code>Start the bootcamp</code></pre></div>
+                <p class="step__alt">Or enter <code>/start-bootcamp</code>. See <a href="#commands">Bootcamp requests</a> for the rest.</p>
+              </li>
+            </ol>
+          </div>
+
+          <div class="path" id="claude-code-cli">
+            <h3>Claude Code CLI</h3>
+            <p class="path__kind">Claude Code in a terminal.</p>
+            <ol class="steps">
+              <li>
+                Install the Claude Code CLI:
+                <div class="cmd-pair">
+                  <div>
+                    <p class="cmd__label">macOS, Linux or WSL</p>
+                    <div class="cmd"><pre><code>curl -fsSL https://claude.ai/install.sh | bash</code></pre></div>
+                  </div>
+                  <div>
+                    <p class="cmd__label">Windows, in PowerShell</p>
+                    <div class="cmd"><pre><code>irm https://claude.ai/install.ps1 | iex</code></pre></div>
+                  </div>
+                </div>
+                <p class="step__alt">Windows is fully supported. To work without a terminal, use <a href="#claude-desktop">Claude Desktop</a>, which runs on Windows too.</p>
+              </li>
+              <li>
+                Add the Senzing Bootcamp marketplace:
+                <div class="cmd"><pre><code>claude plugin marketplace add Senzing/bootcamp</code></pre></div>
+              </li>
+              <li>
+                Install the Senzing Bootcamp plugin:
+                <div class="cmd"><pre><code>claude plugin install senzing-bootcamp@senzing-bootcamp</code></pre></div>
+                <p class="step__alt">If the plugin is already installed, <a href="#update-uninstall">update it</a> instead.</p>
+              </li>
+              <li>
+                Create a new directory for the bootcamp:
+                <div class="cmd"><pre><code>mkdir senzing-bootcamp</code></pre></div>
+              </li>
+              <li>
+                Change into it:
+                <div class="cmd"><pre><code>cd senzing-bootcamp</code></pre></div>
+              </li>
+              <li>
+                Start the Claude Code CLI on <strong>Sonnet 5.5</strong> at medium effort, with <code>--permission-mode auto</code> for the smoothest ride:
+                <div class="cmd"><pre><code>claude --model claude-sonnet-5-5 --effort medium --permission-mode auto</code></pre></div>
+              </li>
+              <li>
+                Start the bootcamp. Tell Claude:
+                <div class="cmd"><pre><code>Start the bootcamp</code></pre></div>
+                <p class="step__alt">Or enter <code>/start-bootcamp</code>. See <a href="#commands">Bootcamp requests</a> for the rest.</p>
+              </li>
+            </ol>
+          </div>
+
+          <p class="after-steps" id="other-claude-code-clients">The plugin works wherever Claude Code runs. Claude Code also runs in the Claude web app and in Claude IDE extensions (<a href="https://marketplace.visualstudio.com/items?itemName=anthropic.claude-code">VS Code</a>, JetBrains). The bootcamp supports those: it adapts its model and effort guidance to the interface you are in. This page has no verified install steps for them, so install the plugin the way your client installs plugins, then start the bootcamp.</p>

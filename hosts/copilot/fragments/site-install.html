@@ -1,0 +1,90 @@
+          <p class="intro">Choose one path. Both end with the bootcamp running in GitHub Copilot.</p>
+          <ul class="paths">
+            <li><a href="#copilot-app">GitHub Copilot app (no terminal)</a></li>
+            <li><a href="#copilot-cli">Copilot CLI</a></li>
+          </ul>
+
+          <div class="path" id="copilot-app">
+            <h3>GitHub Copilot app</h3>
+            <p class="path__kind">Graphical setup, from the app's Customize view.</p>
+            <ol class="steps">
+              <li>Get and install <a href="https://github.com/features/copilot">GitHub Copilot</a>, open the app and sign in with your GitHub account.</li>
+              <li>
+                Add the marketplace:
+                <p class="step__alt"><strong>Note:</strong> These steps may change with the version of the GitHub Copilot app.</p>
+                <ol class="substeps" type="a">
+                  <li>In the left-hand navigation, select <strong>Customize</strong>.</li>
+                  <li>In the upper right, click <strong>+ Add</strong> &gt; <strong>Manage marketplaces...</strong></li>
+                  <li>
+                    For <strong>Source</strong>, enter:
+                    <div class="cmd"><pre><code>https://github.com/Senzing/bootcamp</code></pre></div>
+                  </li>
+                  <li>Click <strong>Add</strong>, then close the <strong>Manage marketplaces</strong> dialog.</li>
+                </ol>
+              </li>
+              <li>
+                Install the plugin:
+                <ol class="substeps" type="a">
+                  <li>In <strong>Customize</strong>, select the <strong>Browse</strong> tab and choose <strong>All types</strong>.</li>
+                  <li>Search for <code>bootcamp</code>.</li>
+                  <li>Select <strong>senzing-bootcamp</strong> and click <strong>Install</strong>.</li>
+                </ol>
+              </li>
+              <li>
+                Start a session in your empty folder:
+                <ol class="substeps" type="a">
+                  <li>In the left-hand navigation, select <strong>Sessions</strong>, then click <strong>New</strong> (<strong>+</strong>) &gt; <strong>Add local folder or repository</strong>.</li>
+                  <li>Create or select a new, empty folder.</li>
+                  <li>In <strong>Mode</strong>, choose <strong>Interactive</strong>.</li>
+                </ol>
+              </li>
+              <li>
+                In the agentic chat, enter:
+                <div class="cmd"><pre><code>Start the bootcamp</code></pre></div>
+              </li>
+            </ol>
+          </div>
+
+          <div class="path" id="copilot-cli">
+            <h3>Copilot CLI</h3>
+            <p class="path__kind">GitHub Copilot in a terminal.</p>
+            <ol class="steps">
+              <li>
+                Install the <a href="https://docs.github.com/en/copilot/how-tos/copilot-cli/set-up-copilot-cli/install-copilot-cli">GitHub Copilot CLI</a>:
+                <div class="cmd-pair">
+                  <div>
+                    <p class="cmd__label">macOS or Linux</p>
+                    <div class="cmd"><pre><code>curl -fsSL https://gh.io/copilot-install | bash</code></pre></div>
+                  </div>
+                  <div>
+                    <p class="cmd__label">Windows, WinGet</p>
+                    <div class="cmd"><pre><code>winget install GitHub.Copilot</code></pre></div>
+                  </div>
+                </div>
+              </li>
+              <li>
+                Add the Senzing Bootcamp marketplace:
+                <div class="cmd"><pre><code>copilot plugin marketplace add Senzing/bootcamp</code></pre></div>
+              </li>
+              <li>
+                Install the Senzing Bootcamp plugin:
+                <div class="cmd"><pre><code>copilot plugin install senzing-bootcamp@senzing-bootcamp</code></pre></div>
+              </li>
+              <li>
+                Create a new directory for the bootcamp:
+                <div class="cmd"><pre><code>mkdir senzing-bootcamp</code></pre></div>
+              </li>
+              <li>
+                Change into it:
+                <div class="cmd"><pre><code>cd senzing-bootcamp</code></pre></div>
+              </li>
+              <li>
+                Start the Copilot CLI:
+                <div class="cmd"><pre><code>copilot</code></pre></div>
+              </li>
+              <li>
+                Start the bootcamp. Tell Copilot:
+                <div class="cmd"><pre><code>Start the bootcamp</code></pre></div>
+              </li>
+            </ol>
+          </div>

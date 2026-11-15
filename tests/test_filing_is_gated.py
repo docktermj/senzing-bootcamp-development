@@ -1,0 +1,739 @@
+"""Every surface that INSTRUCTS an outward act states the gate beside the instruction.
+
+An outward act creates a record outside this repository: a GitHub issue, a comment, a pull
+request, an upstream message. It is **outward-facing and irreversible**: the record is visible
+the moment it exists, its notifications have gone out, and it can be edited or closed but never
+un-created. This module covers the four acts the maintainer commands can instruct:
+`gh issue create`, `gh issue comment`, `gh pr create`, and maintainer-side `submit_feedback`.
+
+⛔ **The hard half is telling an INSTRUCTION from a PROHIBITION**, and a first scan got it
+wrong. Searching for `gh issue create` returns several files, and some of them name it only to
+forbid or template the act. The three pinned as negatives:
+
+* the `--repo` prohibition the `/feedback-to-issues` command file carried, kept verbatim here;
+* `.claude/skills/feedback-to-issues/issue-template.md` — a body template;
+* `.claude/skills/delegate-to-mcp-server/issue-template.md` — a body template.
+
+⚠️ **Dated note, 2026-09-30 (#262): the first negative is a pinned text, not a file.** The
+command file that carried it was deleted by #262, since `/<name>` runs the skill (measured
+2026-09-29, Claude Code 2.1.284, #241). Its sentence is kept verbatim as `RETIRED_PROHIBITION`,
+so the negative set stays at three rather than shrinking toward vacuity (INV-265). The
+`dry-run` command also left the unattended set; the `dry-run` skill is still in it.
+
+⚠️ **Re-pointed 2026-09-28 (#215).** The third negative was
+`.claude/skills/unattended-issue-loop/SKILL.md` (*"An unattended audit FILES NOTHING."*). That
+file is gone (#239), and the loop that runs has no audit cycle. The delegate template replaces
+it so the negative set does not shrink toward vacuity (INV-265).
+
+A guard that cannot tell them apart demands a gate on the rule that forbids filing, which is the
+same "satisfied by something adjacent" defect this repository keeps finding -- committed inside
+the guard written to prevent it.
+
+⛔ **For the three `gh` commands the discriminator is the fence.** A command inside a fenced
+code block is one the reader is told to run; one in inline backticks is prose *about* it.
+Measured 2026-09-29 over the 8 files that name `gh issue create`, it split them **5 and 3**,
+exactly along the instruction/prohibition line (7 files and **5 and 2** after #262, plus the
+pinned text). `ProhibitionsAreNotInstructions` pins the three
+negatives. ⛔ **`submit_feedback` is an MCP call and is never fenced**, so its instruction is
+the call shape `submit_feedback(category=…)`; prose naming the tool is not one.
+
+⚠️ **The gate is required NEAR the instruction, not anywhere in the file.** A file-wide search
+would let a gate in one section vouch for an instruction in another. Measured 2026-09-29: 2 to
+7 lines for the five `gh issue create` sites, and 1 and 3 for the two `submit_feedback` sites,
+on both sides of the instruction.
+
+⛔ **Which records need a per-record yes is INV-314's scope note (#216), applied 2026-09-30.**
+Applying `unattended-ok` is assent, given in advance, to a closed list of acts on that issue
+only, and invoking `/implement-github-issue <n>` is assent to five comments on `<n>`. The two
+overlays under `.claude/skill-overlays/` state the list and cite the note. So a `gh issue
+comment` or `gh pr create` instruction may sit beside that citation instead of a yes. A new
+issue and `submit_feedback` are never on the list, and only a yes vouches for them.
+
+⛔ **Which yes may cover a list is INV-314's 2026-10-13 note (#574), applied by #575.** Every
+gated `gh issue create` or `gh issue comment` instruction carries `BATCH_CLAUSE`, verbatim,
+beside its yes, and no `submit_feedback` call does: an upstream message stays one message, one
+yes. The clause is one fixed form so that a site added later without it fails here.
+⛔ **Since #808 the fixed form ends with its pointer** — `, under the conditions in
+`.claude/skills/feedback-to-issues/drafts.py` → "The batch yes"` — and that docstring section is
+the one statement of the note's four conditions (INV-300): every record shown in one numbered
+message with its exact title, body and labels; struck by number; the yes covers only the records
+shown; GitHub issues and comments in this repository only. Until #808 they were stated in full only
+in the note and at `/release-cycle`'s checkpoint A. No `.claude/skills/` or
+`.claude/skill-overlays/` file outside that section restates a condition (`RESTATED_CONDITION`),
+and the section must hold all four (`TheBatchYesIsStatedOnce`). Five prose
+sites state the gate with no fenced instruction beside it; `PROSE_SITES` pins those by name. The
+five finding skills' `--file` stages are prose sites too since #573 retired #572's per-record
+lines, and `PROSE_SITES` counts them with the rest.
+
+⛔ **The unattended surfaces instruct only acts from the list.** They are discovered, not
+listed: the loop's overlay, the Step 8.1 mapping row for a finding with no entry, and every
+branch opened by a bold *Unattended* or *No maintainer present* label. None may instruct a new
+issue, a `submit_feedback` call or adding `unattended-ok`. No `.claude/` or `tests/` file may
+say that nothing leaves the machine unattended, or that the loop files an issue itself.
+
+⛔ **Every skill that files issues states INV-318** (#610): it never applies `unattended-ok` to
+an issue it files. `LABEL_RULE_SKILLS` names the eight, and the list is checked against the
+filing surfaces this module discovers (every skill with a fenced `gh issue create` or a
+`PROSE_SITES` entry), so a skill that starts filing without the rule fails here. Until #610
+only `/dry-run`, `/production-readiness-audit` and `/release-cycle` stated it.
+
+⚠️ **`gh issue comment` and `gh pr create` have no fenced site in this repository today.** Both
+live only in the governing copies under `~/.claude/skills/`, which this module cannot read and
+CI never has (INV-308). For those two the check runs over the whole corpus, and the synthetic
+controls in `TheCheckersAreNotVacuous` keep it from passing by finding nothing.
+
+⚠️ **What this does NOT establish.** It pins that each instruction and its gate **sit together
+in the shipped text**. It cannot establish that a run actually asks, that a maintainer actually
+answered, that an unattended run kept to the list, or which issue a comment was posted on --
+those are properties of a live turn, and only `dry-run` phase 3 observes one. An act named in
+prose rather than a fence or a call shape is outside the finders (`/dry-run`'s outbound rule is
+pinned by `tests/test_dry_run_files_issues.py` instead), and so is a `gh` verb that is not one
+of the four acts. A green run means the rule is *written* everywhere it should be, not that it
+was *obeyed*.
+
+⛔ **Enforces INV-314** — a maintainer command creating a record outside this repository
+presents the exact text and gets the maintainer's assent first, each record separately, or
+one yes for the whole list shown in one message (INV-314, 2026-10-13 note); unattended, it creates nothing and writes the drafted text where the maintainer will find it.
+
+Source issues: #106, #216, #575, #573, #610.
+
+Stdlib only; the surfaces are discovered rather than listed (INV-246).
+
+Run:  python3 -m unittest discover -s tests
+"""
+import re
+import unittest
+from pathlib import Path
+
+from _corpus import corpus_files
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+CLAUDE = REPO_ROOT / ".claude"
+
+#: A fenced block, indented or not. ⛔ `[ \t]*` is load-bearing: two of the instructions sit
+#: inside list items, so their fences are indented and a column-0 pattern missed them -- which
+#: made the first measurement report those surfaces as ungated.
+FENCE = re.compile(r"^[ \t]*```.*?^[ \t]*```", re.M | re.S)
+
+#: The act this module was first written for.
+FILING = "gh issue create"
+
+#: The three `gh` acts, each an instruction only inside a fence.
+GH_ACTS = (FILING, "gh issue comment", "gh pr create")
+
+#: `submit_feedback` as a call. The prose that names the tool, forbids it or records a value
+#: from it has no `(category=` after the name.
+SUBMIT = "submit_feedback"
+SUBMIT_CALL = re.compile(r"\bsubmit_feedback\(\s*category\s*=")
+
+#: The gate, matched on the CLAIM rather than one phrasing (INV-282). The shipped wordings are
+#: "get a yes first", "get a yes, before filing", "get a yes, then file" and, at both
+#: `submit_feedback` sites, "get an explicit yes".
+GATE = re.compile(r"(?i)\bget an? (?:explicit )?yes\b")
+
+#: A citation of INV-314's scope note, as both overlays write it.
+SCOPE_NOTE = re.compile(r"INV-314, as amended by its 2026-09-30 scope note\b[^\n]*#216")
+
+#: What may stand beside each act. Only a yes vouches for a new issue or `submit_feedback`,
+#: because neither is on the scope note's list.
+ACCEPTED = {
+    FILING: (GATE,),
+    "gh issue comment": (GATE, SCOPE_NOTE),
+    "gh pr create": (GATE, SCOPE_NOTE),
+    SUBMIT: (GATE,),
+}
+
+#: INV-314's 2026-10-13 note, as every gated issue or comment states it (#575). One fixed form,
+#: matched across line wraps, so a later guard -- and this one -- can find every site. Since #808
+#: it ends with the pointer to the one statement of the note's conditions.
+BATCH_NOTE = "one yes for the whole list shown in one message (INV-314, 2026-10-13 note)"
+BATCH_POINTER = ', under the conditions in `.claude/skills/feedback-to-issues/drafts.py` → "The batch yes"'
+BATCH_CLAUSE = BATCH_NOTE + BATCH_POINTER
+BATCH = re.compile(r"\s+".join(re.escape(w) for w in BATCH_CLAUSE.split()))
+
+#: Anything that starts the clause, so a variant wording or citation is caught (INV-282).
+BATCH_START = re.compile(r"(?i)\bone\s+yes\s+for\s+the\s+whole\s+list\b")
+
+#: The one statement of the note's conditions (#808): a docstring section of this file.
+CONDITIONS_FILE = CLAUDE / "skills" / "feedback-to-issues" / "drafts.py"
+CONDITIONS_HEADING = "The batch yes"
+
+#: Each of the note's four conditions, as a site would restate it (#808). Matched on
+#: whitespace-flattened text, so a wrap does not hide one.
+RESTATED_CONDITION = (
+    ("1: shown whole", re.compile(r"(?i)\bexact title, body,? and labels\b")),
+    ("2: struck by number", re.compile(r"(?i)\bstrikes?\b[^.]{0,40}?\bby number\b"
+                                       r"|\byes except \d")),
+    ("3: only the records shown", re.compile(r"(?i)\bcovers only the records\b"
+                                             r"|\badded or edited after\b")),
+    ("4: issues and comments here", re.compile(r"(?i)\bissues and comments in this repository\b")),
+)
+
+#: The acts the note lets one yes cover: issues and comments in this repository. Not
+#: `gh pr create`, which stays behind Gate 2's yes, and never `submit_feedback`.
+BATCHABLE = (FILING, "gh issue comment")
+
+#: The files holding the five sites that state the gate in prose, with no fenced instruction for
+#: the finders above to reach, and how many times each file carries the clause in all (dry-run's
+#: and delegate's second is at their fenced site). Re-located on `2bc257da` (#575). #573 adds the
+#: clause at each finding skill's `--file` stage, a prose site, so each of the five counts one
+#: more, and the three with no other prose site are listed for it.
+PROSE_SITES = {
+    "skills/dry-run/SKILL.md": 3,
+    "skills/delegate-to-mcp-server/SKILL.md": 3,
+    "skills/auto-test/SKILL.md": 1,
+    "skills/compact-dev-environment/SKILL.md": 1,
+    "skill-overlays/implement-github-issue.md": 1,
+    "skills/feedback-to-issues/SKILL.md": 2,
+    "skills/retrofit-from-public/SKILL.md": 2,
+    "skills/production-readiness-audit/SKILL.md": 2,
+    "skills/release-cycle/SKILL.md": 1,
+}
+
+#: How far from the instruction the gate may sit. Measured 2026-09-29: at most 7 lines. The
+#: bound is deliberately small -- a file-wide search would let a gate in one section vouch for
+#: an instruction in another.
+GATE_WINDOW = 25
+
+#: The label that opens a surface's unattended branch. Both wordings the corpus uses are bold.
+UNATTENDED_BRANCH = re.compile(r"\*\*(?i:unattended|no maintainer present)(?![\w-])")
+
+#: The two unattended surfaces with no such label: the loop's overlay, which describes nothing
+#: else, and the Step 8.1 mapping row for a finding with no entry.
+LOOP_OVERLAY = "skill-overlays/unattended-issue-loop.md"
+NO_ENTRY_ROW = ("skills/feedback-to-issues/SKILL.md", re.compile(r"^[ \t]*\| \*\(no entry:", re.M))
+
+#: Adding `unattended-ok`, which no run may do (INV-318 for a filed issue; the scope note for any).
+ADDS_THE_LABEL = re.compile(r"--add-label[\s=]+[\"']?unattended-ok")
+
+#: The two claims the scope note contradicts. An unattended run creates the listed acts, so
+#: something does leave the machine; and it files no issue, so no finding is one it files itself.
+STALE_CLAIM = re.compile(
+    r"(?i)nothing leaves the machine unattended|\bfiles itself\b"
+    r"|\bunattended (?:loop|run) files (?:an? |its own )?issues?\b")
+
+
+#: The skills that file issues, each of which must state INV-318 (#610). Stated rather than
+#: derived, because `/release-cycle` files through the skills it runs and has no filing site of
+#: its own; `test_every_filing_skill_is_listed` derives the rest and holds the list to them.
+LABEL_RULE_SKILLS = ("dry-run", "production-readiness-audit", "release-cycle",
+                     "feedback-to-issues", "retrofit-from-public", "delegate-to-mcp-server",
+                     "auto-test", "compact-dev-environment")
+
+#: INV-318 stated: the citation and the label in one sentence, in either order. Matched on
+#: whitespace-flattened text, so a wrap does not hide it.
+STATES_INV318 = re.compile(r"\(INV-318\b[^)]*\)[^.]{0,120}?`unattended-ok`"
+                           r"|`unattended-ok`[^.]{0,120}?\(INV-318\b")
+
+
+def states_inv318(text):
+    return bool(STATES_INV318.search(re.sub(r"\s+", " ", text)))
+
+
+def line_of(text, offset):
+    return text[:offset].count("\n") + 1
+
+
+def surfaces():
+    """Every markdown file under `.claude/`; `_corpus` keeps worktree scratch out."""
+    return corpus_files(".claude", suffixes={".md"})
+
+
+def instruction_lines(text, act=FILING):
+    """Line numbers where `text` tells the reader to RUN `act`.
+
+    A `gh` act is an instruction inside a fenced block and prose in inline backticks.
+    `submit_feedback` is an instruction in its call shape.
+    """
+    if act == SUBMIT:
+        return [line_of(text, m.start()) for m in SUBMIT_CALL.finditer(text)]
+    return [line_of(text, m.start()) for m in FENCE.finditer(text) if act in m.group(0)]
+
+
+def ungated_lines(text, act):
+    """Instructions of `act` with nothing `ACCEPTED` for it within `GATE_WINDOW` lines."""
+    marks = [line_of(text, m.start()) for p in ACCEPTED[act] for m in p.finditer(text)]
+    return [n for n in instruction_lines(text, act)
+            if not any(abs(g - n) <= GATE_WINDOW for g in marks)]
+
+
+def _near(n, lines):
+    return any(abs(g - n) <= GATE_WINDOW for g in lines)
+
+
+def unbatched_lines(text, act):
+    """Instructions of `act` gated by a yes with no `BATCH_CLAUSE` within `GATE_WINDOW` lines.
+
+    A comment vouched for by the scope-note citation needs no yes, so it needs no clause.
+    """
+    gates = [line_of(text, m.start()) for m in GATE.finditer(text)]
+    notes = [line_of(text, m.start()) for m in SCOPE_NOTE.finditer(text)]
+    batch = [line_of(text, m.start()) for m in BATCH.finditer(text)]
+    return [n for n in instruction_lines(text, act)
+            if _near(n, gates) and not _near(n, notes) and not _near(n, batch)]
+
+
+def batched_submit_lines(text):
+    """`submit_feedback` calls with `BATCH_CLAUSE` within `GATE_WINDOW` lines."""
+    batch = [line_of(text, m.start()) for m in BATCH.finditer(text)]
+    return [n for n in instruction_lines(text, SUBMIT) if _near(n, batch)]
+
+
+def variant_clauses(text):
+    """Line numbers where the clause starts in any form but the fixed one."""
+    exact = {m.start() for m in BATCH.finditer(text)}
+    return [line_of(text, m.start()) for m in BATCH_START.finditer(text) if m.start() not in exact]
+
+
+def conditions_section(text):
+    """The `The batch yes` section of ``CONDITIONS_FILE``'s docstring, or None."""
+    m = re.search(r"^%s\n=+\n(.*?)(?=^\S[^\n]*\n=+\n)" % re.escape(CONDITIONS_HEADING),
+                  text, re.M | re.S)
+    return m.group(1) if m else None
+
+
+def restated_conditions(text):
+    """Each condition of INV-314's 2026-10-13 note that ``text`` states in its own words."""
+    flat = re.sub(r"\s+", " ", text)
+    return ["%s: %r" % (name, m.group(0)) for name, pattern in RESTATED_CONDITION
+            for m in pattern.finditer(flat)]
+
+
+def condition_sites():
+    """Every `.md` and `.py` file under `.claude/skills/` and `.claude/skill-overlays/`."""
+    return corpus_files(".claude/skills", ".claude/skill-overlays", suffixes={".md", ".py"})
+
+
+def off_list_acts(text):
+    """The acts `text` instructs that an unattended run never takes."""
+    found = ["%s at +%d" % (FILING, n - 1) for n in instruction_lines(text, FILING)]
+    found += ["%s at +%d" % (SUBMIT, n - 1) for n in instruction_lines(text, SUBMIT)]
+    found += ["--add-label unattended-ok at +%d" % (line_of(text, m.start()) - 1)
+              for f in FENCE.finditer(text) for m in ADDS_THE_LABEL.finditer(f.group(0))]
+    found += ["%r at +%d" % (m.group(0), line_of(text, m.start()) - 1)
+              for m in STALE_CLAIM.finditer(text)]
+    return found
+
+
+def branch_region(text, start):
+    """From `start` to the end of its list item, table row or paragraph."""
+    first = text.rfind("\n", 0, start) + 1
+    head = text[first:].split("\n", 1)[0]
+    if head.lstrip().startswith("|"):
+        return text[start:first + len(head)]
+    indent = len(head) - len(head.lstrip())
+    end = first + len(head)
+    for line in text[end + 1:].split("\n"):
+        stripped = line.lstrip()
+        if (not stripped or stripped.startswith("#") or
+                (len(line) - len(stripped) <= indent and re.match(r"(?:[-*]|\d+\.)\s", stripped))):
+            break
+        end += 1 + len(line)
+    return text[start:end]
+
+
+def unattended_regions():
+    """`(label, text)` for every surface that describes an unattended run."""
+    out = []
+    overlay = CLAUDE / LOOP_OVERLAY
+    if overlay.is_file():
+        out.append((LOOP_OVERLAY, overlay.read_text(encoding="utf-8")))
+    rel, row = NO_ENTRY_ROW
+    if (CLAUDE / rel).is_file():
+        text = (CLAUDE / rel).read_text(encoding="utf-8")
+        out += [("%s:%d" % (rel, line_of(text, m.start())), branch_region(text, m.start()))
+                for m in row.finditer(text)]
+    for p in surfaces():
+        text = p.read_text(encoding="utf-8")
+        out += [("%s:%d" % (p.relative_to(CLAUDE).as_posix(), line_of(text, m.start())),
+                 branch_region(text, m.start()))
+                for m in UNATTENDED_BRANCH.finditer(text)]
+    return out
+
+
+def claim_corpus():
+    """Every `.claude/` and `tests/` file a stale claim could be written in, this one excepted."""
+    files = corpus_files(".claude", "tests", suffixes={".md", ".py"})
+    return sorted(p for p in files if p.resolve() != Path(__file__).resolve())
+
+
+def read(p):
+    return p.read_text(encoding="utf-8")
+
+
+class TheCorpusIsNotEmpty(unittest.TestCase):
+    """INV-265 -- every assertion below is satisfied trivially by an empty set."""
+
+    def test_surfaces_were_found(self):
+        self.assertGreaterEqual(len(surfaces()), 10,
+                                "fewer than ten markdown surfaces under %s; the glob has drifted"
+                                % CLAUDE)
+
+    def test_at_least_three_instructions_to_file(self):
+        found = sum(len(instruction_lines(read(p), FILING)) for p in surfaces())
+        self.assertGreaterEqual(
+            found, 3,
+            "fewer than three fenced `%s` instructions (%d). Either the fence pattern has "
+            "drifted or the commands stopped filing; either way the gate check below is vacuous"
+            % (FILING, found))
+
+    def test_at_least_two_calls_to_submit_feedback(self):
+        found = sum(len(instruction_lines(read(p), SUBMIT)) for p in surfaces())
+        self.assertGreaterEqual(
+            found, 2,
+            "fewer than two call-shaped `%s(category=…)` instructions (%d); the call-shape "
+            "finder has drifted, or the gate check below reads nothing" % (SUBMIT, found))
+
+    def test_the_unattended_set_holds_each_named_surface(self):
+        labels = [label for label, _ in unattended_regions()]
+        for rel in (LOOP_OVERLAY, "skills/production-readiness-audit/SKILL.md",
+                    "skills/dry-run/SKILL.md", NO_ENTRY_ROW[0]):
+            with self.subTest(surface=rel):
+                self.assertTrue(
+                    any(label.split(":")[0] == rel for label in labels),
+                    "%s is not in the unattended set (%s). Its branch label or anchor has "
+                    "drifted, so the off-list check below no longer reads it"
+                    % (rel, ", ".join(labels)))
+
+
+class EveryInstructionCarriesTheGate(unittest.TestCase):
+    def test_the_gate_is_stated_beside_each_instruction(self):
+        ungated = []
+        for p in surfaces():
+            text = read(p)
+            for act in ACCEPTED:
+                ungated += ["%s:%d (%s)" % (p.relative_to(REPO_ROOT), n, act)
+                            for n in ungated_lines(text, act)]
+        self.assertEqual(
+            [], ungated,
+            "surface(s) instruct an outward act with no gate within %d lines: %s. The record "
+            "exists, and its notifications have gone out, the moment the command runs. Put "
+            "'get a yes' beside it, or, for a comment or a PR on the scope note's list, cite "
+            "INV-314, as amended by its 2026-09-30 scope note (#216)" % (GATE_WINDOW, ", ".join(ungated)))
+
+
+class OneYesMayCoverAListOfIssuesOrComments(unittest.TestCase):
+    """⛔ INV-314's 2026-10-13 note (#574) at every gated site, and never at `submit_feedback`."""
+
+    def test_there_are_gated_issue_instructions_to_check(self):
+        found = sum(len(instruction_lines(read(p), FILING)) for p in surfaces())
+        self.assertGreaterEqual(found, 5, "fewer than five fenced `%s` instructions (%d); the "
+                                "batch-clause check below is near vacuous" % (FILING, found))
+
+    def test_each_gated_issue_or_comment_carries_the_clause(self):
+        missing = []
+        for p in surfaces():
+            text = read(p)
+            for act in BATCHABLE:
+                missing += ["%s:%d (%s)" % (p.relative_to(REPO_ROOT), n, act)
+                            for n in unbatched_lines(text, act)]
+        self.assertEqual(
+            [], missing,
+            "gated instruction(s) with no batch clause within %d lines: %s. Splice %r into the "
+            "gate sentence beside the per-record yes, so one yes may cover the list shown in one "
+            "message" % (GATE_WINDOW, ", ".join(missing), BATCH_CLAUSE))
+
+    def test_no_submit_feedback_gate_carries_the_clause(self):
+        batched = []
+        for p in surfaces():
+            batched += ["%s:%d" % (p.relative_to(REPO_ROOT), n)
+                        for n in batched_submit_lines(read(p))]
+        self.assertEqual(
+            [], batched,
+            "`submit_feedback` call(s) with the batch clause within %d lines: %s. An upstream "
+            "message leaves the organization, so it keeps one message, one yes (INV-314, "
+            "2026-10-13 note)" % (GATE_WINDOW, ", ".join(batched)))
+
+    def test_each_prose_site_carries_the_clause(self):
+        for rel, count in PROSE_SITES.items():
+            with self.subTest(surface=rel):
+                self.assertEqual(count, len(BATCH.findall(read(CLAUDE / rel))),
+                                 "%s should carry %r %d time(s)" % (rel, BATCH_CLAUSE, count))
+
+    def test_the_clause_has_one_form(self):
+        variants = []
+        for p in surfaces():
+            variants += ["%s:%d" % (p.relative_to(REPO_ROOT), n) for n in variant_clauses(read(p))]
+        self.assertEqual([], variants, "the batch clause is reworded at %s; write it as %r so "
+                         "every site stays findable" % (", ".join(variants), BATCH_CLAUSE))
+
+
+class TheBatchYesIsStatedOnce(unittest.TestCase):
+    """⛔ #808: the note's four conditions live in `drafts.py` → "The batch yes" alone (INV-300)."""
+
+    def test_the_section_states_all_four_conditions(self):
+        section = conditions_section(read(CONDITIONS_FILE))
+        self.assertIsNotNone(section, "drafts.py has no %r docstring section" % CONDITIONS_HEADING)
+        found = {r.split(":")[0] for r in restated_conditions(section)}
+        self.assertEqual({"1", "2", "3", "4"}, found,
+                         "the section does not state every condition of INV-314's 2026-10-13 note")
+        self.assertIn("(INV-300)", section)
+
+    def test_no_other_site_restates_a_condition(self):
+        found = []
+        for p in condition_sites():
+            text = read(p)
+            if p.resolve() == CONDITIONS_FILE.resolve():
+                text = text.replace(conditions_section(text) or "", "")
+            found += ["%s: %s" % (p.relative_to(REPO_ROOT).as_posix(), hit)
+                      for hit in restated_conditions(text)]
+        self.assertEqual(
+            [], found,
+            "a site restates a condition of INV-314's 2026-10-13 note; point at "
+            "`.claude/skills/feedback-to-issues/drafts.py` → \"The batch yes\" instead (INV-300): "
+            + "; ".join(found))
+
+    def test_the_corpus_reaches_every_pointing_file(self):
+        names = {p.relative_to(CLAUDE).as_posix() for p in condition_sites()}
+        for rel in list(PROSE_SITES) + ["skills/release-cycle/cycle.py",
+                                        "skills/feedback-to-issues/drafts.py"]:
+            with self.subTest(file=rel):
+                self.assertIn(rel, names)
+
+    def test_every_clause_carries_the_pointer(self):
+        """The fixed form ends with the pointer, so the bare note is a variant (#808)."""
+        bare = []
+        for p in surfaces():
+            text = read(p)
+            bare += ["%s:%d" % (p.relative_to(REPO_ROOT), n) for n in variant_clauses(text)]
+        self.assertEqual([], bare)
+        target = BATCH_POINTER.split(" in ", 1)[1]
+        self.assertIn(target, re.sub(r"\s+", " ", read(CLAUDE / "skills/release-cycle/cycle.py")),
+                      "cycle.py's checkpoint sentence does not point at the conditions")
+
+    def test_restating_a_condition_at_a_site_fails(self):
+        """The negative control #808 asks for: each condition spliced into a real site."""
+        text = read(CLAUDE / "skills" / "dry-run" / "SKILL.md")
+        self.assertEqual([], restated_conditions(text), "dry-run restates one as shipped")
+        for splice in ("Show every record numbered, with its exact title, body\nand labels.",
+                       "The maintainer may strike records by number.",
+                       'Reply "yes except 3, 7".',
+                       "One yes covers only the records in that message.",
+                       "A draft added or edited after the list was shown needs its own yes.",
+                       "It applies to GitHub issues and comments in this repository."):
+            with self.subTest(splice=splice):
+                mutated = BATCH.sub(lambda m: m.group(0) + ". " + splice, text, count=1)
+                self.assertNotEqual(text, mutated, "the control's target is gone")
+                self.assertTrue(restated_conditions(mutated))
+
+    def test_dropping_a_condition_from_the_section_fails(self):
+        section = conditions_section(read(CONDITIONS_FILE))
+        mutated = re.sub(r"(?m)^4\. .*$", "4. (dropped)", section)
+        self.assertNotEqual(section, mutated)
+        self.assertNotIn("4", {r.split(":")[0] for r in restated_conditions(mutated)})
+
+    def test_a_clause_without_its_pointer_is_a_variant(self):
+        self.assertEqual([1], variant_clauses("or " + BATCH_NOTE + "."))
+        self.assertEqual([], variant_clauses("or " + BATCH_CLAUSE + "."))
+
+
+class UnattendedSurfacesInstructOnlyListedActs(unittest.TestCase):
+    """⛔ An unattended run creates only the scope note's list, on the issue it works."""
+
+    def test_no_unattended_surface_instructs_an_off_list_act(self):
+        for label, text in unattended_regions():
+            with self.subTest(surface=label):
+                self.assertEqual(
+                    [], off_list_acts(text),
+                    "%s describes an unattended run and instructs an act outside the scope "
+                    "note's list. Unattended, a new issue, a `submit_feedback` call and "
+                    "adding `unattended-ok` are drafted in the handoff, never taken" % label)
+
+    def test_no_file_says_nothing_leaves_or_the_loop_files(self):
+        stale = ["%s:%d" % (p.relative_to(REPO_ROOT), line_of(read(p), m.start()))
+                 for p in claim_corpus() for m in STALE_CLAIM.finditer(read(p))]
+        self.assertEqual(
+            [], stale,
+            "file(s) say nothing leaves the machine unattended, or that the unattended loop "
+            "files an issue: %s. An unattended run posts its listed comments and PR, and it "
+            "files no issue" % ", ".join(stale))
+
+
+class EachOverlayStatesItsPartOfTheList(unittest.TestCase):
+    """Each overlay cites INV-314's scope note and states its part of the note's list."""
+
+    PARTS = {
+        LOOP_OVERLAY: ("four `/implement-github-issue` *(user level)* log comments", "one blocked comment",
+                       "opening its PR", "`--no-merge`", "no new issue"),
+        "skill-overlays/implement-github-issue.md": ("five comments", "escape-hatch comment",
+                                                     "per-record yes", BATCH_CLAUSE),
+    }
+
+    def test_each_overlay_cites_the_scope_note_and_states_its_acts(self):
+        for rel, parts in self.PARTS.items():
+            text = re.sub(r"\s+", " ", read(CLAUDE / rel))
+            with self.subTest(overlay=rel):
+                self.assertRegex(text, SCOPE_NOTE, "%s no longer cites INV-314 as amended by "
+                                 "its 2026-09-30 scope note (#216), so the list it states "
+                                 "cites nothing" % rel)
+                for part in parts:
+                    self.assertIn(part, text, "%s no longer states %r" % (rel, part))
+
+
+class ProhibitionsAreNotInstructions(unittest.TestCase):
+    """⛔ The three negatives, pinned beside the positives (INV-282)."""
+
+    #: Each names `gh issue create` only to forbid or template it.
+    NEGATIVES = (
+        "skills/feedback-to-issues/issue-template.md",
+        "skills/delegate-to-mcp-server/issue-template.md",
+    )
+
+    #: The prohibition the `/feedback-to-issues` command file carried until #262 deleted it,
+    #: verbatim. It names `gh issue create` only to forbid a flag on it.
+    RETIRED_PROHIBITION = (
+        "routing is owned exclusively by `/escalate-to-parent`; in this repo — the parent —\n"
+        "parent-to-child change travels by **parity**, so the parent never files into children at\n"
+        "all. ⚠️ A `--repo` argument to `gh issue create`, or any other way of naming a repository,\n"
+        "is a violation of this rule rather than a convenience.\n")
+
+    def test_the_retired_prohibition_is_not_read_as_instructing(self):
+        self.assertIn(FILING, self.RETIRED_PROHIBITION)
+        self.assertEqual([], instruction_lines(self.RETIRED_PROHIBITION),
+                         "a prohibition naming `%s` in inline backticks is read as an "
+                         "instruction to file" % FILING)
+
+    def test_none_of_them_is_read_as_instructing(self):
+        for rel in self.NEGATIVES:
+            p = CLAUDE / rel
+            with self.subTest(surface=rel):
+                self.assertTrue(p.is_file(), "%s no longer exists; re-derive the negatives" % rel)
+                self.assertIn(FILING, read(p),
+                              "%s no longer mentions %r, so it exercises nothing" % (rel, FILING))
+                self.assertEqual(
+                    [], instruction_lines(read(p)),
+                    "%s is read as instructing filing. It names `%s` only to forbid or template "
+                    "it, and flagging it would demand a gate on the rule that forbids the act"
+                    % (rel, FILING))
+
+
+class TheFenceIsWhatDistinguishes(unittest.TestCase):
+    """The discriminator itself, pinned so a later edit cannot quietly widen it."""
+
+    def test_a_fenced_command_is_an_instruction(self):
+        self.assertEqual([1], instruction_lines("```bash\n%s --title x\n```" % FILING))
+
+    def test_an_indented_fence_still_counts(self):
+        """Two of the instructions sit in list items; a column-0 pattern missed them."""
+        self.assertEqual([1], instruction_lines("   ```bash\n   %s --title x\n   ```" % FILING))
+
+    def test_inline_backticks_are_not_an_instruction(self):
+        self.assertEqual([], instruction_lines("a `%s` mention in prose" % FILING))
+
+    def test_naming_submit_feedback_is_not_a_call(self):
+        self.assertEqual([], instruction_lines("⛔ Never call `submit_feedback`.", SUBMIT))
+
+
+class EveryFilingSkillStatesTheLabelRule(unittest.TestCase):
+    """#610: INV-318 at every skill that files issues, not three of the eight."""
+
+    def test_each_listed_skill_states_it(self):
+        missing = [name for name in LABEL_RULE_SKILLS
+                   if not states_inv318(read(CLAUDE / "skills" / name / "SKILL.md"))]
+        self.assertEqual([], missing, "these issue-filing skills do not state INV-318: never "
+                                      "apply `unattended-ok` to an issue the run files")
+
+    def test_every_filing_skill_is_listed(self):
+        filers = {p.parent.name for p in surfaces()
+                  if p.name == "SKILL.md" and instruction_lines(read(p))}
+        filers |= {rel.split("/")[1] for rel in PROSE_SITES if rel.startswith("skills/")}
+        self.assertTrue(filers, "no filing skill was discovered; the finders are wrong")
+        self.assertEqual([], sorted(filers - set(LABEL_RULE_SKILLS)))
+
+
+class TheCheckersAreNotVacuous(unittest.TestCase):
+    """Negative controls, run on every suite: each mutation must fail the check it targets."""
+
+    SYNTHETIC = "Post the comment.\n\n```bash\n%s 12 --body-file f\n```\n"
+
+    def _site(self, rel, act):
+        text = read(CLAUDE / rel)
+        self.assertTrue(instruction_lines(text, act), "%s no longer instructs %s" % (rel, act))
+        self.assertEqual([], ungated_lines(text, act), "%s is ungated as shipped" % rel)
+        return text
+
+    def test_removing_the_gate_at_a_real_filing_site_fails(self):
+        text = self._site("skills/feedback-to-issues/SKILL.md", FILING)
+        self.assertTrue(ungated_lines(GATE.sub("", text), FILING))
+
+    def test_removing_the_gate_at_a_real_submit_feedback_site_fails(self):
+        text = self._site("skills/delegate-to-mcp-server/SKILL.md", SUBMIT)
+        self.assertTrue(ungated_lines(GATE.sub("", text), SUBMIT))
+
+    def test_an_ungated_comment_or_pr_fails_and_a_gate_or_citation_passes(self):
+        for act in ("gh issue comment", "gh pr create"):
+            with self.subTest(act=act):
+                bare = self.SYNTHETIC % act
+                self.assertEqual([3], ungated_lines(bare, act))
+                self.assertEqual([], ungated_lines("Get a yes first.\n" + bare, act))
+                self.assertEqual([], ungated_lines(
+                    "(INV-314, as amended by its 2026-09-30 scope note, #216)\n" + bare, act))
+
+    def test_the_citation_never_vouches_for_a_new_issue(self):
+        text = ("(INV-314, as amended by its 2026-09-30 scope note, #216)\n"
+                + self.SYNTHETIC % FILING)
+        self.assertEqual([4], ungated_lines(text, FILING))
+
+    def test_removing_the_clause_at_a_real_filing_site_fails(self):
+        text = self._site("skills/feedback-to-issues/SKILL.md", FILING)
+        self.assertEqual([], unbatched_lines(text, FILING), "the clause is missing as shipped")
+        self.assertTrue(unbatched_lines(BATCH.sub("", text), FILING))
+
+    def test_the_clause_at_a_real_submit_feedback_gate_fails(self):
+        """The negative control #575 asks for: the batch exception reaching `submit_feedback`."""
+        for rel, gate in (("skills/feedback-to-issues/SKILL.md",
+                           "get an explicit yes before sending."),
+                          ("skills/delegate-to-mcp-server/SKILL.md",
+                           "get an explicit yes before sending.**")):
+            with self.subTest(surface=rel):
+                text = self._site(rel, SUBMIT)
+                self.assertEqual([], batched_submit_lines(text), "batched as shipped")
+                self.assertEqual(1, text.count(gate), "%s's gate has moved" % rel)
+                mutated = text.replace(gate, gate + " Or " + BATCH_CLAUSE + ".")
+                self.assertTrue(batched_submit_lines(mutated))
+
+    def test_a_gated_comment_needs_the_clause_and_a_cited_one_does_not(self):
+        bare = "Get a yes first.\n" + self.SYNTHETIC % "gh issue comment"
+        self.assertEqual([4], unbatched_lines(bare, "gh issue comment"))
+        self.assertEqual([], unbatched_lines(
+            "Get a yes, or %s.\n" % BATCH_CLAUSE + self.SYNTHETIC % "gh issue comment",
+            "gh issue comment"))
+        self.assertEqual([], unbatched_lines(
+            "(INV-314, as amended by its 2026-09-30 scope note, #216)\n" + bare, "gh issue comment"))
+
+    def test_the_clause_matches_across_a_line_wrap_and_a_variant_fails(self):
+        wrapped = BATCH_CLAUSE.replace(" in one message", "\n   in one message")
+        self.assertTrue(BATCH.search(wrapped))
+        self.assertEqual([], variant_clauses(wrapped))
+        self.assertEqual([1], variant_clauses("or one yes for the whole list (INV-314)"))
+
+    def test_an_off_list_act_in_any_unattended_surface_fails(self):
+        injected = ("\n```bash\n%s --title x\n```\n" % FILING,
+                    "\nThen call `submit_feedback(category='bug', message='m')`.\n",
+                    "\n```bash\ngh issue edit 12 --add-label unattended-ok\n```\n",
+                    " Nothing leaves the machine unattended.",
+                    " A finding the unattended loop files itself.")
+        for label, text in unattended_regions():
+            for extra in injected:
+                with self.subTest(surface=label, act=extra.strip()[:30]):
+                    self.assertTrue(off_list_acts(text + extra))
+
+    def test_dropping_inv318_from_a_filing_skill_fails(self):
+        """#610's negative control: each skill's statement, removed, is reported missing."""
+        for name in LABEL_RULE_SKILLS:
+            with self.subTest(skill=name):
+                text = read(CLAUDE / "skills" / name / "SKILL.md")
+                self.assertTrue(states_inv318(text), "%s does not state it as shipped" % name)
+                self.assertFalse(states_inv318(text.replace("INV-318", "the label rule")))
+        self.assertTrue(states_inv318("It never applies `unattended-ok` outside refine's\n"
+                                      "approved batch (INV-318, 2026-10-13 note)."))
+        self.assertFalse(states_inv318("Apply `unattended-ok`. Unrelated (INV-318)."))
+
+    def test_listed_acts_in_an_unattended_surface_pass(self):
+        text = "```bash\ngh issue comment 12 --body-file f\ngh pr create --fill\n" \
+               "gh issue edit 12 --remove-label unattended-ok\n```\n"
+        self.assertEqual([], off_list_acts(text))
+
+
+if __name__ == "__main__":
+    unittest.main()

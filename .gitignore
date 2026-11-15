@@ -1,0 +1,20 @@
+# Built packages. Every assistant's package is generated from source/ by
+# `python3 -m tools.bootcamp_build build`; nothing under dist/ is edited by hand.
+/dist/
+
+# Python bytecode and test caches
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Raw bootcamper feedback never enters this repository, which is public. Only the ledger of
+# what was processed is committed.
+/SENZING_BOOTCAMP_*FEEDBACK*.md
+/feedback/SENZING_BOOTCAMP_*FEEDBACK*.md
+
+# Editor history
+.history
+
+# /release-cycle run directories: the finding skills' --draft records. Not a durable record by
+# design: the caller records every unresolved draft in its ledger entry (INV-317).
+.claude/release-cycle/runs/

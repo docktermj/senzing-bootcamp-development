@@ -1,0 +1,972 @@
+"""A path a step tells the guide to run must resolve where that step actually runs.
+
+Enforces **INV-389**, registered by the maintainer 2026-10-20: a bundled script named in shipped
+guide-facing prose resolves inside the plugin unless the skill containing the mention resolves
+it somewhere, with the exemption computed from the tree rather than listed. ⚠️ It cannot
+establish that a resolved path is the right script, only that it resolves.
+
+`deep-dive-audit-2026-07-30b`. Three path defects of one shape (a fourth, #325, is item 4),
+none of which any existing test could see, because each is a *string in prose* that is only
+wrong relative to a working directory no test had modeled.
+
+1. **A bundled script invoked by a bare project-relative path.** Module 7 said:
+
+       python3 scripts/generate_discoveries_pdf.py
+
+   Every other bundled-script invocation in the plugin resolves as
+   `${CLAUDE_PLUGIN_ROOT}/scripts/…` with a skill-relative fallback, because the script ships
+   *inside the plugin* while the command runs in the *bootcamp project* — and the project
+   layout (INV-050) has no top-level `scripts/`, only `src/scripts/`. Run from a project root
+   the command exits 2, `can't open file`. It was the only invocation of that generator, and
+   the discoveries deliverable is produced on every path, so the realistic outcome was a
+   guaranteed deliverable silently reported missing (the surrounding text is explicitly
+   "report exactly what failed and continue").
+
+2. **A production copy that flattened a path its own copied code depends on.** Graduation
+   copied `data/senzing-ready/**` to `production/data/` while copying `src/load/**`
+   *verbatim* to `production/src/load/`. The loading code reads `data/senzing-ready/`
+   (INV-084), so the handover project's loader pointed at a directory that did not exist.
+
+3. **An install doc covering two of three supported platforms.** The Claude Code CLI section
+   installed on "macOS or Linux" only, with no Windows route and no line sending a Windows
+   reader to the Desktop path — while INV-001 makes Windows supported and INV-158 makes the
+   CLI one of the two interfaces the install docs must document.
+
+4. **A production copy that left out the registry its own copied code reads (#325).** Module 6
+   Phase C step 17 has the orchestrator read each source's entry in `config/data_sources.yaml`
+   when it runs (INV-320), and graduation copied `src/load/**` verbatim while copying nothing
+   from `config/`. Step 2 now writes a projection of the registry to the same path under
+   `production/` (INV-186), keeping only `version`, `name`, `file_path` and `format`, so no
+   evaluation-only `load_subset:` limit reaches production.
+
+5. **A bundled script invoked with no runner in front of it (#390).** Graduation's one remedy
+   for a recap missing the Bootcamper's results screenshots read "re-run the capture against
+   it (`capture_screenshots.py --url http://localhost:<port> --name <name>`)". The sweep for
+   item 1 looked only at lines carrying an interpreter token, so a runner-less span was
+   invisible to it, and that span also wrapped across two lines. `inline_invocations()` reads
+   every inline backticked span whole, across line breaks, whether or not a runner precedes
+   the script name.
+
+6. **A bundled script NAMED by a bare `scripts/...` path where the guide has to READ it
+   (#689).** Module 7 told the guide to build its results server "modeled on the shipped Truth
+   Set visualization server (`scripts/senzing_viz_server.py`)" -- the guide has to open that
+   file -- and the same file states the rule, in full, 370 lines later, and applies it
+   correctly to three other bundled scripts. A *reference* carries no invocation shape, so
+   items 1 and 5 were both blind to it: INV-252's **read** half of INV-185 was unguarded.
+   `bundled_path_references()` reads every `scripts/<bundled>.py` path in shipped prose,
+   invocation or not, and exempts a site only when the **skill that contains it** resolves that
+   script somewhere -- computed from the tree, never from a list of paths (INV-246).
+
+7. **A bare `scripts/<name>.py` spelling in a skill that does resolve the script (#809).** The
+   skill exemption in item 6 let six mentions keep the bare path because their skill resolves
+   the script elsewhere -- Module 3b's `SKILL.md` (three), its `phase1-visualization.md` Step 2,
+   `module-completion.md` Step 2c's closing note and graduation Step 1c. INV-389 says such a
+   mention names the script **by bare name** and points at the resolution, so
+   `bare_paths_outside_their_resolution()` reports a bare path unless the same block resolves
+   that script (the resolution sentence itself, such as Module 3b Step 2.1's "Resolve
+   `scripts/senzing_viz_server.py` (`${CLAUDE_PLUGIN_ROOT}/…`").
+
+Written as sweeps, not as three assertions about three lines, so the next one is caught too.
+
+Enforces **INV-185** (a command run against a bundled script resolves it inside the plugin
+via `${CLAUDE_PLUGIN_ROOT}`, never by a bare project-relative path -- the script ships in
+the plugin while the command runs in the Bootcamper's project), which names this file, and
+**INV-252**, which extends it from *running* a bundled script to *reading* a bundled file.
+
+Run:  python3 -m unittest discover -s tests
+"""
+import html
+import re
+import unittest
+from pathlib import Path
+
+from _corpus import corpus_files
+from _wrapped_text import collapsed_blocks, line_of
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+# One-repository migration, 2026-11-14: the whole module reads the tokenized `source/`, so the
+# rule holds for every assistant. `{{host.scripts_dir}}` stands where `${CLAUDE_PLUGIN_ROOT}/scripts`
+# was and `{{host.scripts_fallback}}` where `<this-skill-dir>/../../scripts` was; the assertions
+# below are otherwise unchanged.
+PLUGIN = REPO_ROOT / "source"
+SKILLS = PLUGIN / "skills"
+COMMANDS = PLUGIN / "commands"
+SCRIPTS = PLUGIN / "scripts"
+GRADUATION = SKILLS / "graduation" / "SKILL.md"
+PHASE_C = SKILLS / "module-06-data-processing" / "phaseC-multi-source.md"
+# Adapted (one-repository migration, 2026-11-14): the Claude Code CLI install steps were in
+# `docs/README.md`, which was deleted; they are now the CLI path of the Claude install fragment,
+# from which the build renders the Claude install page. It is HTML, so it is read as a reader
+# sees it (`cli_install_text()`): entities decoded, so `&amp;&amp;` is the `&&` it displays.
+CLI_INSTALL_DOC = REPO_ROOT / "hosts" / "claude" / "fragments" / "site-install.html"
+
+# The scripts that ship inside the plugin. A step that runs one of these is running a file
+# that is NOT in the bootcamper's project, so the path has to be resolved, never assumed.
+BUNDLED_SCRIPTS = sorted(p.name for p in SCRIPTS.glob("*.py"))
+
+# How a resolved invocation is allowed to look. Either the env var the harness substitutes,
+# or the explicit skill-relative fallback the plugin documents beside it, or a placeholder
+# the surrounding prose resolves (module 3b's `<viz-server-path>`).
+RESOLVED = (
+    "{{host.scripts_dir}}",
+    "{{host.scripts_fallback}}",
+    "<this-skill-dir>",
+    "../../scripts/",
+    "{{host.scripts_relative}}/",
+    "<helper>",
+    "<viz-server-path>",
+)
+
+
+def prose_files():
+    """Every file that can instruct the guide to run a command.
+
+    Reached through `tests/_corpus.py`'s one listing rather than a walk of its own (#515), so
+    the exclusions that listing makes are made here too. The set is unchanged: the `.md` files
+    under the plugin's `skills/` and `commands/`.
+
+    ⛔ `hooks/README.md` and the bundled scripts' own comments are deliberately NOT here, and
+    item 6 needs that said out loud because its span would otherwise report them. They document
+    the plugin's own layout to a reader of this repository, from the plugin root, where
+    `scripts/<name>.py` IS the path -- it is what `hooks/hooks.json` expands under
+    `${CLAUDE_PLUGIN_ROOT}`. Nothing there is a step handed to a guide running in a bootcamp
+    project. `test_plugin_manifest_reads_resolve_inside_the_plugin.py` draws the same boundary,
+    in the same words, for the same reason (`GUIDE_FACING = ("skills", "commands")`).
+    """
+    return corpus_files("source/skills", "source/commands",
+                        suffixes={".md"})
+
+
+def invocation_lines():
+    """(path, lineno, line) for each line invoking a bundled script with an interpreter.
+
+    Line-scoped by design (#418, INV-346): each hit is a command line, which a newline ends in
+    the shell that runs it. A command wrapped across two lines of prose sits in an inline code
+    span, and `inline_invocations()` below reads those with whitespace collapsed (#390).
+    """
+    out = []
+    runner = re.compile(r"(?:^|\s)(?:python3?|py -3|[\w./\\-]*/(?:python3?|bin/python))\s")
+    for path in prose_files():
+        for i, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            if not runner.search(line):
+                continue
+            if any(name in line for name in BUNDLED_SCRIPTS):
+                out.append((path, i, line.strip()))
+    return out
+
+
+#: Flags that belong to bundled helpers and to nothing else the guide runs. An instruction that
+#: supplies these is parameterizing a bundled tool, whether or not it names one.
+#:
+#: ⚠️ **This exists because the sweep above cannot see the worse failure.** `invocation_lines()`
+#: discovers invocations BY SCRIPT NAME, so it catches a *wrong* resolution and is blind to a
+#: *missing* one. On 2026-08-18 both steps that require screenshot capture supplied `--url`,
+#: `--tabs`, `--name` and `--query` and named no executable, deferring the identity to another
+#: file — and a guide concluded capture was impossible "because browser automation was
+#: unavailable" without ever looking for the tool the plugin ships. Twelve recap images were
+#: lost, one module's unrecoverably, and the same script then captured 6 of 6 tabs first try.
+#: The guard was built for a wrong path; the defect was no path at all.
+HELPER_ONLY_FLAGS = ("--tabs", "--single", "--out-dir")
+
+#: A line is exempt when it resolves a bundled script by any documented route, or is prose about
+#: the flags rather than an instruction to run them.
+RESOLVED_MARKERS = ("{{host.scripts_dir}}", "{{host.scripts_fallback}}", "../../scripts/", "{{host.scripts_relative}}/", "<helper>")
+
+
+#: Distinguishes a COMMAND from PROSE ABOUT a command. Without this the sweep fires on
+#: `module-completion.md`'s own explanation of what `--single` does, and on any sentence that
+#: mentions a flag in backticks — five false positives on first run, all of them documentation
+#: doing its job. A line is an instruction to run something when it sits in a fenced block or
+#: carries an interpreter token; prose may discuss flags freely.
+_RUNNER = re.compile(r"(?:^|\s)(?:python3?|py -3|[\w./\\-]*/(?:python3?|bin/python))\s")
+
+
+def parameterized_without_a_script():
+    """(path, lineno, line) for COMMANDS using helper-only flags with no resolved script path."""
+    out = []
+    for path in prose_files():
+        lines = path.read_text(encoding="utf-8").splitlines()
+        in_fence = False
+        for i, line in enumerate(lines, 1):
+            if line.lstrip().startswith("```"):
+                in_fence = not in_fence
+                continue
+            if not any(f in line for f in HELPER_ONLY_FLAGS):
+                continue
+            if not (in_fence or _RUNNER.search(line)):
+                continue  # prose about the flags, not an instruction to run them
+            # A fenced invocation commonly names the script on a preceding continuation line.
+            window = "\n".join(lines[max(0, i - 8):i + 3])
+            if any(m in window for m in RESOLVED_MARKERS):
+                continue
+            if any(n in window for n in BUNDLED_SCRIPTS):
+                continue
+            out.append((path, i, line.strip()))
+    return out
+
+
+class AParameterizedInvocationNamesItsScript(unittest.TestCase):
+    """INV-185's blind spot: flags supplied, executable never identified.
+
+    Negative-controlled 2026-08-21 by deleting the script name from Module 3b's invocation and
+    confirming this fails, then restoring it.
+    """
+
+    def test_the_flag_vocabulary_is_still_present_somewhere(self):
+        """Non-vacuity: if no shipped step uses these flags, the check asserts nothing."""
+        users = [
+            (p, i) for p in prose_files()
+            for i, line in enumerate(p.read_text(encoding="utf-8").splitlines(), 1)
+            if any(f in line for f in HELPER_ONLY_FLAGS)
+        ]
+        self.assertTrue(
+            users,
+            "no shipped file uses %s, so this sweep is vacuous — either the flags were renamed "
+            "or the capture instructions were removed" % (HELPER_ONLY_FLAGS,))
+
+    def test_no_step_parameterizes_a_helper_without_naming_it(self):
+        found = parameterized_without_a_script()
+        self.assertEqual(
+            [], ["%s:%d  %s" % (p.relative_to(REPO_ROOT), i, line) for p, i, line in found],
+            "a step supplies bundled-helper flags without naming a resolved script. The flags "
+            "then read as 'what the procedure will need' rather than 'what this bundled tool "
+            "accepts', and a guide can conclude the capability is unavailable without ever "
+            "looking for it — which is how twelve recap images were lost on 2026-08-18, one "
+            "module's unrecoverably. Name the script with {{host.scripts_dir}} and its "
+            "skill-relative fallback (INV-185, INV-252) at the point of use.")
+
+
+class BundledScriptsAreInvokedByAResolvedPath(unittest.TestCase):
+    def test_the_sweep_finds_the_known_invocations(self):
+        """A sweep that matches nothing would pass forever."""
+        found = invocation_lines()
+        self.assertGreaterEqual(
+            len(found),
+            5,
+            "the invocation sweep matched almost nothing — its regex or the "
+            "BUNDLED_SCRIPTS list has drifted, and it is no longer testing anything",
+        )
+        names = {n for _, _, line in found for n in BUNDLED_SCRIPTS if n in line}
+        self.assertIn("generate_recap_pdf.py", names)
+        self.assertIn("generate_discoveries_pdf.py", names)
+
+    def test_no_step_runs_a_bundled_script_by_an_unresolved_path(self):
+        problems = []
+        for path, lineno, line in invocation_lines():
+            if not any(marker in line for marker in RESOLVED):
+                problems.append(f"{path.relative_to(REPO_ROOT)}:{lineno}  {line}")
+        self.assertEqual(
+            [],
+            problems,
+            "a bundled script is invoked by a path that does not resolve from the "
+            "bootcamp project (the plugin's scripts/ is not the project's):\n  "
+            + "\n  ".join(problems),
+        )
+
+    def test_the_discoveries_generator_is_reachable(self):
+        """The one that was broken, named explicitly so a regression is unambiguous."""
+        text = (
+            SKILLS
+            / "module-07-query-visualize-discover"
+            / "phase1-query-visualize.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn(
+            '"{{host.scripts_dir}}/generate_discoveries_pdf.py"',
+            text,
+            "Module 7 must resolve the discoveries generator inside the plugin",
+        )
+        self.assertNotRegex(
+            text,
+            r"(?m)^\s*python3 scripts/generate_discoveries_pdf\.py\s*$",
+            "the bare project-relative invocation is back; it exits 2 from a project root",
+        )
+
+
+#: An inline code span: a backtick run, then content up to the next run of the same length.
+#: The content may cross a line break (a wrapped span is one span) but never a blank line,
+#: so one stray backtick cannot pair spans across paragraphs.
+_SPAN = re.compile(r"(?s)(?<!`)(`+)(?!`)((?:(?!\n[ \t]*\n).)+?)(?<!`)\1(?!`)")
+
+#: A span is an INVOCATION when a bundled script name is followed, inside the span, by an
+#: argument. `capture_screenshots.py` alone, or `capture_screenshots.py`'s, is a reference.
+_INVOKED = re.compile(
+    r"""(?<![\w.-])(?:%s)["']?\s+\S""" % "|".join(re.escape(n) for n in BUNDLED_SCRIPTS))
+
+#: An absolute path INTO the plugin is resolved by construction: it is what
+#: `${CLAUDE_PLUGIN_ROOT}/scripts/<name>.py` expands to. Graduation's re-render command must
+#: be written that way, because `${CLAUDE_PLUGIN_ROOT}` is unset in the Bootcamper's own
+#: terminal. An absolute path that does not pass through the plugin's directory is not.
+_ABSOLUTE_INTO_PLUGIN = re.compile(
+    r"""(?:^|[\s'"])(?:/|[A-Za-z]:[\\/])(?:[^\s'"`]*[\\/])?senzing-bootcamp[\\/]"""
+    r"""(?:[^\s'"`]*[\\/])?scripts[\\/](?:%s)""" % "|".join(re.escape(n) for n in BUNDLED_SCRIPTS))
+
+
+def inline_invocations(text):
+    """(lineno, span) for each inline span that invokes a bundled script, whitespace collapsed.
+
+    Fenced blocks are blanked first; they stay covered by `invocation_lines()` and
+    `parameterized_without_a_script()`. Blanking keeps the line numbers right.
+    """
+    kept, in_fence = [], False
+    for line in text.splitlines():
+        if line.lstrip().startswith("```"):
+            in_fence = not in_fence
+            kept.append("")
+        else:
+            kept.append("" if in_fence else line)
+    body = "\n".join(kept)
+    out = []
+    for m in _SPAN.finditer(body):
+        span = " ".join(m.group(2).split())
+        if _INVOKED.search(span):
+            out.append((body.count("\n", 0, m.start()) + 1, span))
+    return out
+
+
+def span_is_resolved(span):
+    return any(marker in span for marker in RESOLVED) or bool(_ABSOLUTE_INTO_PLUGIN.search(span))
+
+
+def unresolved_inline_invocations(text):
+    return [(i, span) for i, span in inline_invocations(text) if not span_is_resolved(span)]
+
+
+class AnInlineInvocationResolvesItsScript(unittest.TestCase):
+    """#390: INV-185 for a span with no runner in front of the script, or one that wraps.
+
+    No exemption list. A span that only talks about a script's flag names the script in the
+    possessive (`capture_screenshots.py`'s `--url`), so it pairs no bare name with an argument.
+    """
+
+    def test_no_inline_span_runs_a_bundled_script_by_an_unresolved_path(self):
+        problems = [
+            "%s:%d  `%s`" % (p.relative_to(REPO_ROOT), i, span)
+            for p in prose_files()
+            for i, span in unresolved_inline_invocations(p.read_text(encoding="utf-8"))
+        ]
+        self.assertEqual(
+            [], problems,
+            "an inline span runs a bundled script without resolving it inside the plugin. Run "
+            "from the bootcamp project it fails with \"can't open file\". Name it as "
+            "{{host.scripts_dir}}/<name>.py with the skill-relative fallback "
+            "{{host.scripts_fallback}}/<name>.py (INV-185, INV-252); if the span is prose about a flag, "
+            "write the script name in the possessive, as `<name>.py`'s `--flag`.")
+
+    def test_the_span_sweep_finds_the_known_invocations(self):
+        """Non-vacuity: a regex drift that matches nothing would pass forever."""
+        found = [(p.name, span) for p in prose_files()
+                 for _, span in inline_invocations(p.read_text(encoding="utf-8"))]
+        names = {n for _, span in found for n in BUNDLED_SCRIPTS if n in span}
+        self.assertGreaterEqual(len(found), 2, "the span sweep matched almost nothing: %s" % found)
+        self.assertIn("capture_screenshots.py", names)
+        self.assertIn("generate_recap_video.py", names)
+        self.assertTrue(
+            any("{{host.scripts_dir}}" in span for _, span in found),
+            "the span sweep found no {{host.scripts_dir}} invocation, so the resolved route is "
+            "not being exercised")
+
+    def test_the_graduation_remedy_is_resolved(self):
+        """The one that was broken, named explicitly so a regression is unambiguous."""
+        flat = " ".join(GRADUATION.read_text(encoding="utf-8").split())
+        remedy = ('`python3 "{{host.scripts_dir}}/capture_screenshots.py" --url '
+                  'http://localhost:<port> --name <name>` (INV-185; skill-relative fallback '
+                  '`{{host.scripts_relative}}/capture_screenshots.py`, INV-252)')
+        self.assertTrue(
+            remedy in flat,
+            "graduation's screenshot remedy must resolve the capture tool inside the plugin, "
+            "with the skill-relative fallback, the way Module 3b and Module 7 name it")
+
+    def test_negative_controls(self):
+        """The sweep fails on the defect it exists for, and passes on the fix."""
+        # (a) The original graduation span, runner-less and wrapped across two lines.
+        shipped = ("   re-run the capture against it (`capture_screenshots.py --url "
+                   "http://localhost:<port> --name\n   <name>`), then re-embed via the backfill path")
+        self.assertEqual(
+            [(1, "capture_screenshots.py --url http://localhost:<port> --name <name>")],
+            unresolved_inline_invocations(shipped))
+        # The line sweep could not see it: no runner on either line.
+        self.assertFalse(any(_RUNNER.search(line) for line in shipped.splitlines()))
+        # (b) A runner-less single-line span.
+        self.assertEqual([(2, "generate_recap_pdf.py --check")],
+                         unresolved_inline_invocations("x\n`generate_recap_pdf.py --check` reads it"))
+        # A bare project-relative path with a runner, and an absolute path outside the plugin.
+        self.assertTrue(unresolved_inline_invocations(
+            "`python3 scripts/capture_screenshots.py --url x`"))
+        self.assertTrue(unresolved_inline_invocations(
+            "`'/home/ada/my-bootcamp/scripts/generate_recap_video.py' --storyboard s`"))
+        # (c) The resolved forms pass, and are still seen as invocations.
+        for resolved in (
+                '`python3 "{{host.scripts_dir}}/capture_screenshots.py" --url x --name n`',
+                "`python3 {{host.scripts_fallback}}/capture_screenshots.py --url x`",
+                "`python3 ../../scripts/capture_screenshots.py --url x`",
+                "`'/opt/plugins/senzing-bootcamp/scripts/generate_recap_video.py' --storyboard s`",
+                '`& "C:\\plugins\\senzing-bootcamp\\scripts\\generate_recap_video.py" --output o`'):
+            self.assertEqual(1, len(inline_invocations(resolved)), resolved)
+            self.assertEqual([], unresolved_inline_invocations(resolved), resolved)
+        # A reference is not an invocation, nor is a possessive followed by a flag span.
+        for reference in ("`capture_screenshots.py`", "`capture_screenshots.py`'s `--url` mode",
+                          "`generate_recap_pdf.py`'s `--check --expect-modules`"):
+            self.assertEqual([], inline_invocations(reference), reference)
+        # A fenced block is left to the line sweep, and the line numbers survive blanking.
+        fenced = "```bash\ncapture_screenshots.py --url x\n```\n`generate_recap_pdf.py --check`"
+        self.assertEqual([(4, "generate_recap_pdf.py --check")], inline_invocations(fenced))
+        # A blank line ends a span, so a stray backtick cannot pair across paragraphs.
+        self.assertEqual([(3, "capture_screenshots.py --url x")],
+                         inline_invocations("a ` stray\n\n`capture_screenshots.py --url x`"))
+
+
+#: A path that NAMES a bundled script: the whole path token ending in `scripts/<name>.py`.
+#: Unanchored on the left, so the token carries whatever resolves it -- `${CLAUDE_PLUGIN_ROOT}/`,
+#: `<this-skill-dir>/../../`, `/opt/plugins/senzing-bootcamp/` -- and is bare when nothing does.
+# One-repository migration, 2026-11-14: `{{host.scripts_dir}}/<name>.py` and
+# `{{host.scripts_fallback}}/<name>.py` are path tokens too; each token stands for a `.../scripts`.
+#: The character class stops at the delimiters prose puts around a path (whitespace, backticks,
+#: quotes, brackets), so the token is the path and not the sentence around it.
+_BUNDLED_PATH = re.compile(
+    r"""[^\s'"`()\[\]]*(?:scripts|\{\{host\.scripts_(?:dir|fallback|relative)\}\})[\\/](?:%s)(?![\w-])"""
+    % "|".join(re.escape(n) for n in sorted(BUNDLED_SCRIPTS, key=len, reverse=True)))
+
+#: The same "absolute into the plugin is resolved by construction" rule as
+#: `_ABSOLUTE_INTO_PLUGIN`, matched from the start of a token rather than inside a span.
+_ABSOLUTE_TOKEN_INTO_PLUGIN = re.compile(
+    r"""(?:/|[A-Za-z]:[\\/])(?:[^\s'"`]*[\\/])?senzing-bootcamp[\\/]""")
+
+
+def reference_is_resolved(token):
+    """True when a `scripts/<name>.py` path token resolves inside the plugin."""
+    return (any(marker in token for marker in RESOLVED)
+            or bool(_ABSOLUTE_TOKEN_INTO_PLUGIN.match(token)))
+
+
+def bundled_path_references(text):
+    """(lineno, token, name, resolved) for each `scripts/<bundled>.py` path in `text`.
+
+    Read through `collapsed_blocks` (INV-346): the rule is about a sentence -- *this* path, in
+    *this* skill -- and the sentence wraps wherever the column runs out, so a line-at-a-time
+    read would certify only the phrasings that happen to fit on one line. `line_of` keeps the
+    `file:line` report. Fenced blocks are read too, unlike `inline_invocations()`: a fenced
+    invocation is how a skill usually resolves a script, and that resolution is what exempts
+    the skill's other mentions.
+    """
+    out = []
+    for flat, origin in collapsed_blocks(text):
+        for m in _BUNDLED_PATH.finditer(flat):
+            token = m.group(0)
+            name = re.split(r"[\\/]", token)[-1]
+            out.append((line_of(origin, m.start()), token, name, reference_is_resolved(token)))
+    return out
+
+
+def owning_scope(path):
+    """The skill directory a prose file belongs to; the file itself when it is in none.
+
+    ⚠️ **Skill, not file, and that is the whole design.** INV-300 puts the resolution in ONE
+    place per skill and has the other mentions point at it, so the question a reference has to
+    answer is whether its own *skill* resolves that script -- not its own file. File scope would
+    demand that Module 3b's `SKILL.md` restate what `phase1-visualization.md` Step 2.1 already
+    resolves, which is the duplication INV-300 forbids.
+    """
+    try:
+        rel = path.relative_to(SKILLS)
+    except ValueError:
+        return path
+    return SKILLS / rel.parts[0]
+
+
+def scopes_that_resolve():
+    """{script name: {scope}} -- which skills resolve which bundled script. Scanned, never listed.
+
+    ⛔ **(INV-246) The exemption is derived from the tree at run time.** The issue proposed
+    exempting by name "any site whose own file resolves it"; a list of exempt paths is a second
+    copy of the site set, which certifies the sites its author already knew and goes stale in
+    silence when a file is split, renamed, or stops resolving what it used to.
+    """
+    out = {}
+    for path in prose_files():
+        for _, _, name, resolved in bundled_path_references(path.read_text(encoding="utf-8")):
+            if resolved:
+                out.setdefault(name, set()).add(owning_scope(path))
+    return out
+
+
+def unresolved_bundled_references():
+    """(path, lineno, token) for each bare `scripts/<name>.py` whose skill resolves it nowhere."""
+    resolving = scopes_that_resolve()
+    out = []
+    for path in prose_files():
+        for lineno, token, name, resolved in bundled_path_references(
+                path.read_text(encoding="utf-8")):
+            if resolved or owning_scope(path) in resolving.get(name, ()):
+                continue
+            out.append((path, lineno, token))
+    return out
+
+
+def bare_paths_in(text):
+    """(lineno, token) for each bare `scripts/<name>.py` outside a block that resolves it (#809).
+
+    A block that resolves the script is its resolution sentence, which may spell the bare path
+    as the thing it resolves. Anywhere else the mention names the script by bare name and points
+    at that resolution (INV-389, INV-300), whether or not its skill resolves the script.
+    """
+    out = []
+    for flat, origin in collapsed_blocks(text):
+        refs = []
+        for m in _BUNDLED_PATH.finditer(flat):
+            token = m.group(0)
+            refs.append((line_of(origin, m.start()), token, re.split(r"[\\/]", token)[-1],
+                         reference_is_resolved(token)))
+        resolved_here = {name for _, _, name, resolved in refs if resolved}
+        out += [(lineno, token) for lineno, token, name, resolved in refs
+                if not resolved and name not in resolved_here]
+    return out
+
+
+def bare_paths_outside_their_resolution():
+    """(path, lineno, token) for every bare spelling `bare_paths_in` reports, over prose_files()."""
+    return [(path, lineno, token) for path in prose_files()
+            for lineno, token in bare_paths_in(path.read_text(encoding="utf-8"))]
+
+
+class AReferenceToABundledScriptResolvesToo(unittest.TestCase):
+    """#689: INV-252's READ half of INV-185 -- a bundled file named by a bare `scripts/...` path.
+
+    Items 1 and 5 sweep for an *invocation*. A reference the guide must READ -- "modeled on the
+    shipped `scripts/senzing_viz_server.py`" -- carries no invocation shape, so both were blind
+    to it, in the very file that states the rule and applies it correctly to three other scripts.
+
+    ⚠️ **The vocabulary was measured before it was narrowed (INV-282).** Over every file under
+    `source/`, `scripts/<bundled>.py` appears 105 times, 25 of them bare; 12 of those 25 are in
+    `hooks/README.md` and 2 in a bundled script's own comments, which `prose_files()` says why it
+    leaves out. Over `prose_files()` the reading is 76 mentions, 11 bare, and the per-skill
+    exemption below leaves 4.
+
+    **Negative control, run against the shipped text before any site was fixed.** It reported
+    exactly those 4 -- `bootcamp-onboarding/ground-rules.md:681`,
+    `module-01-business-problem/phase2-document-confirm.md:42`, and
+    `module-07-query-visualize-discover/phase1-query-visualize.md:948` and `:1034` -- and none of
+    Module 3b's 5, whose skill resolves the path once at `phase1-visualization.md` Step 2.1.
+    ⚠️ Module 01's was not in the issue's list; the scan found it, which is the point of INV-246.
+    """
+
+    def test_the_reference_sweep_is_not_vacuous(self):
+        """A regex or a scope rule that matched nothing would pass forever."""
+        found = [(p, lineno, token, name, resolved)
+                 for p in prose_files()
+                 for lineno, token, name, resolved in bundled_path_references(
+                     p.read_text(encoding="utf-8"))]
+        self.assertGreaterEqual(
+            len(found), 40,
+            "the reference sweep matched almost nothing (%d): its regex or BUNDLED_SCRIPTS has "
+            "drifted" % len(found))
+        names = {name for _, _, _, name, _ in found}
+        self.assertIn("senzing_viz_server.py", names)
+        self.assertIn("generate_recap_pdf.py", names)
+        self.assertTrue(any(resolved for _, _, _, _, resolved in found),
+                        "no reference resolves, so the exemption side is never exercised")
+        self.assertTrue(any(not resolved for _, _, _, _, resolved in found),
+                        "no bare reference survives anywhere, so the exemption carries the whole "
+                        "sweep and a regression would look identical")
+
+    def test_the_exemption_is_scanned_rather_than_listed(self):
+        """The index is built from the tree: Module 3b resolves the viz server, Module 7 too."""
+        resolving = scopes_that_resolve()
+        scopes = resolving.get("senzing_viz_server.py", set())
+        self.assertIn(SKILLS / "module-03b-truthset-visualization", scopes)
+        self.assertIn(SKILLS / "module-07-query-visualize-discover", scopes)
+        self.assertIn(SKILLS / "bootcamp-onboarding", scopes)
+
+    def test_no_shipped_step_names_a_bundled_script_by_a_bare_path(self):
+        problems = ["%s:%d  %s" % (p.relative_to(REPO_ROOT), i, token)
+                    for p, i, token in unresolved_bundled_references()]
+        self.assertEqual(
+            [], problems,
+            "a shipped step names a bundled script by a bare `scripts/...` path, and nothing in "
+            "its skill resolves that script. A guide told to READ it looks in the bootcamp "
+            "project, where INV-050 puts no top-level `scripts/`. Give the first mention in the "
+            "skill {{host.scripts_dir}}/<name>.py with the skill-relative fallback "
+            "{{host.scripts_fallback}}/<name>.py (INV-185, INV-252), and have the later mentions point at it "
+            "by bare name instead of a second copy (INV-300):\n  " + "\n  ".join(problems))
+
+    def test_a_bare_path_appears_only_in_its_resolution(self):
+        """#809: INV-389's bare-name half, which the skill exemption above does not reach."""
+        problems = ["%s:%d  %s" % (p.relative_to(REPO_ROOT), i, token)
+                    for p, i, token in bare_paths_outside_their_resolution()]
+        self.assertEqual(
+            [], problems,
+            "a shipped mention spells a bundled script as a bare `scripts/<name>.py` path outside "
+            "the sentence that resolves it. Name it by bare name (`<name>.py`) and point at the "
+            "skill's resolution instead (INV-389, INV-300):\n  " + "\n  ".join(problems))
+
+    def test_the_bare_path_check_sees_the_809_sites(self):
+        """Negative controls: each #809 spelling, put back, is reported; the resolution is not."""
+        m3b = SKILLS / "module-03b-truthset-visualization"
+        sites = (
+            (m3b / "SKILL.md",
+             "modeled on the shipped reference `senzing_viz_server.py` (resolved at",
+             "modeled on the shipped reference `scripts/senzing_viz_server.py` (resolved at"),
+            (m3b / "phase1-visualization.md",
+             "The shipped `senzing_viz_server.py` (resolved at 2.1 below)",
+             "The shipped `scripts/senzing_viz_server.py`"),
+            (SKILLS / "bootcamp-onboarding" / "module-completion.md",
+             "with the\n`generate_recap_pdf.py` that the structural check above resolves",
+             "with the\n`scripts/generate_recap_pdf.py`"),
+            (SKILLS / "graduation" / "SKILL.md",
+             "the bundled renderer, `generate_recap_video.py` (resolved under",
+             "the bundled renderer, `scripts/generate_recap_video.py` (resolved under"),
+        )
+        for path, fixed, defect in sites:
+            with self.subTest(path=path.name):
+                text = path.read_text(encoding="utf-8")
+                self.assertIn(fixed, text, "negative control is stale: %r is gone" % fixed)
+                self.assertEqual([], bare_paths_in(text))
+                reported = bare_paths_in(text.replace(fixed, defect, 1))
+                self.assertEqual(1, len(reported), reported)
+        # The resolution sentence spells the bare path as what it resolves, and is not reported.
+        resolution = ("Resolve `scripts/senzing_viz_server.py`\n"
+                      "(`{{host.scripts_dir}}/senzing_viz_server.py` in a command/hook "
+                      "context, else\n`{{host.scripts_relative}}/senzing_viz_server.py` relative to this skill)")
+        self.assertEqual([], bare_paths_in(resolution))
+        # A different script resolved in the same block does not excuse this one.
+        self.assertEqual(
+            1, len(bare_paths_in("`scripts/brand_tokens.py` beside "
+                                 "`{{host.scripts_dir}}/senzing_viz_server.py`")))
+
+    def test_module_7_resolves_the_server_it_sends_the_guide_to_read(self):
+        """The sharpest site, named explicitly so a regression is unambiguous."""
+        flat = " ".join((SKILLS / "module-07-query-visualize-discover"
+                         / "phase1-query-visualize.md").read_text(encoding="utf-8").split())
+        self.assertIn("{{host.scripts_dir}}/senzing_viz_server.py", flat)
+        self.assertIn("{{host.scripts_relative}}/senzing_viz_server.py", flat)
+        self.assertNotIn("(`scripts/senzing_viz_server.py`)", flat,
+                         "the bare spelling is back in the build instruction")
+
+    def test_negative_controls(self):
+        """The sweep fails on the defect it exists for, and passes on each fixed shape."""
+        # (a) The shipped Module 7 sentence, wrapped exactly as it was.
+        shipped = ("Build it modeled on the shipped Truth Set visualization server\n"
+                   "(`scripts/senzing_viz_server.py`) and the contract")
+        # Line 2, not line 1: the block wraps, and the report follows the path, not the block.
+        self.assertEqual(
+            [(2, "scripts/senzing_viz_server.py", "senzing_viz_server.py", False)],
+            bundled_path_references(shipped))
+        # It is not an invocation, so neither older sweep could ever see it.
+        self.assertEqual([], unresolved_inline_invocations(shipped))
+        self.assertFalse(any(_RUNNER.search(line) for line in shipped.splitlines()))
+        # (b) A reference that wraps between the words carrying it still reports its own line.
+        wrapped = "x\n\nWorked example in the bundled reference server:\n`scripts/brand_tokens.py`"
+        self.assertEqual([(4, "scripts/brand_tokens.py", "brand_tokens.py", False)],
+                         bundled_path_references(wrapped))
+        # (c) Every documented resolution reads as resolved.
+        for resolved in ('`{{host.scripts_dir}}/senzing_viz_server.py`',
+                         "`{{host.scripts_fallback}}/senzing_viz_server.py`",
+                         "`{{host.scripts_relative}}/senzing_viz_server.py`",
+                         "python3 <this-skill-dir>/../../scripts/generate_recap_pdf.py --check",
+                         "`'/opt/plugins/senzing-bootcamp/scripts/generate_recap_video.py'`",
+                         '"C:\\plugins\\senzing-bootcamp\\scripts\\generate_recap_video.py"'):
+            refs = bundled_path_references(resolved)
+            self.assertEqual(1, len(refs), resolved)
+            self.assertTrue(refs[0][3], resolved)
+        # (d) A bare NAME is not a path: that is how a later mention points at the resolution.
+        for reference in ("`senzing_viz_server.py` does exactly this",
+                          "the bundled renderer `generate_recap_video.py`",
+                          "`src/scripts/verify_sdk.py`",
+                          "data/temp/truthset-viz/senzing_viz_server.py"):
+            self.assertEqual([], bundled_path_references(reference), reference)
+        # (e) A project-relative `scripts/` path IS reported, runner or none.
+        for bare in ("`python3 scripts/generate_discoveries_pdf.py`",
+                     "modeled on `scripts/senzing_viz_server.py`"):
+            refs = bundled_path_references(bare)
+            self.assertEqual(1, len(refs), bare)
+            self.assertFalse(refs[0][3], bare)
+
+
+def copy_table_rows(text):
+    """(source, destination) for each row of graduation's Step 2 copy table."""
+    rows = []
+    for line in text.splitlines():
+        if line.startswith("| `") and "production/" in line:
+            cells = [c.strip().strip("`") for c in line.strip("|").split("|")]
+            if len(cells) >= 2:
+                rows.append((cells[0], cells[1]))
+    return rows
+
+
+def graduation_step(text, number):
+    """Graduation's `## Step <number>:` section, up to the next `## ` heading."""
+    start = text.index("\n## Step %s:" % number)
+    end = text.find("\n## ", start + 1)
+    return text[start:] if end == -1 else text[start:end]
+
+
+def step17_registry_paths(phase_c):
+    """The `config/` files Phase C step 17 tells the orchestrator to read when it runs."""
+    paragraphs = [p for p in re.split(r"\n\s*\n", phase_c)
+                  if "(INV-320) Then the orchestrator loads" in p]
+    return {path for p in paragraphs
+            for path in re.findall(r"`(config/[^`]+)`", p)}
+
+
+def registry_rows_missing(phase_c, graduation):
+    """Each registry step 17 reads that Step 2 does not land at its own path under production/."""
+    rows = dict(copy_table_rows(graduation))
+    return sorted(path for path in step17_registry_paths(phase_c)
+                  if rows.get(path) != "production/" + path)
+
+
+def projection_bullet(graduation, label):
+    """The backticked items of Step 2's `- **<label>:**` projection bullet, or None."""
+    m = re.search(r"(?ms)^- \*\*%s:\*\*(.*?)(?=^- \*\*|^\s*$)" % re.escape(label),
+                  graduation_step(graduation, 2))
+    return None if m is None else re.findall(r"`([^`]+)`", m.group(1))
+
+
+#: The projection's allowlist (#325): what production's orchestrator needs and nothing more.
+PROJECTION_KEEPS = {"version", "sources:", "name", "file_path", "format"}
+
+
+def projection_problems(graduation):
+    """Why Step 2's projection would carry an evaluation-only field, or [] when it would not."""
+    keep, strip = (projection_bullet(graduation, "Keep only"),
+                   projection_bullet(graduation, "Strip"))
+    if keep is None or strip is None:
+        return ["Step 2 has no **Keep only:** / **Strip:** projection bullet"]
+    problems = []
+    if set(keep) != PROJECTION_KEEPS:
+        problems.append("Keep only names %s, not %s" % (sorted(keep), sorted(PROJECTION_KEEPS)))
+    for field in ("load_subset:", "sample:"):
+        if field not in strip:
+            problems.append("Strip does not name %s" % field)
+    return problems
+
+
+def readme_names_the_registry(graduation):
+    """Step 4's Configuration bullet names the registry and the subset sources' full load."""
+    flat = " ".join(graduation_step(graduation, 4).split())
+    m = re.search(r"\*\*Configuration names the registry\.\*\*(.*?)(?= - \*\*|$)", flat)
+    return bool(m) and all(
+        needle in m.group(1)
+        for needle in ("`config/data_sources.yaml`", "`load_subset:`", "whole `file_path`"))
+
+
+def report_lists_the_projection(graduation):
+    """Step 5's files-generated table lists the projection."""
+    flat = " ".join(graduation_step(graduation, 5).split())
+    return "files-generated table (it lists `production/config/data_sources.yaml`" in flat
+
+
+class ProductionCopyPreservesThePathsItsCodeUses(unittest.TestCase):
+    """Copied code is not rewritten, so its inputs must land where it looks for them."""
+
+    def _copy_table_rows(self):
+        return copy_table_rows(GRADUATION.read_text(encoding="utf-8"))
+
+    def test_the_copy_table_is_readable(self):
+        rows = self._copy_table_rows()
+        self.assertGreaterEqual(
+            len(rows), 5, "graduation's Step 2 copy table no longer parses"
+        )
+
+    def test_senzing_ready_keeps_its_directory(self):
+        rows = dict(self._copy_table_rows())
+        dest = rows.get("data/senzing-ready/**")
+        self.assertIsNotNone(dest, "the Senzing-ready copy row disappeared from Step 2")
+        self.assertEqual(
+            "production/data/senzing-ready/",
+            dest,
+            "the loading code is copied verbatim and reads data/senzing-ready/ "
+            "(INV-084); flattening it to production/data/ ships a project whose "
+            "loader points at a directory that does not exist",
+        )
+
+    def test_every_src_row_preserves_its_subdirectory(self):
+        for source, dest in self._copy_table_rows():
+            if source.startswith("src/"):
+                self.assertEqual(
+                    "production/" + source.replace("**", ""),
+                    dest,
+                    f"{source} must keep its path under production/ — copied code is "
+                    "not rewritten, so a moved directory breaks its imports",
+                )
+
+    def test_the_excluded_raw_input_is_disclosed(self):
+        """data/raw/ is excluded by design; a fast-pathed source's loader then has no input.
+
+        Asserted per *paragraph* rather than by character distance: the disclosure is
+        several wrapped sentences, and a proximity window either misses it or would pass
+        on an unrelated mention elsewhere in an 850-line file.
+        """
+        text = GRADUATION.read_text(encoding="utf-8")
+        self.assertIn("data/raw/", text, "the exclusion list lost data/raw/")
+
+        paragraphs = [
+            re.sub(r"\s+", " ", p)
+            for p in re.split(r"\n\s*\n", text)
+            if "fast-pathed source" in p
+        ]
+        self.assertTrue(
+            paragraphs,
+            "graduation no longer says what happens to a fast-pathed source's input, "
+            "which data/raw/'s exclusion leaves out of production/",
+        )
+        disclosing = [
+            p
+            for p in paragraphs
+            if "data/raw/" in p
+            and "files-excluded" in p
+            and "README" in p
+        ]
+        self.assertTrue(
+            disclosing,
+            "the fast-pathed paragraph must name data/raw/ as the excluded input AND "
+            "route the disclosure to both the graduation report's files-excluded table "
+            "and production/README.md — otherwise the missing input is silent.\n"
+            "Paragraphs found:\n  " + "\n  ".join(paragraphs),
+        )
+
+
+    # -- #325: the registry the Phase C orchestrator reads ------------------------------
+
+    def test_step17_still_names_the_registry_it_reads(self):
+        """Not vacuous: the paragraph parser finds the registry, or the next test checks nothing."""
+        self.assertEqual(
+            {"config/data_sources.yaml"},
+            step17_registry_paths(PHASE_C.read_text(encoding="utf-8")),
+            "Phase C step 17's (INV-320) paragraph no longer parses, or reads another file",
+        )
+
+    def test_the_registry_step17_reads_keeps_its_path(self):
+        """INV-186: the orchestrator is copied verbatim, so its registry lands where it looks."""
+        missing = registry_rows_missing(PHASE_C.read_text(encoding="utf-8"),
+                                        GRADUATION.read_text(encoding="utf-8"))
+        self.assertEqual(
+            [], missing,
+            "Phase C step 17 tells the orchestrator to read these at run time, and graduation "
+            "Step 2 does not write them to the same path under production/, so the copied "
+            "loader stops at its registry lookup: %s" % missing,
+        )
+
+    def test_the_projection_carries_no_evaluation_only_field(self):
+        self.assertEqual([], projection_problems(GRADUATION.read_text(encoding="utf-8")))
+
+    def test_the_readme_configuration_names_the_registry(self):
+        self.assertTrue(
+            readme_names_the_registry(GRADUATION.read_text(encoding="utf-8")),
+            "Step 4's **Configuration names the registry.** bullet must name "
+            "`config/data_sources.yaml`, the sources that had a `load_subset:` block, and that "
+            "production loads each one's whole `file_path`",
+        )
+
+    def test_the_report_lists_the_projection(self):
+        self.assertTrue(
+            report_lists_the_projection(GRADUATION.read_text(encoding="utf-8")),
+            "Step 5's files-generated table must list production/config/data_sources.yaml",
+        )
+
+    def test_negative_controls(self):
+        """Each check above fails on the defect it exists for."""
+        graduation = GRADUATION.read_text(encoding="utf-8")
+        phase_c = PHASE_C.read_text(encoding="utf-8")
+        row = ("| `config/data_sources.yaml` | `production/config/data_sources.yaml` |")
+        self.assertIn(row, graduation, "the control's copy-table row moved")
+
+        # 1. The pre-#325 copy table: no registry row.
+        without_row = "\n".join(l for l in graduation.splitlines() if not l.startswith(row))
+        self.assertEqual(["config/data_sources.yaml"],
+                         registry_rows_missing(phase_c, without_row))
+        # 2. The registry flattened out of config/.
+        flattened = graduation.replace(row, row.replace("production/config/", "production/"), 1)
+        self.assertEqual(["config/data_sources.yaml"],
+                         registry_rows_missing(phase_c, flattened))
+        # 3. load_subset: kept, so production inherits the evaluation's cap.
+        keep = "- **Keep only:** `version`,"
+        self.assertIn(keep, graduation, "the control's Keep only bullet moved")
+        leaky = graduation.replace(keep, "- **Keep only:** `load_subset:`, `version`,", 1)
+        self.assertTrue(projection_problems(leaky))
+        # 4. load_subset: dropped from the Strip list.
+        unstripped = graduation.replace("including `load_subset:`, ", "including ", 1)
+        self.assertNotEqual(graduation, unstripped, "the control's Strip entry moved")
+        self.assertIn("Strip does not name load_subset:", projection_problems(unstripped))
+        # 5. The README bullet gone.
+        bullet = "**Configuration names the registry.**"
+        self.assertFalse(readme_names_the_registry(graduation.replace(bullet, "", 1)))
+        # 6. The report no longer lists the projection.
+        listed = "(it lists\n`production/config/data_sources.yaml`"
+        self.assertIn(listed, graduation, "the control's Step 5 wording moved")
+        self.assertFalse(report_lists_the_projection(graduation.replace(listed, "(", 1)))
+
+
+def cli_install_lines(text=None):
+    """The CLI path of the Claude install fragment, line by line, as a reader sees each line."""
+    text = CLI_INSTALL_DOC.read_text(encoding="utf-8") if text is None else text
+    found = re.search(r'<div class="path" id="claude-code-cli">(.*?)\n          </div>', text, re.S)
+    assert found, "%s has no Claude Code CLI path (id=\"claude-code-cli\")" % CLI_INSTALL_DOC
+    return [html.unescape(re.sub(r"<[^>]+>", " ", line)) for line in found.group(1).splitlines()]
+
+
+def cli_install_text(text=None):
+    return re.sub(r"\s+", " ", " ".join(cli_install_lines(text)))
+
+
+def powershell_chaining(lines):
+    """The bash chaining operators on the lines that carry the Windows install command."""
+    return [op for line in lines if "install.ps1" in line for op in ("&&", "||") if op in line]
+
+
+class InstallDocsCoverEverySupportedPlatform(unittest.TestCase):
+    """INV-001 makes Windows supported; INV-158 makes the CLI a documented interface."""
+
+    def test_the_cli_section_has_a_windows_route(self):
+        text = cli_install_text()
+        self.assertIn(
+            "install.ps1",
+            text,
+            "the Claude Code CLI install section gives no Windows command "
+            "(verified against the official setup docs: `irm https://claude.ai/install.ps1 | iex`)",
+        )
+        self.assertIn(
+            "install.sh",
+            text,
+            "the macOS/Linux install command disappeared",
+        )
+
+    def test_no_install_step_claims_two_platforms_are_the_set(self):
+        """'on macOS or Linux' with no Windows line is how the gap read as complete."""
+        self.assertNotIn(
+            "Claude Code CLI on macOS or Linux",
+            cli_install_text(),
+            "this phrasing presents two platforms as the whole supported set",
+        )
+
+    def test_the_windows_command_is_powershell_shaped(self):
+        """INV-167: a PowerShell command must not carry bash chaining operators."""
+        self.assertEqual([], powershell_chaining(cli_install_lines()),
+                         "bash chaining in a PowerShell command")
+
+    def test_the_cli_checks_read_the_fragment_as_a_reader_does(self):
+        """Negative controls (INV-265): each defect, written as the HTML would carry it."""
+        text = CLI_INSTALL_DOC.read_text(encoding="utf-8")
+        windows = "irm https://claude.ai/install.ps1 | iex"
+        self.assertIn(windows, text, "the control's Windows command moved")
+        chained = text.replace(windows, windows + " &amp;&amp; claude")
+        self.assertEqual(["&&"], powershell_chaining(cli_install_lines(chained)))
+        self.assertNotIn("install.ps1", cli_install_text(text.replace(windows, "see the docs")))
+        label = "Install the Claude Code CLI:"
+        self.assertIn(label, text, "the control's install step moved")
+        self.assertIn("Claude Code CLI on macOS or Linux", cli_install_text(
+            text.replace(label, "Install the Claude Code <strong>CLI</strong>\n on macOS or Linux:")))
+
+
+class TheProseSweepIsNotVacuous(unittest.TestCase):
+    """`prose_files()` is skills + commands. If either half stops matching, the path
+    checks pass over a smaller corpus and report clean."""
+
+    def test_both_halves_contribute(self):
+        found = prose_files()
+        self.assertGreater(len(found), 20, "corpus shrank to %d files" % len(found))
+        self.assertTrue(any("skills" in p.parts for p in found), "no skill .md found")
+        self.assertTrue(any("commands" in p.parts for p in found), "no command .md found")
+
+
+if __name__ == "__main__":
+    unittest.main()
