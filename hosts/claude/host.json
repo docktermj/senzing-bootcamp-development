@@ -18,7 +18,8 @@
     "model_balanced": "Sonnet 5.5",
     "model_capable": "Opus 5.5",
     "model_top": "Fable 5.1",
-    "model_controls": "the model and effort controls in your Claude interface"
+    "model_controls": "the model and effort controls in your Claude interface",
+    "skills_dir": "${CLAUDE_PLUGIN_ROOT}/skills"
   },
   "layout": {
     "skills": "skills",

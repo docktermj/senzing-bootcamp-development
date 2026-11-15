@@ -5,7 +5,8 @@ description: Package the bootcamp into one transferable zip archive under backup
 The bootcamper wants to archive their bootcamp, move it to another machine, or hand the
 results to someone else.
 
-Follow the packaging workflow in the `bootcamp-onboarding` skill's `packaging.md`: run the
+Follow the packaging workflow in the `bootcamp-onboarding` skill's `packaging.md`
+(`{{host.skills_dir}}/bootcamp-onboarding/packaging.md`): run the
 dry run FIRST so the question quotes a measured size rather than an estimate, ask the one
 pinned numbered 👉 question about what should travel, then write the archive with
 

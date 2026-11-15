@@ -5,7 +5,8 @@ description: Jot down an idea, question, reminder or to-do (saved locally to doc
 The bootcamper wants to capture a note of their own — an idea, question, reminder,
 to-do or memo about **their** work, not feedback about the bootcamp.
 
-Follow the bootcamp note workflow in the `bootcamp-onboarding` skill's `notes.md`:
+Follow the bootcamp note workflow in the `bootcamp-onboarding` skill's `notes.md`
+(`{{host.skills_dir}}/bootcamp-onboarding/notes.md`):
 capture the time, module and pending question silently, classify the note without
 asking, recite it for approval, and APPEND (never overwrite) it to
 `docs/bootcamp_notes.md`, creating that file with its header if it does not exist.

@@ -18,7 +18,8 @@
     "model_balanced": "a balanced model",
     "model_capable": "a high-capability model",
     "model_top": "the most capable model your plan offers",
-    "model_controls": "the model picker in the GitHub Copilot app, or `/model` in the Copilot CLI"
+    "model_controls": "the model picker in the GitHub Copilot app, or `/model` in the Copilot CLI",
+    "skills_dir": ".."
   },
   "layout": {
     "skills": "skills",

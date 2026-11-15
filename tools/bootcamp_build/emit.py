@@ -331,6 +331,9 @@ def _commands_as_skills(build: HostBuild, context: BuildContext) -> None:
         )
         if not text.startswith(FRONTMATTER_OPEN):
             raise BuildError(f"{where}: a command must start with frontmatter")
+        # A command sits in commands/, one level above skills/; as a skill it sits inside
+        # skills/, so a link that reached a skill through ../skills/ now reaches it through ../
+        text = text.replace("../skills/", "../")
         skill = FRONTMATTER_OPEN + f"name: {path.stem}\n" + text[len(FRONTMATTER_OPEN):]
         skill = skill.rstrip("\n") + "\n\n" + SIBLING_SKILLS_NOTE
         _write(build, Path("skills") / path.stem / "SKILL.md", skill.encode("utf-8"), 0o644)

@@ -5,7 +5,7 @@ description: Give feedback about the Senzing bootcamp (saved locally to docs/fee
 The bootcamper wants to give feedback about the bootcamp.
 
 Follow the bootcamp feedback workflow in the `bootcamp-onboarding` skill's
-`feedback.md`: capture context silently, gather the feedback one 👉 question at a
+`feedback.md` (`{{host.skills_dir}}/bootcamp-onboarding/feedback.md`): capture context silently, gather the feedback one 👉 question at a
 time, triage whether the issue is in this plugin or in the Senzing MCP server, and
 APPEND (never overwrite) a formatted entry to
 `docs/feedback/SENZING_BOOTCAMP_FEEDBACK.md`, creating that file with its

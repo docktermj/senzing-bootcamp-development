@@ -18,7 +18,8 @@
     "model_balanced": "a balanced Gemini model",
     "model_capable": "a high-capability Gemini model",
     "model_top": "the most capable Gemini model available",
-    "model_controls": "the model controls in the Antigravity CLI"
+    "model_controls": "the model controls in the Antigravity CLI",
+    "skills_dir": ".."
   },
   "layout": {
     "skills": "skills",

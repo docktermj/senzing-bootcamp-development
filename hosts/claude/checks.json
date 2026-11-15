@@ -6,5 +6,13 @@
     "scope": "first-turn",
     "result": "pass",
     "notes": "Built package loaded with --plugin-dir in an empty project. \"Start the bootcamp\" ran onboarding, reached the Senzing MCP server, wrote README.md and the two config files, showed the WELCOME banner with v0.7.0 and ended on one 👉 question."
+  },
+  {
+    "release": "0.7.0",
+    "client": "Claude Code 2.1.325",
+    "date": "2026-11-15",
+    "scope": "first-turn",
+    "result": "pass",
+    "notes": "Repeated on the assistant-neutral source with --plugin-dir. \"Start the bootcamp\" reached the WELCOME banner and one 👉 question. \"bootcamp feedback: ...\" saved an Improvement entry in docs/feedback/SENZING_BOOTCAMP_FEEDBACK.md with the package version (0.7.0) and \"AI assistant: Claude (Claude Code)\". Found and fixed on the way: the feedback command named the onboarding skill's feedback.md without its location, so Claude searched the disk, did not find it and improvised a format. That defect predates this repository."
   }
 ]

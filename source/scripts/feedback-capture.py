@@ -242,6 +242,16 @@ elif VERBOSITY.search(lower):
     )
 
 if ctx:
+    # Say exactly where the onboarding skill's files are. Told only the skill's name, an
+    # assistant has searched the whole disk for them and followed another copy of the bootcamp.
+    _here = os.path.dirname(os.path.abspath(__file__))
+    for _candidate in (os.path.join(_here, os.pardir, "skills", "bootcamp-onboarding"),
+                       os.path.join(_here, os.pardir)):
+        if os.path.isfile(os.path.join(_candidate, "feedback.md")):
+            ctx += (" The bootcamp-onboarding skill's files (feedback.md, notes.md, ground-rules.md) "
+                    "are in " + os.path.normpath(_candidate) + ". Read them from there, and never "
+                    "search the filesystem for them.")
+            break
     print(json.dumps({
         "hookSpecificOutput": {
             "hookEventName": "UserPromptSubmit",
