@@ -108,9 +108,20 @@ TABLE_HEADER = "| Stage | Recommended | CLI commands |"
 # "renamed in one place" defect. `specs/`, `SENZING_BOOTCAMP_FEEDBACK_*.md`,
 # and `specs/IMPLEMENTED.md` are deliberately NOT scanned: they are historical
 # records and must keep naming what was true when written.
+# Adapted (one-repository migration, 2026-11-14): `docs/README.md`, the old Claude user doc,
+# was deleted. The user-facing docs that name a model are now the public README and the Claude
+# install fragments (`Sonnet 5.5`, `Opus 5.5` and `claude --model claude-sonnet-5-5` are in
+# `site-install.html` and `site-tips.html`), so those are read in its place. The fragments are
+# HTML; the names and IDs sit in their text as written, so they are matched as text. A listed
+# file that is missing now fails (`test_every_repo_doc_exists_and_one_names_a_model`) where
+# the old loop skipped it silently.
+CLAUDE_FRAGMENTS = os.path.join(REPO_ROOT, "hosts", "claude", "fragments")
 REPO_DOCS = [
     os.path.join(REPO_ROOT, "README.md"),
-    os.path.join(REPO_ROOT, "docs", "README.md"),
+    os.path.join(REPO_ROOT, "public", "README.md"),
+    os.path.join(CLAUDE_FRAGMENTS, "site-before.html"),
+    os.path.join(CLAUDE_FRAGMENTS, "site-install.html"),
+    os.path.join(CLAUDE_FRAGMENTS, "site-tips.html"),
 ]
 
 
@@ -122,8 +133,7 @@ def shipped_markdown():
             if name.endswith(".md"):
                 yield os.path.join(dirpath, name)
     for path in REPO_DOCS:
-        if os.path.exists(path):
-            yield path
+        yield path
 
 
 def stage_table(path):
@@ -167,6 +177,37 @@ class NoSupersededModelReferences(unittest.TestCase):
         self.assertEqual(
             offenders, [], "superseded model references found:\n  " + "\n  ".join(offenders)
         )
+
+    def test_every_repo_doc_exists_and_one_names_a_model(self):
+        """INV-265: the repo-level half of the scan reads real files that carry its subject."""
+        # Added with the adaptation (one-repository migration, 2026-11-14).
+        naming = []
+        for path in REPO_DOCS:
+            rel = os.path.relpath(path, REPO_ROOT)
+            with self.subTest(path=rel):
+                self.assertTrue(os.path.isfile(path), "%s is listed in REPO_DOCS and missing" % rel)
+            if os.path.isfile(path):
+                with open(path, encoding="utf-8") as fh:
+                    text = fh.read()
+                if "Sonnet 5.5" in text and "claude-sonnet-5-5" in text:
+                    naming.append(rel)
+        self.assertIn("hosts/claude/fragments/site-install.html", naming,
+                      "no repo-level user doc names the current model and its ID, so the "
+                      "repo-level half of the superseded-name scan reads nothing it could fail on")
+
+    def test_a_superseded_name_in_the_install_fragment_is_reported(self):
+        """Negative control: the walkthrough's own model step, one generation back."""
+        path = os.path.join(CLAUDE_FRAGMENTS, "site-install.html")
+        with open(path, encoding="utf-8") as fh:
+            text = fh.read()
+        self.assertEqual([], superseded_offenders("fragment", text))
+        stale = text.replace("<strong>Sonnet 5.5</strong>", "<strong>Sonnet 5</strong>").replace(
+            "claude-sonnet-5-5", "claude-sonnet-5")
+        self.assertNotEqual(text, stale, "the control changed nothing")
+        self.assertEqual(
+            ["fragment: 'Sonnet 5' should be 'Sonnet 5.5'",
+             "fragment: 'claude-sonnet-5' should be 'claude-sonnet-5-5'"],
+            superseded_offenders("fragment", stale))
 
     def test_the_staleness_note_is_found_and_names_what_it_supersedes(self):
         """The exemption is earned: the note exists and is what explains the supersession."""

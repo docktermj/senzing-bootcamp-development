@@ -23,7 +23,7 @@ attributed defect report that happens to be phrased as a note. Routing it here w
 a defect report into a private keepsake the maintainer never sees. Nothing is lost by
 preferring feedback: that flow is also durable, also banner-bracketed, and also returns
 the bootcamper to the pending question. The precedence is stated in
-`../../scripts/feedback-capture.py` rather than left to branch order.
+`{{host.scripts_relative}}/feedback-capture.py` rather than left to branch order.
 
 ## Step 0: Capture context silently
 

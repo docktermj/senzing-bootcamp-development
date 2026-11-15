@@ -1,4 +1,4 @@
-          <p class="intro">Choose one path. Both end with the bootcamp running in Claude Code.</p>
+          <p class="intro">Choose one path. Both end with the bootcamp running in Claude Code. In the Claude web app or a Claude IDE extension, see <a href="#other-claude-code-clients">other Claude Code clients</a>.</p>
           <ul class="paths">
             <li><a href="#claude-desktop">Claude Desktop (no terminal)</a></li>
             <li><a href="#claude-code-cli">Claude Code CLI</a></li>
@@ -48,6 +48,7 @@
               <li>
                 Near the bottom, in the agentic chat, enter:
                 <div class="cmd"><pre><code>Start the bootcamp</code></pre></div>
+                <p class="step__alt">Or enter <code>/start-bootcamp</code>. See <a href="#commands">Bootcamp requests</a> for the rest.</p>
               </li>
             </ol>
           </div>
@@ -68,6 +69,7 @@
                     <div class="cmd"><pre><code>irm https://claude.ai/install.ps1 | iex</code></pre></div>
                   </div>
                 </div>
+                <p class="step__alt">Windows is fully supported. To work without a terminal, use <a href="#claude-desktop">Claude Desktop</a>, which runs on Windows too.</p>
               </li>
               <li>
                 Add the Senzing Bootcamp marketplace:
@@ -76,6 +78,7 @@
               <li>
                 Install the Senzing Bootcamp plugin:
                 <div class="cmd"><pre><code>claude plugin install senzing-bootcamp@senzing-bootcamp</code></pre></div>
+                <p class="step__alt">If the plugin is already installed, <a href="#update-uninstall">update it</a> instead.</p>
               </li>
               <li>
                 Create a new directory for the bootcamp:
@@ -92,8 +95,9 @@
               <li>
                 Start the bootcamp. Tell Claude:
                 <div class="cmd"><pre><code>Start the bootcamp</code></pre></div>
+                <p class="step__alt">Or enter <code>/start-bootcamp</code>. See <a href="#commands">Bootcamp requests</a> for the rest.</p>
               </li>
             </ol>
           </div>
 
-          <p class="after-steps"><a href="https://marketplace.visualstudio.com/items?itemName=anthropic.claude-code">Claude Code for VS Code</a> and other Claude Code clients also run the plugin. Install it the way your client installs plugins, then start the bootcamp.</p>
+          <p class="after-steps" id="other-claude-code-clients">The plugin works wherever Claude Code runs. Claude Code also runs in the Claude web app and in Claude IDE extensions (<a href="https://marketplace.visualstudio.com/items?itemName=anthropic.claude-code">VS Code</a>, JetBrains). The bootcamp supports those: it adapts its model and effort guidance to the interface you are in. This page has no verified install steps for them, so install the plugin the way your client installs plugins, then start the bootcamp.</p>

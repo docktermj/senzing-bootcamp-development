@@ -395,7 +395,7 @@ project so the recap PDF always exists.
 
 A finished-recap sample ships with the plugin (INV-065) at
 `{{host.docs_dir}}/examples/bootcamp_recap.example.pdf` (skill-relative
-fallback: `../../docs/examples/bootcamp_recap.example.pdf`). You may point the
+fallback: `{{host.docs_relative}}/examples/bootcamp_recap.example.pdf`). You may point the
 bootcamper to it so they see what theirs is about to look like — a non-blocking
 statement, never a 👉 question or gate, and it adds no turn.
 
@@ -435,7 +435,7 @@ are **lists**: put the label on its own line and one bullet per accomplishment, 
 file with a short "— what it is" gloss. `**Why it matters:**` is **prose**: it stays inline after its
 label. This is the shape `../bootcamp-onboarding/module-completion.md` prescribes and the shape
 `{{host.docs_dir}}/examples/bootcamp_recap.example.md` (skill-relative fallback:
-`../../docs/examples/bootcamp_recap.example.md`, INV-252) shows. It is not cosmetic: the PDF renders bullets as
+`{{host.docs_relative}}/examples/bootcamp_recap.example.md`, INV-252) shows. It is not cosmetic: the PDF renders bullets as
 bullets and inline text as one wrapped paragraph, so a list written inline — the comma-joined run of
 paths being the usual way it happens — reaches the keepsake as a paragraph and cannot be recovered
 later. The shape chosen here is the shape the bootcamper keeps.
@@ -606,7 +606,7 @@ none of these are covered by it:
    ⛔ **(INV-271) Offer the remedy — it is cheap while the artifacts are still on disk.** Re-start the app and
    re-run the capture against it with the bundled tool,
    `python3 "{{host.scripts_dir}}/capture_screenshots.py" --url http://localhost:<port> --name <name>`
-   (INV-185; skill-relative fallback `../../scripts/capture_screenshots.py`, INV-252), then
+   (INV-185; skill-relative fallback `{{host.scripts_relative}}/capture_screenshots.py`, INV-252), then
    re-embed via the backfill path, rather than proceeding with a recap that pictures the sample
    dataset in place of the Bootcamper's results.
 
@@ -1956,7 +1956,7 @@ Then stop and wait. This is the single closing question for the whole bootcamp.
 
    - **Wants to keep exploring** (asks a question, names a topic, or otherwise continues): help them, then offer the closing question again when they are ready. Do **not** show the terminal banner yet — it must never pre-empt continued exploration.
    - **Declines** ("no", "I'm done", "that's all", "nothing else"): the bootcamp is complete. Do these two things, in order:
-     1. **Stand down the Stop-hook nudge and record completion, silently.** Set a top-level `bootcamp_complete: true` key in `config/bootcamp_preferences.yaml` (a single minimal edit; do not narrate it). In the same step, write `config/bootcamp_progress.json`: set `bootcamp_complete: true`, `completed_at` to the current time in ISO 8601, `current_module: "graduation"` and `current_step: null`, and append `graduation` to `modules_completed` if it is absent, keeping every other key as it is. Make both writes on the normal path and after Step 2's Abort alike. The `Stop` hook (`../../scripts/stop-nudge.py`) reads the flag and will not nudge for a closing 👉 question once the bootcamp is over — so the terminal banner, which ends the turn with no 👉, is not re-opened. Session start and `/start-bootcamp` read either file's flag as a finished bootcamp (`../bootcamp-onboarding/SKILL.md` step 2), so the progress file never presents the last module as current.
+     1. **Stand down the Stop-hook nudge and record completion, silently.** Set a top-level `bootcamp_complete: true` key in `config/bootcamp_preferences.yaml` (a single minimal edit; do not narrate it). In the same step, write `config/bootcamp_progress.json`: set `bootcamp_complete: true`, `completed_at` to the current time in ISO 8601, `current_module: "graduation"` and `current_step: null`, and append `graduation` to `modules_completed` if it is absent, keeping every other key as it is. Make both writes on the normal path and after Step 2's Abort alike. The `Stop` hook (`{{host.scripts_relative}}/stop-nudge.py`) reads the flag and will not nudge for a closing 👉 question once the bootcamp is over — so the terminal banner, which ends the turn with no 👉, is not re-opened. Session start and `/start-bootcamp` read either file's flag as a finished bootcamp (`../bootcamp-onboarding/SKILL.md` step 2), so the progress file never presents the last module as current.
      2. **Render the terminal banner, verbatim, exactly once, then the one `/package-bootcamp` line below it, verbatim.** The banner bookends the WELCOME banner that opened the bootcamp (start) and the BOOTCAMP GRADUATION banner (finish) with a clear end-of-bootcamp marker; the line reminds the bootcamper how to keep or share what they built.
 
      ```text

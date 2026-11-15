@@ -81,8 +81,9 @@ class TheSlugsAreDistinct(unittest.TestCase):
 # `test_the_public_slug_on_the_page_fails_naming_the_page`), with the helpers only they used
 # (`SECTIONS`, `README_SITES`, `section`, `_read`, `surface_problems`, `readme_site_problems`).
 # Their one subject was installing from the development repository, which no longer exists: the
-# root `README.md` is the developer readme, `docs/README.md` and `docs/index.html` are carry-overs
-# of the old Claude pages, and no script rewrites a development slug on the way out.
+# root `README.md` is the developer readme, `docs/README.md` and `docs/index.html` (carry-overs of
+# the old Claude pages) were deleted on 2026-11-15, and no script rewrites a development slug on
+# the way out.
 
 
 class TheRetirementIsStillEarned(unittest.TestCase):

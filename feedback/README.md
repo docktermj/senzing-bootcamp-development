@@ -6,8 +6,9 @@ recorded in `PROCESSED.jsonl`.
 
 **Why this exists.** Feedback files arrive from multiple bootcampers at multiple times, and
 the working copy at the repo root is gitignored and transient — one has already been lost to
-an overwrite before it was archived. Committing the processed file here makes the raw report
-durable, and the ledger makes re-processing detectable.
+an overwrite before it was archived. Moving the processed file here keeps the raw report on
+the maintainer's machine, and the ledger makes re-processing detectable. This repository is
+public, so the raw files are ignored by git and only `PROCESSED.jsonl` is committed.
 
 **Why the ledger is per entry, not per file.** The realistic collision is a file that
 *overlaps* a previous one: a bootcamper's project accumulates entries during a run, so a

@@ -6,11 +6,10 @@ the governing copy, which reads this file and must meet everything below.
 
 ⚠️ **The governing copy is not checked in CI.** It lives under `~/.claude/skills/`, outside
 this repository, and a CI runner checks out only the repository. The tests here assert this
-overlay and `docs/FAMILY_WORKFLOW.md`; nothing here establishes what the governing copy says
+overlay and `docs/development.md`; nothing here establishes what the governing copy says
 on any machine (INV-308).
 
-Choosing the issue is not this command's job. [`docs/FAMILY_WORKFLOW.md`](../../docs/FAMILY_WORKFLOW.md)
-R8 gives it to the operation that chooses the issue, `/order-github-issues` *(user level)* in
+Choosing the issue is not this command's job. It belongs to the operation that chooses the issue, `/order-github-issues` *(user level)* in
 this host. With no argument this command names no issue.
 
 ## What invoking this command assents to

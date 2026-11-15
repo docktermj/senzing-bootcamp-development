@@ -191,7 +191,8 @@ class TheMergePolicyIsStatedOnce(unittest.TestCase):
                              "(INV-300): %s" % hits)
 
     def test_the_overlay_links_to_the_row(self):
-        self.assertIn("FAMILY_WORKFLOW.md",
+        # The row's home is now docs/development.md (one-repository migration, 2026-11-14).
+        self.assertIn("docs/development.md",
                       overlay("unattended-issue-loop").read_text(encoding="utf-8"))
 
 

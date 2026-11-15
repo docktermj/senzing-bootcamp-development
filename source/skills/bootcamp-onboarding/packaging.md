@@ -31,7 +31,7 @@ python3 "{{host.scripts_dir}}/package_bootcamp.py" --profile transfer --dry-run
 
 Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
-(Skill-relative fallback `../../scripts/package_bootcamp.py` per INV-252, exactly as every
+(Skill-relative fallback `{{host.scripts_relative}}/package_bootcamp.py` per INV-252, exactly as every
 other bundled script is invoked — INV-185.)
 
 Each prints the manifest on stdout and a `size:` line on stderr, and **writes nothing**.

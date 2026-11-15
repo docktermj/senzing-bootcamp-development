@@ -119,9 +119,24 @@ def make_worktree(root, ref):
         print(f"  worktree failed ({result.stderr.strip()[:160]}); "
               "falling back to the live tree — findings will not be "
               "attributable to a commit", file=sys.stderr)
+        build_package(REPO_ROOT)
         return REPO_ROOT, None
     sha = _run(["git", "-C", str(worktree), "rev-parse", "HEAD"]).stdout.strip()
+    build_package(worktree)
     return worktree, sha
+
+
+def build_package(tree):
+    """Build the Claude package the walk loads, from the tree under test.
+
+    The package is generated from ``source/`` and is not committed, so a freshly made worktree
+    has none. Building it there keeps the walk on exactly the pinned commit.
+    """
+    result = _run([sys.executable, "-m", "tools.bootcamp_build", "build", "--host", "claude"],
+                  cwd=str(tree))
+    if result.returncode != 0:
+        raise SystemExit(f"could not build the Claude package in {tree}: "
+                         f"{(result.stderr or result.stdout).strip()[:300]}")
 
 
 def drop_worktree(worktree):

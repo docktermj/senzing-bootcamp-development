@@ -65,7 +65,10 @@ Read the whole file.
 
 Feedback is usually a series of `## Improvement: <title>` blocks with subsections
 (**What happened**, **Why it matters**, **Suggested fix**, **Context when
-reported**), plus **Date**, **Module**, **Priority**, and **Source** lines. Handle
+reported**), plus **Date**, **Module**, **Priority**, and **Source** lines. The context
+block's **AI assistant** line names the assistant the bootcamper ran (Claude, GitHub Copilot,
+Kiro, ChatGPT or Gemini) and is read in Step 6. An entry written before 2026-11-14 has no such
+line; it came from the Claude plugin unless the file name says otherwise. Handle
 free-form prose too — bootcampers do not always follow the template.
 
 For each item, extract: `title`, `symptom` (what happened, with any verbatim
@@ -198,6 +201,19 @@ Rules for this step:
 For every parsed item:
 
 1. **Classify** it: bug / false-positive, UX or wording, missing feature, invariant gap, documentation, or unclear.
+   Then decide **which assistants it affects**, because the bootcamp is one source built for five:
+   - **Every assistant:** the defect is in `source/` text or a bundled script that no marker varies.
+     Reproduce it by reading the source, not one package. This is the default: text outside a
+     host marker is the same everywhere.
+   - **One assistant:** the defect is in that assistant's profile, fragments or files under
+     `hosts/<assistant>/`, in the hook adapter's handling of its payloads, or in how the assistant
+     itself behaves. Say which, and check `python3 -m tools.bootcamp_build check` still passes
+     after the fix.
+   - **Unknown:** the entry names no assistant and the evidence does not settle it. Say so.
+   Put the verdict in the issue's Source section, and label the issue `assistant:<id>`
+   (`assistant:claude`, `assistant:copilot`, `assistant:kiro`, `assistant:chatgpt`,
+   `assistant:gemini`) only when it affects that one assistant. ⛔ A report from one assistant is
+   not evidence the defect is limited to it: most are not.
 2. **Confirm the root cause in the codebase**, don't just restate the report. Open the code the feedback implicates — `source/hooks/`, `scripts/`, `skills/`, `commands/` — and verify what actually causes the symptom. Cite `file:line`. If you cannot confirm it, label the root cause "Unverified — needs investigation" rather than asserting one.
 3. **Reconcile the code against what Step 5 returned.** Where the plugin's text or code states a Senzing fact the server now answers differently, the plugin is the defect — even when the entry blamed the server, and even when the plugin's claim was correct when written. Check both directions: text the server contradicts, *and* a workaround the plugin still carries for a defect the server has since fixed.
 4. **Decide the routing** — `plugin`, `mcp-server`, `both`, `host` or `unclear`, the same five verdicts the bootcamper-facing flow records (`feedback.md` Step 2b) — from what Step 5 established, not from what the entry guessed. An entry may be routed `mcp-server` and still need a plugin issue (our reference should record the confirmed shape), and one routed `plugin` may turn out to be a server defect worth reporting upstream (Step 8). ⛔ **`host` has no upstream channel and MUST NOT be sent** — `submit_feedback` reaches Senzing, which does not ship the Claude Code harness, so Step 8 is skipped for it entirely. A `host` entry may still need a **plugin** issue for the part the bootcamp does own: what it says when the bootcamper raises it, and how it recovers a question the host displaced.
@@ -366,12 +382,12 @@ already in the ledger are not re-recorded, and are reported as skipped.
   `unrecorded`, the helper warns, and the ledger loses the thing that makes it useful — the
   link from an entry to the issue it produced. Use the entry's title exactly as the `check`
   output printed it.
-- **The archive is committed to git** (the root-anchored `.gitignore` rule does not cover
-  `feedback/`). That is deliberate: the root feedback file is transient and has been lost to
-  an overwrite before, and the issues quote entries only in part. Bootcamper text therefore
-  enters history permanently — usernames, workstation details, dataset names — which is
-  acceptable for this private development repo and is why `feedback/**` is on
-  `propagate-to-public`'s excluded list. Do not relax either half of that.
+- **The archived file stays on this machine; only the ledger is committed.** This repository is
+  public, and a feedback file carries bootcamper text: usernames, workstation details, dataset
+  names. `.gitignore` keeps `feedback/SENZING_BOOTCAMP_FEEDBACK_*.md` out of git, so the raw
+  report is kept locally for reference and `feedback/PROCESSED.jsonl` is the durable record of
+  what was processed. ⛔ Never force-add an archived file, and never quote more of an entry in
+  an issue than the defect needs.
 - **Never edit an archived file or a ledger line.** Both are the record of what was
   processed. The ledger is append-only and read **last-wins**, so a disposition recorded as
   `unrecorded` (or recorded wrongly) is corrected by *appending*:

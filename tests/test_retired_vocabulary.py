@@ -124,6 +124,12 @@ RETIRED_TERMS = (
 )
 
 
+#: The install instructions a bootcamper reads, which `shipped_files()` must reach.
+INSTALL_PAGES = ("public/README.md", "site/index.html", "site/_install.html",
+                 "hosts/claude/fragments/site-install.html",
+                 "hosts/claude/fragments/site-tips.html")
+
+
 def shipped_files():
     """Every file a bootcamper receives, excluding generated caches and binaries.
 
@@ -131,13 +137,20 @@ def shipped_files():
     mirrors both into the public repo as user-facing content, so a retired term reads to a
     bootcamper there exactly as it would inside the plugin. Leaving them out is how
     "the Claude app" survived in the install instructions (INV-158).
+
+    Adapted (one-repository migration, 2026-11-14): the install instructions were
+    `docs/README.md`, which was deleted. They are now `public/README.md`, the pages under
+    `site/` and each assistant's `hosts/<assistant>/fragments/site-*.html`, so those are read
+    too. `INSTALL_PAGES` names the ones that must be among them.
     """
     roots = list(sorted(PLUGIN.rglob("*")))
     roots += [REPO_ROOT / "README.md"] + sorted((REPO_ROOT / "docs").glob("*.md"))
+    roots += [REPO_ROOT / "public" / "README.md"] + sorted((REPO_ROOT / "site").glob("*.html"))
+    roots += sorted((REPO_ROOT / "hosts").glob("*/fragments/site-*.html"))
     for path in roots:
         if not path.is_file():
             continue
-        if path.suffix not in (".md", ".py", ".json"):
+        if path.suffix not in (".md", ".py", ".json", ".html"):
             continue
         if "pytest_cache" in path.parts or "__pycache__" in path.parts:
             continue
@@ -188,6 +201,26 @@ class TestRetiredVocabulary(unittest.TestCase):
             "Retired vocabulary used as though it were current — the stale-instruction "
             "defect class:\n  " + "\n  ".join(offenders),
         )
+
+    def test_the_install_instructions_are_among_the_files_read(self):
+        """INV-265: the half of the scan INV-158 was written for reads real files."""
+        # Added with the adaptation (one-repository migration, 2026-11-14).
+        read = {path.relative_to(REPO_ROOT).as_posix() for path in shipped_files()}
+        for rel in INSTALL_PAGES:
+            with self.subTest(page=rel):
+                self.assertIn(rel, read)
+
+    def test_the_retired_interface_name_in_an_install_fragment_is_caught(self):
+        """Negative control: "the Claude app" in the walkthrough's HTML, wrapped or not."""
+        pattern = next(p for label, p, _, _ in RETIRED_TERMS if label.startswith('"Claude app"'))
+        fragment = REPO_ROOT / "hosts" / "claude" / "fragments" / "site-install.html"
+        text = fragment.read_text(encoding="utf-8")
+        self.assertEqual([], retired_term_lines(text, pattern))
+        for planted in ("<p>Set it with your Claude app's model control.</p>",
+                        "<p>Set it with your Claude\n  application's model control.</p>"):
+            with self.subTest(planted=planted):
+                (n,) = retired_term_lines(text + planted + "\n", pattern)
+                self.assertFalse(marked_as_retired((text + planted).split("\n")[n - 1]))
 
     def test_registry_is_not_silently_empty(self):
         """A registry that stopped matching anything is a registry nobody maintains."""

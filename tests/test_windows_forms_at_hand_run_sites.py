@@ -51,7 +51,11 @@ Windows and that had no correct Windows form:
    the `PATH` on Windows too, and the hooks run it, so graduation's `py -3` lines became
    `python3`, and no shipped Markdown may say `py -3` (`NoShippedMarkdownSaysPyDashThree`, with
    negative controls). "Shipped" is what `propagate-to-public` mirrors: every `.md` under the
-   plugin, `README.md`, and `docs/` except `docs/development.md` and `docs/FAMILY_WORKFLOW.md`. The pairing scan now asks what #420 asked of a block that splits its
+   plugin, `README.md`, and `docs/` except `docs/development.md` and `docs/FAMILY_WORKFLOW.md`.
+   Since the one-repository migration, 2026-11-14, the user-facing page under `docs/` is gone
+   and the scan also reads the published HTML: `site/*.html` and every assistant's
+   `hosts/<assistant>/fragments/site-*.html` (`published_pages()`).
+   The pairing scan now asks what #420 asked of a block that splits its
    lines per platform: its `# Windows` part creates the same venv, as `python3 -m venv <path>`.
    A venv line in prose, or in a block with no `# Windows` line, serves every platform as written.
 
@@ -387,6 +391,16 @@ def shipped_markdown():
             if path.relative_to(REPO_ROOT).as_posix() not in NOT_SHIPPED]
 
 
+def published_pages():
+    """The HTML the build publishes: the landing page, the install template and every
+    assistant's install fragments."""
+    # Adapted (one-repository migration, 2026-11-14): `docs/README.md`, the user-facing page
+    # this scan read under `docs/`, was deleted. Its install steps are now HTML, in `site/` and
+    # in `hosts/<assistant>/fragments/site-*.html`, so those are read in its place.
+    return [path for path in corpus_files("site", "hosts", suffixes={".html"})
+            if path.parent == REPO_ROOT / "site" or path.name.startswith("site-")]
+
+
 def py_dash_three_sites(paths, texts=None):
     """``path:lineno`` for every `py -3` in ``paths``, wrapped across a line or not (#786).
 
@@ -405,19 +419,25 @@ class NoShippedMarkdownSaysPyDashThree(unittest.TestCase):
     """#786: `python3` is the interpreter on every platform, as `README.md` requires."""
 
     def setUp(self):
-        self.paths = shipped_markdown()
+        self.paths = shipped_markdown() + published_pages()
 
     def test_no_py_dash_three(self):
         self.assertEqual([], py_dash_three_sites(self.paths),
                          "write `python3`, which README.md requires on the PATH on Windows too")
 
     def test_the_scan_reads_what_propagate_to_public_ships(self):
-        """Guard the guard (INV-265): the plugin, the README and the user-facing `docs/`, and
-        not the two `docs/` files the public repo never gets."""
+        """Guard the guard (INV-265): the plugin, the README and the published pages, and
+        not the `docs/` file the public repo never gets."""
         names = {path.relative_to(REPO_ROOT).as_posix() for path in self.paths}
+        # Adapted (one-repository migration, 2026-11-14): the install pages stand where
+        # `docs/README.md` stood.
         for name in ("source/skills/graduation/SKILL.md", "public/README.md", "README.md",
-                     "docs/README.md"):
+                     "site/_install.html", "site/index.html",
+                     "hosts/claude/fragments/site-install.html",
+                     "hosts/claude/fragments/site-tips.html"):
             self.assertIn(name, names)
+        self.assertEqual([], [name for name in names if name.endswith(".html")
+                              and not name.startswith(("site/", "hosts/"))])
         self.assertEqual(set(), names & NOT_SHIPPED)
         for name in NOT_SHIPPED:
             self.assertTrue((REPO_ROOT / name).is_file(), f"{name} moved: re-check NOT_SHIPPED")
@@ -430,10 +450,16 @@ class NoShippedMarkdownSaysPyDashThree(unittest.TestCase):
                 self.assertEqual(1, len(py_dash_three_sites(self.paths, {GRADUATION: text})))
 
     def test_negative_control_a_py_dash_three_line_in_docs(self):
-        """A `py -3` planted in a shipped `docs/` file is caught; in an unshipped one it is not."""
-        docs_readme = REPO_ROOT / "docs" / "README.md"
-        text = docs_readme.read_text(encoding="utf-8") + "\nOn Windows, run `py -3 -m pip`.\n"
-        self.assertEqual(1, len(py_dash_three_sites(self.paths, {docs_readme: text})))
+        """A `py -3` planted in a published install page is caught; in an unshipped `docs/` file
+        it is not."""
+        # Adapted (one-repository migration, 2026-11-14): planted in the Claude install fragment
+        # and in the shared template, where it was planted in `docs/README.md`.
+        for rel in ("hosts/claude/fragments/site-install.html", "site/_install.html"):
+            with self.subTest(page=rel):
+                page = REPO_ROOT / rel
+                text = (page.read_text(encoding="utf-8")
+                        + "\n<p>On Windows, run <code>py -3 -m pip</code>.</p>\n")
+                self.assertEqual(1, len(py_dash_three_sites(self.paths, {page: text})))
         development = REPO_ROOT / "docs" / "development.md"
         text = development.read_text(encoding="utf-8") + "\nOn Windows, run `py -3 -m pip`.\n"
         self.assertEqual([], py_dash_three_sites(self.paths, {development: text}))

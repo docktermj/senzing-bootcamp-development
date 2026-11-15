@@ -16,8 +16,8 @@ that resolve. The cross-document link is pinned because renaming a heading silen
 an anchor: nothing in a Markdown repo fails when `#using-claude-code` no longer exists.
 
 ⚠️ **Dated note, 2026-11-14 (one-repository migration): the install half reads the Claude install
-fragment.** The root `README.md` is now the developer readme and `docs/README.md` is a carry-over
-of the old Claude pages. The Claude walkthrough, with both paths on one page, is
+fragment.** The root `README.md` is now the developer readme, and the old Claude user doc under
+`docs/` was deleted. The Claude walkthrough, with both paths on one page, is
 `hosts/claude/fragments/site-install.html`, from which the build generates the Claude install
 page; `public/README.md`, the host-neutral readme bootcampers see, names no Claude interface.
 So each install check below reads that fragment as HTML: a path's `<h3>` stands where a README

@@ -45,7 +45,7 @@ systematic version of both, and it is the only one of the four that reads the pl
 - ⛔ **Write nothing under `specs/`.** The archive is frozen (INV-307) and a spec file
   written there is rejected by `tests/test_specs_are_frozen.py`. This skill's only writes
   are **GitHub issues** and its own ledger, `specs/mcp-coverage.jsonl` — a **named live
-  exception** to the freeze, recorded in INV-307 and in `docs/FAMILY_WORKFLOW.md` §8.
+  exception** to the freeze, recorded in INV-307 and in the table in `specs/README.md`.
   ⚠️ **It is NOT exempt for being `.jsonl`.** That was the reason given here until #142, and
   it rested on the `specs/*.md` glob the freeze guard used until #257 — *a scope-narrowing that
   happens to produce correct behavior, which INV-308 says must not be relied on*, as

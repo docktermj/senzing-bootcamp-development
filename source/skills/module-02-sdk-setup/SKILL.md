@@ -1038,7 +1038,7 @@ existing-install path, which skips Phase 1 and Phase 2; INV-338, INV-339):**
    skew**: this module's version check reads the *engine's* version through the native library, so
    it reports a current install while the bindings actually imported are older. The plugin's own
    shipped example recap records this happening on a real run
-   (`../../docs/examples/bootcamp_recap.example.md`).
+   (`{{host.docs_relative}}/examples/bootcamp_recap.example.md`).
 
    **Detection — run it, do not assume:**
 

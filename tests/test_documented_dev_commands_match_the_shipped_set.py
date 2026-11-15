@@ -1,8 +1,9 @@
 """The documented maintainer-operation set equals the shipped one, in both directions.
 
 `tests/test_documented_commands_match_the_shipped_set.py` pins exactly this contract for the
-**bootcamper** surface -- `source/commands/` against the table in
-`docs/README.md`. The **maintainer** surface had no equivalent, and nothing read
+**bootcamper** surface -- `source/commands/` against the slash commands the Claude install page
+names (one-repository migration, 2026-11-14: the table in `docs/README.md` until that file was
+deleted). The **maintainer** surface had no equivalent, and nothing read
 `docs/development.md` at all, so it drifted in both directions at once:
 
     docs/development.md:119  `/compact-dev-development`   <- no skill and no command by that name

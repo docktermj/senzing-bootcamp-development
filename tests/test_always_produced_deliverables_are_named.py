@@ -54,8 +54,10 @@ graduation", and the two graduation PDFs' "(best-effort)", which INV-050's own p
 **Reading the surfaces (INV-346).** The rule is about a sentence, so the Markdown surfaces are
 read through `collapsed_blocks()`, which joins a phrase across a line wrap and still reports the
 line a match starts on. One surface is HTML, where a Markdown-shaped read finds tags rather than
-prose and would leave this guard passing on two surfaces out of three. `docs/index.html` is
-therefore read with `html.parser` into the same `(flat, origin)` pairs: the text a reader sees,
+prose and would leave this guard passing on two surfaces out of three. An `.html` surface is
+therefore read with `html.parser` into the same `(flat, origin)` pairs (one-repository
+migration, 2026-11-14: `site/index.html` and `site/_install.html` today; `docs/index.html`,
+the page this was written for, was deleted): the text a reader sees,
 cut into blocks at each block-level tag, with `<script>` and `<style>` contents and HTML comments
 left out, entities unescaped and whitespace collapsed. One matcher then reads both kinds.
 

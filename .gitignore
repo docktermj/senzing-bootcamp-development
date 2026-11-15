@@ -10,7 +10,7 @@ __pycache__/
 # Raw bootcamper feedback never enters this repository, which is public. Only the ledger of
 # what was processed is committed.
 /SENZING_BOOTCAMP_*FEEDBACK*.md
-/feedback/raw/
+/feedback/SENZING_BOOTCAMP_*FEEDBACK*.md
 
 # Editor history
 .history

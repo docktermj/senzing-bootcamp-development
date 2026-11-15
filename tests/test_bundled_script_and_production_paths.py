@@ -75,6 +75,7 @@ the plugin while the command runs in the Bootcamper's project), which names this
 
 Run:  python3 -m unittest discover -s tests
 """
+import html
 import re
 import unittest
 from pathlib import Path
@@ -93,7 +94,11 @@ COMMANDS = PLUGIN / "commands"
 SCRIPTS = PLUGIN / "scripts"
 GRADUATION = SKILLS / "graduation" / "SKILL.md"
 PHASE_C = SKILLS / "module-06-data-processing" / "phaseC-multi-source.md"
-CLI_INSTALL_DOC = REPO_ROOT / "docs" / "README.md"
+# Adapted (one-repository migration, 2026-11-14): the Claude Code CLI install steps were in
+# `docs/README.md`, which was deleted; they are now the CLI path of the Claude install fragment,
+# from which the build renders the Claude install page. It is HTML, so it is read as a reader
+# sees it (`cli_install_text()`): entities decoded, so `&amp;&amp;` is the `&&` it displays.
+CLI_INSTALL_DOC = REPO_ROOT / "hosts" / "claude" / "fragments" / "site-install.html"
 
 # The scripts that ship inside the plugin. A step that runs one of these is running a file
 # that is NOT in the bootcamper's project, so the path has to be resolved, never assumed.
@@ -107,6 +112,7 @@ RESOLVED = (
     "{{host.scripts_fallback}}",
     "<this-skill-dir>",
     "../../scripts/",
+    "{{host.scripts_relative}}/",
     "<helper>",
     "<viz-server-path>",
 )
@@ -164,7 +170,7 @@ HELPER_ONLY_FLAGS = ("--tabs", "--single", "--out-dir")
 
 #: A line is exempt when it resolves a bundled script by any documented route, or is prose about
 #: the flags rather than an instruction to run them.
-RESOLVED_MARKERS = ("{{host.scripts_dir}}", "{{host.scripts_fallback}}", "../../scripts/", "<helper>")
+RESOLVED_MARKERS = ("{{host.scripts_dir}}", "{{host.scripts_fallback}}", "../../scripts/", "{{host.scripts_relative}}/", "<helper>")
 
 
 #: Distinguishes a COMMAND from PROSE ABOUT a command. Without this the sweep fires on
@@ -364,7 +370,7 @@ class AnInlineInvocationResolvesItsScript(unittest.TestCase):
         flat = " ".join(GRADUATION.read_text(encoding="utf-8").split())
         remedy = ('`python3 "{{host.scripts_dir}}/capture_screenshots.py" --url '
                   'http://localhost:<port> --name <name>` (INV-185; skill-relative fallback '
-                  '`../../scripts/capture_screenshots.py`, INV-252)')
+                  '`{{host.scripts_relative}}/capture_screenshots.py`, INV-252)')
         self.assertTrue(
             remedy in flat,
             "graduation's screenshot remedy must resolve the capture tool inside the plugin, "
@@ -417,7 +423,7 @@ class AnInlineInvocationResolvesItsScript(unittest.TestCase):
 #: The character class stops at the delimiters prose puts around a path (whitespace, backticks,
 #: quotes, brackets), so the token is the path and not the sentence around it.
 _BUNDLED_PATH = re.compile(
-    r"""[^\s'"`()\[\]]*(?:scripts|\{\{host\.scripts_(?:dir|fallback)\}\})[\\/](?:%s)(?![\w-])"""
+    r"""[^\s'"`()\[\]]*(?:scripts|\{\{host\.scripts_(?:dir|fallback|relative)\}\})[\\/](?:%s)(?![\w-])"""
     % "|".join(re.escape(n) for n in sorted(BUNDLED_SCRIPTS, key=len, reverse=True)))
 
 #: The same "absolute into the plugin is resolved by construction" rule as
@@ -619,7 +625,7 @@ class AReferenceToABundledScriptResolvesToo(unittest.TestCase):
         # The resolution sentence spells the bare path as what it resolves, and is not reported.
         resolution = ("Resolve `scripts/senzing_viz_server.py`\n"
                       "(`{{host.scripts_dir}}/senzing_viz_server.py` in a command/hook "
-                      "context, else\n`../../scripts/senzing_viz_server.py` relative to this skill)")
+                      "context, else\n`{{host.scripts_relative}}/senzing_viz_server.py` relative to this skill)")
         self.assertEqual([], bare_paths_in(resolution))
         # A different script resolved in the same block does not excuse this one.
         self.assertEqual(
@@ -631,7 +637,7 @@ class AReferenceToABundledScriptResolvesToo(unittest.TestCase):
         flat = " ".join((SKILLS / "module-07-query-visualize-discover"
                          / "phase1-query-visualize.md").read_text(encoding="utf-8").split())
         self.assertIn("{{host.scripts_dir}}/senzing_viz_server.py", flat)
-        self.assertIn("../../scripts/senzing_viz_server.py", flat)
+        self.assertIn("{{host.scripts_relative}}/senzing_viz_server.py", flat)
         self.assertNotIn("(`scripts/senzing_viz_server.py`)", flat,
                          "the bare spelling is back in the build instruction")
 
@@ -654,7 +660,7 @@ class AReferenceToABundledScriptResolvesToo(unittest.TestCase):
         # (c) Every documented resolution reads as resolved.
         for resolved in ('`{{host.scripts_dir}}/senzing_viz_server.py`',
                          "`{{host.scripts_fallback}}/senzing_viz_server.py`",
-                         "`../../scripts/senzing_viz_server.py`",
+                         "`{{host.scripts_relative}}/senzing_viz_server.py`",
                          "python3 <this-skill-dir>/../../scripts/generate_recap_pdf.py --check",
                          "`'/opt/plugins/senzing-bootcamp/scripts/generate_recap_video.py'`",
                          '"C:\\plugins\\senzing-bootcamp\\scripts\\generate_recap_video.py"'):
@@ -890,11 +896,28 @@ class ProductionCopyPreservesThePathsItsCodeUses(unittest.TestCase):
         self.assertFalse(report_lists_the_projection(graduation.replace(listed, "(", 1)))
 
 
+def cli_install_lines(text=None):
+    """The CLI path of the Claude install fragment, line by line, as a reader sees each line."""
+    text = CLI_INSTALL_DOC.read_text(encoding="utf-8") if text is None else text
+    found = re.search(r'<div class="path" id="claude-code-cli">(.*?)\n          </div>', text, re.S)
+    assert found, "%s has no Claude Code CLI path (id=\"claude-code-cli\")" % CLI_INSTALL_DOC
+    return [html.unescape(re.sub(r"<[^>]+>", " ", line)) for line in found.group(1).splitlines()]
+
+
+def cli_install_text(text=None):
+    return re.sub(r"\s+", " ", " ".join(cli_install_lines(text)))
+
+
+def powershell_chaining(lines):
+    """The bash chaining operators on the lines that carry the Windows install command."""
+    return [op for line in lines if "install.ps1" in line for op in ("&&", "||") if op in line]
+
+
 class InstallDocsCoverEverySupportedPlatform(unittest.TestCase):
     """INV-001 makes Windows supported; INV-158 makes the CLI a documented interface."""
 
     def test_the_cli_section_has_a_windows_route(self):
-        text = CLI_INSTALL_DOC.read_text(encoding="utf-8")
+        text = cli_install_text()
         self.assertIn(
             "install.ps1",
             text,
@@ -909,19 +932,29 @@ class InstallDocsCoverEverySupportedPlatform(unittest.TestCase):
 
     def test_no_install_step_claims_two_platforms_are_the_set(self):
         """'on macOS or Linux' with no Windows line is how the gap read as complete."""
-        flat = re.sub(r"\s+", " ", CLI_INSTALL_DOC.read_text(encoding="utf-8"))
         self.assertNotIn(
             "Claude Code CLI on macOS or Linux",
-            flat,
+            cli_install_text(),
             "this phrasing presents two platforms as the whole supported set",
         )
 
     def test_the_windows_command_is_powershell_shaped(self):
         """INV-167: a PowerShell command must not carry bash chaining operators."""
-        for line in CLI_INSTALL_DOC.read_text(encoding="utf-8").splitlines():
-            if "install.ps1" in line:
-                self.assertNotIn("&&", line, "bash chaining in a PowerShell command")
-                self.assertNotIn("||", line, "bash chaining in a PowerShell command")
+        self.assertEqual([], powershell_chaining(cli_install_lines()),
+                         "bash chaining in a PowerShell command")
+
+    def test_the_cli_checks_read_the_fragment_as_a_reader_does(self):
+        """Negative controls (INV-265): each defect, written as the HTML would carry it."""
+        text = CLI_INSTALL_DOC.read_text(encoding="utf-8")
+        windows = "irm https://claude.ai/install.ps1 | iex"
+        self.assertIn(windows, text, "the control's Windows command moved")
+        chained = text.replace(windows, windows + " &amp;&amp; claude")
+        self.assertEqual(["&&"], powershell_chaining(cli_install_lines(chained)))
+        self.assertNotIn("install.ps1", cli_install_text(text.replace(windows, "see the docs")))
+        label = "Install the Claude Code CLI:"
+        self.assertIn(label, text, "the control's install step moved")
+        self.assertIn("Claude Code CLI on macOS or Linux", cli_install_text(
+            text.replace(label, "Install the Claude Code <strong>CLI</strong>\n on macOS or Linux:")))
 
 
 class TheProseSweepIsNotVacuous(unittest.TestCase):

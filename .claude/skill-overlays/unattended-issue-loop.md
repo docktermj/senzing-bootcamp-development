@@ -6,11 +6,11 @@ the governing copy, which reads this file and must meet everything below.
 
 ⚠️ **The governing copy is not checked in CI.** It lives under `~/.claude/skills/`, outside
 this repository, and a CI runner checks out only the repository. The tests here assert this
-overlay and `docs/FAMILY_WORKFLOW.md`; nothing here establishes what the governing copy says
+overlay and `docs/development.md`; nothing here establishes what the governing copy says
 on any machine (INV-308).
 
 The loop's merge policy and its label gate are stated in the
-[`docs/FAMILY_WORKFLOW.md`](../../docs/FAMILY_WORKFLOW.md) §2 row for `unattended-issue-loop`
+[`docs/development.md`](../../docs/development.md) section "The unattended loop works only on labeled issues"
 (INV-300), and are not restated here.
 
 ## Every worker also meets the implement overlay

@@ -1026,7 +1026,7 @@ Pin the offer verbatim:
 
 Build it modeled on the shipped Truth Set visualization server
 (`{{host.scripts_dir}}/senzing_viz_server.py`, INV-185; skill-relative fallback
-`../../scripts/senzing_viz_server.py`, INV-252) and the
+`{{host.scripts_relative}}/senzing_viz_server.py`, INV-252) and the
 `../module-03b-truthset-visualization/visualization-api-reference.md` contract, in the
 bootcamper's chosen programming language (INV-090), pointed at the bootcamper's loaded data instead
 of the Truth Set. Save it as the program `results_server` in `src/server`, at the path and with the
@@ -1140,7 +1140,7 @@ The server MUST:
   SQL.
 - Render offline with the vendored D3 asset inlined, no CDN (INV-091), and brand the pages with the
   palette/typography token values from `{{host.scripts_dir}}/brand_tokens.py` (INV-081;
-  skill-relative fallback `../../scripts/brand_tokens.py`, INV-252).
+  skill-relative fallback `{{host.scripts_relative}}/brand_tokens.py`, INV-252).
   - ⛔ **(INV-081, INV-091) Copy the brand-token values into the server's own code when you write
     it, in every language, Python included.** Read them from `brand_tokens.py` on the host, where
     the plugin path resolves. The server never imports `brand_tokens.py` and never reads any
@@ -1164,7 +1164,7 @@ The server MUST:
     Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
     Where `{{host.plugin_root}}` is unset, use the skill-relative fallback
-    `../../scripts/senzing_viz_server.py` (INV-252). The emit mode needs neither the vendored D3,
+    `{{host.scripts_relative}}/senzing_viz_server.py` (INV-252). The emit mode needs neither the vendored D3,
     the Senzing SDK nor engine settings, so on SDK setup's `docker` route it runs on the host too.
     It refuses to overwrite an existing file, so an existing server is never replaced. Then adapt
     `src/server/results_server.py` to the Bootcamper's data as this step describes.
@@ -1215,7 +1215,7 @@ The server MUST:
 
   ⛔ **The capture tool is bundled — run it, do not assess whether automation exists.**
   `{{host.scripts_dir}}/capture_screenshots.py` (INV-185; skill-relative fallback
-  `../../scripts/capture_screenshots.py`, INV-252). It tries several headless backends itself and
+  `{{host.scripts_relative}}/capture_screenshots.py`, INV-252). It tries several headless backends itself and
   writes both the PNGs and a `<name>-tabs.json` coverage manifest that graduation reads:
 
   ```bash

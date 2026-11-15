@@ -1,5 +1,25 @@
 """The Pages site's `claude plugin …` commands match `docs/README.md`'s (#455).
 
+⚠️ **Dated note, 2026-11-14 (one-repository migration): the comparison this module made is now
+true by construction, and its README half is retired.** `docs/index.html` and `docs/README.md`
+were two hand-written files that repeated the same commands; both were deleted. The Claude
+install page is now generated: `site/_install.html` is rendered once per assistant, and the
+Claude commands are written in one place, `hosts/claude/fragments/site-install.html` and
+`site-tips.html`. There is no second copy for the page to drift from. What still runs:
+
+* the rendered Claude page carries exactly the `claude plugin …` commands its fragments hold,
+  so a template that stopped including a fragment fails here, with the same negative controls
+  (a changed command, an empty page, an empty other side);
+* the retirement is still earned: no shared surface (`public/README.md`, `site/index.html`,
+  `site/_install.html`) states a `claude plugin …` command of its own. If one does, the two-file
+  agreement INV-348 describes exists again and the retired cases below must come back.
+
+Retired, each where it stood: `readme_commands()` (the `console`-fence reader) with
+`test_indented_console_fences_count_line_by_line` and `test_other_fences_and_prose_are_ignored`.
+Their subject was a Markdown README carrying the Claude commands, and none does. The file keeps
+its name because INV-348 names it as its enforcer. Everything below this note is the module's
+description as it was, kept as the record.
+
 `docs/index.html`, the GitHub Pages quick-start site dev owns since #452, repeats the install
 commands of `docs/README.md`, and its header comment says it must follow them. Until this
 module nothing checked that it did, so the two could drift silently, as the model names in
@@ -30,25 +50,49 @@ rewrite pass applies to both files alike, and
 
 Source issue: #455.
 
-Stdlib only (INV-108); both files read as text, no network.
+Stdlib only (INV-108); the page is built into a scratch directory and read as text, no network.
 
 Run:  python3 -m unittest discover -s tests
 """
+import functools
 import html.parser
-import re
+import sys
+import tempfile
 import unittest
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-PAGE = REPO_ROOT / "docs" / "index.html"
-README = REPO_ROOT / "docs" / "README.md"
-PAGE_REL = "docs/index.html"
-README_REL = "docs/README.md"
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from tools.bootcamp_build.model import SOURCE_DIR, load_declaration, load_hosts  # noqa: E402
+from tools.bootcamp_build.site import build_site  # noqa: E402
+
+# Adapted (one-repository migration, 2026-11-14): see the dated note in the docstring.
+SITE_DIR = REPO_ROOT / "site"
+FRAGMENTS_DIR = REPO_ROOT / "hosts" / "claude" / "fragments"
+PAGE_REL = "claude/index.html (rendered)"
+FRAGMENTS_REL = "hosts/claude/fragments/site-*.html"
+#: The surfaces every assistant shares. None may state a `claude plugin …` command of its own.
+SHARED_SURFACES = ("public/README.md", "site/index.html", "site/_install.html")
 
 PREFIX = "claude plugin "
 
-#: An opening or closing backtick fence, at any indent, with its info string.
-FENCE = re.compile(r"^\s*(`{3,})\s*([^`\s]*)\s*$")
+
+@functools.lru_cache(maxsize=None)
+def rendered_page():
+    """The Claude install page's HTML, rendered from the current template and fragments."""
+    with tempfile.TemporaryDirectory() as scratch:
+        out = Path(scratch) / "site"
+        build_site(SITE_DIR, load_hosts(), load_declaration(SOURCE_DIR), out)
+        return (out / "claude" / "index.html").read_text(encoding="utf-8")
+
+
+def fragments_text():
+    """Every Claude install fragment, joined: the one place the commands are written."""
+    paths = sorted(FRAGMENTS_DIR.glob("site-*.html"))
+    assert paths, "%s matched no file" % FRAGMENTS_REL
+    return "\n".join(path.read_text(encoding="utf-8") for path in paths)
 
 
 class _CodeText(html.parser.HTMLParser):
@@ -87,56 +131,80 @@ def page_commands(text):
     return _commands(line for block in parser.blocks for line in block.splitlines())
 
 
-def readme_commands(text):
-    """Every `claude plugin …` command inside a `console` fence, indented or not."""
-    # Line-scoped by design (#455): in a console fence each non-blank line is one command,
-    # and a fence is never reflowed, so a line is the unit the comparison is about.
-    lines, fence = [], None
-    for line in text.splitlines():
-        match = FENCE.match(line)
-        if fence is None:
-            if match and match.group(2):
-                fence = (match.group(1), match.group(2))
-            continue
-        if match and not match.group(2) and len(match.group(1)) >= len(fence[0]):
-            fence = None
-            continue
-        if fence[1] == "console":
-            lines.append(line)
-    return _commands(lines)
+# Retired (one-repository migration, 2026-11-14): `readme_commands()`, which read the commands
+# out of a Markdown README's `console` fences. No README carries them now; see the docstring.
 
 
-def drift(page_text, readme_text):
+def drift(page_text, fragments):
     """None when the two sets match; otherwise the failure message, naming the side."""
-    page, readme = page_commands(page_text), readme_commands(readme_text)
-    empty = ["%s yields no `claude plugin …` command %s: the extractor or the file broke"
-             % (rel, where) for rel, found, where in (
-                 (PAGE_REL, page, "inside <code>"),
-                 (README_REL, readme, "inside a console fence"),
-             ) if not found]
+    page, source = page_commands(page_text), page_commands(fragments)
+    empty = ["%s yields no `claude plugin …` command inside <code>: the extractor or the file "
+             "broke" % rel for rel, found in ((PAGE_REL, page), (FRAGMENTS_REL, source))
+             if not found]
     if empty:
         return "; ".join(empty)
-    if page == readme:
+    if page == source:
         return None
-    return ("the page's `claude plugin …` commands differ from docs/README.md's\n"
+    return ("the page's `claude plugin …` commands differ from its fragments'\n"
             "  only in %s:\n%s\n  only in %s:\n%s" % (
-                PAGE_REL, "\n".join("    " + c for c in sorted(page - readme)) or "    (none)",
-                README_REL, "\n".join("    " + c for c in sorted(readme - page)) or "    (none)"))
+                PAGE_REL, "\n".join("    " + c for c in sorted(page - source)) or "    (none)",
+                FRAGMENTS_REL,
+                "\n".join("    " + c for c in sorted(source - page)) or "    (none)"))
 
 
-class ThePageFollowsTheReadme(unittest.TestCase):
-    """The real files: the page and the README name the same `claude plugin …` commands."""
+def second_homes(texts):
+    """The shared surfaces among ``texts`` ({name: text}) that state a `claude plugin …` command."""
+    return sorted(name for name, text in texts.items() if PREFIX.strip() in " ".join(text.split()))
+
+
+def shared_texts():
+    return {rel: (REPO_ROOT / rel).read_text(encoding="utf-8") for rel in SHARED_SURFACES}
+
+
+class ThePageFollowsItsFragments(unittest.TestCase):
+    """The real files: the page carries the `claude plugin …` commands its fragments hold."""
 
     def test_the_two_sets_are_equal(self):
-        problem = drift(PAGE.read_text("utf-8"), README.read_text("utf-8"))
+        problem = drift(rendered_page(), fragments_text())
         if problem:
             self.fail(problem)
 
     def test_both_sides_yield_commands(self):
-        self.assertTrue(page_commands(PAGE.read_text("utf-8")),
+        self.assertTrue(page_commands(rendered_page()),
                         "%s yields no `claude plugin …` command" % PAGE_REL)
-        self.assertTrue(readme_commands(README.read_text("utf-8")),
-                        "%s yields no `claude plugin …` command" % README_REL)
+        self.assertTrue(page_commands(fragments_text()),
+                        "%s yields no `claude plugin …` command" % FRAGMENTS_REL)
+
+    def test_the_install_and_the_update_commands_are_both_on_the_page(self):
+        """Anchored on named commands, one from each fragment, so equality is not two halves."""
+        verbs = {command.split()[2] for command in page_commands(rendered_page())}
+        for verb in ("marketplace", "install", "update", "uninstall"):
+            with self.subTest(verb=verb):
+                self.assertIn(verb, verbs)
+
+
+class TheRetirementIsStillEarned(unittest.TestCase):
+    """⛔ One home for the commands is what makes the README comparison unnecessary."""
+
+    def test_no_shared_surface_states_a_claude_plugin_command(self):
+        self.assertEqual(
+            [], second_homes(shared_texts()),
+            "a surface every assistant shares states a `claude plugin …` command, so the "
+            "commands have two homes again: restore this module's README comparison (INV-348)")
+
+    def test_every_shared_surface_is_read(self):
+        for rel in SHARED_SURFACES:
+            with self.subTest(surface=rel):
+                self.assertTrue((REPO_ROOT / rel).is_file(), "%s moved" % rel)
+
+    def test_a_command_planted_on_a_shared_surface_is_reported(self):
+        """Negative control: wrapped across a line or not, and naming the surface."""
+        for planted in ("\n```console\nclaude plugin install a@b\n```\n",
+                        "\n<p>Run <code>claude\n  plugin update a@b</code>.</p>\n"):
+            with self.subTest(planted=planted):
+                texts = shared_texts()
+                texts["site/_install.html"] += planted
+                self.assertEqual(["site/_install.html"], second_homes(texts))
 
 
 class TheExtractorsReadWhatTheSpecSays(unittest.TestCase):
@@ -149,58 +217,50 @@ class TheExtractorsReadWhatTheSpecSays(unittest.TestCase):
     def test_text_outside_code_is_ignored(self):
         self.assertEqual(page_commands("<p>claude plugin install a@b</p>"), set())
 
-    def test_indented_console_fences_count_line_by_line(self):
-        readme = ("1. Install.\n\n"
-                  "    ```console\n"
-                  "    claude plugin marketplace add o/r\n"
-                  "\n"
-                  "    claude plugin install a@b\n"
-                  "    ```\n")
-        self.assertEqual(readme_commands(readme),
-                         {"claude plugin marketplace add o/r", "claude plugin install a@b"})
-
-    def test_other_fences_and_prose_are_ignored(self):
-        readme = ("claude plugin install prose@x\n\n"
-                  "```bash\nclaude plugin install bash@x\n```\n\n"
-                  "```console\nclaude plugin install console@x\n```\n")
-        self.assertEqual(readme_commands(readme), {"claude plugin install console@x"})
+    # Retired (one-repository migration, 2026-11-14):
+    # `test_indented_console_fences_count_line_by_line` and
+    # `test_other_fences_and_prose_are_ignored`, which pinned `readme_commands()` on a README's
+    # `console` fences. The README that carried the commands was deleted and no other does.
 
     def test_duplicates_and_splitting_are_not_drift(self):
         page = ("<pre><code>claude plugin install a@b</code></pre>"
                 "<pre><code>claude plugin update a@b</code></pre>"
                 "<pre><code>claude plugin update a@b</code></pre>")
-        readme = "```console\nclaude plugin install a@b\nclaude plugin update a@b\n```\n"
-        self.assertIsNone(drift(page, readme))
+        fragments = "<pre><code>claude plugin install a@b\nclaude plugin update a@b</code></pre>"
+        self.assertIsNone(drift(page, fragments))
 
 
 class TheCheckCatchesDrift(unittest.TestCase):
     """Negative controls: a changed command and an empty side both fail, saying where."""
 
     def setUp(self):
-        self.page = PAGE.read_text("utf-8")
-        self.readme = README.read_text("utf-8")
+        self.page = rendered_page()
+        self.fragments = fragments_text()
 
     def test_changing_one_command_on_the_page_fails(self):
         before = sorted(page_commands(self.page))[0]
         after = before + "-drifted"
         mutated = self.page.replace(before, after)
         self.assertNotEqual(mutated, self.page, "the control mutated nothing")
-        problem = drift(mutated, self.readme)
+        problem = drift(mutated, self.fragments)
         self.assertIsNotNone(problem, "a changed page command passed the comparison")
         self.assertIn("only in %s:\n    %s" % (PAGE_REL, after), problem)
-        self.assertIn("only in %s:\n    %s" % (README_REL, before), problem)
+        self.assertIn("only in %s:\n    %s" % (FRAGMENTS_REL, before), problem)
 
     def test_an_empty_page_fails_naming_the_page(self):
         problem = drift(self.page.replace("<code>", "<span>").replace("</code>", "</span>"),
-                        self.readme)
+                        self.fragments)
         self.assertIsNotNone(problem)
         self.assertIn(PAGE_REL, problem)
-        self.assertNotIn(README_REL, problem)
+        self.assertNotIn(FRAGMENTS_REL, problem)
 
-    def test_an_empty_readme_fails_naming_the_readme(self):
-        problem = drift(self.page, self.readme.replace("```console", "```text"))
+    def test_empty_fragments_fail_naming_the_fragments(self):
+        # Adapted (one-repository migration, 2026-11-14): was
+        # `test_an_empty_readme_fails_naming_the_readme`; the other side is now the fragments.
+        problem = drift(self.page,
+                        self.fragments.replace("<code>", "<span>").replace("</code>", "</span>"))
         self.assertIsNotNone(problem)
-        self.assertIn(README_REL, problem)
+        self.assertIn(FRAGMENTS_REL, problem)
         self.assertNotIn(PAGE_REL, problem)
 
 

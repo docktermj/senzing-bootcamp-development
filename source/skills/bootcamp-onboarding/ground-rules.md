@@ -777,7 +777,7 @@ copy (INV-300).
   Python idiom (INV-002): however your language expresses it, the factory's lifetime must enclose
   every engine's. Worked example in the bundled reference server
   (`{{host.scripts_dir}}/senzing_viz_server.py`, INV-185; skill-relative fallback
-  `../../scripts/senzing_viz_server.py`, INV-252): it returns `factory` next to `engine` for
+  `{{host.scripts_relative}}/senzing_viz_server.py`, INV-252): it returns `factory` next to `engine` for
   exactly this reason. Confirm the error text against the installed SDK rather than trusting
   this note (INV-080).
 - **Make grounding visible (attribution).** When you present MCP-sourced Senzing content to the
@@ -1251,7 +1251,7 @@ it is spelled correctly wherever the module is named.
   snapshot, the recap PDF, the data-discoveries PDF, Data Quality, Mapping, and Transformation's
   quality/mapping web pages, and any future charts/dashboards/HTML — **MUST** take its palette and
   typography from the **shared brand tokens** shipped at
-  `../../scripts/brand_tokens.py` (colors, typography, data-source node colors), never an ad hoc
+  `{{host.scripts_relative}}/brand_tokens.py` (colors, typography, data-source node colors), never an ad hoc
   palette, and **MUST** render offline (INV-081). This is a MUST, not a preference: the carve-out
   below is about *which artifacts* are bootcamper-facing, never about whether a bootcamper-facing
   one may skip the tokens. The shipped reference generators (`senzing_viz_server.py`, `generate_recap_pdf.py`)

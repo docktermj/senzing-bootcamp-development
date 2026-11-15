@@ -394,6 +394,11 @@ def host_rules(declaration: dict, host: Host, context: BuildContext) -> str:
         "They apply only in a bootcamp project: a directory where `config/bootcamp_progress.json`",
         "exists. Outside one, none of this applies, and you never create that file to make it apply.",
         "",
+        f"The commands below name the bootcamp's scripts as `{host.vars['scripts_dir']}`. Where",
+        f"`{host.vars['plugin_root_var']}` is not set in your shell, they are at",
+        f"`{host.vars['scripts_fallback']}`, counted from the directory of any skill's `SKILL.md`:",
+        "resolve that to an absolute path once per session and use it.",
+        "",
     ]
     for script in scripts:
         path = context.source_dir / FALLBACK_DIR / (Path(script).stem + ".md")

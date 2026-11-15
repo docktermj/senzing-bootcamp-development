@@ -413,7 +413,7 @@ a short `{name}`):
    Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
    Resolve `<helper>` as `{{host.scripts_dir}}/capture_screenshots.py` (command/hook
-   context) or `../../scripts/capture_screenshots.py` relative to a module skill. It tries several
+   context) or `{{host.scripts_relative}}/capture_screenshots.py` relative to a module skill. It tries several
    headless backends (Playwright, Selenium, headless Chrome/Chromium, `wkhtmltoimage`) and never
    fetches a remote URL (offline — INV-091). Pass only tabs the app actually shows for this data —
    the helper reports any tab that produced no image on stderr rather than dropping it silently.

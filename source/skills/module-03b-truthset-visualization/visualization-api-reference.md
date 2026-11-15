@@ -988,7 +988,7 @@ Entity-detail dialogs (Records / Why? / How?) are a primary surface in both apps
 visual care as the headline tabs: a real header bar (title plus a close control) visually separated
 from the body, deliberate spacing and typographic hierarchy, and a subtle entrance transition.
 Palette and type come from `{{host.scripts_dir}}/brand_tokens.py` (INV-081; skill-relative
-fallback `../../scripts/brand_tokens.py`, INV-252) — the brand tokens apply *inside* the
+fallback `{{host.scripts_relative}}/brand_tokens.py`, INV-252) — the brand tokens apply *inside* the
 modal, not only to the app shell. A functionally-correct but visually plain dialog undersells the
 moment.
 
@@ -1478,7 +1478,7 @@ Discover (`../module-07-query-visualize-discover/phase1-query-visualize.md` step
 than restating it (INV-300). Run the host commands from the project root, on the host. `<runtime>`
 and `<container>` are the SDK container's recorded `runtime` and `name` in `docker_containers`
 (INV-195, INV-349). The helper is `{{host.scripts_dir}}/docker_lifecycle.py` (fallback
-`../../scripts/docker_lifecycle.py` relative to this skill, INV-252). It reads the progress file
+`{{host.scripts_relative}}/docker_lifecycle.py` relative to this skill, INV-252). It reads the progress file
 and makes one HTTP request; it never starts, stops or removes a container.
 
 1. **Read the published port.**

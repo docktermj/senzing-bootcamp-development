@@ -1731,9 +1731,9 @@ If yes, generate a self-contained HTML page and save it to
 ⛔ **Same four rules as the quality-assessment visual in `phase1-quality-assessment.md`** — this is a
 bootcamper-facing visual deliverable too, and the reasons are identical: brand tokens from
 `{{host.scripts_dir}}/brand_tokens.py` (INV-081; skill-relative fallback
-`../../scripts/brand_tokens.py`, INV-252); **renders offline**, so no CDN or web font
+`{{host.scripts_relative}}/brand_tokens.py`, INV-252); **renders offline**, so no CDN or web font
 — inline the vendored `{{host.scripts_dir}}/vendor/d3.v7.min.js` (skill-relative fallback
-`../../scripts/vendor/d3.v7.min.js`, INV-252) if a chart library is needed (INV-081/INV-091);
+`{{host.scripts_relative}}/vendor/d3.v7.min.js`, INV-252) if a chart library is needed (INV-081/INV-091);
 every data-sourced string escaped for the context it lands in, including `<`/`>`/`&` as `\uXXXX`
 inside any inline `<script>` payload (INV-106); and verify the rendered page rather than the exit
 status (INV-129). The mapping summary carries **more** bootcamper-authored text than the phase 1

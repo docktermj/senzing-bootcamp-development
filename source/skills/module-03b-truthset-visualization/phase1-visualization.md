@@ -297,7 +297,7 @@ Whatever the language, the server MUST reproduce the reference's behavior:
   this is a prerequisite for completing the module, not a nicety.
 - **Render offline (INV-091):** inline the vendored D3 at
   `{{host.scripts_dir}}/vendor/d3.v7.min.js` (skill-relative fallback:
-  `../../scripts/vendor/d3.v7.min.js`, INV-252) into both
+  `{{host.scripts_relative}}/vendor/d3.v7.min.js`, INV-252) into both
   the live page and the standalone snapshot; never fetch from a CDN. (D3 runs in the browser, so
   this holds regardless of the server's language.) 2.1 says where each path's server reads it
   from.
@@ -309,7 +309,7 @@ Whatever the language, the server MUST reproduce the reference's behavior:
     language reads a file.
 - **Use the Senzing brand (INV-081):** take the palette and typography from the shipped brand
   tokens (`{{host.scripts_dir}}/brand_tokens.py`, skill-relative fallback
-  `../../scripts/brand_tokens.py` — INV-252; mirrored in `senzing_viz_server.py`). A non-Python server
+  `{{host.scripts_relative}}/brand_tokens.py` — INV-252; mirrored in `senzing_viz_server.py`). A non-Python server
   cannot import the Python module, so replicate the token **values** from the reference; never
   invent an ad-hoc palette. ⛔ **Assign data-source colors from the sources actually present in the
   data, never by lookup in a map keyed by expected source names** (INV-127) — the Truth Set happens
@@ -336,7 +336,7 @@ Read `programming_language` from `config/bootcamp_preferences.yaml`:
 
 - **Python** → the reference implementation *is* the server. Resolve `scripts/senzing_viz_server.py`
   (`{{host.scripts_dir}}/senzing_viz_server.py` in a command/hook context, else
-  `../../scripts/senzing_viz_server.py` relative to this skill) and run it directly. This is the
+  `{{host.scripts_relative}}/senzing_viz_server.py` relative to this skill) and run it directly. This is the
   **only** path on which `senzing_viz_server.py` runs. That resolved path is `<viz-server-path>` in
   2.2, 2.3 and the Python fallback below on every route except SDK setup's container route.
 
@@ -397,7 +397,7 @@ Read `programming_language` from `config/bootcamp_preferences.yaml`:
   into `src/server/`: this one, and Query, Visualize and Discover's results server in every
   language, Python included, whose step 3c links here rather than restating it. At each such
   server's first build, copy `{{host.scripts_dir}}/vendor/d3.v7.min.js` (skill-relative
-  fallback `../../scripts/vendor/d3.v7.min.js`, INV-252) on the host to
+  fallback `{{host.scripts_relative}}/vendor/d3.v7.min.js`, INV-252) on the host to
   `src/server/vendor/d3.v7.min.js`, on every route, overwriting any earlier copy, and have the
   server resolve it from beside its own file there. The plugin's `scripts/` resolves only on the
   host: on SDK setup's `docker` route the server runs inside the SDK container (INV-260), which
@@ -653,7 +653,7 @@ rule that every caption is derived from the opened image and its tab label, neve
 
 ⛔ **(INV-122) The capture tool is bundled — run it, do not assess whether automation exists.**
 `{{host.scripts_dir}}/capture_screenshots.py` (INV-185; skill-relative fallback
-`../../scripts/capture_screenshots.py`, INV-252). It tries several headless backends itself and
+`{{host.scripts_relative}}/capture_screenshots.py`, INV-252). It tries several headless backends itself and
 writes both the PNGs and a `<name>-tabs.json` coverage manifest that graduation reads:
 
 ```bash

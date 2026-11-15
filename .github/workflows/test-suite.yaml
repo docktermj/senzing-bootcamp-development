@@ -70,6 +70,12 @@ jobs:
             exit 1
           fi
 
+      # Every assistant's package is built twice and compared, and the checks that keep the
+      # bootcamp the same everywhere run: no source text names an assistant outside a marker,
+      # no package names another assistant, every skill uses frontmatter every assistant reads.
+      - name: Check every assistant's package
+        run: python -m tools.bootcamp_build check
+
       # `shell: bash` is deliberate: GitHub's default `run:` shell on Linux is `bash -e {0}`
       # WITHOUT pipefail, so a piped `... | tee` reports tee's exit status and a failing
       # suite would report green. Naming the shell turns on `-eo pipefail`.

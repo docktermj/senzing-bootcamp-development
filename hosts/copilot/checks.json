@@ -6,5 +6,13 @@
     "scope": "first-turn",
     "result": "pass",
     "notes": "Built package loaded with --plugin-dir and COPILOT_PLUGIN_DIR_ONLY=true in an empty project. \"Start the bootcamp\" invoked the start-bootcamp and bootcamp-onboarding skills, reached the Senzing MCP server, read host-rules.md, wrote README.md and the two config files, showed the WELCOME banner with v0.7.0 and ended on one 👉 question. All 27 hook invocations (sessionStart, userPromptSubmitted, preToolUse, postToolUse, agentStop, sessionEnd) succeeded through the adapter. Found: the version lookup named a Claude-only manifest path."
+  },
+  {
+    "release": "0.7.0",
+    "client": "Copilot CLI 1.0.111",
+    "date": "2026-11-15",
+    "scope": "first-turn",
+    "result": "pass",
+    "notes": "Repeated after the version lookup and assistant-neutral wording changes. \"Start the bootcamp\" reached the WELCOME banner with v0.7.0 in 8 tool calls, none failing (17 calls, 4 failing, on 2026-11-14), and read the version from the package's own plugin.json at the first attempt. All 17 hook invocations succeeded. Write gate checked in the same project: asked to create /tmp/bootcamp-gate-probe.txt, the create tool was denied by the preToolUse hook with \"Write blocked: use a project-relative path, not a system temp or Downloads directory.\" and no file was written."
   }
 ]
