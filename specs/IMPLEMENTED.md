@@ -27,6 +27,33 @@ records `uncommitted`, and the next run that touches the entry fills the hash in
 
 -->
 
+## invariant-review-2026-11-16-audit
+
+**Not a spec** — the record of a second `/review-invariants` session on 2026-11-16, attended by
+the maintainer.
+
+- **Implemented:** 2026-11-16
+- **Files changed:** `specs/INVARIANTS.md`, `specs/IMPLEMENTED.md`,
+  `source/skills/bootcamp-onboarding/SKILL.md`, `tools/bootcamp_build/emit.py`,
+  `hosts/kiro/host.json`, `tests/test_ground_rules_are_read_to_the_end.py`,
+  `tests/test_invariant_enforcer_citations.py`, `tests/test_supersession_has_one_syntax.py`
+- **MCP re-check:** n/a (no Senzing fact)
+- **Summary:** One block was decided, from `production-readiness-audit-2026-11-16`. The
+  maintainer chose to amend by splitting it, and approved both texts as shown.
+  - **Registered:** INV-427, the read-to-the-last-line rule. Cited at the step that names the
+    ground rules, and enforced by a new test that cites it back; the enforcer pair count was
+    re-derived by the extractor, 349 to 350.
+  - **Amended, still in force:** INV-252, with a dated note that it binds on every assistant
+    and that a package states where a skill's files are when the assistant gives no path. The
+    two notes the build appends to skills now cite INV-252.
+  - **Why the split:** the audit's draft repeated INV-252 without weighing it. The review found
+    the overlap before anything was minted.
+  - **Held:** nothing new. The three earlier holds were not re-offered.
+  - **Remains:** the queue is empty.
+- **Establishes no invariant of its own** (INV-309): the id it registered and the one it
+  amended were established by the entry named above and by INV-252's own source.
+- **Commit:** uncommitted
+
 ## production-readiness-audit-2026-11-16
 
 **Not a spec** — a dated record of an audit run, **attended**. It is the first audit in this
@@ -55,7 +82,11 @@ invariant review.
   ground rules say the nudge is retired. The welcome sentence renders in all five packages.
 - **Findings, most serious first. All open.** Each carries its issue number; finding 1 is the
   deferral below.
-  1. **Reverse contract: hard rules shipped with no invariant and no deferral.** #3 and commit
+  1. **Corrected 2026-11-16, at review.** This finding overstated the gap: INV-252 already
+     forbids searching the filesystem for a bundled file, and `feedback.md` and
+     `graduation/SKILL.md` already cited it. What was unregistered was the read-to-the-last-line
+     rule and the extension of INV-252 to an assistant that gives no path. As first written:
+     **Reverse contract: hard rules shipped with no invariant and no deferral.** #3 and commit
      `f7540ef` added four ⛔ rules on one subject, and neither wrote a block: the read-to-the-
      last-line rule in `bootcamp-onboarding/SKILL.md`, the two "never by searching" rules for
      the version and assistant lines in `feedback.md` and `graduation/SKILL.md`, and the
@@ -92,7 +123,7 @@ invariant review.
   and they need `dry-run` phase 3. No assistant has run a bootcamp built from this `main`.
   Whether an assistant works more carefully on a "high" stage (INV-426) is unmeasured.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** The bootcamp reads its own files from where it is installed and to the end, and never searches the disk for them. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-427, registered by the maintainer 2026-11-16, after an amendment that split it).** The bootcamp reads its own files from where it is installed and to the end, and never searches the disk for them. The rule already shipping, quoted:
     - `source/skills/bootcamp-onboarding/SKILL.md:23` — ⛔ the ground rules are read to the last line, continuing after a read that was cut short *(covered: …)*
     - `tools/bootcamp_build/emit.py` — ⛔ the note appended to every command rendered as a skill says to read sibling skills from beside it and never to search the filesystem *(covered: …)*
     - `hosts/kiro/host.json` — ⛔ the note appended to every Kiro skill names its installed directory and forbids a wider search *(covered: …)*
@@ -101,6 +132,11 @@ invariant review.
 
   Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
   invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
+
+  **As registered, after the split.** The read-to-the-end half is INV-427, with the wording the
+  maintainer approved in review. The never-search half was already INV-252, which this block
+  failed to weigh; it went there as a dated note extending INV-252 to every assistant, and the
+  two appended notes now cite INV-252. The original draft is kept below as the record.
 
   **INV-NNN** — Where an assistant gives the guide a skill's text without its location, the package MUST state where that skill's files are, and the guide MUST read a bootcamp file from the running package's own location and MUST NOT search the filesystem for one, because a second copy of the bootcamp on the same machine is normal. A file the bootcamp tells the guide to read in full MUST be read to its last line, continuing after a read that was cut short.
 

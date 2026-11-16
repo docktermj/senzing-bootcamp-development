@@ -108,6 +108,8 @@ REVIEWED_NOT_A_SUPERSESSION = {
     "INV-270": "carries a dated Correction, which is not a supersession",
     "INV-141": "its 2026-11-16 dated amendment (issue #4) drops the model from each row; the "
                "invariant stays in force, supersedes nothing and is superseded by nothing",
+    "INV-252": "its 2026-11-16 dated amendment (audit, PR #3) extends it to every assistant; it "
+               "supersedes nothing and is superseded by nothing",
     "INV-247": "its 2026-11-16 dated amendment (issue #4) withdraws the model and effort "
                "exception; the invariant stays in force and is superseded by nothing",
     "INV-302": "carries a dated amendment (#239) that admits (user level) names to one clause; "

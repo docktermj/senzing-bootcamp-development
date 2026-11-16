@@ -20,7 +20,7 @@ bootcamper through setup and into the numbered module skills, one guided step at
 1. **Read and follow `ground-rules.md`** (in this skill directory). Those rules apply to every
    turn of the bootcamp: the 👉 one-question-at-a-time protocol, the MCP-first invariant, file
    placement, no direct SQL, progress tracking, and module banners. They are not optional.
-   ⛔ Read the file to its last line. It is long, and a read that reports it was cut short or
+   ⛔ **(INV-427) Read the file to its last line.** It is long, and a read that reports it was cut short or
    truncated has not read it: continue from where it stopped, in as many reads as it takes,
    before the first reply. A rule you did not read is a rule you will break.
 2. **Fresh start vs. resume — decided by the progress file's CONTENT, not its existence.**

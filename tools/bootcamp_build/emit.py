@@ -40,7 +40,7 @@ SIBLING_SKILLS_NOTE = (
     "**Where the files this names are.** Every bootcamp skill is a directory beside this one, so "
     "the `bootcamp-onboarding` skill's files are in `../bootcamp-onboarding/`, counted from the "
     "directory of this `SKILL.md`, and the `graduation` skill's are in `../graduation/`. "
-    "⛔ Read them from there. Never search the filesystem for a skill file: a second copy of the "
+    "⛔ (INV-252) Read them from there. Never search the filesystem for a skill file: a second copy of the "
     "bootcamp on the same machine is normal, and it is not the one running.\n"
 )
 

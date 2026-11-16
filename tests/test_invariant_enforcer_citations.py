@@ -946,7 +946,9 @@ NAMED_TEST = re.compile(r"tests/(test_[a-z0-9_]+\.py)")
 # so neither moves this count.
 #: 2026-11-16 review: INV-426 registered (issue #4), enforced by three tests that each cite it
 #: back. Re-derived by running the extractor, which found 349.
-EXPECTED_PAIRS = 349
+#: 2026-11-16, second review of the day: INV-427 registered (audit, PR #3), enforced by one
+#: test that cites it back. Re-derived by running the extractor, which found 350.
+EXPECTED_PAIRS = 350
 
 
 #: Adapted (one-repository migration, 2026-11-14): enforcers the register names that were not
