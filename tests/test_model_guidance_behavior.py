@@ -40,6 +40,9 @@ describes the retired nudge; `specs/INVARIANTS.md` is superseded separately and 
 here.
 
 Run:  python3 -m unittest discover -s tests
+
+Enforces **INV-426** (registered 2026-11-16). It establishes what each package's text says; it
+does not establish that a live turn obeys it, which only `dry-run` phase 3 can observe.
 """
 import os
 import re

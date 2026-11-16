@@ -27,6 +27,9 @@ Line-scoped by design (#4): a Markdown table row is one line, and each instructi
 written on one line so that it is the same bytes wherever it appears.
 
 Run:  python3 -m unittest discover -s tests
+
+Enforces **INV-426** (registered 2026-11-16). It establishes what each package's text says; it
+does not establish that a live turn obeys it, which only `dry-run` phase 3 can observe.
 """
 import re
 import sys
@@ -147,12 +150,12 @@ class TheGuideAppliesItSilentlyAndChangesNoSetting(unittest.TestCase):
         self.flat = flat(block())
 
     def test_it_is_never_shown_or_mentioned(self):
-        self.assertIn("⛔ **Apply the instruction silently.** Never show the bootcamper this "
+        self.assertIn("⛔ **(INV-426) Apply the instruction silently.** Never show the bootcamper this "
                       "table, a level or an instruction, and never say that a stage has one.",
                       self.flat)
 
     def test_it_changes_no_setting(self):
-        self.assertIn("⛔ **It changes no setting.**", self.flat)
+        self.assertIn("⛔ **(INV-426) It changes no setting.**", self.flat)
         self.assertIn("Do not change the model or the reasoning effort, do not ask the "
                       "bootcamper to change either, and say nothing to them about what they "
                       "are running.", self.flat)

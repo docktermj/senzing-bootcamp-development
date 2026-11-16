@@ -78,7 +78,6 @@ REVIEWED_NOT_A_SUPERSESSION = {
     "INV-082": "supersedes the Truth-Set coupling of INV-038/INV-068, not those invariants whole",
     "INV-087": "supersedes INV-086's recording-location framing only",
     "INV-103": "supersedes the 'Journal' subsection-naming clause of INV-048/085/092",
-    "INV-138": "supersedes INV-137's trigger only; the rest of INV-137 still binds",
     "INV-155": "supersedes INV-104's tab enumeration only",
     "INV-198": "partly supersedes INV-040's parenthetical",
     # -- explicit NEGATIVES: the entry says it supersedes nothing, or is not superseded --
@@ -107,6 +106,10 @@ REVIEWED_NOT_A_SUPERSESSION = {
     "INV-251": "its 2026-09-30 clarification names the INV-063 and INV-064 supersession chains, "
                "already recorded on those entries; INV-251 supersedes nothing",
     "INV-270": "carries a dated Correction, which is not a supersession",
+    "INV-141": "its 2026-11-16 dated amendment (issue #4) drops the model from each row; the "
+               "invariant stays in force, supersedes nothing and is superseded by nothing",
+    "INV-247": "its 2026-11-16 dated amendment (issue #4) withdraws the model and effort "
+               "exception; the invariant stays in force and is superseded by nothing",
     "INV-302": "carries a dated amendment (#239) that admits (user level) names to one clause; "
                "it supersedes nothing and is superseded by nothing",
     "INV-281": "its 2026-09-29 dated correction (#223) says one RATIONALE SENTENCE is superseded; "
