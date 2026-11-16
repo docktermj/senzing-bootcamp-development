@@ -104,7 +104,7 @@ invariant review.
 
   **INV-NNN** — Where an assistant gives the guide a skill's text without its location, the package MUST state where that skill's files are, and the guide MUST read a bootcamp file from the running package's own location and MUST NOT search the filesystem for one, because a second copy of the bootcamp on the same machine is normal. A file the bootcamp tells the guide to read in full MUST be read to its last line, continuing after a read that was cut short.
 
-- **Commit:** uncommitted
+- **Commit:** dc79183
 
 ## invariant-review-2026-11-16
 
