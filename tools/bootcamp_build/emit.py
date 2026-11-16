@@ -8,6 +8,7 @@ registration, hook configuration).
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import stat
 from dataclasses import dataclass, field
@@ -339,6 +340,25 @@ def _commands_as_skills(build: HostBuild, context: BuildContext) -> None:
         _write(build, Path("skills") / path.stem / "SKILL.md", skill.encode("utf-8"), 0o644)
 
 
+def _add_skill_locations(build: HostBuild) -> None:
+    """Tell every skill where its own directory is, on a host that does not.
+
+    A host that hands the assistant a ``SKILL.md`` without its path leaves "this skill directory"
+    meaning nothing, and the assistant searches the disk for the files beside it (seen on Kiro
+    IDE 1.4.26, 2026-11-15: ``find /`` reached a backup of another copy of the bootcamp). The
+    host's ``skill_location_note`` option states the installed location; ``{skill}`` in it is
+    the skill's name.
+    """
+    note = build.host.options.get("skill_location_note")
+    if not note:
+        return
+    for relative in sorted(name for name in build.files if re.fullmatch(r"skills/[^/]+/SKILL\.md", name)):
+        target = build.root / relative
+        skill = relative.split("/")[1]
+        text = target.read_bytes().decode("utf-8").rstrip("\n")
+        target.write_bytes((text + "\n\n" + note.replace("{skill}", skill) + "\n").encode("utf-8"))
+
+
 def _copy_host_files(build: HostBuild, context: BuildContext) -> None:
     """Files only this host's package carries, from ``hosts/<id>/files/`` (same layout as the package)."""
     host = build.host
@@ -528,6 +548,7 @@ def build_host(
     _copy_layout(build, source_dir, known_hosts)
     _copy_host_files(build, context)
     emitter(build, declaration, context)
+    _add_skill_locations(build)
     if (source_dir / FALLBACK_DIR).is_dir():
         _emit_host_rules(build, declaration, context)
     _emit_host_file(build, declaration)

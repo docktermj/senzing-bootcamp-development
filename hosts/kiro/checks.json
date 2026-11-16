@@ -1,0 +1,26 @@
+[
+  {
+    "release": "0.7.0",
+    "client": "Kiro IDE 1.4.26",
+    "date": "2026-11-15",
+    "scope": "first-turn",
+    "result": "pass",
+    "notes": "Run by the maintainer in a new empty folder, with the package built from this repository installed as a custom Power from dist/plugins/kiro/senzing-bootcamp. \"Start the bootcamp\" showed the WELCOME banner with v0.7.0, reached the Senzing MCP server, showed no errors and ended on the 👉 question asking for questions before starting. After that question was answered the bootcamp offered the hook install once, showed the installer's plan (five files) and, on a yes, wrote the five files to .kiro/hooks/, then opened Bootcamp preparation on one 👉 question. Kiro's session record shows the installed hooks invoked in the same session with status completed: prompt-submit, pre-tool-use, post-tool-use and stop. Found: Kiro showed the plan as a table with the adapter path shortened, where the skill asks for the installer's output as it is. Write gate checked: asked to write /tmp/test.txt, the assistant decided to proceed, the pre-tool-use hook ran and Kiro recorded the fs_write call as denied; no file was created, and the reply said so and returned to the pending 👉 question. The denied call's result was empty, so whether the hook's reason reaches the assistant is unknown. Resume checked in the same session: \"start the bootcamp\" again ran the session-start script as the host rules direct and offered to resume Entity Resolution Concepts by name on one 👉 question. Found and fixed: Kiro hands over a SKILL.md without its path, so the first turn ran find / for the onboarding files and listed a backup of another copy of the bootcamp before it looked under ~/.kiro; the Kiro package now states each skill's installed directory. Not checked: what the other hooks received and returned (only that they ran and exited cleanly), the session-start hook in a new session, a blocked shell command, a declined offer and anything past the preparation questions."
+  },
+  {
+    "release": "0.7.0",
+    "client": "Kiro IDE 1.4.26",
+    "date": "2026-11-15",
+    "scope": "first-turn",
+    "result": "pass",
+    "notes": "Second run by the maintainer, in a new empty folder with the Power removed and added again from a build carrying the skill location note; read from Kiro's session record. The first turn went straight to ~/.kiro/powers/installed/senzing-bootcamp/ with no filesystem search, reached the Senzing MCP server and showed the WELCOME banner with v0.7.0. Found: Kiro cuts a tool result at about 30,000 characters and ground-rules.md is 134,187 bytes, so this run read under a tenth of it before the first reply, and the first run read under half. The onboarding skill now says to read the file to its last line in as many reads as it takes. Also seen: the welcome points were reworded, and the progress file was created empty."
+  },
+  {
+    "release": "0.7.0",
+    "client": "Kiro IDE 1.4.26",
+    "date": "2026-11-15",
+    "scope": "first-turn",
+    "result": "pass",
+    "notes": "Third run by the maintainer, in a new empty folder with the Power added again from a build that says to read the ground rules to the last line; read from Kiro's session record. Before the welcome the assistant read ground-rules.md in five reads covering lines 1 to the end (the first was cut at about 30,000 characters and the next resumed at line 362), with no filesystem search. It showed the welcome, took the next message as no questions and offered the hook install with the installer's plan on one 👉 question. One run only: it does not show the file is read in full every time."
+  }
+]
