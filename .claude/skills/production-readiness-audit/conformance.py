@@ -390,8 +390,51 @@ def added_rules_outside_the_corpus(repo, ref, upto=None):
     return added
 
 
+#: The line in the ledger's opening section that states the fallback range start (#10). The
+#: value is captured whole, so a refusal can say what was read when it is not a hash.
+FALLBACK_FIELD = re.compile(r"(?m)^[ \t]*-[ \t]+\*\*Fallback commit:\*\*[ \t]*(.*)$")
+
+
+def _ledger_fallback(repo, text, why):
+    """The fallback range start the ledger states, or None after saying what was read (#10).
+
+    ⛔ **The fallback commit is stated in the ledger's opening section and read from there.**
+    This file holds no fallback hash of its own. A hash kept here would be a second copy of a
+    fact the ledger owns, and the two would disagree the first time the maintainer moved one.
+
+    The opening section is everything above the first `## ` heading. That heading is the entry
+    format shown in the ledger's own comment, so the line sits above that comment.
+
+    The commit is used as stated. It is not an audit record, so the `SUSPECT-REF` widening,
+    which tests what an audit record's commit carries, is not applied to it.
+
+    Refuses when the ledger states no fallback, or states one that is not a commit here. `why`
+    is the caller's account of the audit entries, repeated so the refusal names everything read.
+    """
+    stated = FALLBACK_FIELD.search(re.split(r"(?m)^## ", text, maxsplit=1)[0])
+    if not stated:
+        sys.stderr.write("%s, and specs/IMPLEMENTED.md states no fallback: no "
+                         "`- **Fallback commit:** <hash>` line above its first `## ` heading "
+                         "-- cannot resolve the last audit\n" % why)
+        return None
+    raw = stated.group(1).strip()
+    shaped = re.fullmatch(r"`?([0-9a-f]{7,40})`?", raw)
+    if not shaped:
+        sys.stderr.write("%s, and the fallback specs/IMPLEMENTED.md states is not a commit "
+                         "hash: %r -- cannot resolve the last audit\n" % (why, raw))
+        return None
+    ref = shaped.group(1)
+    ok = subprocess.run(["git", "rev-parse", "--verify", "%s^{commit}" % ref],
+                        cwd=str(repo), capture_output=True, text=True)
+    if ok.returncode != 0:
+        sys.stderr.write("%s, and the fallback specs/IMPLEMENTED.md states, %s, is not a "
+                         "commit here -- cannot resolve the last audit\n" % (why, ref))
+        return None
+    return ref
+
+
 def last_audit_ref(repo):
-    """The newest audit entry with a resolvable commit, or None.
+    """The newest audit entry with a resolvable commit, else the ledger's fallback, or None.
 
     Walks audit entries newest-first and takes the first whose `Commit:` field names a commit this
     repo has, reporting which entry it used. \u26d4 It does NOT stop at the newest entry: an audit
@@ -400,9 +443,17 @@ def last_audit_ref(repo):
     unusable in exactly the situation it was added for. Skipping to the previous audit is still
     reading a recorded hash, not guessing a range.
 
-    Fails loudly when NO entry has a resolvable commit. An unresolvable ref reported as "0 rules
-    added" is indistinguishable from a clean range (INV-110/INV-115), and the point of this view is
-    to be believed about what a run added.
+    When NO entry has a resolvable commit, including a ledger with no audit entry at all, the
+    range starts at the fallback commit the ledger states (`_ledger_fallback`, #10). An entry
+    that resolves always wins; the fallback is read only after every entry has been tried.
+
+    ⛔ **A fallback run prints a FALLBACK line on stdout, every time, zero included.** The line
+    names the commit and the entries that were skipped, so a range measured from the fallback is
+    never read as one measured from an audit.
+
+    Fails loudly when neither an entry nor the fallback resolves. An unresolvable ref reported as
+    "0 rules added" is indistinguishable from a clean range (INV-110/INV-115), and the point of
+    this view is to be believed about what a run added.
     """
     ledger = repo / "specs" / "IMPLEMENTED.md"
     if not ledger.is_file():
@@ -410,9 +461,6 @@ def last_audit_ref(repo):
         return None
     text = ledger.read_text(encoding="utf-8")
     entries = re.findall(r"(?m)^## (production-readiness-audit\S*)\n(.*?)(?=\n## |\Z)", text, re.S)
-    if not entries:
-        sys.stderr.write("no audit entry found in the ledger\n")
-        return None
     skipped = []
     chosen = previous = None
     for name, body in entries:
@@ -438,9 +486,19 @@ def last_audit_ref(repo):
         previous = (name, ref)
         break
     if chosen is None:
-        sys.stderr.write("no audit entry has a resolvable commit; skipped: %s\n"
-                         % "; ".join(skipped))
-        return None
+        if entries:
+            why = "no audit entry has a resolvable commit; skipped: %s" % "; ".join(skipped)
+        else:
+            why = "no audit entry found in the ledger"
+        ref = _ledger_fallback(repo, text, why)
+        if ref is None:
+            return None
+        # One line, so a reader or a parser takes the commit and the skipped entries together.
+        print("   \u26a0 FALLBACK: no audit entry yields a commit here, so the range starts at %s, "
+              "the fallback commit specs/IMPLEMENTED.md states. Skipped: %s."
+              % (ref, "; ".join(skipped) if skipped else "none, the ledger holds no audit entry"))
+        _report_retired_boundary(repo, None, ref)
+        return ref
     name, ref = chosen
     print("   (ref %s from ledger entry %s)" % (ref, name))
     for entry in skipped:
