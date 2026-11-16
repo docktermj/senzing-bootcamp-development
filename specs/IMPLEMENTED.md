@@ -27,6 +27,85 @@ records `uncommitted`, and the next run that touches the entry fills the hash in
 
 -->
 
+## production-readiness-audit-2026-11-16
+
+**Not a spec** — a dated record of an audit run, **attended**. It is the first audit in this
+repository, after the move to one source for five assistants, the two Kiro fixes (#3), the
+effort research (#5), the removal of the model and effort question (#4) and the 2026-11-16
+invariant review.
+
+- **Implemented:** 2026-11-16 (**7 findings recorded below; none fixed; six filed as #9 to
+  #14 with the maintainer's yes; one unregistered rule queued as a deferral**)
+- **Files changed:** this record only.
+- **MCP re-check:** n/a (no Senzing fact). Every finding is internal consistency. No absence
+  claim is made, so INV-213's `owner-checked:` clause is not owed.
+- **Baseline.** `main` at `bfa4f8a`, tree clean.
+  - **Suite green:** `Ran 9454 tests`, `OK (skipped=15)`, run on the identical tree at `9e71a30`
+    before its merge; not re-run after the merge commit, whose tree is the same.
+  - `citations.py verify` clean at 424 invariants; `bootcamp_build check` OK;
+    `coverage_reports.py shipped` lists nothing.
+  - Reachable here: `fpdf2`, `pdftoppm`, `docker`, Google Chrome. Not found: `chromium`.
+- **Scope, chosen deliberately.** Not a full forward sweep. Swept: everything issue #4 and the
+  invariant review touched, in all five built packages; the hard rules added to `source/` since
+  the import commit `55971ad`; cross-references to the model page; live citations of the
+  retired invariants; the install pages' model wording. Not swept: the per-module outcome
+  blocks (INV-028 to INV-049), the 93 enumerating invariants, duplication and file size.
+- **Verified correct.** No built package holds a leftover of the model and effort question. The
+  retired invariants (INV-063, 069, 098, 138, 139) are cited in shipped text only where the
+  ground rules say the nudge is retired. The welcome sentence renders in all five packages.
+- **Findings, most serious first. All open.** Each carries its issue number; finding 1 is the
+  deferral below.
+  1. **Reverse contract: hard rules shipped with no invariant and no deferral.** #3 and commit
+     `f7540ef` added four ⛔ rules on one subject, and neither wrote a block: the read-to-the-
+     last-line rule in `bootcamp-onboarding/SKILL.md`, the two "never by searching" rules for
+     the version and assistant lines in `feedback.md` and `graduation/SKILL.md`, and the
+     never-search note the build appends to skills (`tools/bootcamp_build/emit.py`,
+     `hosts/kiro/host.json`). Queued below as one deferral. This run's author wrote those
+     changes and omitted the blocks.
+  2. **The audit's own tools cannot see where assistants differ.** (#9) `conformance.py` reads
+     `source/` and `.claude/` only. Rule text that reaches bootcampers from `hosts/*/fragments/`,
+     `hosts/kiro/files/`, `hosts/kiro/host.json` and `tools/bootcamp_build/emit.py` is scanned by
+     no view, and `pending_invariants.py sites` reports `hosts/` as not scanned.
+  3. **`since --since-last-audit` and `reverse-check --since-last-audit` cannot run.** (#10) The newest
+     audit entry before this one records `committed (hash not recorded)`, and its commit is in
+     the archived repository. Both views stop with "no audit entry has a resolvable commit".
+     This entry's commit gives the next run a range start.
+  4. **Completeness, platforms (INV-001).** (#11) The Kiro package tells the assistant its files are at
+     `~/.kiro/powers/installed/senzing-bootcamp/`. That path was observed on Linux only; nothing
+     states or tests the location on macOS or Windows.
+  5. **Consistency across assistants: a maintainer page ships in one package.** (#12)
+     `docs/model-selection.md`, titled "maintainer notes", is in the Claude package and in no
+     other. No shipped file refers to it, and it points at `docs/effort-mechanisms.md`, which no
+     package carries.
+  6. **Consistency: the install page and the welcome name different models on ChatGPT.** (#13) The
+     install page says to choose GPT-5.6 Terra at Medium; the welcome says "a high-capability
+     Codex model". The Claude install page also sets an effort, which the bootcamp otherwise
+     never mentions; an install-time choice is allowed, but only two of five pages make one.
+  7. **Coherence: the never-ask list names one assistant's controls in every package.** (#14) The
+     ground rules list `/compact` and `/loop` among the controls never offered as a question, on
+     all five assistants. Carried from the migration's open threads.
+- **Concision:** not audited this run. The heaviest shipped file is
+  `module-02-sdk-setup/SKILL.md` at 29,328 words; `ground-rules.md` is 18,764 words and is the
+  file Kiro had to read in five pieces.
+- **Coverage limits.** ⛔ The conversational invariants (INV-005, INV-006, INV-008, INV-009,
+  INV-014, INV-251 and every gate ordering rule) were not tested; reading cannot establish them
+  and they need `dry-run` phase 3. No assistant has run a bootcamp built from this `main`.
+  Whether an assistant works more carefully on a "high" stage (INV-426) is unmeasured.
+
+- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** The bootcamp reads its own files from where it is installed and to the end, and never searches the disk for them. The rule already shipping, quoted:
+    - `source/skills/bootcamp-onboarding/SKILL.md:23` — ⛔ the ground rules are read to the last line, continuing after a read that was cut short *(covered: …)*
+    - `tools/bootcamp_build/emit.py` — ⛔ the note appended to every command rendered as a skill says to read sibling skills from beside it and never to search the filesystem *(covered: …)*
+    - `hosts/kiro/host.json` — ⛔ the note appended to every Kiro skill names its installed directory and forbids a wider search *(covered: …)*
+
+  Enforced by `tests/test_kiro_skills_say_where_they_are.py` and `tests/test_bootcamp_build_hosts.py`.
+
+  Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
+  invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
+
+  **INV-NNN** — Where an assistant gives the guide a skill's text without its location, the package MUST state where that skill's files are, and the guide MUST read a bootcamp file from the running package's own location and MUST NOT search the filesystem for one, because a second copy of the bootcamp on the same machine is normal. A file the bootcamp tells the guide to read in full MUST be read to its last line, continuing after a read that was cut short.
+
+- **Commit:** uncommitted
+
 ## invariant-review-2026-11-16
 
 **Not a spec** — the record of a `/review-invariants` session, attended by the maintainer.
