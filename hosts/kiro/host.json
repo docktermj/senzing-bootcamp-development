@@ -51,7 +51,24 @@
     ]
   },
   "options": {
-    "skill_location_note": "**Where this skill's files are.** Kiro gives you this `SKILL.md` without its path. The bootcamp is installed at `~/.kiro/powers/installed/senzing-bootcamp/`, so this skill's directory is `~/.kiro/powers/installed/senzing-bootcamp/skills/{skill}/`. \"This skill directory\", `<this-skill-dir>` and every `../` path in this file count from there, and `${PLUGIN_ROOT}` is `~/.kiro/powers/installed/senzing-bootcamp`. ⛔ (INV-252) Read the files from there. If that directory is missing, look only inside `~/.kiro/powers/` for `senzing-bootcamp`. Never search the rest of the filesystem for a bootcamp file: a second copy of the bootcamp on the same machine is normal, and it is not the one running.",
+    "skill_location_note": "**Where this skill's files are.** Kiro gives you this `SKILL.md` without its path. The bootcamp's directory is `powers/installed/senzing-bootcamp/` inside the Kiro home, so this skill's directory is `powers/installed/senzing-bootcamp/skills/{skill}/` inside the Kiro home. The Kiro home is the value of the `KIRO_HOME` environment variable when it is set, otherwise `.kiro` in the user's home directory (`%USERPROFILE%` on Windows). \"This skill directory\", `<this-skill-dir>` and every `../` path in this file count from this skill's directory, and `${PLUGIN_ROOT}` is the bootcamp's directory. ⛔ (INV-252) Read the files from there. If `KIRO_HOME` is set and the bootcamp is not under it, look under `.kiro` in the user's home directory next. If the bootcamp's directory is missing from the Kiro home, look only inside `powers/` in the Kiro home for `senzing-bootcamp`. Never search the rest of the filesystem for a bootcamp file: a second copy of the bootcamp on the same machine is normal, and it is not the one running.",
+    "skill_location_sources": {
+      "linux": {
+        "status": "observed",
+        "source": "Observed on Kiro IDE 1.4.26 in a run by the maintainer, recorded in hosts/kiro/checks.json: the first turn read the bootcamp from ~/.kiro/powers/installed/senzing-bootcamp/ with no filesystem search. No recorded run tested KIRO_HOME; what it does is from https://kiro.dev/docs/configuration/.",
+        "date": "2026-11-15"
+      },
+      "macos": {
+        "status": "documented",
+        "source": "Documented, not observed: no run was observed on macOS. https://kiro.dev/docs/configuration/ lists Powers at ~/.kiro/powers/ with no difference between platforms, and says an absolute KIRO_HOME replaces ~/.kiro. The installed/<power-name>/ subfolder is not in Kiro's documentation; https://docs.jfrog.com/ai-ml/docs/kiro describes it.",
+        "date": "2026-11-16"
+      },
+      "windows": {
+        "status": "documented",
+        "source": "Documented, not observed: no run was observed on Windows. https://kiro.dev/docs/configuration/ lists Powers at ~/.kiro/powers/ with no difference between platforms, and says an absolute KIRO_HOME replaces ~/.kiro. The installed/<power-name>/ subfolder is not in Kiro's documentation; https://docs.jfrog.com/ai-ml/docs/kiro describes it.",
+        "date": "2026-11-16"
+      }
+    },
     "adapter": {
       "result_dialect": "text",
       "transcript_dialect": null,
