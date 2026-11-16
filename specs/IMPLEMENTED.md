@@ -36,6 +36,76 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## the-kiro-package-states-its-installed-path-for-linux-only
+
+- **Implemented:** 2026-11-16 (issue #11)
+- **Files changed:** `hosts/kiro/host.json`, `tests/test_kiro_skills_say_where_they_are.py`,
+  `specs/IMPLEMENTED.md` (this entry)
+- **MCP re-check:** n/a (no Senzing fact). Re-confirmed on 2026-11-16 against the change itself:
+  it says where Kiro keeps an installed Power and what that statement rests on, and asserts
+  nothing about Senzing. The two pages the record names are Kiro's and JFrog's. No absence claim
+  about the Senzing MCP server is made, so INV-213's `owner-checked:` clause is not owed.
+- **Summary:** The note the build appends to every Kiro `SKILL.md` no longer gives a path under
+  `~`, and the repository records what the stated location rests on for each platform.
+  - **The note.** `options.skill_location_note` gives the bootcamp's directory as
+    `powers/installed/senzing-bootcamp/` inside the Kiro home and the skill's directory as
+    `powers/installed/senzing-bootcamp/skills/<skill>/` inside it. It defines the Kiro home: the
+    `KIRO_HOME` environment variable when it is set, otherwise `.kiro` in the user's home
+    directory, with `%USERPROFILE%` named for Windows. It still says what "this skill
+    directory", `<this-skill-dir>`, every `../` path and `${PLUGIN_ROOT}` resolve to, and still
+    forbids a search of the rest of the filesystem.
+  - **A `KIRO_HOME` that Kiro ignores.** When the bootcamp is not under `KIRO_HOME`, the note
+    sends the assistant to `.kiro` in the home directory next. When the bootcamp's directory is
+    missing, the assistant looks only inside `powers/` in the Kiro home.
+  - **The record.** `options.skill_location_sources` has one entry each for `linux`, `macos` and
+    `windows`, with `status`, `source` and `date`. Linux is `observed`: Kiro IDE 1.4.26,
+    2026-11-15, the run in `hosts/kiro/checks.json`. macOS and Windows are `documented`,
+    2026-11-16, and each says no run was observed there. The build reads `options` by key, so
+    the record is in no package; a test asserts that.
+  - **Not read again here.** The two pages were read on 2026-11-16 while the issue was refined.
+    This run did not fetch them, and the record's wording follows the issue's.
+  - **No real run was made.** `hosts/kiro/checks.json` is unchanged.
+  - **Decided here, because the issue leaves it open.** The skill's directory is one path from
+    the Kiro home, so the assistant composes nothing, and
+    `tests/test_bootcamp_build_hosts.py` passes unchanged. The Linux entry says no recorded run
+    tested `KIRO_HOME`: `observed` covers the default location only.
+  - **Tests.** The module grew from 3 tests to 14. For every Kiro skill it asserts the note is
+    stated once and carries each sentence above, with no `~` in it. For the record it asserts
+    the three platforms, the three statuses, a source and a date for any status other than
+    `unchecked`, a recorded run with the same date and client behind `observed`, and a page and
+    "no run was observed" behind `documented`. The check that the Claude and GitHub Copilot
+    packages carry no note is kept and now also looks for the note's heading, `KIRO_HOME` and
+    "Kiro home", because the new wording no longer contains `.kiro/`. Negative control, run and
+    then reverted: against the old note the module reports 109 failures and 1 error. The
+    module finds the note by line, and says why at the read: the build appends it as one
+    unwrapped line.
+  - **Coverage limit.** Reading cannot establish where Kiro installs a Power. The test reads the
+    note's wording and the record's shape. On macOS and Windows the location rests on
+    documentation, and the `installed/<power-name>/` subfolder on a third-party guide.
+- **Establishes no new invariant** (INV-309), and proposes a change to one in force. The
+  register is not edited here (INV-365). The note's one hard-rule line still cites INV-252 at
+  the line. `conformance.py since --since-last-audit` does not report it: `hosts/` is outside
+  the corpus that view reads (audit finding 2, issue #9). The block below proposes the dated
+  note on INV-252 that would bind the new wording and the record. Until the maintainer applies
+  it, only the test holds them.
+
+- **PROPOSED AMENDMENT to INV-252 — awaiting the maintainer's sign-off; NOT applied.**
+    - ⛔ **(INV-252) Read the files from there. If `KIRO_HOME` is set and the bootcamp is not under it, look under `.kiro` in the user's home directory next.** — in `hosts/kiro/host.json`
+
+  INV-252, as amended on 2026-11-16, requires a package to state where a skill's files are when
+  the assistant gives no path. It does not say the stated location must hold on every platform
+  the bootcamp supports, or that anything records what the location rests on. Without the note
+  below, a later edit can put a Linux-only path back, or mark a platform `observed` with no
+  run behind it, and contradict no registered rule. Enforced by
+  `tests/test_kiro_skills_say_where_they_are.py`.
+
+  Drafted wording follows, under the registered id. A new rule's id would be
+  written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
+
+  **INV-252** — (⚠️ **Amended 2026-11-16 (issue #11).** A location a package states for a skill's files MUST hold on every platform the bootcamp supports (INV-001). It MUST NOT rest on `~` alone, and where a setting of the assistant's own can move the directory, the location MUST be given inside a directory the note itself defines. On Kiro that directory is the Kiro home: the value of the `KIRO_HOME` environment variable when it is set, otherwise `.kiro` in the user's home directory (`%USERPROFILE%` on Windows), with the bootcamp at `powers/installed/senzing-bootcamp/` inside it. The assistant's `host.json` MUST record, for Linux, macOS and Windows each, whether the stated location is `observed`, `documented` or `unchecked`, with a source and a date unless it is `unchecked`; `observed` MUST name a run recorded in that assistant's `checks.json`, and `documented` MUST say that no run was observed. Enforced by `tests/test_kiro_skills_say_where_they_are.py`, which reads the note's wording and the record's shape and **cannot** establish where Kiro installs a Power on any platform: only a run there can, and on 2026-11-16 only Linux has one.)
+
+- **Commit:** uncommitted
+
 ## the-since-last-audit-views-cannot-run-in-this-repository
 
 - **Implemented:** 2026-11-16 (issue #10)
