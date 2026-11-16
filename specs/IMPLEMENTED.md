@@ -14,6 +14,15 @@ An invariant whose `(Source: …)` names an entry that is not below resolves the
 `committed (hash not recorded)`, and nothing else. An entry written before its commit exists
 records `uncommitted`, and the next run that touches the entry fills the hash in.
 
+**The fallback commit.** `conformance.py since --since-last-audit` and
+`conformance.py reverse-check --since-last-audit` measure from the newest audit entry whose
+`Commit:` names a commit in this repository. When no audit entry yields one, they measure from
+the commit on the line below and print a `FALLBACK` line saying so. It is the commit that
+brought this ledger and the maintainer skills across. `conformance.py` reads the hash from this
+line and holds no copy of it, so changing the line changes the range.
+
+- **Fallback commit:** 4587b43
+
 <!-- New entries go directly below this line. Format:
 
 
@@ -26,6 +35,80 @@ records `uncommitted`, and the next run that touches the entry fills the hash in
 - **Commit:** <hash, "uncommitted", or "committed (hash not recorded)">
 
 -->
+
+## the-since-last-audit-views-cannot-run-in-this-repository
+
+- **Implemented:** 2026-11-16 (issue #10)
+- **Files changed:** `.claude/skills/production-readiness-audit/conformance.py`,
+  `specs/IMPLEMENTED.md` (the opening section and this entry),
+  `tests/test_since_last_audit_falls_back_to_the_ledgers_commit.py`,
+  `tests/test_all_runs_every_argument_free_view.py`,
+  `tests/test_new_hard_rules_are_cited_or_deferred.py` (one docstring sentence)
+- **MCP re-check:** n/a (no Senzing fact). Re-confirmed on 2026-11-16 against the change itself:
+  it decides which commit a maintainer script measures from, and asserts nothing about Senzing.
+  No absence claim is made, so INV-213's `owner-checked:` clause is not owed.
+- **Summary:** `conformance.py since --since-last-audit` and `reverse-check --since-last-audit`
+  now resolve a range start in this repository and say where it came from.
+  - **The fallback.** The opening section of this ledger states the fallback commit on a
+    `- **Fallback commit:**` line. When no audit entry yields a commit here, `last_audit_ref`
+    measures from it, exits 0 and prints one `FALLBACK` line on stdout naming the commit and
+    every skipped entry with its reason. A ledger with no audit entry falls back the same way.
+    A run that adds nothing still prints the line.
+  - **One copy of the hash.** `conformance.py` holds no fallback hash. The opening section is
+    everything above the first `## ` heading; a `Fallback commit:` line inside an entry is not
+    read.
+  - **An entry that resolves always wins**, including an older one behind a newer
+    `uncommitted` one. Where an entry resolves, the output is byte-identical with and without
+    the fallback line.
+  - **The refusal.** With no fallback stated, a value that is not a hash, a hash that is not a
+    commit here, or no ledger at all, both views exit 2, say on stderr what they read of the
+    audit entries and of the fallback, and print no count.
+  - **Decided here, because the issue leaves it open.** The fallback is measured from as
+    stated: the `SUSPECT-REF` widening tests what an audit record's commit carries, and the
+    fallback is not an audit record. For the commit stated today the result is the same either
+    way, since it touches nothing under `source/`, `hosts/`, `site/` or `public/`. A fallback
+    run prints the first-range `BOUNDARY` line.
+  - **Already on `main`, not redone.** The issue's first scope item, recording `dc79183` in the
+    `Commit:` field of `production-readiness-audit-2026-11-16`, landed in `eead1c6` (pull
+    request #16). Verified on this branch before the work began.
+  - **Measured on this branch, 2026-11-16.** Both views exit 0 and print
+    `(ref dc79183 from ledger entry production-readiness-audit-2026-11-16)`. `since` reports 1
+    line added since `dc79183`, the INV-427 rule, and `reverse-check` says `VERDICT: clean`.
+    `since --ref` against the fallback commit reports 10 lines across 6 files.
+  - **Tests.** The new module builds a throwaway repository with four commits and runs both
+    views as subprocesses: 29 tests over the fallback, the ledger with no audit entry, the
+    refusals, the entry that wins and the live ledger. A fallback report is compared byte for
+    byte, from its `== ` header on, with the same view run with `--ref`, so the reverse
+    check's verdict is the ordinary one. Negative controls, each run and then reverted: the
+    script without the change (44 failures, 2 errors), without the `BOUNDARY` call (2
+    failures), and reading the fallback from anywhere in the ledger (2 failures).
+    `test_all_runs_every_argument_free_view.py` accepts the `FALLBACK` line as a third outcome,
+    keyed on the resolver's own line.
+  - **Not changed.** `.claude/skills/production-readiness-audit/SKILL.md`: it is not in the
+    issue's file list, and the `FALLBACK` line and the opening section above explain a
+    fallback run where it happens.
+- **Invariants.** The register is not edited here (INV-365). The change ships two hard-rule
+  lines in a docstring, which `since` reports as outside its corpus. One block below covers
+  both.
+
+- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** The since-last-audit views take their range start from the ledger alone, and say when it is the fallback. The rule already shipping, quoted:
+    - ⛔ **The fallback commit is stated in the ledger's opening section and read from there.** — in `.claude/skills/production-readiness-audit/conformance.py`
+    - ⛔ **A fallback run prints a FALLBACK line on stdout, every time, zero included.** — in `.claude/skills/production-readiness-audit/conformance.py`
+
+  Enforced by `tests/test_since_last_audit_falls_back_to_the_ledgers_commit.py`.
+
+  **Why it is not an existing invariant:** INV-308 requires a tool to say what it could not
+  verify and to keep one definition of the scope it resolves against. It does not say where a
+  range start comes from, that a fallback exists, or what a run measured from one must print.
+  No registered invariant names the resolver, its `SUSPECT-REF` widening or its `BOUNDARY`
+  report.
+
+  Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
+  invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
+
+  **INV-NNN** — `conformance.py`'s `--since-last-audit` views MUST take their range start from `specs/IMPLEMENTED.md` and from nowhere else: the newest audit entry whose `Commit:` names a commit in the repository and, only when no audit entry yields one, the commit on the `- **Fallback commit:**` line in the ledger's opening section. `conformance.py` MUST NOT hold a fallback hash of its own. A run measured from the fallback MUST print a `FALLBACK` line on stdout naming the commit and the audit entries it skipped, including a run that reports zero lines added, and is otherwise an ordinary run with the usual exit code and verdict. When the ledger states no fallback, or states one that is not a commit in the repository, the views MUST exit 2, say on stderr what they read, and print no count. Enforced by `tests/test_since_last_audit_falls_back_to_the_ledgers_commit.py`, which builds throwaway repositories and **cannot** establish that the commit the live ledger states is the right one to measure from; that is the maintainer's choice, recorded in GitHub issue #10. (Source: `the-since-last-audit-views-cannot-run-in-this-repository`, GitHub issue #10, 2026-11-16.)
+
+- **Commit:** uncommitted
 
 ## invariant-review-2026-11-16-audit
 

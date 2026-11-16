@@ -108,6 +108,11 @@ class SinceCanComputeItsOwnRef(unittest.TestCase):
         does have a resolvable commit -- but "no audit entry has one" is still a legitimate
         refusal, and a test that demands success would fail on a fresh clone with a truncated
         ledger. What must never happen is a silent zero, and that is what this asserts.
+
+        Three outcomes since #10. When no audit entry has a resolvable commit, the resolver
+        measures from the fallback commit the ledger states and prints a `FALLBACK` line in
+        place of the `(ref … from ledger entry …)` line. It refuses only when the fallback
+        does not resolve either, and the refusal then says what it read about both.
         """
         out = run("since", "--since-last-audit")
         if out.returncode != 0:
@@ -116,14 +121,27 @@ class SinceCanComputeItsOwnRef(unittest.TestCase):
             # audit entry" is a second legitimate refusal. It still must say what it read.
             self.assertRegex(out.stderr, "resolvable commit|no audit entry found in the ledger",
                              "a refusal must say what it read:\n%s" % out.stderr)
+            self.assertIn("fallback", out.stderr,
+                          "a refusal must also say what it read of the ledger's fallback "
+                          "commit (#10):\n%s" % out.stderr)
             return
         # The corpus named in the header widened in 2026-09-14 (`.claude/` joined the shipped
         # markdown for THIS view only), so the prose between "added" and "since" is not pinned.
         # What is pinned is unchanged: a resolvable hash is reported rather than a silent zero.
         m = re.search(r"added .*?since ([0-9a-f]{7,40})", out.stdout)
         self.assertIsNotNone(m, "the resolved ref is not reported:\n%s" % out.stdout)
-        self.assertRegex(out.stdout, r"\(ref [0-9a-f]{7,40} from ledger entry \S+\)",
-                         "the flag must name the entry it took the ref from:\n%s" % out.stdout)
+        # Keyed on the resolver's own line, never on the bare word: a rule line the report
+        # lists may mention a fallback too.
+        fallback = re.search(r"(?m)^\s*⚠ FALLBACK: .*the range starts at ([0-9a-f]{7,40})",
+                             out.stdout)
+        if fallback:
+            self.assertEqual(m.group(1), fallback.group(1),
+                             "the FALLBACK line names one commit and the report measures "
+                             "from another:\n%s" % out.stdout)
+        else:
+            self.assertRegex(out.stdout, r"\(ref [0-9a-f]{7,40} from ledger entry \S+\)",
+                             "the flag must name the entry it took the ref from, or say it "
+                             "fell back:\n%s" % out.stdout)
         # The ref must be a real commit, not a plausible-looking string.
         rev = subprocess.run(["git", "rev-parse", "--verify", "%s^{commit}" % m.group(1)],
                              cwd=str(REPO_ROOT), capture_output=True, text=True)

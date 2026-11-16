@@ -62,9 +62,11 @@ in a deferral, exactly as a shipped rule is. The breakdown is still printed on e
 including zeroes (INV-308). The fixtures that prove the check reaches every `.claude/` root,
 independent of the live range, are in `test_reverse_contract_flags_the_maintainer_surface.py`.
 
-⚠️ **Skips rather than fails when the range cannot be resolved** — no git, a shallow clone, an
-audit entry whose `Commit:` is `uncommitted`. A guard that hard-failed there would fail on
-checkouts that have nothing wrong with them.
+⚠️ **Skips rather than fails when the range cannot be resolved** — no git, a shallow clone, a
+ledger whose audit entries and fallback commit all fail to resolve. A guard that hard-failed
+there would fail on checkouts that have nothing wrong with them. Since #10 an audit entry whose
+`Commit:` is `uncommitted` no longer skips on its own: with no entry that resolves, the range
+starts at the fallback commit the ledger states, and this guard checks that range.
 
 Source spec:
 `specs/three-hard-rules-from-the-2026-08-28-loop-carry-no-citation-at-the-line.md`.
