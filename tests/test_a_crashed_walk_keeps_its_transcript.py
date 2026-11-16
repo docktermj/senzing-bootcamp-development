@@ -366,16 +366,18 @@ class AChildThatExitsNonZeroIsAFailure(unittest.TestCase):
         self.assertTrue(any(BOOTCAMPER_STDOUT in a for argv in guide for a in argv),
                         "the control's reply should have reached the guide")
 
-    def test_a_failure_while_a_slash_only_reply_is_re_asked_ends_the_walk_at_once(self):
-        # Call 1 is only a slash line, so the Bootcamper is asked again; call 2 fails.
+    def test_a_slash_only_reply_is_a_turn_so_the_next_failure_is_one_turn_later(self):
+        """Until issue #4 a reply of only `/effort high` was re-asked, and a failure during the
+        re-ask ended the walk on that turn. No reply is read as a command now, so the line is
+        the turn, and the Bootcamper's second call belongs to the next one."""
         failure, written, guide, console = self.walk(
             bootcamper_exit_at=2, bootcamper_replies=["/effort high"])
         self.assertEqual("the Bootcamper process exited 1", failure)
         self.assert_whole_stderr_kept(written, console, "Bootcamper")
-        self.assertEqual(1, len(guide), "the walk went on after the failed re-ask")
-        self.assertEqual(1, written[-1]["turn"])
+        self.assertEqual(2, len(guide), "the slash-only reply was not sent as its turn")
+        self.assertEqual(2, written[-1]["turn"])
 
-        # Control: the re-ask answers normally and the walk runs on.
+        # Control: the second call answers normally and the walk runs on.
         failure, written, guide, _console = self.walk(
             bootcamper_exit_at=2, code=0, bootcamper_replies=["/effort high"])
         self.assertIsNone(failure)

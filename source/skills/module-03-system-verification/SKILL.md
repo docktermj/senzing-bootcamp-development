@@ -34,7 +34,7 @@ to initialize at Step 1a skips Steps 2–8 and the Mari prediction (`phase1-veri
 Rule 4's one exception), so it reaches that question in its first turn.
 
 **First:** Read `config/bootcamp_progress.json`, then (per ground-rules) show the module start
-banner, journey map, before/after framing, a brief numbered overview of this module's steps, an estimated time-to-complete (INV-096), and the recommended model/effort nudge (INV-063), before any module work.
+banner, journey map, before/after framing, a brief numbered overview of this module's steps, and an estimated time-to-complete (INV-096), before any module work.
 
 **Language:** Use the bootcamper's chosen language — read `programming_language` from
 `config/bootcamp_preferences.yaml` (persisted in Bootcamp preparation) at each code-generation

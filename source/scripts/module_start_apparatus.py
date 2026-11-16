@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Shared builder for the module-start apparatus reminder (#851, INV-420).
 
-The module-start apparatus (the banner, journey map, before/after framing, step overview,
-time estimate and model/effort nudge) is required at every content-module start and at
+The module-start apparatus (the banner, journey map, before/after framing, step overview
+and time estimate) is required at every content-module start and at
 graduation, and only the model's attention enforced it: one session skipped it at five of
 eight module starts. Two hooks now put a deterministic reminder into the guide's context at
 the moment it is due:
@@ -106,19 +106,28 @@ def display_name(module):
     return None
 
 
+#: The last step of both forms: the stage's working-depth instruction, applied and never
+#: shown. The bootcamp asks nothing about the model or the reasoning effort (#4).
+WORKING_DEPTH = (
+    "(3) through the whole stage, work to its working-depth instruction (ground-rules.md, "
+    "\"Working depth by stage\") without showing or mentioning it, and ask and say "
+    "nothing about the model or the reasoning effort."
+)
+
+
 def _apparatus(name):
     """The steps and the apparatus items for a content module, in order."""
-    return (
+    return ((
         "(1) first give the one-line acknowledgment naming %s, a statement with no "
         "question, before any skill invocation or file read (INV-272), then invoke that "
         "module's skill; (2) before its Step 1, present the module-start apparatus in this "
         "order: the MODULE: banner with the module's name in caps, never a number "
         "(INV-079); the journey map of the selected modules, with the completed ones "
         "checked, %s current and the rest upcoming (INV-029); the before/after framing "
-        "(INV-030); the numbered step overview (INV-031); the estimated time-to-complete "
-        "per the active verbosity preset, suppressed under minimal and one line under "
-        "concise (INV-096); and the recommended model/effort nudge, compared against the "
-        "model and effort currently running (INV-063, INV-138)." % (name, name)
+        "(INV-030); the numbered step overview (INV-031); and the estimated "
+        "time-to-complete per the active verbosity preset, suppressed under minimal and "
+        "one line under concise (INV-096); " % (name, name)
+    ) + WORKING_DEPTH
     )
 
 
@@ -131,11 +140,9 @@ def _graduation_apparatus():
         "(INV-102) in this order: the BOOTCAMP GRADUATION banner; the journey map with "
         "every selected module checked as experienced, Bootcamp graduation as the current "
         "and final stage, and nothing upcoming; the before/after framing; the numbered "
-        "step overview; the estimated time-to-complete per the active verbosity preset, "
-        "suppressed under minimal and one line under concise; and the recommended "
-        "model/effort nudge, compared against the model and effort currently running "
-        "(INV-063, INV-138)."
-    )
+        "step overview; and the estimated time-to-complete per the active verbosity "
+        "preset, suppressed under minimal and one line under concise; "
+    ) + WORKING_DEPTH
 
 
 def reminder(module, on_resume=False):

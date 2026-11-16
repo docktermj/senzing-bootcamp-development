@@ -89,21 +89,25 @@ mode.
 
 ## Recommendation for issue #4
 
-**Use instructions on every assistant, and add the skill `effort:` setting on Claude only.**
+**Use instructions only, on every assistant.**
 
 1. **Instructions everywhere.** Each stage tells the assistant how carefully to work: verify more
    on the hard stages, move briskly on the simple ones. This is the only mechanism available on
    all five assistants. It touches no setting, so it cannot lose the conversation cache, and it
    leaves an automatic mode free to decide for itself.
-2. **Claude's `effort:` frontmatter as an addition.** It is the one main-session mechanism found,
-   it is verified live and it kept the cache. It belongs in the Claude rendering only, because the
-   build requires skill frontmatter every assistant reads.
+2. **No skill `effort:` setting on Claude.** It is the one main-session mechanism found, it is
+   verified live and it kept the cache, and it still does not fit. It lasts only for the turn that
+   loads a skill. A bootcamp module is loaded once and then runs for many turns, each one a new
+   request from the bootcamper, so the setting would cover the turn that opens a module and none
+   of the turns that do its work. The build also requires skill frontmatter every assistant reads.
 3. **No helper agents for the bootcamp's stages.** A helper agent does not see the conversation,
    and the bootcamp's stages depend on it: the bootcamper's answers, their data and the one
    question at a time. Only Claude's was confirmed live, and Copilot's did not take effect.
 
-The consequence for issue #4 is that "effort follows the task" will be a real setting change on
-Claude and guidance on the other four, until those assistants give a package a way to set it.
+The consequence for issue #4 is that "effort follows the task" is guidance to the assistant on all
+five assistants, the same text in every package, and no package changes a setting. An earlier
+version of this section recommended adding the skill `effort:` setting on Claude; it was corrected
+on 2026-11-16 for the reason in item 2.
 
 ## Sources
 

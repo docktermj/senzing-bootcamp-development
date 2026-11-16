@@ -12,9 +12,9 @@ for testing. We'll set up proper security measures as we go."
 ⛔ **This step is non-yielding: it does not get a turn of its own.** Present it in the same turn as
 Step 2 and let Step 2's 👉 end that turn — a turn ending here would end with **zero** 👉, which
 INV-225 forbids, and presenting it alone is not what "advance exactly one step at a time" asks for
-(`../bootcamp-onboarding/ground-rules.md` → the 👉 protocol). This is also the step the post-nudge
-sequence lands on: on **no** to the model/effort switch, the reply turn carries this reminder and
-ends on Step 2's question.
+(`../bootcamp-onboarding/ground-rules.md` → the 👉 protocol). This is also the step the
+module-start sequence lands on: the turn that shows the banner, journey map, before/after, step
+overview and time estimate carries this reminder too and ends on Step 2's question.
 
 **Checkpoint:** write step 1 — but as one write with Step 2's at the end of the shared turn, not two
 writes inside it.

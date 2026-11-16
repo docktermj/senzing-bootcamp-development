@@ -30,7 +30,7 @@ complete if it does not (INV-077).
 ## Module start: Truth Set visualization (present at module start, before Step 1)
 
 The Truth Set visualization is a **first-class, standalone module** (INV-086/INV-087) — so it opens
-with the standard module-start apparatus (INV-079/INV-029–031, INV-063), exactly like any module start,
+with the standard module-start apparatus (INV-079/INV-029–031), exactly like any module start,
 per `../bootcamp-onboarding/ground-rules.md`. Present it **once**, at the start of the module,
 immediately before Step 1:
 
@@ -55,18 +55,6 @@ immediately before Step 1:
 6. **Estimated time (INV-096):** give an honest, range-based estimate (a handful of minutes,
    varying with Truth Set download and render speed), stated as "hard to estimate" if no meaningful
    figure is possible; suppress under the `minimal` verbosity preset, one line under `concise`.
-7. **Model/effort (INV-063/INV-137/INV-138):** surface this module's recommended model/effort per
-   `../bootcamp-onboarding/ground-rules.md` → "Best-value model/effort prompt", whose table is the
-   authoritative source for the values. There is no `model_guidance` preference to read (INV-137).
-
-   ⛔ **Do not pre-decide whether to ask — compare against what the bootcamper is running right
-   now** (INV-138), not against the previous module's recommendation. This step used to assert the
-   recommendation was "unchanged from System verification" and therefore a statement rather than a
-   question; that became false when this module was re-rated to Opus 5.5 / high effort while System
-   verification stayed on Sonnet 5.5, so a bootcamper who took the previous module's recommendation
-   was never offered the switch for the module that *generates* the visualization server. Read the
-   table, compare, and let the comparison decide: differing → the pinned 👉 switch question naming
-   only the dial that differs; matching → the one-line statement.
 
 Then proceed to Step 1 below. (Its end-of-module summary and `✅ Module complete: Truth Set
 visualization` line are presented at this module's close — `phase2-close.md`.)

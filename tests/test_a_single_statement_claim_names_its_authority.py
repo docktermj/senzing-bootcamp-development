@@ -100,8 +100,6 @@ NOT_A_CLAIM = (
      "code reuse; the rule it names is stated in that same list, so nothing is pointed at"),
     ("the legend and the edge styling cannot drift apart",
      "two code constructs sharing a closed value set, not two statements of one rule"),
-    ("two statements of the same idea cannot drift apart",
-     "an authoring note about aligned wording; it names no owner and points nowhere"),
     # The next two were found by the #424 conversion: each is wrapped in the shipped text
     # ("cannot\ndrift", "do not\nrestate"), so no line-at-a-time scan ever saw them.
     ("so it cannot drift at runtime",

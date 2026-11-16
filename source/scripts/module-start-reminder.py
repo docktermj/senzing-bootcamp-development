@@ -2,8 +2,8 @@
 """UserPromptSubmit hook: to remind the guide of the module-start apparatus when a module
 is about to start (#851, INV-420).
 
-The apparatus (banner, journey map, before/after framing, step overview, time estimate,
-model/effort nudge) is stated in ``ground-rules.md`` and in every content module's
+The apparatus (banner, journey map, before/after framing, step overview, time estimate)
+is stated in ``ground-rules.md`` and in every content module's
 ``**First:**`` line, and one session still skipped it at five of eight module starts. This
 hook puts a reminder into the guide's context at the moment it is due, so compliance does
 not depend on recalling a rule from a skill file not yet read. It never blocks, and the

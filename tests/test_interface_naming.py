@@ -10,9 +10,10 @@ they were different products.
 
 `tests/test_retired_vocabulary.py` owns the negative half — "Claude app" may appear only
 on a line that frames it as retired. This file owns the positive half, which a ban cannot
-express: that both interfaces are actually documented, that the model/effort nudge names
-each interface it adapts to, and that the two install paths point at each other with links
-that resolve. The cross-document link is pinned because renaming a heading silently breaks
+express: that both interfaces are actually documented, that the ground rules name all four
+interfaces, and that the two install paths point at each other with links that resolve.
+(Until issue #4 it also held the module-start model/effort question to naming each interface
+it adapted to. That question is gone, so the names are now checked where they are listed.) The cross-document link is pinned because renaming a heading silently breaks
 an anchor: nothing in a Markdown repo fails when `#using-claude-code` no longer exists.
 
 ⚠️ **Dated note, 2026-11-14 (one-repository migration): the install half reads the Claude install
@@ -158,8 +159,8 @@ class InstallDocsNameBothInterfaces(unittest.TestCase):
             text.replace("<h3>Claude Desktop</h3>", "<h3>The desktop app</h3>"), "claude-desktop"))
 
 
-class TheNudgeNamesEveryInterfaceItAdaptsTo(unittest.TestCase):
-    """INV-098 adapts to four interfaces; INV-158 requires each to be named."""
+class TheGroundRulesNameEveryInterface(unittest.TestCase):
+    """INV-158 requires each of the four interfaces to be named where one is meant."""
 
     def test_ground_rules_names_all_four(self):
         text = flat(GROUND_RULES)
@@ -167,26 +168,23 @@ class TheNudgeNamesEveryInterfaceItAdaptsTo(unittest.TestCase):
             with self.subTest(interface=name):
                 self.assertIn(name, text)
 
-    def test_graduation_takes_the_interface_wording_from_ground_rules(self):
-        """Graduation's nudge is ground-rules' nudge since #293, so the four names live there.
+    def test_no_file_directs_the_bootcamper_to_a_model_or_effort_control(self):
+        """The one instruction that used to need an interface name is gone (#4).
 
-        Graduation carried its own copy of the switch question and its interface-adapted
-        wording until then, and this test required that copy to name all four interfaces.
-        It now points to ground-rules instead, and `test_ground_rules_names_all_four` holds
-        the one copy to the same requirement. What is asserted here is that graduation did
-        not fork the interface wording back in, and that its pointer reaches the copy that
-        names them.
+        The module-start question told the bootcamper where to set the model and the effort,
+        in wording adapted to each interface. The bootcamp asks for neither now, so no shipped
+        file names a control for them, in any interface.
         """
-        text = flat(GRADUATION)
-        self.assertNotIn("Would you like to switch to", text)
-        self.assertIn('`../bootcamp-onboarding/ground-rules.md` → "Module start banners and '
-                      'transitions"', text)
-
-    def test_the_model_table_note_names_the_cli_by_its_full_name(self):
-        """Both copies of the table carry the note; INV-114 keeps them in sync."""
-        for path in (GROUND_RULES, MODEL_SELECTION):
+        for path in (GROUND_RULES, GRADUATION, MODEL_SELECTION):
             with self.subTest(path=os.path.basename(path)):
-                self.assertIn(CLI, flat(path))
+                text = flat(path)
+                self.assertNotIn("Would you like to switch to", text)
+                self.assertNotRegex(text, r"(?i)model(?: and |/)effort controls|`/model`|`/effort`")
+
+    def test_graduation_points_at_the_ground_rules_for_what_it_asks(self):
+        """Graduation carries no interface wording of its own; it never did after #293."""
+        text = flat(GRADUATION)
+        self.assertIn('`../bootcamp-onboarding/ground-rules.md` → "Working depth by stage"', text)
 
     def test_the_unknown_interface_fallback_is_the_only_vague_wording(self):
         """"Your Claude interface" is honest when the interface is unknown, and a

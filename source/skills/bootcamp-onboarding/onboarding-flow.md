@@ -186,6 +186,8 @@ file.
   options then.
 - If you hit unfamiliar terms (Entity Specification, DATA_SOURCE, entity resolution), ask and
   I'll look up the current definition from the Senzing docs on demand.
+- One model is fine for the whole bootcamp: {{host.model_capable}} suits it well, and the bootcamp
+  never asks you to switch models or change settings along the way.
 - **How long it takes:** the bootcamp is **module-sized, not clock-sized** — each module tells you
   its own time estimate right before it starts, so you always know what the next stretch costs.
   There is no fixed total: it depends on whether you pick Core or Customized (still to come, in
@@ -219,9 +221,14 @@ place."); otherwise the full bullet. ⛔ Same caveat as the version line: on a *
 preset exists yet, so the full bullet is simply shown and that is correct, not an oversight
 (INV-075/INV-133). ⛔ **State it; never make it a 👉 question** — it needs no answer, and INV-012
 forbids output the bootcamper cannot act on. ⛔ **Do not repeat it at every module start** — the
-module-start apparatus is already dense (INV-028-031, INV-096, the model/effort nudge), and this is
+module-start apparatus is already dense (INV-028-031, INV-096), and this is
 an always-available control (INV-010). Once, here, is the point; graduation's closing invitation
 (`../graduation/SKILL.md`, Step 7) stays as it is.
+
+⛔ **The model bullet is a statement, said once.** Never pose it as a 👉 question, never pause on
+it, and never follow it up: when the bootcamper is on a different model, say nothing further, here
+or later. The bootcamp never asks for a model or reasoning-effort change
+(`ground-rules.md` → "Working depth by stage").
 
 ## 4. Any questions (preface item 2)
 

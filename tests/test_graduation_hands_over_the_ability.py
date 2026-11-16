@@ -95,7 +95,7 @@ class TheStepSitsRightAfterStepZero(unittest.TestCase):
 
     def test_the_preface_overview_names_it_in_order(self):
         preface = squash(section(TEXT, "## Bootcamp graduation preface",
-                                 "## Best-value model/effort prompt"))
+                                 "## After the preface"))
         overview = preface[preface.index("**What we'll do.**"):
                            preface.index("**Estimated time.**")]
         step = overview.index("(2) look back at the decisions you made and how you got it built")
