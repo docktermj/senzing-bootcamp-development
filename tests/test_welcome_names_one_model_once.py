@@ -23,6 +23,9 @@ pre-seeded run can reach; a fresh bootcamp has no preset and shows every bullet.
 Reads collapsed text (`flat`), so a re-wrapped bullet still matches.
 
 Run:  python3 -m unittest discover -s tests
+
+Enforces **INV-426** (registered 2026-11-16). It establishes what each package's text says; it
+does not establish that a live turn obeys it, which only `dry-run` phase 3 can observe.
 """
 import re
 import unittest
@@ -125,7 +128,7 @@ class ItIsAStatement(unittest.TestCase):
         for host in HOSTS:
             with self.subTest(host=host):
                 welcome = flat(between(skill_text(host, ONBOARDING_FLOW), WELCOME_START, WELCOME_END))
-                self.assertIn("⛔ **The model bullet is a statement, said once.** Never pose it as "
+                self.assertIn("⛔ **(INV-426) The model bullet is a statement, said once.** Never pose it as "
                               "a 👉 question, never pause on it, and never follow it up", welcome)
 
 

@@ -1506,10 +1506,10 @@ the 👉 protocol above).
   - **medium:** Move briskly: work from what the step and the Senzing MCP server give you, and do not re-derive what is already settled.
   - **high:** Work carefully: before you write code or state a result, check it against the MCP server's answer and the bootcamper's own files, and re-read the step's rules before each action.
 
-  ⛔ **Apply the instruction silently.** Never show the bootcamper this table, a level or an
+  ⛔ **(INV-426) Apply the instruction silently.** Never show the bootcamper this table, a level or an
   instruction, and never say that a stage has one. It is not module-start output, at any verbosity.
 
-  ⛔ **It changes no setting.** A level here is a way of working, not a value to set. Do not change
+  ⛔ **(INV-426) It changes no setting.** A level here is a way of working, not a value to set. Do not change
   the model or the reasoning effort, do not ask the bootcamper to change either, and say nothing to
   them about what they are running. That holds when the assistant is choosing the model or the
   effort by itself: the bootcamp neither detects that nor mentions it. Nothing the bootcamp ships

@@ -225,7 +225,7 @@ module-start apparatus is already dense (INV-028-031, INV-096), and this is
 an always-available control (INV-010). Once, here, is the point; graduation's closing invitation
 (`../graduation/SKILL.md`, Step 7) stays as it is.
 
-⛔ **The model bullet is a statement, said once.** Never pose it as a 👉 question, never pause on
+⛔ **(INV-426) The model bullet is a statement, said once.** Never pose it as a 👉 question, never pause on
 it, and never follow it up: when the bootcamper is on a different model, say nothing further, here
 or later. The bootcamp never asks for a model or reasoning-effort change
 (`ground-rules.md` → "Working depth by stage").

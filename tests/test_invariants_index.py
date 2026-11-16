@@ -123,6 +123,14 @@ PARTIAL_SUPERSESSION = re.compile(
 )
 
 
+#: A dated note that retires the whole invariant, whatever its earlier history says. Added
+#: 2026-11-16 (issue #4, `/review-invariants`): INV-063 and INV-069 were restored by INV-137 and
+#: so read as partial for good, since the register is append-only and "restores this" can never
+#: leave their text. When INV-426 retired them outright, the index could not say so. The note
+#: must carry its date, so an undated phrase in old prose cannot trigger it.
+FULL_OVERRIDE = re.compile(r"fully superseded \d{4}-\d{2}-\d{2}", re.I)
+
+
 def _invariant_bodies():
     """{number: single-line body}, emphasis stripped so `**superseded by**` still matches."""
     pairs = re.findall(r"^- \*\*INV-(\d{3})\*\* — (.+?)(?=\n- \*\*INV-|\n##|\Z)",
@@ -136,7 +144,8 @@ def classify_from_the_invariants():
     for number, body in _invariant_bodies().items():
         if number < FIRST_DEV_RULE or not ANY_SUPERSESSION.search(body):
             continue
-        (part if PARTIAL_SUPERSESSION.search(body) else full).add(number)
+        partial = PARTIAL_SUPERSESSION.search(body) and not FULL_OVERRIDE.search(body)
+        (part if partial else full).add(number)
     return full, part
 
 

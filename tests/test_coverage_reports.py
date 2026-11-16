@@ -494,7 +494,10 @@ class TestSupersededFilter(unittest.TestCase):
         self.assertTrue(retired, "no fully-superseded ids parsed — the index format moved")
         # Every id claimed retired must actually sit on a "Fully superseded" index line.
         for line in body.split("\n"):
-            if "Partly superseded" in line or "since restored" in line:
+            # An index line only. An entry's own "Partly superseded by: INV-nnn" marker names
+            # the rule that REPLACED part of it, which may itself be retired later (INV-138 was,
+            # on 2026-11-16), so reading those lines here would report a retired rule as live.
+            if line.lstrip().startswith("*Partly superseded"):
                 for n in re.findall(r"INV-(\d{3})", line):
                     with self.subTest(inv="INV-" + n):
                         self.assertNotIn(

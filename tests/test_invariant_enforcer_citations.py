@@ -944,7 +944,9 @@ NAMED_TEST = re.compile(r"tests/(test_[a-z0-9_]+\.py)")
 # Re-derived by running the extractor -- 346, the new pair present and none removed. The same
 # review's INV-347 and INV-354 notes each name a test their invariant was already paired with,
 # so neither moves this count.
-EXPECTED_PAIRS = 346
+#: 2026-11-16 review: INV-426 registered (issue #4), enforced by three tests that each cite it
+#: back. Re-derived by running the extractor, which found 349.
+EXPECTED_PAIRS = 349
 
 
 #: Adapted (one-repository migration, 2026-11-14): enforcers the register names that were not

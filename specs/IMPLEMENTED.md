@@ -27,6 +27,53 @@ records `uncommitted`, and the next run that touches the entry fills the hash in
 
 -->
 
+## invariant-review-2026-11-16
+
+**Not a spec** — the record of a `/review-invariants` session, attended by the maintainer.
+
+- **Implemented:** 2026-11-16
+- **Files changed:** `specs/INVARIANTS.md`, `specs/IMPLEMENTED.md`,
+  `source/skills/bootcamp-onboarding/ground-rules.md`,
+  `source/skills/bootcamp-onboarding/onboarding-flow.md`, `tests/test_invariants_index.py`,
+  `tests/test_invariant_enforcer_citations.py`, `tests/test_supersession_has_one_syntax.py`,
+  `tests/test_coverage_reports.py`, `tests/test_working_depth_by_stage.py`,
+  `tests/test_model_guidance_behavior.py`, `tests/test_welcome_names_one_model_once.py`
+- **MCP re-check:** n/a (no Senzing fact)
+- **Summary:** Nine blocks were decided, all from
+  `adjust-effort-automatically-instead-of-asking-the-bootcamper` (issue #4), each on its own yes.
+  - **Registered:** INV-426, as drafted and as one invariant. Cited at both rules in the ground
+    rules and at the welcome's "said once" rule, and cited back by its three enforcing tests;
+    the enforcer pair count was re-derived by the extractor, 346 to 349.
+  - **Fully superseded by INV-426:** INV-063, INV-069, INV-098, INV-138 and INV-139. Each
+    carries a dated note and a `Superseded by` marker, and the index lists it as fully
+    superseded.
+  - **Narrowed:** INV-137. Its nudge clauses went to INV-426; the no-preference rule still
+    binds. The maintainer approved one clause added to the draft, that a stale `model_guidance`
+    value is ignored.
+  - **Amended, still in force:** INV-141 (one effort level per row and no model) and INV-247
+    (the model and effort exception is withdrawn).
+  - **Wording changed from the drafts, with the maintainer's yes:** each retiring note opens
+    "Fully superseded 2026-11-16 (issue #4): superseded by INV-426", because the index guard
+    reads a supersession only in that form.
+  - **Guard changed:** `tests/test_invariants_index.py` now treats a dated "fully superseded"
+    note as overriding an earlier restoration. INV-063 and INV-069 say INV-137 "restores this",
+    and the register is append-only, so without it they could never leave the partly
+    superseded list.
+  - **Markers added so each supersession reads both ways:** `Supersedes` under INV-426 for the
+    five it retires, and `Partly superseded by: INV-426` under INV-137.
+  - **Two more guards adjusted:** `tests/test_supersession_has_one_syntax.py` records INV-141
+    and INV-247 as amended and not superseded, and drops INV-138 from its reviewed list now that
+    it carries a marker. `tests/test_coverage_reports.py` reads only index lines when it looks
+    for partly superseded ids, since an entry's own marker can name a rule retired later.
+  - **Held:** nothing new. The three earlier holds were not re-offered; none of their revisit
+    conditions was met.
+  - **Remains:** the queue is empty. Stale in wording only, with no block written: INV-086,
+    INV-096, INV-102, INV-114, INV-140, INV-158, INV-236 and INV-420 mention the retired nudge
+    or the model column in passing, and INV-236 has no shipped site left to bind.
+- **Establishes no invariant of its own** (INV-309): every id it registered or amended was
+  established by the entry named above.
+- **Commit:** uncommitted
+
 ## adjust-effort-automatically-instead-of-asking-the-bootcamper
 
 - **Implemented:** 2026-11-16 (issue #4)
@@ -58,9 +105,9 @@ records `uncommitted`, and the next run that touches the entry fills the hash in
   INV-086, INV-096, INV-102, INV-114, INV-140, INV-158, INV-236 and INV-420 mention the nudge or
   the model column in passing, and INV-236 has no shipped site left to bind.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** The bootcamp never asks for a model or effort change, and effort follows the stage by instruction. The rule already shipping, quoted:
-    - ⛔ **It changes no setting.** — in `source/skills/bootcamp-onboarding/ground-rules.md`
-    - ⛔ **Apply the instruction silently.** — in `source/skills/bootcamp-onboarding/ground-rules.md`
+- **DEFERRED INVARIANT (resolved INV-426, registered by the maintainer 2026-11-16).** The bootcamp never asks for a model or effort change, and effort follows the stage by instruction. The rule already shipping, quoted:
+    - ⛔ **(INV-426) It changes no setting.** — in `source/skills/bootcamp-onboarding/ground-rules.md`
+    - ⛔ **(INV-426) Apply the instruction silently.** — in `source/skills/bootcamp-onboarding/ground-rules.md`
 
   Enforced by `tests/test_working_depth_by_stage.py`, `tests/test_model_guidance_behavior.py` and
   `tests/test_welcome_names_one_model_once.py`.
@@ -70,7 +117,7 @@ records `uncommitted`, and the next run that touches the entry fills the hash in
 
   **INV-NNN** — The bootcamp MUST NOT ask the Bootcamper to change the model or the reasoning effort, MUST NOT change either itself, and MUST NOT ship anything that sets either. Every stage the bootcamp can run MUST have exactly one effort level in the "Working depth by stage" table, each level MUST map to exactly one instruction to the guide, the table and instructions MUST be identical in every assistant's package, and the guide MUST apply them without showing or mentioning them. The welcome MUST name one suitable model exactly once, as a statement.
 
-- **PROPOSED AMENDMENT to INV-063 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-063 — applied 2026-11-16 by the maintainer.**
     - ⛔ **There is no module-start model or effort question.** — in `source/skills/bootcamp-onboarding/ground-rules.md`
 
   INV-063 requires the model and effort recommendation and its switch question at every module and graduation start. Issue #4 removes both, so the register describes a question the bootcamp no longer asks.
@@ -79,7 +126,7 @@ records `uncommitted`, and the next run that touches the entry fills the hash in
   written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
 
   **INV-063** — *Superseded 2026-11-16 (issue #4).* The bootcamp no longer surfaces a model or effort recommendation at a module or graduation start and asks no switch question. How carefully the guide works is set by instruction ("Working depth by stage"), and the welcome names one suitable model once.
-- **PROPOSED AMENDMENT to INV-069 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-069 — applied 2026-11-16 by the maintainer.**
     - ⛔ **There is no module-start model or effort question.** — in `source/skills/bootcamp-onboarding/ground-rules.md`
 
   INV-069 pins the confirmation gate that followed an accepted switch. With no switch question there is no yes for it to follow.
@@ -88,7 +135,7 @@ records `uncommitted`, and the next run that touches the entry fills the hash in
   written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
 
   **INV-069** — *Superseded 2026-11-16 (issue #4).* The "Are you done modifying the model and effort?" gate no longer exists, because the switch question it followed no longer exists.
-- **PROPOSED AMENDMENT to INV-098 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-098 — applied 2026-11-16 by the maintainer.**
     - ⛔ **There is no module-start model or effort question.** — in `source/skills/bootcamp-onboarding/ground-rules.md`
 
   INV-098 makes the nudge adapt to the Claude interface in use. There is no nudge to adapt.
@@ -97,7 +144,7 @@ records `uncommitted`, and the next run that touches the entry fills the hash in
   written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
 
   **INV-098** — *Superseded 2026-11-16 (issue #4).* No model or effort nudge is presented in any interface. Naming the interface for any other control stays under INV-158.
-- **PROPOSED AMENDMENT to INV-137 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-137 — applied 2026-11-16 by the maintainer.**
     - ⛔ **There is no module-start model or effort question.** — in `source/skills/bootcamp-onboarding/ground-rules.md`
 
   INV-137's first half says model and effort guidance is unconditional. The guidance is gone; only the second half still holds, and shipped text still cites it for that.
@@ -106,7 +153,7 @@ records `uncommitted`, and the next run that touches the entry fills the hash in
   written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
 
   **INV-137** — *Narrowed 2026-11-16 (issue #4).* There is no module-start model or effort guidance to be unconditional about. What remains in force: the Bootcamper is never asked how they want model or effort handled, and there is no `model_guidance` preference.
-- **PROPOSED AMENDMENT to INV-138 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-138 — applied 2026-11-16 by the maintainer.**
     - ⛔ **There is no module-start model or effort question.** — in `source/skills/bootcamp-onboarding/ground-rules.md`
 
   INV-138 says how the nudge decides whether to ask. Nothing is compared and nothing is asked.
@@ -115,7 +162,7 @@ records `uncommitted`, and the next run that touches the entry fills the hash in
   written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
 
   **INV-138** — *Superseded 2026-11-16 (issue #4).* No comparison is made between a recommendation and the running model or effort, and no question follows from one.
-- **PROPOSED AMENDMENT to INV-139 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-139 — applied 2026-11-16 by the maintainer.**
     - ⛔ **There is no module-start model or effort question.** — in `source/skills/bootcamp-onboarding/ground-rules.md`
 
   INV-139 words the step-down case of the switch question. The question no longer exists.
@@ -124,7 +171,7 @@ records `uncommitted`, and the next run that touches the entry fills the hash in
   written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
 
   **INV-139** — *Superseded 2026-11-16 (issue #4).* There is no switch question, so there is no step-down wording.
-- **PROPOSED AMENDMENT to INV-141 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-141 — applied 2026-11-16 by the maintainer.**
     - ⛔ **Working depth by stage.** — in `source/skills/bootcamp-onboarding/ground-rules.md`
 
   INV-141 requires each per-stage row to name exactly one model and one effort. The table has no model column.
@@ -133,7 +180,7 @@ records `uncommitted`, and the next run that touches the entry fills the hash in
   written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
 
   **INV-141** — *Amended 2026-11-16 (issue #4).* A per-stage row names exactly one effort level and no model. A conditional or two-branch level stays forbidden.
-- **PROPOSED AMENDMENT to INV-247 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-247 — applied 2026-11-16 by the maintainer.**
     - ⛔ **There is no exception:** — in `source/skills/bootcamp-onboarding/ground-rules.md`
 
   INV-247 forbids presenting a session-level control as a bootcamp question, with one exception: the module-start model and effort switch. The exception is removed, so the prohibition has none.
