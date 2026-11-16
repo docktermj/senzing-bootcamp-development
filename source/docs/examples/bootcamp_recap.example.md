@@ -129,10 +129,6 @@
 
 ### Questions & Responses
 
-- **Q:** Would you like to switch to `/model opus` + `/effort high` for this module?
-    - **R:** Yes (set Opus 5.5 at high effort).
-- **Q:** Are you done modifying the model and effort?
-    - **R:** Yes.
 - **Q:** Which database would you like to use?
     - **R:** SQLite.
 
@@ -186,10 +182,6 @@
 
 ### Questions & Responses
 
-- **Q:** Would you like to switch to `/model sonnet` for this module?
-    - **R:** Yes (step down from Opus 5.5; effort stayed at high).
-- **Q:** Are you done modifying the model and effort?
-    - **R:** Yes.
 - **Will this `Mari` record join Marisol's entity?** — No, it stays a separate entity → joined (differed)
 
 ### Actions Taken
@@ -239,10 +231,6 @@
 
 ### Questions & Responses
 
-- **Q:** Would you like to switch to `/model opus` for this module?
-    - **R:** Yes (effort already at high).
-- **Q:** Are you done modifying the model and effort?
-    - **R:** Yes.
 - **Q:** Are you ready to continue? (after the guided tour)
     - **R:** Yes.
 - **Q:** Ready for me to stop the visualization server and clean up the Truth Set data?
@@ -364,10 +352,6 @@
 
 ### Questions & Responses
 
-- **Q:** Would you like to switch to `/model opus` + `/effort high` for this module?
-    - **R:** Yes.
-- **Q:** Are you done modifying the model and effort?
-    - **R:** Yes.
 - **Q:** Your CORD sources ENFORMION and EQUIFAX are already in Senzing-loadable form. Would you like to skip the mapping phase and proceed directly to loading?
     - **R:** Yes, skip.
 - **Q:** Would you like a visual of the quality assessment?
@@ -639,7 +623,7 @@ against the source system's own customer count before quoting it to anyone.
 - **Entity Resolution Concepts:** you asked for a short knowledge check; the AI built the concepts primer and a four-question check with the Senzing MCP server.
 - **Discover the Business Problem:** you asked for a generated Customer 360 scenario, deployed locally with no integrations; the AI built the business problem statement, the data architecture, the source registry and a stakeholder summary with the Senzing MCP server.
 - **SDK setup:** you asked for SQLite; the AI built the SQLite datastore, the engine configuration and the environment, verification and connection scripts with the Senzing MCP server.
-- **System verification:** you asked for nothing beyond a model switch; the AI built seven verification programs in `src/system_verification/` with the Senzing MCP server and proved the install end to end.
+- **System verification:** you asked for a prediction of your own on the `Mari` record to be checked; the AI built seven verification programs in `src/system_verification/` with the Senzing MCP server and proved the install end to end.
 - **Truth Set visualization:** you asked to continue after the guided tour and then to clean up; the AI built the Truth Set web app, its offline snapshot and six screenshots with the Senzing MCP server.
 - **Data collection:** you asked for 5,000 records and an evaluation license; the AI built 2,500-record samples per source with all 98 matched pairs kept whole, and sent the license request, with the Senzing MCP server.
 - **Data Quality, Mapping, and Transformation:** you asked to skip mapping and for a quality visual; the AI built the readiness check, the per-record-type quality scores, the fast-path lineage and the quality visualization with the Senzing MCP server.

@@ -64,7 +64,7 @@ See `../bootcamp-onboarding/ground-rules.md` → the 👉 protocol, which define
 and the single-write checkpoint that follows from it; it is stated once, there, and not restated here (INV-300).
 
 **First:** Read `config/bootcamp_progress.json`, then (per ground-rules) show the module start
-banner, journey map, before/after framing, a brief numbered overview of this module's steps, an estimated time-to-complete (INV-096), and the recommended model/effort nudge (INV-063), before any module work. Read `current_step` and
+banner, journey map, before/after framing, a brief numbered overview of this module's steps, and an estimated time-to-complete (INV-096), before any module work. Read `current_step` and
 resume at the right step. **(INV-366) When it carries a `collection_return`, none of this runs:** go straight
 to Step 2 → [Receiving a `collection_return`](#receiving-a-collection-return). A return runs only the
 steps it names, so the steps it leaves out are not skipped steps. **(INV-366) When it carries a

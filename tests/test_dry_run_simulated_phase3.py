@@ -490,7 +490,7 @@ class TheWalkStopsOffline(unittest.TestCase):
             walk.main(["--project", tmp, "--out", str(Path(tmp) / "t.jsonl"),
                        "--mcp-config", str(Path(tmp) / "m.json")])
         self.assertEqual(run.call_args.kwargs, {"max_turns": 150, "stop_at_banner": None,
-                                               "effort": None, "pin": False})
+                                               "effort": None})
 
     def test_the_forbidden_tools_stay_blocked_by_flag(self):
         self.assertEqual(walk.FORBIDDEN_TOOLS, ("mcp__senzing__submit_feedback",

@@ -1,5 +1,5 @@
 Whenever output, a question, or a doc tells the bootcamper to do something **in their ChatGPT
-interface** — set a model, change reasoning effort, restart an MCP server, click a control — name
+interface** — restart an MCP server, click a control — name
 which interface. The bootcamp runs in more than one, and the names are not interchangeable:
 
 | Say | For |

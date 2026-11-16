@@ -133,7 +133,7 @@ class AConformingOpeningRaisesNoFinding(unittest.TestCase):
         self.assertEqual(
             [], findings,
             "a module opening that showed the journey map, the before/after framing, "
-            "the step overview and the model nudge, with the estimate suppressed as "
+            "and the step overview, with the estimate suppressed as "
             "INV-096 requires under `minimal`, was reported as missing apparatus: "
             + "; ".join(f["message"] for f in findings))
 
@@ -190,8 +190,7 @@ class AnOpeningMissingAnItemStillRaisesIt(unittest.TestCase):
         self.assertEqual(
             {"content module showed no journey map",
              "content module showed no before/after",
-             "content module showed no step overview",
-             "content module showed no model nudge"},
+             "content module showed no step overview"},
             set(self.messages("Starting the module now.")))
 
 

@@ -25,7 +25,7 @@ mandatory gate. This has absolute precedence: no internal reasoning or token-bud
 overrides it.
 
 **First:** Read `config/bootcamp_progress.json`, then (per ground-rules) show the module start
-banner, journey map, before/after framing, a brief numbered overview of this module's steps, an estimated time-to-complete (INV-096), and the recommended model/effort nudge (INV-063), before any module work. Resume at
+banner, journey map, before/after framing, a brief numbered overview of this module's steps, and an estimated time-to-complete (INV-096), before any module work. Resume at
 `current_step` if progress already exists. **(INV-366) When it carries a `setup_detour`, none of this runs:**
 go straight to [Receiving a `setup_detour`](#receiving-a-setup-detour). A detour runs only the
 steps it names, so the steps it leaves out are not skipped steps.

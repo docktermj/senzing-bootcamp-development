@@ -145,35 +145,6 @@ def drop_worktree(worktree):
               str(worktree)])
 
 
-def ignored_flag_findings(transcript):
-    """An INFO finding for each Bootcamper slash line a walk ignored (#870, #877).
-
-    ``walk.py`` logs each as a ``bootcamper_flag_ignored`` event; the report names them so
-    a run says what the Bootcamper asked for and did not get. The event's ``reason`` words
-    the message: ``"no value"`` (a bare ``/model`` or ``/effort``, ``value`` null, pinned or
-    not) ends it "(no value given)", and ``"pin"`` ends it "(--pin)", as does an event with
-    no ``reason``, written before #877. Never raises.
-    """
-    findings = []
-    try:
-        lines = Path(transcript).read_text(encoding="utf-8").splitlines()
-    except (OSError, ValueError):
-        return findings
-    for line in lines:
-        try:
-            event = json.loads(line)
-        except ValueError:
-            continue
-        if isinstance(event, dict) and event.get("type") == "bootcamper_flag_ignored":
-            why = "no value given" if event.get("reason") == "no value" else "--pin"
-            findings.append({
-                "severity": "INFO", "code": "bootcamper-flag-ignored", "source": "walk",
-                "message": (f"turn {event.get('turn')}: the Bootcamper's "
-                            f"{event.get('command')!r} was not applied ({why})"),
-            })
-    return findings
-
-
 def build_sandbox(root, seed):
     """Build the walk's project with dry-run's scaffold: ``(project, error)``.
 
@@ -257,8 +228,6 @@ def main(argv=None):
     ap.add_argument("--ref", default="HEAD", help="commit to pin the plugin at")
     ap.add_argument("--model", default=None)
     ap.add_argument("--effort", default=None, help="the guide's effort (walk.py)")
-    ap.add_argument("--pin", action="store_true",
-                    help="hold --model and --effort for the whole walk (walk.py, #870)")
     ap.add_argument("--keep", action="store_true", help="keep the sandbox")
     ap.add_argument("--report-dir", type=Path, default=REPORT_DIR,
                     help="where the report, the transcript copy and latest.json go "
@@ -339,7 +308,6 @@ def main(argv=None):
                            if args.stop_at_banner else [])
                         + (["--model", args.model] if args.model else [])
                         + (["--effort", args.effort] if args.effort else [])
-                        + (["--pin"] if args.pin else [])
                         + (["--isolate-config"] if args.isolate_config else []))
             if walk.stdout.strip():
                 print(walk.stdout.rstrip())
@@ -380,7 +348,6 @@ def main(argv=None):
                 for finding in lint_findings:
                     finding["source"] = "transcript"
                 report["findings"].extend(lint_findings)
-                report["findings"].extend(ignored_flag_findings(transcript))
                 print(f"  {len(lint_findings)} transcript finding(s)")
             else:
                 report["coverage_limits"].append(

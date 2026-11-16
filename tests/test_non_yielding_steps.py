@@ -2,9 +2,11 @@
 
 Three rules collided with no legal move. INV-251: a turn never carries two or more 👉, and INV-225 forbids ending on none, so
 presenting a statement-only step alone ends a turn with **zero**. "Advance exactly one step at
-a time", so folding it into the next step's turn looks like advancing two. And the post-nudge
-sequence said the reply turn ends "on Step 1's single 👉 question" — which Module 1's Step 1,
-a privacy reminder explicitly labeled statement-only, does not have.
+a time", so folding it into the next step's turn looks like advancing two. And the module-start
+sequence said the turn ends "on Step 1's single 👉 question" — which Module 1's Step 1,
+a privacy reminder explicitly labeled statement-only, does not have. (That sentence then sat
+in the two reply turns after the model/effort question. Issue #4 removed the question, so a
+module start now runs straight into Step 1 and the sentence is stated once.)
 
 The obvious resolution was unwritten, so the guide had to break a rule and learn to read ⛔ as
 advisory. The consequential form is not one step: Module 1 Phase 1 has four non-yielding steps
@@ -134,21 +136,21 @@ class TheGroundRulesDefineTheNonYieldingStep(unittest.TestCase):
             "mention of the shared turn, which is where the contradiction was read from")
 
 
-class ThePostNudgeSequenceNoLongerAssumesStepOneAsks(unittest.TestCase):
+class TheModuleStartSequenceNoLongerAssumesStepOneAsks(unittest.TestCase):
     def setUp(self):
         self.flat = squash(read(GROUND_RULES))
 
     def test_the_stale_sentence_is_gone(self):
         self.assertNotIn("ending on Step 1's single 👉 question", self.flat,
-                         "the post-nudge sequence still asserts Step 1 ends on a 👉, which "
-                         "is false for the first module a bootcamper reaches after the nudge")
+                         "the module-start sequence still asserts Step 1 ends on a 👉, which "
+                         "is false for the first content module a bootcamper reaches")
 
-    def test_both_places_say_the_next_question(self):
-        occurrences = len(re.findall(r"the next single 👉 question", self.flat))
-        self.assertGreaterEqual(
-            occurrences, 2,
-            "the correction must appear in both post-nudge sentences; found %d"
-            % occurrences)
+    def test_the_module_start_sentence_says_the_next_question(self):
+        """One sentence since #4; it was two while a switch question sat ahead of Step 1."""
+        transition = self.flat[self.flat.index("- After an affirmative module-transition"):]
+        transition = transition[:transition.index("## Closing questions")]
+        self.assertIn("continue straight into Step 1 the same turn. The turn ends on **the next "
+                      "single 👉 question**", transition)
 
     def test_module_1_is_named_as_the_case(self):
         self.assertRegex(

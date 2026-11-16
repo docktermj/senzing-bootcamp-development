@@ -15,10 +15,7 @@
     "assistant": "ChatGPT",
     "scripts_relative": "../../scripts",
     "docs_relative": "../../docs",
-    "model_balanced": "a balanced Codex model",
     "model_capable": "a high-capability Codex model",
-    "model_top": "the highest-capability Codex model available",
-    "model_controls": "the model and effort controls in the Codex desktop app",
     "skills_dir": ".."
   },
   "layout": {

@@ -27,6 +27,9 @@ the situation it governs:
   or not. Model and effort are separate dials in different epistemic states: the model is knowable,
   the effort is not. Read all-or-nothing, the fallback would compare a determinable Opus 5.5 against
   the previous stage's Sonnet 5.5, find it unchanged, and suppress the switch offer entirely.
+  ⚠️ **Retired by issue #4 (2026-11-16):** the bootcamp no longer asks for a model or effort
+  change, so there is no comparison and no dial to resolve. The class below now pins that the
+  comparison is gone and that the guide says nothing about what the bootcamper is running.
 * **Write batching (item 9).** Step 10a persisted per answer where Bootcamp preparation holds and
   writes once (INV-058) — two or three diffs to one file inside one step.
 
@@ -322,36 +325,24 @@ class MissedQueriesAreDistinguishedFromThinDocumentation(unittest.TestCase):
         )
 
 
-class Inv138ResolvesTheFallbackPerDial(unittest.TestCase):
-    """Item 8: model and effort sit in different epistemic states at the same moment."""
+class NoDialIsComparedAnyMore(unittest.TestCase):
+    """Item 8, retired by issue #4: there is no model/effort comparison left to resolve per dial."""
 
     def setUp(self):
         self.text = flat(GROUND_RULES)
 
-    def test_it_says_per_dial_explicitly(self):
-        self.assertRegex(
+    def test_the_comparison_and_its_fallback_are_gone(self):
+        self.assertNotRegex(
             self.text,
-            r"(?i)Resolve \"?cannot be determined\"? PER DIAL, not for the setting as a whole",
-            "read all-or-nothing, the fallback suppresses a switch offer for a Bootcamper "
-            "demonstrably on a different model",
+            r"(?i)PER DIAL|previous-stage row|cannot be determined\"? PER|the dial is|separate dials",
+            "ground-rules still describes comparing the bootcamper's model or effort against a "
+            "recommendation; issue #4 removed the question that comparison decided",
         )
 
-    def test_the_fallback_is_scoped_to_the_undeterminable_dial(self):
-        self.assertRegex(
-            self.text,
-            r"(?i)Only for a dial whose current value cannot be determined",
-            "the fallback must apply per dial, not to the whole setting",
-        )
-
-    def test_it_names_the_failure_the_clause_prevents(self):
-        self.assertRegex(
-            self.text,
-            r"(?i)Applying the previous-stage row to a dial that \*?was\*? determinable",
-            "state the concrete failure, or the clause reads as pedantry and gets simplified away",
-        )
-
-    def test_it_keeps_the_separate_dials_principle_visible(self):
-        self.assertIn("INV-137", self.text)
+    def test_the_guide_says_nothing_about_what_is_running(self):
+        self.assertIn(
+            "do not ask the bootcamper to change either, and say nothing to them about what "
+            "they are running", self.text)
 
 
 class Step10aBatchesItsPreferenceWrites(unittest.TestCase):

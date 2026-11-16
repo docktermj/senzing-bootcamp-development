@@ -21,15 +21,16 @@ repo-wide search for `auto-mode`, `auto mode`, `auto-accept`, `permission mode`,
 `fast mode` and `bypass permissions` across `source/`, `.claude/` and `tests/` still returns
 matches only in the rule text and this guard.
 
-One thing also made such a question look native. The bootcamp already asks the bootcamper to
-operate `/model` and `/effort` at module start (INV-063/INV-098/INV-158/INV-236) and named no
-boundary, so a bootcamper who has been asked *"Would you like to switch to `/model …` +
-`/effort …` for this module?"* had no way to tell an "auto-mode?" question from bootcamp
-content.
+One thing also made such a question look native. Until issue #4 the bootcamp asked the
+bootcamper to operate `/model` and `/effort` at module start, and INV-247 named that switch
+as the one exception. ⚠️ **Issue #4 removed it (2026-11-16): the bootcamp now asks the
+bootcamper to operate no interface control at all,** so this guard has no sanctioned slash
+command left to allow, and the test that required the exception to survive now requires it
+to stay gone. INV-247's registered wording still names the exception; it is superseded
+separately, and `specs/INVARIANTS.md` is not read here.
 
 Enforces **INV-247** — every 👉 question traces to a step in a shipped skill file, and no
-session- or host-level control other than the model/effort switch is presented as a bootcamp
-question.
+session- or host-level control is presented as a bootcamp question.
 
 ⛔ **THIS GUARD HAS TWO LIMITS. BOTH ARE STATED HERE BECAUSE ONE DISCLOSURE READS AS ALL OF
 THEM**, and a guard whose caveat looks complete is the pattern
@@ -46,8 +47,8 @@ THEM**, and a guard whose caveat looks complete is the pattern
    guarantee.
 
 ``test_no_pinned_question_offers_an_unsanctioned_slash_command`` exists because of limit 2 and
-does not share it: it matches slash commands **structurally** and allows only ``/model`` and
-``/effort``, so a future ``/thinking`` or ``/verbose`` offered in a pinned question fails
+does not share it: it matches slash commands **structurally** and allows none, so a future
+``/thinking`` or ``/verbose`` offered in a pinned question fails
 without anyone having added it to a list. It is the assertion to prefer; the vocabulary check
 survives only to catch non-slash phrasings ("auto mode", "permission mode").
 
@@ -81,12 +82,13 @@ PINNED_QUESTION = re.compile("\U0001F449" + r"\s*\*\*")
 # question. This is the assertion that actually enforces INV-247's class.
 SLASH_COMMAND = re.compile(r"(?<![\w/])/([a-z][a-z0-9-]{1,20})\b")
 
-#: The only Claude-interface controls the bootcamp asks the bootcamper to operate (INV-247,
-#: via INV-063/INV-098/INV-158/INV-236).
-SANCTIONED_SLASH = frozenset({"model", "effort"})
+#: The Claude-interface controls the bootcamp asks the bootcamper to operate: none. It held
+#: `model` and `effort` until issue #4 removed the module-start switch.
+SANCTIONED_SLASH = frozenset()
 
 # Session- or host-level controls: the bootcamper's Claude interface, not the bootcamp's to
-# offer. `/model` and `/effort` are deliberately absent — they are the sole exception.
+# offer. `/model` and `/effort` are not listed because SLASH_COMMAND catches both
+# structurally, and `test_no_question_offers_the_model_or_the_effort` names them.
 #
 # ⚠️ SNAPSHOT, NOT A CLOSED SET — dated 2026-08-15, the Claude Code CLI's affordances at that
 # date. The CLI ships independently of this plugin, so this list expires silently and an
@@ -185,8 +187,8 @@ class NoShippedQuestionOffersAHostControl(unittest.TestCase):
         self.assertEqual(
             [], offenders,
             "a 👉 question offers a control that belongs to the bootcamper's Claude session, "
-            "not to the bootcamp (INV-247). The model/effort switch is the only "
-            "Claude-interface control the bootcamp asks them to operate:\n  "
+            "not to the bootcamp (INV-247). The bootcamp asks them to operate no "
+            "Claude-interface control:\n  "
             + "\n  ".join(offenders))
 
     def test_no_pinned_question_offers_an_unsanctioned_slash_command(self):
@@ -194,8 +196,8 @@ class NoShippedQuestionOffersAHostControl(unittest.TestCase):
 
         INV-247 governs a CLASS ("a session- or host-level control"); a literal list can only
         ever be a snapshot of a CLI that ships separately from this plugin. Slash commands are
-        that class's structural signature, so allow the two sanctioned dials and reject the
-        rest — a control this repo has never heard of fails the day it appears in a question.
+        that class's structural signature, so reject every one — a control this repo has
+        never heard of fails the day it appears in a question.
         """
         offenders = []
         for path in shipped_markdown():
@@ -210,25 +212,34 @@ class NoShippedQuestionOffersAHostControl(unittest.TestCase):
                             % (path.relative_to(REPO_ROOT), n, cmd, question.strip()[:110]))
         self.assertEqual(
             [], offenders,
-            "a 👉 question offers a slash command that is not `/model` or `/effort`. Those two "
-            "are the only Claude-interface controls the bootcamp asks the bootcamper to "
-            "operate (INV-247); everything else belongs to their session:\n  "
+            "a 👉 question offers a slash command. The bootcamp asks the bootcamper to "
+            "operate no Claude-interface control (INV-247, #4); every one belongs to their "
+            "session:\n  "
             + "\n  ".join(offenders))
 
-    def test_the_model_effort_switch_is_still_asked_as_a_question(self):
-        """The exception must survive — otherwise this guard passes by deleting the rule's subject.
+    def test_no_question_offers_the_model_or_the_effort(self):
+        """The former exception stays gone (#4): no 👉 question is about either setting.
 
-        Line-scoped by design (#424): a presence check fails closed. A wrap can hide a
-        question from the line read and so make this fail, never pass one that is missing.
+        This test used to require the opposite, so that the guard could not pass by deleting
+        the rule's subject. Issue #4 deleted the subject on purpose, on every assistant.
         """
-        asked = [line
+        asked = ["%s:%d: %s" % (path.relative_to(REPO_ROOT), n, question.strip()[:110])
                  for path in shipped_markdown()
-                 for line in read(path).splitlines()
-                 if PINNED_QUESTION.search(line) and re.search(r"/model|/effort|reasoning effort", line)]
-        self.assertTrue(asked,
-                        "no 👉 question offers the model/effort switch any more; INV-247 names "
-                        "it as the sole exception, so its disappearance means the exception or "
-                        "the question form changed")
+                 for n, question in pinned_questions(read(path))
+                 if re.search(r"(?i)/model|/effort|reasoning effort|\bmodel and effort\b",
+                              question[PINNED_QUESTION.search(question).start():])]
+        self.assertEqual([], asked,
+                         "a 👉 question offers a model or effort change. The bootcamp never "
+                         "asks for one (#4):\n  " + "\n  ".join(asked))
+
+    def test_a_question_offering_the_model_or_the_effort_is_caught(self):
+        """Negative control (INV-265): the pinned question issue #4 removed, wrapped."""
+        retired = ("👉 **Would you like to switch to `/model opus` +\n`/effort high` for this "
+                   "module?** (Recommended for best value.)\n")
+        (n, question), = pinned_questions(retired)
+        self.assertEqual(1, n)
+        self.assertEqual({"model", "effort"}, set(SLASH_COMMAND.findall(question)))
+        self.assertFalse(set(SLASH_COMMAND.findall(question)) & SANCTIONED_SLASH)
 
     def test_a_wrapped_question_offering_a_host_control_is_caught(self):
         """Negative control (#424): the control is named on the line the question wraps onto."""
@@ -376,17 +387,19 @@ class TheRuleShipsWhereItBinds(unittest.TestCase):
             "the preamble does not restate that INV-251 still binds, which is the reading that "
             "let a host-control detour carry a second 👉")
 
-    def test_the_sole_exception_is_stated_where_the_precedent_is_set(self):
-        """A limit stated only in the protocol is read by nobody writing a new nudge."""
-        banners = section(self.text, "## Module start banners and transitions")
+    def test_the_rule_states_that_it_has_no_exception(self):
+        """The module-start switch was the one exception until issue #4 removed it."""
+        protocol = section(self.text, "## Conversation protocol (the 👉 rules)")
         self.assertRegex(
-            banners, r"(?i)ONLY Claude-interface control the bootcamp asks the bootcamper to operate",
-            "the model/effort section does not say it is the only Claude-interface control "
-            "the bootcamp offers, so a reader adding a second one never meets the limit "
-            "(INV-247)")
-        self.assertRegex(
-            banners, r"INV-247",
-            "the sole-exception line ships without its invariant ID")
+            protocol, r"(?i)\*\*There is no exception:\*\* the bootcamp asks the bootcamper to "
+                      r"operate no Claude-interface control at all",
+            "the closed-question-set rule no longer says it has no exception, so a reader "
+            "adding an interface question never meets the limit (INV-247)")
+        self.assertNotRegex(
+            squash(self.text), r"(?i)the single exception is|ONLY Claude-interface control "
+                               r"the bootcamp asks",
+            "ground-rules still names an interface control the bootcamp asks the bootcamper "
+            "to operate; issue #4 left none")
 
     def test_a_bootcamper_question_about_a_host_control_has_a_stated_answer(self):
         controls = section(self.text, "## Any-time bootcamper controls")
@@ -421,14 +434,14 @@ class TheRuleShipsWhereItBinds(unittest.TestCase):
         """Maintainer decision, 2026-08-15: the answer stays silent on how to dismiss.
 
         The dialog offers "Don't show again". Naming it would direct the bootcamper to
-        operate a SECOND Claude-interface control, and the model/effort switch is the only
-        one INV-247 allows. The prohibition must ship, not merely be honored today.
+        operate a Claude-interface control, and the bootcamp asks them to operate none
+        (INV-247, #4). The prohibition must ship, not merely be honored today.
         """
         controls = section(self.text, "## Any-time bootcamper controls")
         self.assertRegex(
             controls, r"(?i)do not name a dismissal affordance",
             "the handling line no longer forbids naming a dismissal control, so a guide may "
-            "point the bootcamper at “Don't show again” — a second interface control "
+            "point the bootcamper at “Don't show again” — an interface control "
             "the bootcamp is not permitted to direct (INV-247)")
 
     def test_the_interruption_list_names_a_host_rendered_prompt(self):

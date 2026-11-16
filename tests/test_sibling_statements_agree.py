@@ -8,8 +8,10 @@ drifts back:
    the field `module-completion.md` Step 1 and `ground-rules.md` "Progress and state" require.
 2. Module 1's Desired Output `**Format**` line lists the 6d options, ending in the Bootcamper's
    words for "Something else", and Step 6c (an open question) is not called an option reply.
-3. The transition summary in `ground-rules.md` defers to the three post-yes shapes (INV-236):
-   the "Are you done modifying the model and effort?" gate only when the dial is not yet set.
+3. The transition summary in `ground-rules.md` and Module 1's Step 1 agree on where a module
+   start lands: straight into Step 1 the same turn, ending on the next single 👉 question.
+   (Until issue #4 this pair was the summary and the three post-yes shapes of the model/effort
+   switch, INV-236; the switch and its gate are gone.)
 4. The onboarding preface detects OS/architecture; it persists nothing (Bootcamp preparation's
    consolidated write does).
 5. Module 4 Step 8b sub-step 1 computes the collected total by pointing to sub-step 4's
@@ -94,15 +96,21 @@ class ModuleOneFormatMatchesTheOptions(unittest.TestCase):
         self.assertIn("the Step 6c answer for source count", flat)
 
 
-class TransitionSummaryDefersToTheThreeShapes(unittest.TestCase):
-    def test_summary_shows_the_gate_only_when_the_dial_is_not_yet_set(self):
+class TransitionSummaryAndModuleOneAgreeOnWhereAStartLands(unittest.TestCase):
+    def test_the_summary_runs_straight_into_step_1(self):
         summary = _flat(
             _section(_read(GROUND_RULES), r"^- After an affirmative module-transition", r"^## ")
         )
-        self.assertIn("three shapes above", summary)
-        self.assertIn("INV-236", summary)
-        self.assertRegex(summary, r"when the dial is not yet set, .*Are you done modifying the model and effort")
-        self.assertRegex(summary, r"when the dial is already set, .*no gate")
+        self.assertIn("then continue straight into Step 1 the same turn", summary)
+        self.assertIn("The turn ends on **the next single 👉 question**", summary)
+        self.assertIn("Module 1's Step 1 is exactly this case", summary)
+        self.assertNotRegex(summary, r"(?i)three shapes|done modifying|switch question")
+
+    def test_module_1_step_1_says_the_same(self):
+        step = _flat(_read(PHASE1_DISCOVERY))
+        self.assertIn("This is also the step the module-start sequence lands on", step)
+        self.assertIn("carries this reminder too and ends on Step 2's question", step)
+        self.assertNotRegex(step, r"(?i)post-nudge|model/effort")
 
 
 class PrefaceDetectsButDoesNotPersist(unittest.TestCase):

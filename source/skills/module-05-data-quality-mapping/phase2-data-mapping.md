@@ -326,8 +326,8 @@ nothing shown and nothing asked.
   with a neutral lead followed by the numbered list.
 
   ⚠️ **The recommendation is welcome — do not strip it.** INV-051 requires the *lead question* to be
-  neutral, not the absence of advice; the plugin recommends inside pinned questions routinely (the
-  model-switch question carries "Recommended for best value"). The tool's format is good content in
+  neutral, not the absence of advice; the plugin recommends inside pinned questions routinely
+  (Bootcamp preparation's path question marks Core *(recommended)*). The tool's format is good content in
   a forbidden shape, and over-correcting throws away the useful half. (INV-205, scope extended
   2026-08-12.)
 

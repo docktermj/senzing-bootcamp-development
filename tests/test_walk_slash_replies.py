@@ -3,37 +3,32 @@
 `walk.py` sent every Bootcamper reply as `claude -p <reply>`, and the CLI parses a prompt that
 starts with `/` as a slash command. A simulated walk stalled at the first effort gate: the
 reply `/effort high` then `yes` ran `/effort` with the argument `high\\n\\nyes`, and the CLI's
-"Invalid argument" became the next "turn". `/effort` run under `-p --resume` does not persist
-either (checked against CLI 2.1.300 on 2026-10-15), so the maintainer chose sticky flags.
+"Invalid argument" became the next "turn". #656 answered with two things: a reply that starts
+with `/` is sent with one leading space, and a leading `/effort <level>` or `/model <name>`
+line became a sticky `--effort` / `--model` flag (extended by #870 and #877).
+
+⚠️ **Issue #4 removed the second half (2026-11-16).** The bootcamp no longer asks the
+Bootcamper to change the model or the effort, so there is no gate for a simulated Bootcamper
+to answer with a slash command, and `walk.py` reads no reply line as one. What remains is the
+first half, and it now covers every reply.
 
 Checks, each driven through `walk.run_walk` with a stub `claude` that records every call's
-argv and a scripted Bootcamper; each was negative-controlled when written:
+argv and a scripted Bootcamper:
 
-1. **The flag reaches every later turn.** A leading reply line that is exactly
-   `/effort <level>` or `/model <name>` becomes `--effort` / `--model` on that turn's
-   `claude -p … --resume` call and on every later one, and the latest value wins.
-2. **The original text is logged.** The `bootcamper` event holds the reply exactly as the
-   Bootcamper process returned it; a `bootcamper_flag` event records each flag; neither
-   counts as a turn, and `transcript_lint.load` and `module_banners.slice_transcript` do not
-   read the new event as a guide turn.
-3. **A path reply is the turn.** A reply that starts with `/` but is not an allowlisted line,
-   such as `/data/claims.csv`, is sent with one leading space, the form the CLI does not
-   parse, and sets no flag.
-4. **A slash-only reply** asks the Bootcamper once more with the guide's same turn, giving
-   each line's status (#877); a second slash-only reply stops the walk with its own
-   `walk_stop` reason.
+1. **A path reply is the turn.** A reply that starts with `/`, such as `/data/claims.csv`, is
+   sent with one leading space, the form the CLI does not parse, and sets no flag.
+2. **A `/effort` or `/model` line is text too.** It reaches the guide inside the turn, sets
+   no flag on that call or any later one, and writes no flag event.
+3. **The original text is logged.** The `bootcamper` event holds the reply exactly as the
+   Bootcamper process returned it.
+4. **A slash-only reply is a turn.** It is sent, not re-asked, and does not stop the walk.
 5. **The opening** `/senzing-bootcamp:start-bootcamp` is still sent unchanged at turn 1.
-6. **The brief** tells the Bootcamper to put a slash command on its own line, first.
-7. **A bare line** (#877): a leading line that is exactly `/model` or `/effort` is a slash
-   line with no value. It never reaches the guide as text, sets no flag, and is logged as
-   `bootcamper_flag_ignored` with `value: null` and `reason: "no value"`; the valued lines
-   around it behave as check 1 says. A slash-only reply is re-asked with one status per line,
-   in order (`— applied`, `— not applied (no value)`), and a second one still stops the walk.
+6. **The brief** no longer tells the Bootcamper how to type a slash command.
 
-⚠️ **What this does NOT establish:** that the live CLI still applies `--effort` and `--model`
-on a resumed call, or still sends a space-led prompt as text. Both were probed once, against
-a local stub Messages API with scratch `HOME` and `CLAUDE_CONFIG_DIR` (no credentials, no
-model call), and are recorded in the #656 ledger entry; a CLI release can change either.
+⚠️ **What this does NOT establish:** that the live CLI still sends a space-led prompt as
+text. That was probed once, against a local stub Messages API with scratch `HOME` and
+`CLAUDE_CONFIG_DIR` (no credentials, no model call), and is recorded in the #656 ledger
+entry; a CLI release can change it.
 
 Stdlib only, offline (INV-108).
 """
@@ -107,64 +102,73 @@ def of_type(events, kind):
     return [e for e in events if e.get("type") == kind]
 
 
-class TheFlagReachesEveryLaterTurn(unittest.TestCase):
+class APathReplyIsTheTurn(unittest.TestCase):
     """Check 1."""
 
-    def test_effort_high_then_yes_advances_with_the_flag(self):
+    def test_a_path_is_sent_with_a_leading_space(self):
+        argvs, _, events = run(["/data/claims.csv", "1"], turns=3)
+        self.assertEqual(len(argvs), 3)
+        self.assertEqual(argvs[1][:2], ["-p", " /data/claims.csv"])
+        for argv in argvs:
+            self.assertEqual(flag_values(argv, "--effort"), [])
+        self.assertEqual(of_type(events, "bootcamper_flag"), [])
+        self.assertEqual(of_type(events, "bootcamper")[0]["text"], "/data/claims.csv")
+
+    def test_any_other_command_is_text_too(self):
+        argvs, _, _ = run(["/help me pick"], turns=2)
+        self.assertEqual(argvs[1][:2], ["-p", " /help me pick"])
+
+    def test_ordinary_text_is_unchanged(self):
+        self.assertEqual(walk.as_turn("yes /effort"), "yes /effort")
+        self.assertEqual(walk.as_turn("/x"), " /x")
+
+
+class AModelOrEffortLineIsTextToo(unittest.TestCase):
+    """Check 2: the handling issue #4 removed stays removed."""
+
+    def test_effort_high_then_yes_is_sent_whole_and_sets_no_flag(self):
         argvs, _, events = run(["/effort high\n\nyes", "1", "2"], turns=4)
         self.assertEqual(len(argvs), 4)
         self.assertEqual(events[-1]["reason"], "--turns 4 reached")
-        self.assertEqual(flag_values(argvs[0], "--effort"), [])
-        self.assertEqual(argvs[1][:2], ["-p", "yes"])
-        for argv in argvs[1:]:
+        self.assertEqual(argvs[1][:2], ["-p", " /effort high\n\nyes"])
+        for argv in argvs:
             with self.subTest(argv=argv[:2]):
-                self.assertEqual(flag_values(argv, "--effort"), ["high"])
-                self.assertIn("--resume", argv)
+                self.assertEqual(flag_values(argv, "--effort"), [])
+        for argv in argvs[1:]:
+            self.assertIn("--resume", argv)
 
-    def test_the_latest_value_wins_and_replaces_the_model(self):
+    def test_a_model_line_does_not_replace_the_walks_model(self):
         argvs, _, _ = run(["/effort high\nyes",
                            "/effort low\n/model claude-sonnet-4-5\nok", "x"],
                           turns=4, model="claude-opus-5-5")
-        self.assertEqual(flag_values(argvs[0], "--model"), ["claude-opus-5-5"])
-        self.assertEqual(flag_values(argvs[1], "--effort"), ["high"])
-        self.assertEqual(flag_values(argvs[1], "--model"), ["claude-opus-5-5"])
-        for argv in argvs[2:]:
+        for argv in argvs:
             with self.subTest(argv=argv[:2]):
-                self.assertEqual(flag_values(argv, "--effort"), ["low"])
-                self.assertEqual(flag_values(argv, "--model"), ["claude-sonnet-4-5"])
-        self.assertEqual(argvs[2][:2], ["-p", "ok"])
+                self.assertEqual(flag_values(argv, "--model"), ["claude-opus-5-5"])
+                self.assertEqual(flag_values(argv, "--effort"), [])
+        self.assertEqual(argvs[2][:2], ["-p", " /effort low\n/model claude-sonnet-4-5\nok"])
 
-    def test_only_an_exact_leading_line_is_a_flag(self):
-        cases = {
-            "/effort high\n\nyes": ([("/effort high", "--effort", "high")], "yes"),
-            "  /model claude-sonnet-4-5  \n/effort max\nok":
-                ([("/model claude-sonnet-4-5", "--model", "claude-sonnet-4-5"),
-                  ("/effort max", "--effort", "max")], "ok"),
-            "/effort high": ([("/effort high", "--effort", "high")], ""),
-            "yes\n/effort high": ([], "yes\n/effort high"),
-            "/effort": ([("/effort", "--effort", None)], ""),
-            "/effort very high\nyes": ([], "/effort very high\nyes"),
-            "/effortless yes": ([], "/effortless yes"),
-            "/help me": ([], "/help me"),
-        }
-        for reply, expected in cases.items():
-            with self.subTest(reply=reply):
-                self.assertEqual(walk.split_reply(reply), expected)
-        self.assertEqual(set(walk.SLASH_FLAGS), {"/effort", "/model"})
+    def test_no_flag_event_is_written(self):
+        _, _, events = run(["/effort high\n\nyes", "/model\nok"], turns=3)
+        self.assertEqual(of_type(events, "bootcamper_flag"), [])
+        self.assertEqual(of_type(events, "bootcamper_flag_ignored"), [])
+        self.assertEqual([], sorted({e["type"] for e in events
+                                     if str(e.get("type", "")).startswith("bootcamper_flag")}))
+
+    def test_the_slash_flag_table_and_its_parser_are_gone(self):
+        self.assertFalse(hasattr(walk, "SLASH_FLAGS"))
+        self.assertFalse(hasattr(walk, "SLASH_LINE"))
+        self.assertFalse(hasattr(walk, "split_reply"))
 
 
 class TheOriginalTextIsLogged(unittest.TestCase):
-    """Check 2."""
+    """Check 3."""
 
     def test_the_bootcamper_event_keeps_the_slash_line(self):
         _, _, events = run(["/effort high\n\nyes"], turns=2)
         said = of_type(events, "bootcamper")
         self.assertEqual(said[0]["text"], "/effort high\n\nyes")
-        self.assertEqual(of_type(events, "bootcamper_flag"), [
-            {"type": "bootcamper_flag", "turn": 1, "command": "/effort high",
-             "flag": "--effort", "value": "high"}])
 
-    def test_the_flag_event_is_not_a_guide_turn(self):
+    def test_the_transcript_still_loads_turn_for_turn(self):
         _, _, events = run(["/effort high\n\nyes", "1"], turns=3)
         lines = [json.dumps(e) for e in events]
         with tempfile.TemporaryDirectory() as tmp:
@@ -176,147 +180,24 @@ class TheOriginalTextIsLogged(unittest.TestCase):
         self.assertEqual(len(of_type(events, "assistant")), 3)
 
 
-class APathReplyIsTheTurn(unittest.TestCase):
-    """Check 3."""
-
-    def test_a_path_is_sent_with_a_leading_space(self):
-        argvs, _, events = run(["/data/claims.csv", "1"], turns=3)
-        self.assertEqual(len(argvs), 3)
-        self.assertEqual(argvs[1][:2], ["-p", " /data/claims.csv"])
-        for argv in argvs:
-            self.assertEqual(flag_values(argv, "--effort"), [])
-        self.assertEqual(of_type(events, "bootcamper_flag"), [])
-        self.assertEqual(of_type(events, "bootcamper")[0]["text"], "/data/claims.csv")
-
-    def test_a_non_allowlisted_command_is_text_too(self):
-        argvs, _, _ = run(["/help me pick"], turns=2)
-        self.assertEqual(argvs[1][:2], ["-p", " /help me pick"])
-
-    def test_the_rest_after_a_flag_is_protected_as_well(self):
-        argvs, _, _ = run(["/effort high\n/data/claims.csv"], turns=2)
-        self.assertEqual(argvs[1][:2], ["-p", " /data/claims.csv"])
-        self.assertEqual(flag_values(argvs[1], "--effort"), ["high"])
-
-    def test_ordinary_text_is_unchanged(self):
-        self.assertEqual(walk.as_turn("yes /effort"), "yes /effort")
-        self.assertEqual(walk.as_turn("/x"), " /x")
-
-
-class ASlashOnlyReplyAsksAgain(unittest.TestCase):
+class ASlashOnlyReplyIsATurn(unittest.TestCase):
     """Check 4."""
 
-    def test_it_asks_once_more_with_the_same_turn(self):
-        argvs, prompts, events = run(["/effort high", "yes"], turns=2)
-        self.assertEqual(len(argvs), 2)
-        # Two asks for turn 1, then turn 2's (the walk asks before it checks --turns).
-        self.assertEqual(len(prompts), 3)
-        self.assertTrue(prompts[1].startswith(prompts[0]))
-        self.assertIn("/effort high", prompts[1][len(prompts[0]):])
-        self.assertEqual(argvs[1][:2], ["-p", "yes"])
-        self.assertEqual(flag_values(argvs[1], "--effort"), ["high"])
-        self.assertEqual([e["text"] for e in of_type(events, "bootcamper")][:2],
-                         ["/effort high", "yes"])
-        self.assertEqual(events[-1]["reason"], "--turns 2 reached")
+    def test_it_is_sent_and_not_asked_again(self):
+        argvs, prompts, events = run(["/effort high", "yes"], turns=3)
+        self.assertEqual(len(argvs), 3)
+        self.assertEqual(argvs[1][:2], ["-p", " /effort high"])
+        self.assertEqual(argvs[2][:2], ["-p", "yes"])
+        self.assertNotEqual(prompts[0], prompts[1][:len(prompts[0])],
+                            "the Bootcamper was asked again with the same guide turn")
+        self.assertFalse([p for p in prompts if "You entered:" in p])
+        self.assertEqual(events[-1]["reason"], "--turns 3 reached")
 
-    def test_a_second_slash_only_reply_stops_the_walk(self):
-        argvs, prompts, events = run(["/effort high", "/model claude-sonnet-4-5"], turns=3)
-        self.assertEqual(len(argvs), 1)
-        self.assertEqual(len(prompts), 2)
+    def test_two_in_a_row_do_not_stop_the_walk(self):
+        argvs, _, events = run(["/effort high", "/model claude-sonnet-4-5", "ok"], turns=4)
+        self.assertEqual(len(argvs), 4)
         self.assertEqual(events[-1]["type"], "walk_stop")
-        self.assertEqual(events[-1]["reason"], "the Bootcamper replied only with slash commands")
-        self.assertEqual([e["flag"] for e in of_type(events, "bootcamper_flag")],
-                         ["--effort", "--model"])
-
-
-class ABareLineIsRecognizedAndSetsNothing(unittest.TestCase):
-    """Check 7 (#877)."""
-
-    def test_a_bare_line_is_a_slash_line_with_no_value(self):
-        cases = {
-            "/model": ([("/model", "--model", None)], ""),
-            "  /effort  \n\nyes": ([("/effort", "--effort", None)], "yes"),
-            "/model\n/effort high\nok": ([("/model", "--model", None),
-                                          ("/effort high", "--effort", "high")], "ok"),
-            # Not exact: each is text, as before.
-            "/models": ([], "/models"),
-            "/model claude opus": ([], "/model claude opus"),
-            "/model claude opus\nyes": ([], "/model claude opus\nyes"),
-            "/effortless": ([], "/effortless"),
-            "/help": ([], "/help"),
-        }
-        for reply, expected in cases.items():
-            with self.subTest(reply=reply):
-                self.assertEqual(walk.split_reply(reply), expected)
-
-    def test_bare_lines_never_reach_the_guide_and_set_no_flag(self):
-        argvs, _, events = run(["/model\n/effort\nyes"], turns=2, model="claude-opus-5-5")
-        self.assertEqual(argvs[1][:2], ["-p", "yes"])
-        for argv in argvs:
-            with self.subTest(argv=argv[:2]):
-                self.assertEqual(flag_values(argv, "--model"), ["claude-opus-5-5"])
-                self.assertEqual(flag_values(argv, "--effort"), [])
-        self.assertEqual(of_type(events, "bootcamper_flag"), [])
-        self.assertEqual(of_type(events, "bootcamper_flag_ignored"), [
-            {"type": "bootcamper_flag_ignored", "turn": 1, "command": "/model",
-             "flag": "--model", "value": None, "reason": "no value"},
-            {"type": "bootcamper_flag_ignored", "turn": 1, "command": "/effort",
-             "flag": "--effort", "value": None, "reason": "no value"}])
-
-    def test_the_value_is_null_in_the_transcript(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            out = Path(tmp) / "t.jsonl"
-            project = Path(tmp) / "project"
-            project.mkdir()
-            script = ["/effort\nyes"]
-
-            def fake_claude(args, cwd, stdin_text=None, timeout=600, env=None):
-                return subprocess.CompletedProcess(args, 0, stdout=_assistant(
-                    _guide_turn(1)) + "\n", stderr="")
-
-            with mock.patch.object(walk, "_claude", fake_claude), \
-                    mock.patch.object(walk, "bootcamper_reply",
-                                      lambda *a, **k: script.pop(0) if script else "ok"), \
-                    redirect_stdout(io.StringIO()), mock.patch("sys.stderr", io.StringIO()):
-                walk.run_walk(project, out, 2, "terse", Path(tmp) / "mcp.json", None, None,
-                              OPENING, False, 5)
-            raw = [line for line in out.read_text().splitlines()
-                   if '"bootcamper_flag_ignored"' in line]
-        self.assertEqual(len(raw), 1)
-        self.assertIn('"value": null', raw[0])
-        self.assertIn('"reason": "no value"', raw[0])
-
-    def test_a_bare_line_among_valued_lines_leaves_them_applied(self):
-        argvs, _, events = run(["/model claude-sonnet-4-5\n/effort\n/effort low\nyes"],
-                               turns=2, model="claude-opus-5-5")
-        self.assertEqual(argvs[1][:2], ["-p", "yes"])
-        self.assertEqual(flag_values(argvs[1], "--model"), ["claude-sonnet-4-5"])
-        self.assertEqual(flag_values(argvs[1], "--effort"), ["low"])
-        self.assertEqual([e["command"] for e in of_type(events, "bootcamper_flag")],
-                         ["/model claude-sonnet-4-5", "/effort low"])
-        self.assertEqual([(e["command"], e["reason"])
-                          for e in of_type(events, "bootcamper_flag_ignored")],
-                         [("/effort", "no value")])
-
-    def test_the_re_ask_gives_one_status_per_line_in_order(self):
-        argvs, prompts, _ = run(["/model opus\n/effort", "yes"], turns=2)
-        added = prompts[1][len(prompts[0]):]
-        self.assertIn("/model opus — applied\n/effort — not applied (no value)\n", added)
-        self.assertNotIn("It is applied", added)
-        self.assertNotIn("It is not applied", added)
-        self.assertEqual(argvs[1][:2], ["-p", "yes"])
-        self.assertEqual(flag_values(argvs[1], "--model"), ["opus"])
-
-    def test_a_bare_only_reply_is_asked_again_not_sent(self):
-        argvs, prompts, _ = run(["/effort", "yes"], turns=2)
-        self.assertEqual(len(argvs), 2)
-        self.assertIn("/effort — not applied (no value)", prompts[1][len(prompts[0]):])
-        self.assertEqual(argvs[1][:2], ["-p", "yes"])
-
-    def test_a_second_slash_only_reply_still_stops_the_walk(self):
-        argvs, prompts, events = run(["/effort", "/model"], turns=3)
-        self.assertEqual(len(argvs), 1)
-        self.assertEqual(len(prompts), 2)
-        self.assertEqual(events[-1]["reason"], "the Bootcamper replied only with slash commands")
+        self.assertEqual(events[-1]["reason"], "--turns 4 reached")
 
 
 class TheOpeningIsUnchanged(unittest.TestCase):
@@ -328,13 +209,14 @@ class TheOpeningIsUnchanged(unittest.TestCase):
         self.assertIn("--session-id", argvs[0])
 
 
-class TheBriefPutsTheCommandFirst(unittest.TestCase):
+class TheBriefPromptsNoSlashCommand(unittest.TestCase):
     """Check 6."""
 
-    def test_the_brief_carries_the_rule(self):
+    def test_the_brief_no_longer_carries_the_rule(self):
         brief = " ".join(walk.BOOTCAMPER_BRIEF.split())
-        self.assertIn("If you type a slash command such as /effort or /model, put it on its "
-                      "own line, before your answer.", brief)
+        self.assertNotIn("slash command", brief)
+        self.assertNotRegex(brief, r"/effort|/model")
+        self.assertIn("Never mention that this is a test or a simulation.", brief)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 Whenever output, a question, or a doc tells the bootcamper to do something **in their Gemini
-interface** — set a model, change reasoning effort, restart an MCP server, click a control — name
+interface** — restart an MCP server, click a control — name
 which interface. The bootcamp runs in one, and it has one name:
 
 | Say | For |

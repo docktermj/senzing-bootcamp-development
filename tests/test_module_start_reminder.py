@@ -1,7 +1,8 @@
 """The module-start apparatus reminder fires when a module is about to start, and only then.
 
 Issue #851: in one session the module-start apparatus (banner, journey map, before/after
-framing, step overview, time estimate, model/effort nudge) was skipped at five of eight
+framing, step overview, time estimate, and then a model/effort nudge that issue #4 has
+since removed) was skipped at five of eight
 module starts, although every module's `**First:**` line states it. Two hooks now put a
 reminder into the guide's context at the moment it is due:
 
@@ -60,7 +61,7 @@ def transition(name):
 
 GRADUATION_OFFER = ("%s **Would you like to graduate now and generate your production "
                     "project and recap?**" % POINTER)
-OTHER_QUESTION = "%s **Are you done modifying the model and effort?**" % POINTER
+OTHER_QUESTION = "%s **Which database would you like to use?**" % POINTER
 SUMMARY = "**Module complete: Discover the Business Problem**\n\nWhat you accomplished: ..."
 
 #: A module recorded and not begun: the state module completion's Step 1 leaves.
@@ -74,7 +75,10 @@ MODULE_ITEMS = (
     ("step overview", r"numbered step overview"),
     ("time estimate per verbosity", r"time-to-complete per the active verbosity preset, "
                                     r"suppressed under minimal and one line under concise"),
-    ("model/effort nudge", r"model/effort nudge"),
+    ("working-depth instruction, applied and not shown",
+     r"work to its working-depth instruction \(ground-rules\.md, \"Working depth by stage\"\) "
+     r"without showing or mentioning it, and ask and say nothing about the model or the "
+     r"reasoning effort"),
 )
 
 #: The graduation form's items: its own banner, and the terminal journey map.
@@ -87,7 +91,10 @@ GRADUATION_ITEMS = (
     ("step overview", r"numbered step overview"),
     ("time estimate per verbosity", r"time-to-complete per the active verbosity preset, "
                                     r"suppressed under minimal and one line under concise"),
-    ("model/effort nudge", r"model/effort nudge"),
+    ("working-depth instruction, applied and not shown",
+     r"work to its working-depth instruction \(ground-rules\.md, \"Working depth by stage\"\) "
+     r"without showing or mentioning it, and ask and say nothing about the model or the "
+     r"reasoning effort"),
 )
 
 
@@ -481,7 +488,7 @@ def imports_of(path):
 #: Phrases only the apparatus reminder carries. A second hand-written copy of the reminder
 #: would carry at least one of them.
 APPARATUS_PHRASES = ("journey map", "before/after", "step overview", "time-to-complete",
-                     "model/effort", "Do not mention this reminder")
+                     "working-depth", "Do not mention this reminder")
 
 
 def copies_in(path):

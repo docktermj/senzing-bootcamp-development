@@ -719,7 +719,12 @@ class Step24dAnswerSurvivesAnInterruption(unittest.TestCase):
 
 
 class KeptGates(unittest.TestCase):
-    """Candidates 3, 4, 5, 7 and 8 are kept; their reasons are in the #488 ledger entry."""
+    """Candidates 3, 4, 5 and 7 are kept; their reasons are in the #488 ledger entry.
+
+    #488 also kept candidate 8, the "Are you done modifying the model and effort?" wait.
+    Issue #4 removed it with the model/effort switch it followed, on every assistant, so it
+    is no longer a gate to keep; ``test_the_model_and_effort_wait_is_gone`` pins that.
+    """
 
     KEPT = {
         "3, the next-module transition": (
@@ -735,10 +740,11 @@ class KeptGates(unittest.TestCase):
         "7, Module 6's generated-path question": (
             SKILLS / "module-06-data-processing" / "phaseC-multi-source.md",
             "shall I proceed on both?** (respond yes or no)"),
-        "8, the model and effort wait": (
-            SKILLS / "bootcamp-onboarding" / "ground-rules.md",
-            "👉 **Are you done modifying the model and effort?**"),
     }
+
+    def test_the_model_and_effort_wait_is_gone(self):
+        text = flat(read(SKILLS / "bootcamp-onboarding" / "ground-rules.md"))
+        self.assertNotIn("Are you done modifying the model and effort?", text)
 
     def test_each_kept_gate_still_stands(self):
         for name, (path, wording) in self.KEPT.items():

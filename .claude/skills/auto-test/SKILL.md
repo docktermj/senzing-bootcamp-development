@@ -61,15 +61,12 @@ they have. A probe-only run names no persona, because no walk ran.
 **Starting mid-bootcamp, at a fixed model and effort (#870).** `--seed mid` builds dry-run's
 mid-bootcamp project, at Module 5 step 11, and the lint then defaults to `--phase content`;
 an explicit `--phase` still wins. `--effort <level>` sets the guide's effort from the first
-turn, as `--model` sets its model. Without `--pin`, a Bootcamper model or effort slash line
-overrides both for the rest of the walk (#656). With `--pin`, the walk logs each such line as
-`bootcamper_flag_ignored`, the flag stays as given, and the report lists it as an INFO
-`bootcamper-flag-ignored` finding ending "(--pin)". A model or effort slash line with no
-value sets nothing, pinned or not, and is reported the same way, ending "(no value given)"
-(#877):
+turn, as `--model` sets its model, and both hold for the whole walk: the bootcamp asks the
+Bootcamper to change neither (#4), so no Bootcamper reply is read as a `/model` or `/effort`
+command. A reply that starts with `/` is sent to the guide as text (#656):
 
 ```console
-.claude/skills/auto-test/autotest.py --walk --seed mid --model claude-haiku-5-5 --effort low --pin
+.claude/skills/auto-test/autotest.py --walk --seed mid --model claude-haiku-5-5 --effort low
 ```
 
 The scripts are stored executable (mode `100755`, #843, INV-419). Windows ignores that bit, so there

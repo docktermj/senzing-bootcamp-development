@@ -27,6 +27,123 @@ records `uncommitted`, and the next run that touches the entry fills the hash in
 
 -->
 
+## adjust-effort-automatically-instead-of-asking-the-bootcamper
+
+- **Implemented:** 2026-11-16 (issue #4)
+- **Files changed:** `source/skills/` (ground rules, onboarding flow, Bootcamp preparation,
+  graduation, every module), `source/scripts/module_start_apparatus.py`,
+  `source/scripts/module-start-reminder.py`, `source/hooks/`, `source/docs/model-selection.md`,
+  `source/docs/examples/`, `hosts/` (both `model-guidance.md` fragments deleted; every
+  `host.json`, `interface-naming.md` and `site-tips.html`; Claude's `site-install.html`),
+  `docs/effort-mechanisms.md`, `.claude/skills/auto-test/`, `.claude/skills/dry-run/`, `tests/`
+- **MCP re-check:** n/a (no Senzing fact). Re-confirmed on 2026-11-16: the change is about how the
+  guide works and what it asks about the assistant, and asserts nothing about Senzing.
+- **Summary:** The bootcamp no longer recommends a model or a reasoning effort at a module or
+  graduation start and no longer asks the bootcamper to change either. The switch question, its
+  step-down wording and the "Are you done modifying the model and effort?" gate are gone on every
+  assistant. The welcome names the assistant's capable-tier model once, as a statement. The
+  ground rules carry one table, "Working depth by stage", with one effort level per stage and one
+  fixed instruction per level, applied silently and identical in all five packages; nothing the
+  bootcamp ships sets a model or an effort. The host values `model_balanced`, `model_top` and
+  `model_controls` are removed. The model-selection page and the site tips say one model is fine
+  throughout. `docs/effort-mechanisms.md` now recommends instructions only, because a skill's
+  effort setting on Claude lasts one turn and a module runs for many. The auto-test walker no
+  longer answers a switch question, and its transcript lint reports one as a finding.
+  Tests: the nudge's tests are replaced by `test_working_depth_by_stage`,
+  `test_welcome_names_one_model_once`, `test_model_docs_name_no_switch` and rewritten
+  `test_model_guidance_behavior`, `test_bootcamp_build_guidance_parity` and
+  `test_model_guidance_sync`.
+- **Invariants.** The register is not edited here (INV-365). The change contradicts eight
+  invariants in force; each has a block below. Also stale in wording only, with no block:
+  INV-086, INV-096, INV-102, INV-114, INV-140, INV-158, INV-236 and INV-420 mention the nudge or
+  the model column in passing, and INV-236 has no shipped site left to bind.
+
+- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** The bootcamp never asks for a model or effort change, and effort follows the stage by instruction. The rule already shipping, quoted:
+    - ⛔ **It changes no setting.** — in `source/skills/bootcamp-onboarding/ground-rules.md`
+    - ⛔ **Apply the instruction silently.** — in `source/skills/bootcamp-onboarding/ground-rules.md`
+
+  Enforced by `tests/test_working_depth_by_stage.py`, `tests/test_model_guidance_behavior.py` and
+  `tests/test_welcome_names_one_model_once.py`.
+
+  Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
+  invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
+
+  **INV-NNN** — The bootcamp MUST NOT ask the Bootcamper to change the model or the reasoning effort, MUST NOT change either itself, and MUST NOT ship anything that sets either. Every stage the bootcamp can run MUST have exactly one effort level in the "Working depth by stage" table, each level MUST map to exactly one instruction to the guide, the table and instructions MUST be identical in every assistant's package, and the guide MUST apply them without showing or mentioning them. The welcome MUST name one suitable model exactly once, as a statement.
+
+- **PROPOSED AMENDMENT to INV-063 — awaiting the maintainer's sign-off; NOT applied.**
+    - ⛔ **There is no module-start model or effort question.** — in `source/skills/bootcamp-onboarding/ground-rules.md`
+
+  INV-063 requires the model and effort recommendation and its switch question at every module and graduation start. Issue #4 removes both, so the register describes a question the bootcamp no longer asks.
+
+  Drafted wording follows, under the registered id. A new rule's id would be
+  written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
+
+  **INV-063** — *Superseded 2026-11-16 (issue #4).* The bootcamp no longer surfaces a model or effort recommendation at a module or graduation start and asks no switch question. How carefully the guide works is set by instruction ("Working depth by stage"), and the welcome names one suitable model once.
+- **PROPOSED AMENDMENT to INV-069 — awaiting the maintainer's sign-off; NOT applied.**
+    - ⛔ **There is no module-start model or effort question.** — in `source/skills/bootcamp-onboarding/ground-rules.md`
+
+  INV-069 pins the confirmation gate that followed an accepted switch. With no switch question there is no yes for it to follow.
+
+  Drafted wording follows, under the registered id. A new rule's id would be
+  written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
+
+  **INV-069** — *Superseded 2026-11-16 (issue #4).* The "Are you done modifying the model and effort?" gate no longer exists, because the switch question it followed no longer exists.
+- **PROPOSED AMENDMENT to INV-098 — awaiting the maintainer's sign-off; NOT applied.**
+    - ⛔ **There is no module-start model or effort question.** — in `source/skills/bootcamp-onboarding/ground-rules.md`
+
+  INV-098 makes the nudge adapt to the Claude interface in use. There is no nudge to adapt.
+
+  Drafted wording follows, under the registered id. A new rule's id would be
+  written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
+
+  **INV-098** — *Superseded 2026-11-16 (issue #4).* No model or effort nudge is presented in any interface. Naming the interface for any other control stays under INV-158.
+- **PROPOSED AMENDMENT to INV-137 — awaiting the maintainer's sign-off; NOT applied.**
+    - ⛔ **There is no module-start model or effort question.** — in `source/skills/bootcamp-onboarding/ground-rules.md`
+
+  INV-137's first half says model and effort guidance is unconditional. The guidance is gone; only the second half still holds, and shipped text still cites it for that.
+
+  Drafted wording follows, under the registered id. A new rule's id would be
+  written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
+
+  **INV-137** — *Narrowed 2026-11-16 (issue #4).* There is no module-start model or effort guidance to be unconditional about. What remains in force: the Bootcamper is never asked how they want model or effort handled, and there is no `model_guidance` preference.
+- **PROPOSED AMENDMENT to INV-138 — awaiting the maintainer's sign-off; NOT applied.**
+    - ⛔ **There is no module-start model or effort question.** — in `source/skills/bootcamp-onboarding/ground-rules.md`
+
+  INV-138 says how the nudge decides whether to ask. Nothing is compared and nothing is asked.
+
+  Drafted wording follows, under the registered id. A new rule's id would be
+  written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
+
+  **INV-138** — *Superseded 2026-11-16 (issue #4).* No comparison is made between a recommendation and the running model or effort, and no question follows from one.
+- **PROPOSED AMENDMENT to INV-139 — awaiting the maintainer's sign-off; NOT applied.**
+    - ⛔ **There is no module-start model or effort question.** — in `source/skills/bootcamp-onboarding/ground-rules.md`
+
+  INV-139 words the step-down case of the switch question. The question no longer exists.
+
+  Drafted wording follows, under the registered id. A new rule's id would be
+  written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
+
+  **INV-139** — *Superseded 2026-11-16 (issue #4).* There is no switch question, so there is no step-down wording.
+- **PROPOSED AMENDMENT to INV-141 — awaiting the maintainer's sign-off; NOT applied.**
+    - ⛔ **Working depth by stage.** — in `source/skills/bootcamp-onboarding/ground-rules.md`
+
+  INV-141 requires each per-stage row to name exactly one model and one effort. The table has no model column.
+
+  Drafted wording follows, under the registered id. A new rule's id would be
+  written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
+
+  **INV-141** — *Amended 2026-11-16 (issue #4).* A per-stage row names exactly one effort level and no model. A conditional or two-branch level stays forbidden.
+- **PROPOSED AMENDMENT to INV-247 — awaiting the maintainer's sign-off; NOT applied.**
+    - ⛔ **There is no exception:** — in `source/skills/bootcamp-onboarding/ground-rules.md`
+
+  INV-247 forbids presenting a session-level control as a bootcamp question, with one exception: the module-start model and effort switch. The exception is removed, so the prohibition has none.
+
+  Drafted wording follows, under the registered id. A new rule's id would be
+  written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
+
+  **INV-247** — *Amended 2026-11-16 (issue #4).* The model and effort exception is withdrawn. The bootcamp asks the Bootcamper to operate no assistant-interface control at all.
+- **Commit:** uncommitted
+
 ## research-how-each-assistant-can-adjust-reasoning-effort
 
 - **Implemented:** 2026-11-16 (issue #5)

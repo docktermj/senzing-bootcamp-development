@@ -116,8 +116,18 @@ APPARATUS = {
         r"(?im)^[^\w\n]*⏱"
         r"|\b(?:roughly|about|takes|approx\w*)\s+\d+(?:\s*(?:-|–|to)\s*\d+)?\s*minutes?\b"
         r"|\bhard to estimate\b"),
-    "model nudge": re.compile(r"(?i)\b(?:opus|sonnet|haiku)\s*5?\b.*\beffort\b|switch (?:to|the) model"),
 }
+
+#: A 👉 line that asks the Bootcamper to change the model or the reasoning effort. The
+#: bootcamp asks for neither, at a module start or anywhere else (#4), so any such question
+#: is one the guide originated. Read on 👉 lines only: a statement that names a model, such
+#: as the welcome's, is not a request.
+MODEL_EFFORT_REQUEST = re.compile(
+    r"(?i)\bswitch to\b[^?\n]*(?:\beffort\b|/model\b|/effort\b)"
+    r"|\bswitch (?:the |your )?model\b"
+    r"|\bmodifying the model\b"
+    r"|(?<![\w/])/(?:model|effort)\b"
+    r"|\b(?:change|set) (?:the |your )?(?:model|reasoning effort)\b")
 
 #: Where the bootcamp keeps the preferences the guide writes, under the project directory.
 PREFERENCES = Path("config") / "bootcamp_preferences.yaml"
@@ -430,6 +440,23 @@ def check_apparatus(turns, phase, project=None):
     return out
 
 
+def check_model_effort_requests(turns):
+    """The bootcamp never asks the Bootcamper to change the model or the effort (#4).
+
+    Flags a 👉 line that does. ⚠️ It reads questions only, so it cannot see a statement
+    that tells the Bootcamper to change a setting without asking.
+    """
+    out = []
+    for index, text in enumerate(turns, 1):
+        for line in text.splitlines():
+            if POINTER in line and MODEL_EFFORT_REQUEST.search(line):
+                out.append(_finding(
+                    BREAKING, "model-effort-request", index,
+                    "a 👉 question asks for a model or effort change, which the "
+                    f"bootcamp never asks for: {line.strip()[:80]!r}"))
+    return out
+
+
 def check_internal_markers(turns):
     """Internal directives must never be rendered (ground-rules.md)."""
     out = []
@@ -685,8 +712,8 @@ def check_worked_steers(turns, tools=None):
 
 
 CHECKS = (check_one_pointer_per_turn, check_module_numbers, check_or_joined_choices,
-          check_internal_markers, check_repeat_questions, check_directing_steps,
-          check_worked_steers)
+          check_internal_markers, check_model_effort_requests, check_repeat_questions,
+          check_directing_steps, check_worked_steers)
 
 
 def lint(turns, phase=None, project=None, replies=None, tools=None):
@@ -737,6 +764,8 @@ _BAD = [
     "\U0001f449 **Which data source would you like to start with?**",
     # Same question again, so the ask-once check has something to catch.
     "\U0001f449 **Which data source would you like to start with?**",
+    # A model/effort request, which the bootcamp never makes (#4).
+    "\U0001f449 **Would you like to switch to `/model opus` + `/effort high` for this module?**",
 ]
 
 # The plugin's own wording for each apparatus item: ground-rules.md's estimate
@@ -772,7 +801,7 @@ _APPARATUS_RENDERINGS = (
 #: Apparatus a content module must show whatever the verbosity preset says. The time
 #: estimate is not here: INV-096 suppresses it under `minimal`, so it is graded
 #: against the project's preset instead.
-_ALWAYS_REQUIRED = ("journey map", "before/after", "step overview", "model nudge")
+_ALWAYS_REQUIRED = ("journey map", "before/after", "step overview")
 
 # Text from the apparatus-exempt stretches that must NOT raise INV-075. The
 # preparation close is one status line, not a journey map
@@ -838,7 +867,8 @@ def selftest():
         failures.append(f"clean transcript produced findings: {clean}")
 
     expected = {"INV-251-multi-question", "INV-079-module-number",
-                "INV-051-or-joined", "internal-marker-leaked", "INV-006-re-asked"}
+                "INV-051-or-joined", "internal-marker-leaked", "INV-006-re-asked",
+                "model-effort-request"}
     codes = {f["code"] for f in lint(_BAD)}
     for code in sorted(expected - codes):
         failures.append(f"{code} did not fire on input designed to break it")

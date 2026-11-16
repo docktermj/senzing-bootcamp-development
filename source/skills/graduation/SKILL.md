@@ -30,7 +30,7 @@ actions.
 
 Bootcamp graduation is the terminal bookend module. Like every module it opens with the module-start
 apparatus — journey map, before/after framing, a step overview, and an estimated time — adapted to
-a terminal module (INV-102; see "Bootcamp graduation preface" below), then the model/effort nudge. Because no
+a terminal module (INV-102; see "Bootcamp graduation preface" below). Because no
 next-module transition applies, it shows no `✅ Module complete` line and no transition question,
 and it ends on the terminal END OF SENZING BOOTCAMP banner and its one `/package-bootcamp` line
 (INV-057). (Bootcamp graduation is NOT apparatus-exempt — contrast the exemptions for Bootcamp
@@ -48,11 +48,11 @@ finish. Show it at most once per graduation.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-## Bootcamp graduation preface (after the banner, before the model/effort prompt)
+## Bootcamp graduation preface (after the banner)
 
 Like every module, graduation opens with the module-start apparatus (INV-029–032), adapted to a
-terminal module — no next-module transition. Present these in order, right after the banner and
-before the model/effort prompt. First read `config/bootcamp_preferences.yaml` (`selected_modules`)
+terminal module — no next-module transition. Present these in order, right after the banner.
+First read `config/bootcamp_preferences.yaml` (`selected_modules`)
 and `config/bootcamp_progress.json` (`modules_completed`) to render the journey map. Honor the
 active verbosity preset (INV-011/INV-012): suppress the explanatory parts under `minimal`, keep
 them to one line under `concise`. Refer to modules by name, never number (INV-079).
@@ -82,34 +82,15 @@ Bootcamp graduation is terminal, so it has no "what's next / next module" line a
 transition — it ends on the END OF SENZING BOOTCAMP banner and its one `/package-bootcamp` line
 (INV-057). What the bootcamper carries forward is the recap PDF and the `production/` project.
 
-## Best-value model/effort prompt
+## After the preface
 
-After the preface, surface the best-value model/effort before the heavier graduation work.
-Bootcamp graduation is correctness-critical — the `production/` project's code, configuration and
-docs are what the bootcamper builds on — so its recommendation is the "Bootcamp graduation" row of
-the per-stage table in `../bootcamp-onboarding/ground-rules.md`.
+Graduation asks nothing about the model or the reasoning effort, and says nothing about them: no
+question, no gate and no statement, like every module
+(`../bootcamp-onboarding/ground-rules.md` → "Working depth by stage", stated once there, INV-300).
 
-The rule itself is stated once (INV-300), in `../bootcamp-onboarding/ground-rules.md` → "Module
-start banners and transitions" (its **Best-value model/effort prompt** bullet), and graduation
-follows it exactly as every module does: whether to ask, the pinned switch question (which reads
-"…for graduation?" here), what the reply does after a yes or a no, and the confirmation gate.
-Do not restate any of it here (INV-300); a second copy is how the two drifted apart. Only what is
-specific to graduation follows.
-
-- **Where the flow resumes (INV-284).** Wherever ground-rules says to present "Step 1", graduation
-  runs the Pre-checks and then its first step, Step 0 — not graduation's own Step 1. That holds on
-  every path: on the turn after the bootcamper confirms the switch, and in the same turn after a no,
-  after a yes whose dial is already set, or when no switch question was asked. The turn ends on the
-  next single 👉 question, as ground-rules says.
-- **Usually there is nothing to ask.** Bootcamp graduation shares its recommendation with Query,
-  Visualize and Discover, so a bootcamper arriving on it is usually **already there**: they get the
-  one-line statement and go straight into the Pre-checks and Step 0, and are not asked. Do not assume
-  graduation is always a step up — it is not, and asking a bootcamper to switch to the model they are
-  already running is the pointless question INV-006 and INV-012 forbid.
-
-<!-- host:only claude -->
-See `../../docs/model-selection.md`.
-<!-- host:end -->
+**Where the flow resumes (INV-284).** Wherever ground-rules says to continue into "Step 1",
+graduation runs the Pre-checks and then its first step, Step 0 — not graduation's own Step 1 — in
+the same turn as the preface. The turn ends on the next single 👉 question, as ground-rules says.
 
 ## Pre-checks
 
@@ -960,14 +941,8 @@ naming what failed, and graduation continues to Step 2.
 ⛔ **(INV-340) On no, write no video file at all:** no `docs/video/storyboard.json` and no
 `docs/bootcamp_recap.mp4`. The storyboard is written only after a yes.
 
-**Model quality.** There is no second model question, because graduation's best-value model/effort
-prompt already covers it. Only when the bootcamper answered **no** to that switch question, open the
-yes reply with one statement line, not a question:
-
-> ℹ️ The narration comes out best on graduation's recommended model and effort; I'll write it on your current setting.
-
-Say nothing about the model when no switch question was asked (the bootcamper was already on the
-recommendation) or when they accepted the switch.
+**Model quality.** There is no model question and no model statement here. Write the narration on
+whatever the bootcamper is running and say nothing about it (see "After the preface").
 
 #### Write the storyboard
 

@@ -15,10 +15,7 @@
     "assistant": "Kiro",
     "scripts_relative": "../bootcamp-onboarding/scripts",
     "docs_relative": "../bootcamp-onboarding/docs",
-    "model_balanced": "Sonnet 5.5",
     "model_capable": "Opus 5.5",
-    "model_top": "the most capable model Kiro offers",
-    "model_controls": "the model and effort pickers in Kiro's chat",
     "skills_dir": ".."
   },
   "layout": {

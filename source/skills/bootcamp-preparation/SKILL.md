@@ -229,26 +229,17 @@ replied. (The can-change-it-any-time reassurance belongs **before** the question
 ## 3a. Model guidance — no question (retired)
 
 ⛔ **There is no model-guidance question and no `model_guidance` preference (INV-137).** Ask nothing
-here and write nothing for it. Model/effort guidance behaves one way for everyone: at each module
-start and graduation start the guide surfaces the stage's recommendation, and **when that
-recommendation differs from what the bootcamper is running right now** — compared per dial — it
-pauses on the pinned switch question followed by the pinned "Are you done modifying the model and
-effort?" gate; when it already matches, it is a one-line statement.
-
-⛔ **The comparison is against the live session, never against the previous stage's
-recommendation.** Four consecutive stages share one recommendation, so reading it stage-to-stage
-would suppress the switch question through the whole opening of a Core run — for precisely the
-bootcamper who is already running something stronger, which is the common case rather than an edge
-case. `../bootcamp-onboarding/ground-rules.md` → "Best-value model/effort prompt" is
-**authoritative** for the comparison, including the per-dial rule for a value that cannot be read;
-do not restate that procedure here — two copies is how this drifted in the first place (INV-300).
+here and write nothing for it. The bootcamp never asks the bootcamper to change the model or the
+reasoning effort: not here, not at a module start and not at graduation. The welcome names one
+suitable model, once, and how carefully the guide works at each stage is set by instruction alone.
+`../bootcamp-onboarding/ground-rules.md` → "Working depth by stage" is **authoritative**; do not
+restate it here (INV-300).
 
 This step number is kept so the surrounding step numbering and every cross-reference to Steps 4-7
 stay stable. Skip straight from Step 3 to Step 4.
 
 (A previous design asked the bootcamper to choose between `advisory`, `off` and `prompt` and
-persisted the answer. That question is retired: INV-137 supersedes INV-119 and INV-120, restoring
-the unconditional INV-063/INV-069 behavior. Do **not** reintroduce the question, and do not honor a
+persisted the answer. That question is retired. Do **not** reintroduce it, and do not honor a
 stale `model_guidance` key left in an old preferences file.)
 
 ## 4. Programming language selection (gate)

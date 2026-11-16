@@ -23,21 +23,13 @@ skill should read and follow this file.
   rather than relayed (INV-012), and the divergence is recorded in the checkpoint rather than shown
   to the bootcamper. This is **not** license to answer from training data: both sides are still
   MCP-sourced, one generically and one by measuring the bootcamper's own machine.
-<!-- host:only claude -->
-- **Model/effort tuning.** Model/effort is a session-level choice the bootcamper controls with
-  `/model` and `/effort` (it persists for the session; per-skill frontmatter would not — see
-  `../../docs/model-selection.md`). At each module start you **proactively** surface this stage's
-<!-- host:end -->
-<!-- host:except claude -->
-- **Model/effort tuning.** Model/effort is a session-level choice the bootcamper controls with
-  {{host.model_controls}}. At each module start you **proactively** surface this stage's
-<!-- host:end -->
-  best-value recommendation (see "Module start banners and transitions" below): a single 👉 switch
-  question when the recommendation differs from what they are running, otherwise a brief statement.
-  The code-heavy stages — SDK setup, Truth Set visualization, and everything from Data Quality,
-  Mapping, and Transformation through graduation — warrant {{host.model_capable}} + high effort; the lighter
-  conversational and collection stages {{host.model_balanced}}.
-  Do not change the session yourself — only the bootcamper can.
+- **The model and the reasoning effort are the bootcamper's own settings, and the bootcamp leaves
+  them alone.** Never ask the bootcamper to change either one, at a module start or anywhere else:
+  no 👉 question, no gate, no statement and no pointer to a control. Never change either one
+  yourself. The welcome names one suitable model, once (`onboarding-flow.md` step 3), and nothing
+  is said about it afterwards, whatever the bootcamper is running. How carefully you work at each
+  stage is set by instruction alone: see "Working depth by stage" under "Module start banners and
+  transitions" below.
 
 ## Conversation protocol (the 👉 rules)
 
@@ -129,9 +121,9 @@ skill should read and follow this file.
   control as a bootcamp question** — auto mode, auto-accept edits, permission mode, plan mode, fast
   mode, background tasks, `/compact`, `/loop`. Those belong to the bootcamper's {{host.assistant}} session, not
   to the bootcamp, and asking about one is not made legitimate by the host surfacing that control
-  alongside the bootcamp. **The single exception is the module-start model/effort switch** (see
-  "Module start banners and transitions"), which is the only {{host.assistant}}-interface control the bootcamp
-  asks the bootcamper to operate.
+  alongside the bootcamp. **There is no exception:** the bootcamp asks the bootcamper to operate no
+  {{host.assistant}}-interface control at all, and the model and the reasoning effort are two of
+  the settings it never asks about.
   - **Answering a question the bootcamper asks is not originating one.** They may raise anything at
     any time; handle a host-control question under "Any-time bootcamper controls" below. The turn
     then ends one of **two** ways, never both:
@@ -150,11 +142,9 @@ skill should read and follow this file.
     `👉 Do you have any questions before we get started?` pending and unanswered. **That prompt is
     host-rendered: no file in this plugin asks it, and on both runs the guide originated nothing.**
     What it demonstrates is the hazard this rule exists for. It cost each run its pending question,
-    and the bootcamper could not tell it from bootcamp content — arriving *before* any sanctioned
-    interface question, so the frame they formed for every later one came from something the
-    bootcamp never wrote. A question the guide improvised would be indistinguishable to them in
-    exactly that way, which is why the rule binds you even though the observed prompt did not come
-    from you.
+    and the bootcamper could not tell it from bootcamp content. A question the guide improvised
+    would be indistinguishable to them in exactly that way, which is why the rule binds you even
+    though the observed prompt did not come from you.
 <!-- host:end -->
 <!-- host:except claude -->
   - ⚠️ **Why this is a rule and not an assumption.** An assistant can show a prompt of its own,
@@ -1420,9 +1410,8 @@ the 👉 protocol above).
   them, and do **not** claim the bootcamp can suppress or override a host control: the plugin ships
   skills, hooks and commands, none of which reach their interface. **Do not name a dismissal
   affordance either** — not "Don't show again", not any other — because directing them to a control
-  that silences a host prompt is directing them to operate a second {{host.assistant}}-interface control. The
-  bootcamp asks them to operate exactly one, the module-start model/effort switch, and never this
-  one (INV-247).
+  that silences a host prompt is directing them to operate a {{host.assistant}}-interface control, and the
+  bootcamp asks them to operate none (INV-247).
 - **Ask-once:** ask each question only once. Do not re-ask a question the bootcamper already
   answered unless they request the repeat.
   - **A pending, *unanswered* question is different — re-present it verbatim.** After any
@@ -1482,8 +1471,8 @@ the 👉 protocol above).
   added to `modules_completed`; Module 0, when it runs, DOES append its own name-based recap section
   and is added to `modules_completed` (INV-092), so it appears in the recap and is reconciled at
   graduation (INV-085).
-- **Estimated time to complete (INV-096).** After the step overview and before the model/effort
-  prompt, add a short, honest, range-based estimate of how long the module will take — e.g.
+- **Estimated time to complete (INV-096).** After the step overview, add a short, honest,
+  range-based estimate of how long the module will take — e.g.
   "⏱️ Roughly 15-30 minutes, depending on download/install speed." Always caveat that it varies
   with workstation power, business-scenario complexity, data volume, and how much must be
   downloaded/installed. When a meaningful estimate is not possible for a module, say so plainly
@@ -1492,9 +1481,43 @@ the 👉 protocol above).
   the `minimal` verbosity preset and keep it to one line under `concise` (INV-011/INV-012). This
   applies only to the numbered content modules that run this apparatus — the apparatus-exempt setup
   modules (Bootcamp preparation, Module 0) show no estimate.
-- **Best-value model/effort prompt.** After the step overview, surface this stage's recommended
-  model + effort.
-<!-- host:include model-guidance -->
+- **Working depth by stage.** How carefully you work follows the stage you are in, by instruction
+  alone. Find the stage in this table, read its effort level, and work to that level's instruction
+  until the stage ends. One row per stage, in the order the bootcamp runs them, and one level per
+  row:
+
+  | Stage | Effort |
+  |---|---|
+  | Onboarding | medium |
+  | Bootcamp preparation | medium |
+  | Entity Resolution Concepts | medium |
+  | Discover the Business Problem | medium |
+  | SDK setup | high |
+  | System verification | high |
+  | Truth Set visualization | high |
+  | Data collection | medium |
+  | Data Quality, Mapping, and Transformation | high |
+  | Data processing | high |
+  | Query, Visualize and Discover | high |
+  | Bootcamp graduation | high |
+
+  Each level is one instruction to you:
+
+  - **medium:** Move briskly: work from what the step and the Senzing MCP server give you, and do not re-derive what is already settled.
+  - **high:** Work carefully: before you write code or state a result, check it against the MCP server's answer and the bootcamper's own files, and re-read the step's rules before each action.
+
+  ⛔ **Apply the instruction silently.** Never show the bootcamper this table, a level or an
+  instruction, and never say that a stage has one. It is not module-start output, at any verbosity.
+
+  ⛔ **It changes no setting.** A level here is a way of working, not a value to set. Do not change
+  the model or the reasoning effort, do not ask the bootcamper to change either, and say nothing to
+  them about what they are running. That holds when the assistant is choosing the model or the
+  effort by itself: the bootcamp neither detects that nor mentions it. Nothing the bootcamp ships
+  sets either one: no skill or agent frontmatter, no hook and no settings file.
+
+  ⛔ **There is no module-start model or effort question.** The earlier nudge is retired, with its
+  switch question, its step-down wording and its confirmation gate (INV-063, INV-069, INV-098,
+  INV-138, INV-139, INV-141). Surface, compare and offer nothing it described.
 
 - Module start banner:
 
@@ -1505,19 +1528,12 @@ the 👉 protocol above).
   ```
 
 - After an affirmative module-transition ("Ready to move on to the next module?"), immediately produce the
-  banner + journey map + before/after + step overview + estimated time to complete + best-value
-  model/effort prompt. When that
-  prompt is a 👉 switch question (the recommendation differs from what they are running), the turn
-  ends there. On the reply:
-  **no** produces Step 1 the same (reply) turn; **yes** takes one of the three shapes above, read
-  from the live setting (INV-236): when the dial is not yet set, the one-line run-commands
-  statement and the pinned "👉 Are you done modifying the model and effort?" gate, with Step 1 on
-  the turn after the bootcamper confirms; when the dial is already set, at the recommended value or
-  another, no gate, and Step 1 the same turn. When the recommendation already matches (no
-  switch question), continue straight into Step 1 the same turn. In every one of those cases the
-  turn ends on **the next single 👉 question** — Step 1's own if it has one, otherwise the next
-  asking step's, with the non-yielding steps in between executed in that same turn. Never reply
-  with just "." or fewer than 50 characters.
+  banner + journey map + before/after + step overview + estimated time to complete, then continue
+  straight into Step 1 the same turn. The turn ends on **the next single 👉 question** — Step 1's
+  own if it has one, otherwise the next asking step's, with the non-yielding steps in between
+  executed in that same turn (see the 👉 protocol). Module 1's Step 1 is exactly this case: a
+  privacy reminder that asks nothing, so the turn ends on Step 2's question. Never reply with
+  just "." or fewer than 50 characters.
 
 ## Closing questions
 

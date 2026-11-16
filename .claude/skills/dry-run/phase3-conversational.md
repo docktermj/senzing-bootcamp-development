@@ -268,10 +268,13 @@ Interaction invariants, in rough order of how often they break:
 - **INV-058 / one consolidated write.** Bootcamp preparation must show the maintainer
   **one** config diff, not one per gate. Count the diffs.
 - **Apparatus exemptions.** Bootcamp preparation and Module 0 must show *no* journey
-  map, before/after, step overview, time estimate, or model/effort nudge (INV-075,
+  map, before/after, step overview or time estimate (INV-075,
   INV-078). Content modules must show all of them (INV-028–031, INV-096) — except the
   time estimate under the `minimal` verbosity preset, which INV-096 requires suppressed,
   so its absence there is conformance and not a finding.
+- **No model or effort request (#4).** No turn asks the Bootcamper to switch models or
+  change reasoning effort: no 👉 question, no confirmation gate and no statement at a
+  module start. The welcome names one suitable model, once, as a statement.
 - **INV-079 / names not numbers.** No "Module 4" in anything the Bootcamper reads,
   including casual acknowledgments.
 - **INV-051 / no "or" joining choices.** Numbered lists, neutral lead question. The

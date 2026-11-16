@@ -14,7 +14,8 @@ with the bundled renderer (`generate_recap_video.py`, #299). These tests pin:
   download into `data/temp/piper-voices/`, then `--check` and the render with the venv's Python; on
   no or a failure, Step 1b's interpreter and the platform engine; no `--voice-model`; the voice
   named from the `Voice:` line.
-* **On no, nothing is written**; the heads-up line appears only after a declined model switch.
+* **On no, nothing is written**; no line about the model is shown on a yes (issue #4 removed
+  the heads-up that followed a declined model switch, with the switch).
 * **The time budget**: the reporter's shares, summing to 100%, scaled over the modules taken,
   with each worked example checked against the formula rather than trusted.
 * **The Intro** (#347): the budget's first row (`intro`, 3%), always counted; Step 1c states its
@@ -302,7 +303,7 @@ class TheStepIsWhereTheVideoCanReuseTheCertificate(unittest.TestCase):
 
     def test_the_preface_names_the_optional_video(self):
         preface = squash(section(read(GRADUATION), "## Bootcamp graduation preface",
-                                 "## Best-value model/effort prompt"))
+                                 "## After the preface"))
         overview = preface[preface.index("**What we'll do.**"):
                            preface.index("**Estimated time.**")]
         self.assertIn("optional narrated 2-minute graduation video", overview)
@@ -347,7 +348,7 @@ class TheQuestionsArePinned(unittest.TestCase):
 
     def test_no_question_asks_about_the_model(self):
         text = squash(step_1c())
-        self.assertIn("There is no second model question", text)
+        self.assertIn("There is no model question and no model statement here", text)
         self.assertEqual(3, text.count("👉"), "Step 1c asks the offer, the Piper voice offer "
                          "(#341) and the install offer, and nothing else")
 
@@ -361,15 +362,14 @@ class NoMeansNothingWritten(unittest.TestCase):
         self.assertIn("The storyboard is written only after a yes", text)
         self.assertIn("- **No:** continue straight to Step 2 in the same reply turn", text)
 
-    def test_the_heads_up_follows_only_a_declined_switch(self):
+    def test_no_heads_up_about_the_model_is_shown(self):
+        """Issue #4: the heads-up followed a declined model switch, and there is no switch."""
         text = squash(step_1c())
-        self.assertIn("Only when the bootcamper answered **no** to that switch question, open "
-                      "the yes reply with one statement line, not a question", text)
-        self.assertIn("Say nothing about the model when no switch question was asked", text)
-        self.assertIn("or when they accepted the switch", text)
-        heads_up = re.search(r"^> ℹ️ (.+)$", step_1c(), re.M)
-        self.assertIsNotNone(heads_up, "the heads-up line must be pinned")
-        self.assertNotIn("?", heads_up.group(1), "the heads-up is a statement, not a question")
+        self.assertIn("Write the narration on whatever the bootcamper is running and say nothing "
+                      "about it", text)
+        self.assertNotRegex(text, r"(?i)switch question|recommended model|accepted the switch")
+        self.assertIsNone(re.search(r"^> ℹ️ .*(?i:model|effort)", step_1c(), re.M),
+                          "a pinned statement line about the model is back")
 
 
 class TheTimeBudget(unittest.TestCase):

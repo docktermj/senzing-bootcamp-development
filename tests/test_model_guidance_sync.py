@@ -1,21 +1,29 @@
-"""Tests that the per-stage model/effort recommendation stays consistent.
+"""Tests that what the bootcamp says about models and effort levels stays consistent.
 
-The INV-063 module-start nudge names a recommended model in two places that must
-agree: the operational table in `skills/bootcamp-onboarding/ground-rules.md` (the
-file the guide actually loads at module start) and the maintainer reference in
-`docs/model-selection.md`. `ground-rules.md` even carries a "keep in sync"
-instruction — but nothing enforced it, and the pair drifted a full model
-generation behind before a bootcamper reported it.
+Two things here are point-in-time or stated twice, and nothing else couples them:
+
+1. **Model names.** The welcome names one model (`{{host.model_capable}}`), and the Claude
+   install pages and `docs/model-selection.md` name models and IDs. A superseded name would
+   point a bootcamper at a model one generation back, and the pair drifted that far once
+   before a bootcamper reported it.
+2. **The per-stage effort table.** `skills/bootcamp-onboarding/ground-rules.md` → "Working
+   depth by stage" is the copy the guide loads; `docs/model-selection.md` carries a derived
+   copy beside the reasoning for each level.
 
 These tests are the enforcement:
 
 1. No superseded model name or ID survives anywhere in the shipped plugin.
-2. The two per-stage tables agree row for row.
+2. The two per-stage tables, and the instruction for each level, agree.
+3. Every stage the bootcamp can run has exactly one row, with one level.
 
-Enforces **INV-114** (bootcamper-facing model/effort guidance names only current models
-and IDs, with `ground-rules.md` authoritative and `docs/model-selection.md` derived) and
+Named as its enforcer by **INV-114** (model guidance names only current models and IDs, with
+`ground-rules.md` authoritative and `docs/model-selection.md` derived and dated) and by
 **INV-140** (every stage the bootcamp can run has exactly one row in the per-stage table,
-including the apparatus-exempt setup stages). Both name this file as their enforcer.
+including the apparatus-exempt setup stages). ⚠️ Issue #4 changed what that table holds: it
+was a model and effort recommendation the bootcamper was asked to set, and is now an effort
+level the guide works to by instruction, with no model column. Both invariants' registered
+wording still describes the old table; the parts checked here are the parts that survive.
+`tests/test_working_depth_by_stage.py` checks the table against every assistant's package.
 
 Run:  python3 -m unittest discover -s tests
 """
@@ -29,9 +37,8 @@ PLUGIN = os.path.join(str(built("claude")))
 GROUND_RULES = os.path.join(PLUGIN, "skills", "bootcamp-onboarding", "ground-rules.md")
 MODEL_SELECTION = os.path.join(PLUGIN, "docs", "model-selection.md")
 
-# Model names/IDs that have been superseded. A hit means the recommendation would
-# tell a bootcamper to switch *down* from the current model — the defect this
-# guards. Add a row whenever a model is superseded; the last element of each pair
+# Model names/IDs that have been superseded. A hit means the bootcamp would name a
+# model one generation back — the defect this guards. Add a row whenever a model is superseded; the last element of each pair
 # is the current replacement, quoted in the failure message.
 SUPERSEDED = [
     ("Opus 4.8", "Opus 5.5"),
@@ -100,7 +107,7 @@ def superseded_offenders(rel, text, exempt_note=False):
     ]
 
 
-TABLE_HEADER = "| Stage | Recommended | CLI commands |"
+TABLE_HEADER = "| Stage | Effort |"
 
 
 # Repo-level user-facing docs. Included because a rename or model refresh that
@@ -110,7 +117,7 @@ TABLE_HEADER = "| Stage | Recommended | CLI commands |"
 # records and must keep naming what was true when written.
 # Adapted (one-repository migration, 2026-11-14): `docs/README.md`, the old Claude user doc,
 # was deleted. The user-facing docs that name a model are now the public README and the Claude
-# install fragments (`Sonnet 5.5`, `Opus 5.5` and `claude --model claude-sonnet-5-5` are in
+# install fragments (`Opus 5.5` and `claude --model claude-opus-5-5` are in
 # `site-install.html` and `site-tips.html`), so those are read in its place. The fragments are
 # HTML; the names and IDs sit in their text as written, so they are matched as text. A listed
 # file that is missing now fails (`test_every_repo_doc_exists_and_one_names_a_model`) where
@@ -137,7 +144,7 @@ def shipped_markdown():
 
 
 def stage_table(path):
-    """Extract the per-stage recommendation table as a list of cell-tuples.
+    """Extract the per-stage effort table as a list of cell-tuples.
 
     Tolerates leading indentation: the ground-rules copy is nested inside a
     bullet, the model-selection copy sits at column zero.
@@ -163,7 +170,7 @@ def stage_table(path):
 
 
 class NoSupersededModelReferences(unittest.TestCase):
-    """A superseded model name would recommend downgrading — never ship one."""
+    """A superseded model name points a bootcamper one generation back — never ship one."""
 
     def test_no_superseded_names_or_ids(self):
         offenders = []
@@ -189,7 +196,7 @@ class NoSupersededModelReferences(unittest.TestCase):
             if os.path.isfile(path):
                 with open(path, encoding="utf-8") as fh:
                     text = fh.read()
-                if "Sonnet 5.5" in text and "claude-sonnet-5-5" in text:
+                if "Opus 5.5" in text and "claude-opus-5-5" in text:
                     naming.append(rel)
         self.assertIn("hosts/claude/fragments/site-install.html", naming,
                       "no repo-level user doc names the current model and its ID, so the "
@@ -201,12 +208,12 @@ class NoSupersededModelReferences(unittest.TestCase):
         with open(path, encoding="utf-8") as fh:
             text = fh.read()
         self.assertEqual([], superseded_offenders("fragment", text))
-        stale = text.replace("<strong>Sonnet 5.5</strong>", "<strong>Sonnet 5</strong>").replace(
-            "claude-sonnet-5-5", "claude-sonnet-5")
+        stale = text.replace("<strong>Opus 5.5</strong>", "<strong>Opus 5</strong>").replace(
+            "claude-opus-5-5", "claude-opus-5")
         self.assertNotEqual(text, stale, "the control changed nothing")
         self.assertEqual(
-            ["fragment: 'Sonnet 5' should be 'Sonnet 5.5'",
-             "fragment: 'claude-sonnet-5' should be 'claude-sonnet-5-5'"],
+            ["fragment: 'Opus 5' should be 'Opus 5.5'",
+             "fragment: 'claude-opus-5' should be 'claude-opus-5-5'"],
             superseded_offenders("fragment", stale))
 
     def test_the_staleness_note_is_found_and_names_what_it_supersedes(self):
@@ -222,17 +229,13 @@ class NoSupersededModelReferences(unittest.TestCase):
             "exemption is not exercised",
         )
 
-    def test_switch_command_names_a_current_model(self):
-        # The copy-pasteable switch command is a functional string: if the display
-        # name moves without the ID, the pasted command selects the old model.
-        with open(MODEL_SELECTION, encoding="utf-8") as fh:
+    def test_the_welcome_names_a_current_model(self):
+        """The one model the bootcamp names to the bootcamper, as the package renders it."""
+        flow = os.path.join(PLUGIN, "skills", "bootcamp-onboarding", "onboarding-flow.md")
+        with open(flow, encoding="utf-8") as fh:
             text = fh.read()
-        for match in re.finditer(r"/model (claude-[a-z0-9-]+)", text):
-            model_id = match.group(1)
-            stale_ids = [stale for stale, _ in SUPERSEDED if stale == model_id]
-            self.assertEqual(
-                stale_ids, [], f"/model {model_id} names a superseded model"
-            )
+        self.assertIn("Opus 5.5 suits it well", " ".join(text.split()))
+        self.assertEqual([], superseded_offenders("onboarding-flow.md", text))
 
 
 class SupersededMatcherRespectsVersionBoundaries(unittest.TestCase):
@@ -310,6 +313,18 @@ class SupersededMatcherRespectsVersionBoundaries(unittest.TestCase):
         self.assertNotEqual([], superseded_offenders("m.md", stale, exempt_note=True))
 
 
+INSTRUCTION = re.compile(r"^\s*- \*\*([a-z]+):\*\* (.+)$", re.M)
+
+
+def instructions(path):
+    """``[(level, instruction)]`` as a file states them, one line each.
+
+    Line-scoped by design (#4): each instruction is written on one line.
+    """
+    with open(path, encoding="utf-8") as fh:
+        return INSTRUCTION.findall(fh.read())
+
+
 class StageTablesAgree(unittest.TestCase):
     """The operational table and the maintainer reference must not drift."""
 
@@ -317,33 +332,43 @@ class StageTablesAgree(unittest.TestCase):
         self.assertEqual(
             stage_table(GROUND_RULES),
             stage_table(MODEL_SELECTION),
-            "the per-stage model/effort tables in ground-rules.md and "
+            "the per-stage effort tables in ground-rules.md and "
             "docs/model-selection.md have drifted — update both",
         )
 
-    def test_every_row_names_a_model_and_an_effort(self):
-        for stage, recommended, commands in stage_table(GROUND_RULES):
+    def test_every_row_names_one_effort_level_and_nothing_else(self):
+        for row in stage_table(GROUND_RULES):
+            self.assertEqual(2, len(row), f"{row!r}: a row is a stage and its level")
+            stage, level = row
             self.assertTrue(stage, "a stage row has an empty stage name")
-            self.assertIn("effort", recommended, f"{stage!r}: no effort named")
-            self.assertIn("/model", commands, f"{stage!r}: no /model command")
-            self.assertIn("/effort", commands, f"{stage!r}: no /effort command")
+            self.assertIn(level, ("medium", "high"), f"{stage!r}: {level!r} is not a level")
+
+    def test_the_instruction_for_each_level_is_identical(self):
+        found = instructions(GROUND_RULES)
+        self.assertEqual(["medium", "high"], [level for level, _text in found])
+        self.assertEqual(found, instructions(MODEL_SELECTION))
+
+    def test_the_table_names_no_model_and_no_command(self):
+        """The model column and the CLI column went with the question that used them."""
+        for path in (GROUND_RULES, MODEL_SELECTION):
+            for row in stage_table(path):
+                with self.subTest(path=os.path.basename(path), stage=row[0]):
+                    self.assertNotRegex(" | ".join(row), r"(?i)opus|sonnet|fable|haiku|/model|/effort")
 
 
 class EveryStageHasExactlyOneRecommendation(unittest.TestCase):
     """Total coverage, single-valued cells.
 
-    Change detection compares this stage's recommendation against what the
-    Bootcamper is running; where the current setting is undeterminable it falls
-    back to the previous stage's row. Both need a value on each side, so a stage
-    missing from the table leaves the comparison undefined — Entity Resolution
-    Concepts was absent this way. And a cell offering two answers ("Sonnet 5.5,
-    high effort (Opus if bespoke load code)") cannot be pinned into a verbatim
-    switch question (INV-056) nor compared against a single current setting.
+    The guide reads its stage's row at the stage's start and works to that level's
+    instruction, so a stage missing from the table has no instruction at all — Entity
+    Resolution Concepts was absent this way from the table's earlier form. And a cell
+    offering two answers ("high (medium if no bespoke load code)") names a condition the
+    guide cannot resolve at the stage's start.
     """
 
     def setUp(self):
         self.rows = stage_table(GROUND_RULES)
-        self.stages = [stage for stage, _, _ in self.rows]
+        self.stages = [stage for stage, _ in self.rows]
 
     def test_every_canonical_module_has_a_row(self):
         # Parsed from bootcamp-preparation's module table — the one place display
@@ -362,27 +387,30 @@ class EveryStageHasExactlyOneRecommendation(unittest.TestCase):
         self.assertEqual(
             [],
             missing,
-            f"module(s) with no model/effort row: {missing}. Every stage the bootcamp "
-            "can run needs one, including apparatus-exempt stages, so change "
-            "detection always has a value to compare against.",
+            f"module(s) with no effort row: {missing}. Every stage the bootcamp "
+            "can run needs one, including apparatus-exempt stages, so the guide "
+            "always has an instruction to work to.",
         )
 
+    def test_no_stage_has_two_rows(self):
+        doubled = sorted({stage for stage in self.stages if self.stages.count(stage) > 1})
+        self.assertEqual([], doubled, f"stage(s) with more than one row: {doubled}")
+
     def test_onboarding_is_rated_too(self):
-        """Not in the prep table, but it is a stage the nudge compares against."""
+        """Not in the prep table, but it is a stage the bootcamp runs."""
         self.assertIn("Onboarding", self.stages)
 
-    def test_no_row_offers_a_conditional_recommendation(self):
+    def test_no_row_offers_a_conditional_level(self):
         offenders = [
-            f"{stage}: {recommended!r}"
-            for stage, recommended, _ in self.rows
-            if "(" in recommended or re.search(r"\bif\b|\bor\b", recommended)
+            f"{stage}: {level!r}"
+            for stage, level in self.rows
+            if "(" in level or re.search(r"\bif\b|\bor\b", level)
         ]
         self.assertEqual(
             [],
             offenders,
-            f"conditional recommendation(s): {offenders}. A row must name exactly one "
-            "model and one effort — the nudge cannot resolve a condition at module "
-            "start, and INV-056 requires the question be pinnable.",
+            f"conditional level(s): {offenders}. A row must name exactly one "
+            "level — the guide cannot resolve a condition at the stage's start.",
         )
 
     def test_one_stage_per_row(self):
