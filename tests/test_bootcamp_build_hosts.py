@@ -87,11 +87,17 @@ class Packages(unittest.TestCase):
                 source_body = path.read_text(encoding="utf-8").split("---\n", 2)[2]
                 built_body = skill.read_text(encoding="utf-8").split("---\n", 2)[2]
                 # The skill is the command's text plus one closing note saying where sibling
-                # skills are, so an assistant never searches the disk for them.
+                # skills are, so an assistant never searches the disk for them. A host that
+                # hands over a skill without its path adds one more, naming the skill's own
+                # directory.
                 source_lines, built_lines = source_body.rstrip("\n").splitlines(), built_body.splitlines()
-                self.assertEqual(len(built_lines), len(source_lines) + 2, path.name)
+                notes = 2 if build.host.options.get("skill_location_note") else 1
+                self.assertEqual(len(built_lines), len(source_lines) + 2 * notes, path.name)
                 self.assertEqual(built_lines[len(source_lines)], "", path.name)
-                self.assertIn("Never search the filesystem for a skill file", built_lines[-1], path.name)
+                self.assertIn("Never search the filesystem for a skill file",
+                              built_lines[len(source_lines) + 1], path.name)
+                if notes == 2:
+                    self.assertIn(f"/skills/{path.stem}/`", built_lines[-1], path.name)
 
     def test_every_skill_uses_only_frontmatter_every_assistant_reads(self):
         for build in self.each():

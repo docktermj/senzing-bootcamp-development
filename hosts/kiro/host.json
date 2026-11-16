@@ -54,6 +54,7 @@
     ]
   },
   "options": {
+    "skill_location_note": "**Where this skill's files are.** Kiro gives you this `SKILL.md` without its path. The bootcamp is installed at `~/.kiro/powers/installed/senzing-bootcamp/`, so this skill's directory is `~/.kiro/powers/installed/senzing-bootcamp/skills/{skill}/`. \"This skill directory\", `<this-skill-dir>` and every `../` path in this file count from there, and `${PLUGIN_ROOT}` is `~/.kiro/powers/installed/senzing-bootcamp`. ⛔ Read the files from there. If that directory is missing, look only inside `~/.kiro/powers/` for `senzing-bootcamp`. Never search the rest of the filesystem for a bootcamp file: a second copy of the bootcamp on the same machine is normal, and it is not the one running.",
     "adapter": {
       "result_dialect": "text",
       "transcript_dialect": null,
