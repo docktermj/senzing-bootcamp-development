@@ -27,6 +27,27 @@ records `uncommitted`, and the next run that touches the entry fills the hash in
 
 -->
 
+## research-how-each-assistant-can-adjust-reasoning-effort
+
+- **Implemented:** 2026-11-16 (issue #5)
+- **Files changed:** `docs/effort-mechanisms.md`, `tests/test_effort_mechanisms_covers_every_assistant.py`
+- **MCP re-check:** n/a (no Senzing fact). Re-confirmed on 2026-11-16: the change is research
+  about AI assistants and asserts nothing about Senzing.
+- **Summary:** `docs/effort-mechanisms.md` records, for each of the five assistants, whether a
+  package can change the main session's reasoning effort, whether a helper agent can run at a
+  chosen effort, the effect on the conversation cache, the source and what was not verified.
+  Claude Code 2.1.325 was checked live: a skill's `effort:` frontmatter applied for its turn, a
+  plugin agent ran at its own effort, and the conversation cache was kept. Copilot CLI 1.0.112
+  was checked live: a plugin agent's documented `reasoningEffort` was not applied. Kiro, Codex
+  and Antigravity are from documentation only; no mechanism was found for Kiro, so the Kiro live
+  check the issue allows for was not needed. The file recommends, for issue #4, instructions on
+  every assistant plus the skill `effort:` setting on Claude only. The test checks that every
+  assistant under `hosts/` has exactly one row, that each row says how it was verified and that
+  the file ends with a recommendation.
+- **Establishes no invariant** (INV-309): the file is a dated research record, and the test
+  guards its coverage, not a rule of the bootcamp.
+- **Commit:** uncommitted
+
 ## one-development-repository-for-every-assistant
 
 - **Implemented:** 2026-11-14
