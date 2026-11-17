@@ -345,7 +345,7 @@ line and holds no copy of it, so changing the line changes the range.
   bind the rule by kind and name the list as one assistant's examples. Until the maintainer
   applies it, only the test holds them.
 
-- **PROPOSED AMENDMENT to INV-247 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-247 — applied 2026-11-16 by the maintainer.**
     - ⛔ **Every 👉 question traces to a step in a shipped skill file — never originate one (INV-247).** — in `source/skills/bootcamp-onboarding/ground-rules.md`
     - ⛔ **never present a session- or host-level control as a bootcamp question** — in `source/skills/bootcamp-onboarding/ground-rules.md`
     - ⛔ **Do not name a dismissal affordance either** — in `source/skills/bootcamp-onboarding/ground-rules.md`
