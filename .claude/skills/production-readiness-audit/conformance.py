@@ -13,6 +13,13 @@ the audit; it has run a grep.
     size           Goldilocks measurements for the concision pass
     all            every scan
 
+⛔ **A directory the build takes package text from is read by the audit and review tools.**
+Today that is `source`, `hosts` and `tools/bootcamp_build/`, named in `SCAN_ROOTS` and
+`UNCOUNTED_RULE_HOMES` below. One added later joins those constants, and the roots of
+`pending_invariants.py sites` and of `coverage_reports.py`, in the change that adds it. The
+three tools hold their roots separately, and roots left unwidened when package text gained a
+new home is the defect #9 repaired.
+
 Read-only. Exits 0 whatever it finds, because a hit is usually legitimate and a report
 that gates is a report nobody runs.
 """
@@ -43,7 +50,14 @@ INV_ID = re.compile(r"INV-\d{3}")
 #: The command directory left at #262, which deleted the ten same-name command files: `/<name>`
 #: runs the skill (measured 2026-09-29, Claude Code 2.1.284, #241), so every maintainer rule
 #: now ships under `.claude/skills` or `.claude/skill-overlays`.
-SCAN_ROOTS = ("source", ".claude/skills", ".claude/skill-overlays")
+#:
+#: `hosts` joined at #9. The bootcamp is one source built for several assistants, and each
+#: assistant's own package text lives under `hosts/`: its Markdown fragments, the files copied
+#: into one assistant's package, and `host.json`. Until #9 no view read any of it, so a hard
+#: rule added there shipped with nothing listing it. Its Markdown is in the corpus like any
+#: other root's; its `.json`, `.html` and `.py` files are reported outside it, with `!`.
+HOSTS_ROOT = "hosts"
+SCAN_ROOTS = ("source", ".claude/skills", ".claude/skill-overlays", HOSTS_ROOT)
 
 #: ⚠️ **A root that held maintainer files once and holds none now, still handed to `git diff`
 #: (#262).** Git pairs a rename only between paths inside the pathspec. #239 moved two command
@@ -76,7 +90,12 @@ RETIRED_ROOTS = (".claude/commands",)
 #: a signal into permanent noise. A non-`.md` file inside `SCAN_ROOTS` qualifies too -- the
 #: `.py` and `.sh` tooling states rules in `#:` comments and docstrings as a matter of house
 #: style, and 141 of them do.
-UNCOUNTED_RULE_HOMES = ("docs/",)
+#:
+#: `tools/bootcamp_build/` joined at #9: the build appends notes to package text from string
+#: constants in its own `.py` files (`emit.py`), so a hard rule written there reaches a
+#: bootcamper without sitting in any file under `SCAN_ROOTS`. It holds no Markdown, so it is a
+#: rule home reported with `!` and not a corpus root.
+UNCOUNTED_RULE_HOMES = ("docs/", "tools/bootcamp_build/")
 
 # The repo's own convention for a deliberate hard rule: a ⛔ lead-in, or a bolded
 # MUST/NEVER/ALWAYS. Bare prose "must" is excluded — it is ordinary instruction, and
@@ -160,6 +179,45 @@ def shipped_markdown(plugin):
     return sorted(p for p in plugin.rglob("*.md") if p.is_file())
 
 
+def rule_view_roots(repo, plugin):
+    """The directories `rules` and `per-rule` read, in the order they read them (#9).
+
+    The shipped source and the host-side inputs under `HOSTS_ROOT`. The maintainer surface
+    stays out, for the reason `cmd_since` gives. `duplication` and `size` keep reading
+    `shipped_markdown(plugin)` alone: #9 widened the hard-rule views, and their recorded
+    figures stay comparable.
+    """
+    return [plugin, repo / HOSTS_ROOT]
+
+
+def rule_markdown(repo, plugin):
+    """Every Markdown file the whole-corpus rule views read: one definition (INV-308).
+
+    `rules` and `per-rule` list from it and `reverse-check` tests membership against it, so
+    the corpus a line is tested in is by construction the corpus `per-rule` reads.
+    """
+    return [f for root in rule_view_roots(repo, plugin) for f in shipped_markdown(root)]
+
+
+def print_rule_view_corpus(repo, plugin):
+    """What `rules` and `per-rule` read and what they did not, on every run (#9).
+
+    Printed at a zero too, with a file count per root: a root that contributed no hard rule
+    still shows as read, and a root with no file under it shows as `0 file(s)`, which is a
+    different answer from having found nothing in it.
+    """
+    roots = rule_view_roots(repo, plugin)
+    names = [rel(root, repo) for root in roots]
+    print("   CORPUS: %s — and `.md` only."
+          % ", ".join("%s (%d file(s))" % (name, len(shipped_markdown(root)))
+                      for name, root in zip(names, roots)))
+    print("   NOT READ: the non-`.md` files under %s, nor %s,"
+          % (" and ".join(names), ", ".join(UNCOUNTED_RULE_HOMES)))
+    print("     nor the maintainer surface (%s)."
+          % ", ".join(r for r in SCAN_ROOTS if r not in names))
+    print("     `since` reports a hard rule that a range adds in any of those.")
+
+
 def rel(p, repo):
     try:
         return str(p.relative_to(repo))
@@ -198,7 +256,7 @@ def cmd_rules(args):
     counts = collections.Counter()
     hits = 0
     by_file = collections.OrderedDict()
-    for path in shipped_markdown(plugin):
+    for path in rule_markdown(repo, plugin):
         lines = path.read_text(encoding="utf-8").splitlines()
         enclosing = sections(lines)
         for i, line in enumerate(lines):
@@ -225,6 +283,7 @@ def cmd_rules(args):
     print("     not first on its line -- were invisible to every view until then.")
     print("   ^ each is EITHER an unregistered rule (propose an invariant) OR a missing")
     print("     citation to one that exists. Both are findings; they need different fixes.")
+    print_rule_view_corpus(repo, plugin)
     print()
     print("   \u26d4 This is NOT a count of unregistered rules, and MUST NOT be read as one.")
     print("     The unit is the SECTION. A brand-new unregistered rule does not appear here")
@@ -280,7 +339,7 @@ def cmd_per_rule(args):
     only = getattr(args, "uncited", False)
     print("== every hard rule, with the invariants cited AT it (worklist, not a verdict)\n")
     total = bare = 0
-    for path in shipped_markdown(plugin):
+    for path in rule_markdown(repo, plugin):
         lines = path.read_text(encoding="utf-8").splitlines()
         rows = []
         for i, line in enumerate(lines):
@@ -303,6 +362,7 @@ def cmd_per_rule(args):
     print("   ^ a worklist to READ. For each, search INVARIANTS.md for the rule's SUBJECT:")
     print("     registered but uncited -> add the citation (INV-183); not registered ->")
     print("     draft an invariant and get sign-off. Neither is decidable mechanically.")
+    print_rule_view_corpus(repo, plugin)
     print()
     print("   \u26a0 Residual limitation: a hard rule written with NO stop sign and no bolded")
     print("     MUST/NEVER/ALWAYS is invisible to all three views. Bare prose \"must\" is excluded")
@@ -755,6 +815,11 @@ def cmd_reverse_check(args):
     these are leads would have buried the real ones. What was wrong is a check spanning two corpora **silently**, so this view reports
     the span instead of hiding it.
 
+    Dated note (#9): `per-rule` now reads the host-side Markdown under `hosts/` as well as the
+    plugin, and this view tests against the same `rule_markdown()` call, so a rule added to a
+    Markdown file under `hosts/` is TESTED. The maintainer surface is still outside that corpus,
+    for the reason above, and is still counted as UNTESTED.
+
     ⛔ **A run with untested lines is NOT CLEAN**, and the verdict says so in those words. Zero
     uncited among the tested half is a true statement about the tested half and nothing more
     (INV-308).
@@ -784,16 +849,18 @@ def cmd_reverse_check(args):
         sys.stderr.write("git diff against %r failed\n" % ref)
         return 2
 
-    # ⛔ Both derived from `paths()`/`shipped_markdown()` -- the same call `per-rule` makes --
-    # rather than restated as a path literal. A second spelling of "the corpus per-rule reads"
-    # is the defect this view exists to report, one level up (INV-308).
-    corpus_root = rel(plugin, repo)
-    corpus = {rel(f, repo) for f in shipped_markdown(plugin)}
+    # ⛔ (INV-308) Both derived from `rule_view_roots()`/`rule_markdown()` -- the same calls
+    # `per-rule` makes -- rather than restated as path literals. A second spelling of "the
+    # corpus per-rule reads" is the defect this view exists to report, one level up.
+    corpus_roots = [rel(root, repo) for root in rule_view_roots(repo, plugin)]
+    corpus_name = ", ".join(corpus_roots)
+    corpus = {rel(f, repo) for f in rule_markdown(repo, plugin)}
 
     cited, uncited, untested, unresolved = 0, [], [], []
     for path, bodies in added.items():
         if path not in corpus:
-            bucket = unresolved if path.startswith(corpus_root + "/") else untested
+            inside = path.startswith(tuple(root + "/" for root in corpus_roots))
+            bucket = unresolved if inside else untested
             bucket.extend((path, body) for body in bodies)
             continue
         lines = (repo / path).read_text(encoding="utf-8").splitlines()
@@ -810,7 +877,7 @@ def cmd_reverse_check(args):
     untested_cited, untested_bare = _citation_rate(repo, untested)
     print("== INV-282 reverse check: hard rules added since %s, tested at their own line\n" % ref)
     print("   TESTED   %d line(s) in %s -- %d cited at the line, %d NOT cited"
-          % (tested, corpus_root, cited, len(uncited)))
+          % (tested, corpus_name, cited, len(uncited)))
     for path, line_no, body in uncited:
         print("     UNCITED %s:%d  %s" % (path, line_no, body[:90]))
     # ⚠️ Printed even at zero: a figure that appears only when non-zero makes its absence
@@ -818,7 +885,7 @@ def cmd_reverse_check(args):
     print("   UNTESTED %d line(s) outside that corpus%s; %d cite an invariant at the line, "
           "%d do not"
           % (len(untested),
-             " (%s)" % ", ".join(sorted({r for r in SCAN_ROOTS if r != corpus_root})),
+             " (%s)" % ", ".join(sorted({r for r in SCAN_ROOTS if r not in corpus_roots})),
              untested_cited, untested_bare))
     # ⛔ The rate is evidence ABOUT the untested span, never a finding on it. Printed with the
     # count rather than in the verdict block so the two can never drift apart (#83).
@@ -832,7 +899,7 @@ def cmd_reverse_check(args):
     if len(by_file) > 6:
         print("     ... and %d more file(s)" % (len(by_file) - 6))
     print("   UNRESOLVED %d line(s) reported in %s but not found there now"
-          % (len(unresolved), corpus_root))
+          % (len(unresolved), corpus_name))
     for path, body in unresolved[:6]:
         print("     ? %s  %s" % (path, body[:70]))
 

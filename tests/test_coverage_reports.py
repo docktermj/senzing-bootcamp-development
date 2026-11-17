@@ -253,6 +253,61 @@ class TestShippedReport(unittest.TestCase):
             self.assertEqual([FIX_A], [h[0] for h in hits],
                              "a test citation must NOT count as shipped coverage")
 
+    #: (#9) A host-side input of each kind that can carry a citation, and where it sits.
+    HOST_SIDE_CITATIONS = (
+        ("hosts/kiro/host.json", '{"note": "governed by %s here"}\n'),
+        ("hosts/chatgpt/fragments/hooks-setup.md", "governed by %s here\n"),
+        ("hosts/kiro/fragments/site-tips.html", "<!-- governed by %s here -->\n"),
+        ("tools/bootcamp_build/emit.py", 'NOTE = "governed by %s here"\n'),
+    )
+
+    def _cited_only_in(self, root, relpath, shape):
+        """A tree whose one binding invariant is cited in `relpath` and nowhere else."""
+        self._tree(root, self._invariants(
+            (FIX_A, "Module 5's `SKILL.md` MUST do the thing.")))
+        path = root / relpath
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(shape % FIX_A, encoding="utf-8")
+        return reports.find_uncited_in_shipped(str(root))[0]
+
+    def test_an_invariant_cited_only_in_a_host_side_input_is_not_reported(self):
+        """#9: `hosts/` and `tools/bootcamp_build/` are turned into package text by the build."""
+        for relpath, shape in self.HOST_SIDE_CITATIONS:
+            with self.subTest(file=relpath), tempfile.TemporaryDirectory() as tmp:
+                self.assertEqual(
+                    [], self._cited_only_in(Path(tmp), relpath, shape),
+                    "an invariant whose only citation is in %s was reported as cited by no "
+                    "shipped file" % relpath)
+
+    def test_a_citation_outside_the_shipped_roots_still_does_not_count(self):
+        """The control for the test above: it is the root that counts, not any file at all."""
+        for relpath, shape in (("tools/elsewhere/emit.py", 'NOTE = "governed by %s here"\n'),
+                               ("site/index.html", "<!-- governed by %s here -->\n"),
+                               ("docs/development.md", "governed by %s here\n")):
+            with self.subTest(file=relpath), tempfile.TemporaryDirectory() as tmp:
+                hits = self._cited_only_in(Path(tmp), relpath, shape)
+                self.assertEqual([FIX_A], [h[0] for h in hits],
+                                 "a citation in %s counted as shipped coverage" % relpath)
+
+    def test_the_heading_names_every_root_it_read_on_a_run_that_finds_nothing(self):
+        """A zero: the three roots are named when no invariant is reported."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self._tree(root, self._invariants(
+                (FIX_A, "Module 5's `SKILL.md` MUST do the thing."),
+            ), plugin_files=[("m5.md", "governed by %s here" % FIX_A)])
+            code, out, err = run("shipped", tmp, repo=root)
+        self.assertEqual(0, code, err)
+        self.assertIn("(none —", out, "the fixture was meant to report nothing:\n%s" % out)
+        heading = out.splitlines()[0]
+        for shipped_root in reports.SHIPPED_ROOTS:
+            with self.subTest(root=shipped_root):
+                self.assertIn(shipped_root.replace("\\", "/") + "/", heading,
+                              "the heading of a run that found nothing does not name %r as "
+                              "read:\n%s" % (shipped_root, out))
+        self.assertEqual(("source", "hosts", "tools/bootcamp_build"),
+                         tuple(r.replace("\\", "/") for r in reports.SHIPPED_ROOTS))
+
     def test_the_development_group_is_exempt_and_read_from_the_data(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -472,7 +527,8 @@ class TestShippedReport(unittest.TestCase):
     def test_both_still_runs_every_report_including_this_one(self):
         code, out, err = run("both", REPO_ROOT)
         self.assertEqual(0, code, err)
-        for heading in ("cited by no test file", "NO file under source/ cites",
+        for heading in ("cited by no test file",
+                        "NO file under source/, hosts/ or tools/bootcamp_build/ cites",
                         "Predicted-but-unrecorded", "Dated MCP negatives"):
             with self.subTest(heading=heading):
                 self.assertIn(heading, out)
@@ -657,6 +713,80 @@ class TestNegativesScanSurface(unittest.TestCase):
         )
 
 
+class TestNegativesReadTheHostSideInputs(unittest.TestCase):
+    """#9 — a marker in a file under `hosts/` is a live claim and is on the worklist."""
+
+    GOOD = ("MCP-NEGATIVE: sdk_guide(topic='install') — returns no language list "
+            "— owner: get_capabilities carries it — server 1.32.9, 2026-08-13")
+
+    def _tree(self, tmp, files):
+        root = Path(tmp)
+        (root / "specs").mkdir()
+        (root / "source").mkdir()
+        for relpath, body in files:
+            path = root / relpath
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(body, encoding="utf-8")
+        return root
+
+    def test_a_marker_in_a_host_file_is_listed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = self._tree(tmp, [
+                ("hosts/kiro/fragments/hooks-setup.md", "<!-- %s -->\n" % self.GOOD),
+                ("hosts/kiro/files/skills/x/scripts/install_hooks.py", "# %s\n" % self.GOOD),
+                ("site/index.md", "<!-- %s -->\n" % self.GOOD),
+            ])
+            found = sorted(r[5].replace("\\", "/") for r in reports.find_negatives(str(root)))
+            code, out, err = run("negatives", tmp, repo=root)
+        self.assertEqual(
+            ["hosts/kiro/files/skills/x/scripts/install_hooks.py",
+             "hosts/kiro/fragments/hooks-setup.md"], found,
+            "the worklist must carry both markers under `hosts/`, and not the one under "
+            "`site/`, which is no scanned root; got %r" % (found,))
+        self.assertEqual(0, code, err)
+        self.assertIn("hosts/kiro/fragments/hooks-setup.md:1", out)
+
+    def test_a_malformed_marker_in_a_host_file_is_reported_as_malformed(self):
+        """The half of the worklist that catches a marker which fell off it."""
+        clauseless = self.GOOD.replace("— owner: get_capabilities carries it ", "")
+        with tempfile.TemporaryDirectory() as tmp:
+            root = self._tree(tmp, [("hosts/kiro/fragments/hooks-setup.md", clauseless + "\n")])
+            malformed = [r[0].replace("\\", "/")
+                         for r in reports.find_malformed_negatives(str(root))]
+        self.assertEqual(["hosts/kiro/fragments/hooks-setup.md"], malformed)
+
+    def test_the_report_names_its_roots_on_a_run_that_finds_nothing(self):
+        """A zero: `hosts/` is named as read when no marker was found anywhere."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = self._tree(tmp, [("hosts/kiro/fragments/hooks-setup.md", "# no marker\n")])
+            code, out, err = run("negatives", tmp, repo=root)
+        self.assertEqual(0, code, err)
+        self.assertIn("(none found", out, "the fixture was meant to find nothing:\n%s" % out)
+        corpus = next((line for line in out.splitlines() if line.startswith("CORPUS:")), "")
+        for negative_root in reports.NEGATIVE_ROOTS:
+            with self.subTest(root=negative_root):
+                self.assertIn(negative_root.replace("\\", "/") + "/", corpus,
+                              "the report does not name %r as read:\n%s" % (negative_root, out))
+        self.assertIn("hosts", reports.NEGATIVE_ROOTS)
+        for suffix in reports.NEGATIVE_SUFFIXES:
+            self.assertIn("`%s`" % suffix, corpus)
+        self.assertIn("specs/DECLINED.md", corpus)
+
+    def test_the_stated_file_types_are_the_ones_the_scan_reads(self):
+        """The corpus line and the scan read one constant, so the line cannot overstate."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = self._tree(tmp, [
+                ("hosts/kiro/host.json", '{"note": "%s"}\n' % self.GOOD),
+                ("hosts/kiro/fragments/site-tips.html", "<!-- %s -->\n" % self.GOOD),
+            ])
+            found = reports.find_negatives(str(root))
+        self.assertEqual((".md", ".py"), tuple(reports.NEGATIVE_SUFFIXES))
+        self.assertEqual(
+            [], found,
+            "a `.json` or `.html` file was read although the corpus line says `.md` and `.py` "
+            "only; widen the constant and the statement together")
+
+
 class TestUnmarkedReport(unittest.TestCase):
     """`unmarked` finds dated tool-absence prose that carries no marker.
 
@@ -710,7 +840,9 @@ class TestUnmarkedReport(unittest.TestCase):
             stamp, relpath, lineno, phrase, excerpt = row
             with self.subTest(where="%s:%d" % (relpath, lineno)):
                 self.assertRegex(stamp, r"^(20\d\d-\d\d-\d\d|server \d)")
-                self.assertTrue(relpath.startswith("source"), "prose scan is plugin-only")
+                self.assertTrue(
+                    relpath.startswith(tuple(root + "/" for root in reports.PROSE_ROOTS)),
+                    "a hit outside the prose roots: %s" % relpath)
                 self.assertGreater(lineno, 0)
                 self.assertTrue(phrase.strip() and excerpt.strip())
 
@@ -792,6 +924,57 @@ class TestUnmarkedReport(unittest.TestCase):
                 "- ALL Senzing facts come from `search_docs` and friends, never from training "
                 "data. Re-assessed 2026-07-26.\n"))
             self.assertEqual([], self.report(root))
+
+    CLAIM = "- `sdk_guide` returns no upgrade topic (verified 2026-07-31).\n"
+
+    def _host_tree(self, tmp, relpath, body):
+        root = pathlib.Path(tmp)
+        (root / "specs").mkdir(exist_ok=True)
+        (root / "source").mkdir(exist_ok=True)
+        path = root / relpath
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(body, encoding="utf-8")
+        return root
+
+    def test_a_dated_absence_in_host_markdown_is_reported(self):
+        """#9: an assistant's fragment, and a file copied into its package, are shipped prose."""
+        for relpath in ("hosts/chatgpt/fragments/hooks-setup.md",
+                        "hosts/kiro/files/skills/bootcamp-hooks-setup/SKILL.md"):
+            with self.subTest(file=relpath), tempfile.TemporaryDirectory() as tmp:
+                found = self.report(self._host_tree(tmp, relpath, self.CLAIM))
+                self.assertEqual([relpath], [row[1].replace("\\", "/") for row in found],
+                                 "a dated tool-absence claim in %s was not reported" % relpath)
+
+    def test_the_same_host_claim_with_a_marker_is_not_reported(self):
+        """The control: the report reads the host file, it does not flag everything in it."""
+        marker = ("<!-- MCP-NEGATIVE: sdk_guide(topic='install') — returns no upgrade topic "
+                  "— owner: sdk_guide is the route that would carry it — server 1.32.9, "
+                  "2026-08-13 -->\n")
+        with tempfile.TemporaryDirectory() as tmp:
+            root = self._host_tree(tmp, "hosts/chatgpt/fragments/hooks-setup.md",
+                                   self.CLAIM + marker)
+            self.assertEqual([], self.report(root))
+
+    def test_only_markdown_is_read_under_hosts(self):
+        """`unmarked` reads prose: a `.json` or `.html` file under `hosts/` is not swept."""
+        for relpath in ("hosts/kiro/host.json", "hosts/kiro/fragments/site-tips.html"):
+            with self.subTest(file=relpath), tempfile.TemporaryDirectory() as tmp:
+                self.assertEqual([], self.report(self._host_tree(tmp, relpath, self.CLAIM)))
+
+    def test_the_report_names_its_roots_on_a_clean_run(self):
+        """A zero: `hosts/` is named as read when nothing was found."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = self._host_tree(tmp, "hosts/chatgpt/fragments/hooks-setup.md", "# clean\n")
+            code, out, err = run("unmarked", tmp, repo=root)
+        self.assertEqual(0, code, err)
+        self.assertIn("(none —", out, "the fixture was meant to find nothing:\n%s" % out)
+        corpus = next((line for line in out.splitlines() if line.startswith("CORPUS:")), "")
+        for prose_root in reports.PROSE_ROOTS:
+            with self.subTest(root=prose_root):
+                self.assertIn(prose_root + "/", corpus,
+                              "the report does not name %r as read:\n%s" % (prose_root, out))
+        self.assertEqual(("source", "hosts"), tuple(reports.PROSE_ROOTS))
+        self.assertIn("`.md`", corpus)
 
     def test_specs_and_tests_are_out_of_scope(self):
         """They have their own mechanisms: Step 3.3, INV-217, and the assertion-line guard."""

@@ -331,12 +331,45 @@ def resolve(loc):
 
 #: The suffixes a candidate site can have. Named once so the scanned and unscanned counts
 #: below are measuring the same population -- two spellings would make the pair meaningless.
-SITE_SUFFIXES = (".md", ".py")
+#:
+#: `.json` joined at #9, for every root at once and not for `hosts/` alone: an assistant's
+#: `host.json` carries package text, a rule in one is a site, and a suffix admitted under one
+#: root only would make the scanned count measure a population the unscanned count does not.
+SITE_SUFFIXES = (".md", ".py", ".json")
+
+#: The host-side inputs the candidate scan reads beside the plugin (#9): each assistant's own
+#: package text under `hosts/`, and the build tool, whose `.py` files hold the notes the build
+#: appends to package text. Repository-relative, and joined to `REPO` when the scan runs.
+HOST_SIDE_INPUTS = ("hosts", "tools/bootcamp_build")
+
+
+def scan_roots():
+    """The roots the candidate scan reads, in order: the plugin, then the host-side inputs.
+
+    A function and not a constant, because `REPO` and `PLUGIN` are module-level names a caller
+    may point at another tree; roots computed at import time would keep reading this one.
+    """
+    return (PLUGIN,) + tuple(REPO / root for root in HOST_SIDE_INPUTS)
 
 
 def shipped_files():
-    return sorted(p for p in PLUGIN.rglob("*")
-                  if p.suffix in SITE_SUFFIXES and p.is_file())
+    """Every candidate-suffixed file under `scan_roots()`, root by root."""
+    return [f for root in scan_roots()
+            for f in sorted(p for p in root.rglob("*")
+                            if p.suffix in SITE_SUFFIXES and p.is_file())]
+
+
+def site_label(f):
+    """A scanned file as a block names it: plugin-relative under the plugin, else repo-relative.
+
+    A block names a plugin site without the plugin root (`skills/x/SKILL.md`), which is the
+    form the named-site comparison in `cmd_sites` has always used. A host-side input has no
+    such short form, so it is named from the repository root, the way `resolve` finds it.
+    """
+    try:
+        return str(f.relative_to(PLUGIN))
+    except ValueError:
+        return rel_to_repo(f)
 
 
 #: The frozen archive's own manifest. A file pinned here is read-only under INV-307, so a
@@ -377,7 +410,7 @@ def scan_scope():
     tomorrow shows up in this count on its own.
 
     ⚠️ Measures the same suffixes `shipped_files()` does, over the whole repository minus the
-    scanned root, so the two numbers are halves of one population rather than two unrelated
+    scanned roots, so the two numbers are halves of one population rather than two unrelated
     figures. `.git` is skipped: it is not source and would dominate the count.
     """
     scanned = shipped_files()
@@ -408,14 +441,21 @@ def print_scan_scope(scanned, unscanned, ineligible):
     exactly the output that reads as *the* set, and it carried no statement that 887 of the
     repository's 950 candidate files were never opened. ⚠️ The two halves of this command
     disagree by design and now say so: a path named in the block's prose resolves anywhere
-    under RESOLUTION_ROOTS, while this scan reads one root.
+    under RESOLUTION_ROOTS, while this scan reads `scan_roots()` and nothing else.
+
+    One `SCANNED` line per root, each with its own count (#9), so a root the scan read and
+    found no file under still shows, as `0 file(s)`, and is not mistaken for a root left out.
     """
     total = sum(unscanned.values())
-    print(f"\n  SCANNED {rel_to_repo(PLUGIN)}: {len(scanned)} file(s)")
+    print()
+    for root in scan_roots():
+        under = sum(1 for f in scanned if root in f.parents)
+        print(f"  SCANNED {rel_to_repo(root)}: {under} file(s)")
     listed = ", ".join(f"{d}/ {n}" for d, n in
                        sorted(unscanned.items(), key=lambda kv: -kv[1])[:5])
     print(f"  NOT SCANNED {total} file(s) that COULD hold a site"
           + (f" -- {listed}" if listed else ""))
+    print(f"  Both counts measure one set of suffixes: {', '.join(SITE_SUFFIXES)}.")
     # ⚠️ Printed even at zero, like the count above it: a figure that appears only when it is
     # non-zero makes its absence something to interpret (#77, #83).
     print(f"  EXCLUDED {ineligible} frozen file(s): pinned in the archive manifest, read-only")
@@ -578,7 +618,7 @@ def cmd_sites(n):
     print("\n-- CANDIDATES from scanning (read each; do not cite blind) --")
     hits = 0
     for f in files:
-        rel = str(f.relative_to(PLUGIN))
+        rel = site_label(f)
         if rel in named or rel in prose:
             continue
         for i, line in enumerate(texts[f].splitlines(), 1):
@@ -591,8 +631,8 @@ def cmd_sites(n):
     if not hits:
         # ⛔ This line used to read "the named sites are likely the whole set". That is a
         # reassurance the scan cannot support and is FLATLY WRONG when nothing was named
-        # either -- the one case where it was certain to mislead (#59). The scan reads one
-        # root, so finding nothing is evidence about that root, not about the set.
+        # either -- the one case where it was certain to mislead (#59). The scan reads its own
+        # roots only, so finding nothing is evidence about those roots, not about the set.
         print("  (none found)")
         if not p["sites"]:
             print("\n  ⛔ NOTHING was named and NOTHING was found. That is not evidence the "

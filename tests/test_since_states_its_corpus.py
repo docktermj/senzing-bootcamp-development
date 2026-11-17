@@ -26,13 +26,23 @@ make it non-zero on every run and therefore worth ignoring, which is how a signa
 deferred, or that the corpus boundary is the right one. It establishes that a zero can no longer
 be read as "nothing was added" when something was.
 
-Source issue: #108.
+⚠️ **Dated note (#9): the host-side inputs joined.** `hosts` is a scanned root, so a rule in
+a Markdown file under it is counted with `+`, and a rule in its `.json`, `.html` or `.py`
+files is outside with `!`, as a non-`.md` file under any scanned root is.
+`tools/bootcamp_build/` is an uncounted rule home beside `docs/`.
+`HostSideInputsAreReportedWithTheRightMarker` runs the view itself over both.
+
+No phrase-level pattern (#9): its line reads are of `conformance.py`'s stdout, where the unit is
+the report line the view prints, and of no Markdown prose.
+
+Source issues: #108, #9.
 
 Stdlib only; the producer is loaded by path (INV-108).
 
 Run:  python3 -m unittest discover -s tests
 """
 import importlib.util
+import re
 import subprocess
 import sys
 import tempfile
@@ -123,6 +133,30 @@ class RuleHomesAreClassifiedCorrectly(unittest.TestCase):
         self.add(".claude/skills/x/SKILL.md", self.RULE)
         self.assertEqual([], self.outside())
 
+    def test_a_rule_in_host_json_is_an_uncounted_rule_home(self):
+        """#9: under a scanned root, and not Markdown."""
+        self.add("hosts/kiro/host.json", '{"note": "%s"}\n' % self.RULE.strip())
+        self.assertEqual(["hosts/kiro/host.json"], self.outside())
+
+    def test_a_rule_in_the_build_tool_is_an_uncounted_rule_home(self):
+        """#9: the build appends package text from string constants in its own source."""
+        self.add("tools/bootcamp_build/emit.py", 'NOTE = (\n    "%s "\n)\n' % self.RULE.strip())
+        self.assertEqual(["tools/bootcamp_build/emit.py"], self.outside())
+
+    def test_a_rule_under_tools_but_outside_the_build_tool_is_not_counted(self):
+        """The rule home is `tools/bootcamp_build/`, not everything under `tools/`."""
+        self.add("tools/elsewhere/helper.py", "#: " + self.RULE)
+        self.assertEqual([], self.outside())
+
+    def test_a_rule_in_host_markdown_is_NOT_outside(self):
+        """#9: host Markdown is in the corpus, so it is counted once, by `added_rule_lines`."""
+        self.add("hosts/chatgpt/fragments/hooks-setup.md", self.RULE)
+        self.add("hosts/kiro/files/skills/x/SKILL.md", self.RULE)
+        self.assertEqual([], self.outside())
+        self.assertEqual(
+            ["hosts/chatgpt/fragments/hooks-setup.md", "hosts/kiro/files/skills/x/SKILL.md"],
+            sorted(self.mod.added_rule_lines(self.repo, self.base)))
+
 
 class RecordsAboutRulesAreNotRuleHomes(RuleHomesAreClassifiedCorrectly):
     """⛔ The exclusions that keep the count a signal rather than noise."""
@@ -139,6 +173,118 @@ class RecordsAboutRulesAreNotRuleHomes(RuleHomesAreClassifiedCorrectly):
         """Docstrings there state rules ABOUT rules."""
         self.add("tests/test_x.py", '"""' + self.RULE + '"""\n')
         self.assertEqual([], self.outside())
+
+
+class HostSideInputsAreReportedWithTheRightMarker(unittest.TestCase):
+    """#9 — the view itself, run over a range that adds a rule to each host-side input.
+
+    A Markdown file under `hosts/` is in the corpus and its rule prints with `+`; `host.json`
+    and the build tool's `emit.py` are outside it and their rules print with `!`. Both
+    parsers that read this report are run over it too, because the markers exist for them.
+    """
+
+    RULE = "⛔ **A host-side rule that must be listed.**"
+    MARKDOWN = ("hosts/chatgpt/fragments/hooks-setup.md",
+                "hosts/kiro/files/skills/bootcamp-hooks-setup/SKILL.md")
+    OUTSIDE = {"hosts/kiro/host.json": '{"note": "%s"}\n',
+               "tools/bootcamp_build/emit.py": 'NOTE = (\n    "%s "\n)\n'}
+
+    def setUp(self):
+        self.mod = producer()
+        self.repo = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        git(self.repo, "init", "-q")
+        git(self.repo, "config", "user.email", "t@example.com")
+        git(self.repo, "config", "user.name", "t")
+        # `--repo` is refused without a `source/` directory, so the fixture carries one.
+        (self.repo / "source").mkdir()
+        (self.repo / "source" / "seed.md").write_text("# seed\n", encoding="utf-8")
+        git(self.repo, "add", "-A")
+        git(self.repo, "commit", "-qm", "seed")
+        self.base = git(self.repo, "rev-parse", "HEAD").stdout.strip()
+
+    def add(self, relpath, text):
+        path = self.repo / relpath
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+        git(self.repo, "add", "-A")
+        git(self.repo, "commit", "-qm", "add %s" % relpath)
+
+    def since(self):
+        done = subprocess.run(
+            [sys.executable, str(CONFORMANCE), "--repo", str(self.repo), "since", "--ref",
+             self.base], cwd=str(self.repo), capture_output=True, text=True)
+        self.assertEqual(0, done.returncode, done.stderr)
+        return done.stdout
+
+    def halves(self, report):
+        """(the in-corpus block, the block from the `CORPUS:` line on)."""
+        cut = report.index("CORPUS:")
+        return report[:cut], report[cut:]
+
+    def test_a_rule_in_host_markdown_is_reported_with_a_plus(self):
+        for relpath in self.MARKDOWN:
+            self.add(relpath, self.RULE + "\n")
+        counted, outside = self.halves(self.since())
+        for relpath in self.MARKDOWN:
+            with self.subTest(file=relpath):
+                self.assertIn("   %s\n     + %s" % (relpath, self.RULE), counted,
+                              "a hard rule added to a Markdown file under `hosts/` is not "
+                              "listed in the corpus block with `+`:\n%s" % counted)
+                self.assertNotIn(relpath, outside,
+                                 "the same rule is also listed outside the corpus, so it is "
+                                 "counted twice:\n%s" % outside)
+        self.assertIn("2 hard-rule line(s) added", counted)
+
+    def test_a_rule_in_host_json_and_in_the_build_tool_is_reported_with_a_bang(self):
+        for relpath, shape in self.OUTSIDE.items():
+            self.add(relpath, shape % self.RULE)
+        counted, outside = self.halves(self.since())
+        self.assertIn("0 hard-rule line(s) added", counted,
+                      "a non-Markdown file was counted inside the `.md`-only corpus:\n%s"
+                      % counted)
+        self.assertIn("NOT counted above: 2 line(s) in 2 file(s)", outside)
+        for relpath in self.OUTSIDE:
+            with self.subTest(file=relpath):
+                self.assertRegex(
+                    outside, r"(?m)^ +%s  \(1\)\n +! .*A host-side rule" % re.escape(relpath),
+                    "a hard rule added to %s is not listed in the outside-the-corpus block "
+                    "with `!`:\n%s" % (relpath, outside))
+                self.assertNotIn(relpath, counted)
+
+    def test_the_other_file_types_under_hosts_are_reported_with_a_bang_too(self):
+        """`.html` and `.py`: the corpus is `.md` only under every scanned root."""
+        self.add("hosts/kiro/fragments/site-tips.html", "<p>%s</p>\n" % self.RULE)
+        self.add("hosts/_shared/hook_adapter.py", "#: %s\n" % self.RULE)
+        counted, outside = self.halves(self.since())
+        self.assertIn("0 hard-rule line(s) added", counted)
+        self.assertIn("NOT counted above: 2 line(s) in 2 file(s)", outside)
+
+    def test_both_consumers_place_the_two_populations(self):
+        """The gate's parser reads the `+` lines and its outside reader the `!` lines."""
+        self.add(self.MARKDOWN[0], self.RULE + "\n")
+        self.add("hosts/kiro/host.json", self.OUTSIDE["hosts/kiro/host.json"] % self.RULE)
+        report = self.since()
+        helpers = consumer_helpers()
+        parsed = helpers.parse_since(report)
+        self.assertEqual([], parsed.unknown_headings,
+                         "the gate does not recognize a heading under `hosts/` as a scanned "
+                         "root, so the rule under it is checked by nothing")
+        self.assertEqual([self.MARKDOWN[0]], [heading for heading, _line in parsed.checked])
+        self.assertEqual(1, helpers.outside_count(report))
+        self.assertEqual(1, len(helpers.outside_lines(report)))
+        self.assertIn("A host-side rule", helpers.outside_lines(report)[0])
+
+    def test_a_range_that_adds_nothing_still_names_the_new_roots(self):
+        """A zero: the roots are stated as read on a run that found nothing in them."""
+        report = self.since()
+        self.assertIn("0 hard-rule line(s) added", report)
+        corpus = next(line for line in report.splitlines() if "CORPUS:" in line)
+        self.assertIn("hosts", corpus, "the corpus line of an empty run omits `hosts`")
+        zero = next(line for line in report.splitlines() if "OUTSIDE the corpus: 0" in line)
+        for home in self.mod.UNCOUNTED_RULE_HOMES:
+            with self.subTest(home=home):
+                self.assertIn(home, zero, "the zero line does not name the rule home %r" % home)
+        self.assertIn("tools/bootcamp_build/", self.mod.UNCOUNTED_RULE_HOMES)
 
 
 class TheConsumerReadsTheOutsideCount(unittest.TestCase):

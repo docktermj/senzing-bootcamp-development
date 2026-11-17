@@ -36,6 +36,108 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## audit-and-review-tools-do-not-scan-rule-text-under-hosts
+
+- **Implemented:** 2026-11-16 (issue #9)
+- **Files changed:** `.claude/skills/production-readiness-audit/conformance.py`,
+  `.claude/skills/review-invariants/pending_invariants.py`,
+  `.claude/skills/dry-run/coverage_reports.py`,
+  `.claude/skills/production-readiness-audit/SKILL.md`,
+  `.claude/skills/review-invariants/SKILL.md`, `.claude/skills/dry-run/SKILL.md`,
+  `tests/test_since_states_its_corpus.py`, `tests/test_the_gate_sees_every_scanned_root.py`,
+  `tests/test_reverse_check_counts_what_it_cannot_test.py`,
+  `tests/test_sites_states_the_corpus_it_scanned.py`, `tests/test_coverage_reports.py`,
+  `tests/test_since_last_audit_falls_back_to_the_ledgers_commit.py` (one assertion),
+  `tests/test_every_invariant_is_cited_in_shipped_text.py` (one docstring note),
+  `specs/IMPLEMENTED.md` (this entry)
+- **MCP re-check:** n/a (no Senzing fact). Re-confirmed on 2026-11-16 against the change itself:
+  it decides which directories three maintainer scripts read, and asserts nothing about
+  Senzing. No absence claim about the Senzing MCP server is made, so INV-213's
+  `owner-checked:` clause is not owed.
+- **Summary:** The three audit and review tools now read the host-side inputs, the files under
+  `hosts/` and `tools/bootcamp_build/` that the build turns into package text. No file that
+  ships to a bootcamper changes.
+  - **`conformance.py`.** `hosts` joins `SCAN_ROOTS` and `tools/bootcamp_build/` joins
+    `UNCOUNTED_RULE_HOMES`. `since` reports a hard rule added to a Markdown file under `hosts/`
+    with `+`, and one added to `host.json`, an `.html` or `.py` file under `hosts/`, or the
+    build tool with `!`. `rules`, `per-rule` and `reverse-check` read the Markdown under
+    `source/` and `hosts/` through one function, `rule_markdown()`, so a rule added to host
+    Markdown is TESTED. `rules` and `per-rule` print a `CORPUS:` line with a file count for
+    each root and a `NOT READ:` line, on every run. `duplication` and `size` still read
+    `source/` alone.
+  - **`pending_invariants.py sites`.** The candidate scan reads `source/`, `hosts/` and
+    `tools/bootcamp_build/`. `.json` joins the candidate suffixes for every root at once, so
+    the scanned and not-scanned counts still measure one set of suffixes, and the scope
+    statement names that set. It prints one `SCANNED` line for each root, a root holding no
+    file included.
+  - **`coverage_reports.py`.** `shipped` counts a citation in any text file under `source/`,
+    `hosts/` or `tools/bootcamp_build/`, and its heading names the three. `negatives` reads
+    `hosts/` as well, in `.md` and `.py` files as under its other roots. `unmarked` reads
+    Markdown under `source/` and `hosts/`. `negatives` and `unmarked` print a `CORPUS:` line
+    on every run.
+  - **The gate.** `tests/test_new_hard_rules_are_cited_or_deferred.py` is unchanged: it reads
+    `SCAN_ROOTS` from the producer, so it checks a rule reported under `hosts/` from this
+    change on.
+  - **Chosen by a race.** Two implementations were built and judged against a rubric written
+    first; issue #9's Approach comment has the table. This one gives each tool the new roots
+    in its own constants. The other stated the host-side inputs once and had two tools load
+    `conformance.py` by path. No tool under `.claude/skills/` loads another today.
+  - **Skill text corrected.** Five sentences in the three `SKILL.md` files described the old
+    corpora. One of them is a hard-rule line, in `review-invariants/SKILL.md`, and still cites
+    INV-308 at the line.
+  - **Measured on this branch, 2026-11-16.** `rules` and `per-rule` report 848 hard-rule lines
+    before and after, 275 citing no invariant at the rule: no hard rule sits in host Markdown
+    today. Both print `CORPUS: source (55 file(s)), hosts (11 file(s))`. `sites` prints
+    `SCANNED source: 82`, `hosts: 21`, `tools/bootcamp_build: 9` and `NOT SCANNED 554`.
+    `shipped` and `unmarked` list nothing. `since --since-last-audit`, from `dc79183`, reports
+    2 lines with `+`, both cited at the line, and 6 with `!`, among them the `host.json` and
+    `emit.py` rules no view listed before.
+  - **Tests.** 39 test methods added across the five modules that already pin these corpora,
+    with no new test file. Each acceptance criterion has a test, and each new view statement
+    is tested on a run that finds nothing. Three existing assertions changed because the old
+    expectation is now wrong: the call `reverse-check` shares with `per-rule`, the `shipped`
+    heading, and the roots a live `unmarked` hit may sit under. A fourth, added by issue #10,
+    pinned `TESTED … in source`; the view now prints `in source, hosts`. Negative control, run
+    and then reverted: against the three tools as they were on `main`, the six modules report
+    51 failures and 4 errors.
+  - **Known limits.** The three tools hold their roots separately, so a later root means three
+    edits. `negatives` does not read `.json` or `.html`, and says so in its `CORPUS:` line. A
+    rule the build composes from pieces, so that no single input line holds it, is seen by no
+    view. `site/` and `public/` are not read.
+  - **A limit of the gate, found here and not changed.** The gate checks `!` lines only when
+    the range has no `+` line, and it checks the 110-character display text, not the source
+    line. `hosts/kiro/host.json`'s rule is one long line whose `(INV-252)` sits past column
+    110, so that branch would flag it although it is cited. The branch does not run on today's
+    range, which has two `+` lines. Changing it is outside this issue.
+- **Invariants.** The register is not edited here (INV-365). The change ships one new
+  hard-rule line, in `conformance.py`'s module docstring, which `since` reports with `!`. The
+  block below covers it. One existing hard-rule comment in `conformance.py` was reworded and
+  cites INV-308 at the line.
+
+- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** The audit and review tools read every directory the build takes package text from. The rule already shipping, quoted:
+    - ⛔ **A directory the build takes package text from is read by the audit and review tools.** — in `.claude/skills/production-readiness-audit/conformance.py`
+
+  The other two tools state their roots as constants and carry no rule line:
+  `.claude/skills/review-invariants/pending_invariants.py` (`HOST_SIDE_INPUTS`) and
+  `.claude/skills/dry-run/coverage_reports.py` (`SHIPPED_ROOTS`, `NEGATIVE_ROOTS`,
+  `PROSE_ROOTS`). Enforced by `tests/test_since_states_its_corpus.py`,
+  `tests/test_the_gate_sees_every_scanned_root.py`,
+  `tests/test_reverse_check_counts_what_it_cannot_test.py`,
+  `tests/test_sites_states_the_corpus_it_scanned.py` and `tests/test_coverage_reports.py`.
+
+  **Why it is not an existing invariant:** INV-308 requires one definition of the roots a tool
+  resolves against and a statement of what it could not verify. INV-246 requires a guard to
+  derive its sites by scanning. Neither says which directories the corpus must cover, so the
+  three tools went on reading `source/` and `.claude/` alone after package text gained a
+  second home, and contradicted no registered rule.
+
+  Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
+  invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
+
+  **INV-NNN** — The maintainer tools that audit and review rule text MUST read every directory the build takes package text from, and not the shared source alone. Today those directories are `source/`, `hosts/` and `tools/bootcamp_build/`. A hard rule added to any file under `hosts/` or `tools/bootcamp_build/` MUST be reported by `conformance.py since`; one in a Markdown file under `hosts/` MUST be listed by `rules` and `per-rule` and tested by `reverse-check`. `pending_invariants.py sites` MUST scan `hosts/`, its `.json` files included, and `tools/bootcamp_build/` for candidates. `coverage_reports.py shipped` MUST count a citation in either directory, and `negatives` and `unmarked` MUST read `hosts/`. A directory that later holds package text MUST join the roots of all three tools in the change that adds it. The tools read the inputs and not a built package: `dist/` is ignored by git, so a range diff cannot see it, and a reported rule needs a source line where its citation can be written. Each view MUST name the roots it read on every run, a run that finds nothing in them included (INV-308). ⚠️ Limits: a rule the build composes from pieces, so that no single input line holds it, is seen by no view, and `site/` and `public/` are outside this rule. Enforced by `tests/test_since_states_its_corpus.py`, `tests/test_the_gate_sees_every_scanned_root.py`, `tests/test_reverse_check_counts_what_it_cannot_test.py`, `tests/test_sites_states_the_corpus_it_scanned.py` and `tests/test_coverage_reports.py`. (Source: `audit-and-review-tools-do-not-scan-rule-text-under-hosts`, 2026-11-16.)
+
+- **Commit:** uncommitted
+
 ## the-kiro-package-states-its-installed-path-for-linux-only
 
 - **Implemented:** 2026-11-16 (issue #11)
