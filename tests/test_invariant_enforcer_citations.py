@@ -948,7 +948,10 @@ NAMED_TEST = re.compile(r"tests/(test_[a-z0-9_]+\.py)")
 #: back. Re-derived by running the extractor, which found 349.
 #: 2026-11-16, second review of the day: INV-427 registered (audit, PR #3), enforced by one
 #: test that cites it back. Re-derived by running the extractor, which found 350.
-EXPECTED_PAIRS = 350
+#: 2026-11-16, third review of the day: INV-428 registered (issue #13), enforced by one test
+#: that cites it back. Re-derived by running the extractor, which found 351, the new pair
+#: present by name.
+EXPECTED_PAIRS = 351
 
 
 #: Adapted (one-repository migration, 2026-11-14): enforcers the register names that were not

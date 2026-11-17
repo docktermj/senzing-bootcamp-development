@@ -117,7 +117,7 @@ line and holds no copy of it, so changing the line changes the range.
   INV-426 is not amended: it governs what the bootcamp asks and what a package ships, and an
   install page is neither.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** An install page that names a model names the welcome's model, from one value. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-428, registered by the maintainer 2026-11-16).** An install page that names a model names the welcome's model, from one value. The rule already shipping, quoted:
     - ⛔ **An install page that names a model takes the name from `{{host.model_capable}}`, the value the welcome is built from.** — in `tests/test_model_docs_name_no_switch.py`
     - ⛔ **The model ID in the Claude CLI start command is the one derived from Claude's `model_capable`.** — in `tests/test_model_docs_name_no_switch.py`
 

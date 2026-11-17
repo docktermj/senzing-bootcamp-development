@@ -23,9 +23,9 @@ Issue #13 added what an install page (`hosts/<assistant>/fragments/site-install.
 about the model and the effort. On ChatGPT the page named one model and the welcome another,
 and two of the five pages set an effort that the bootcamp never mentions again.
 
-- ⛔ **An install page that names a model takes the name from `{{host.model_capable}}`, the value the welcome is built from.**
+- ⛔ **(INV-428) An install page that names a model takes the name from `{{host.model_capable}}`, the value the welcome is built from.**
   It spells that value nowhere as literal text. A page that names no model passes.
-- ⛔ **The model ID in the Claude CLI start command is the one derived from Claude's `model_capable`.**
+- ⛔ **(INV-428) The model ID in the Claude CLI start command is the one derived from Claude's `model_capable`.**
   Lowercase, each space and dot a hyphen, `claude-` in front: "Opus 5.5" gives
   `claude-opus-5-5`. The ID stays literal in the fragment, and the command carries no flag
   but `--model` and `--permission-mode auto`.
@@ -39,6 +39,9 @@ HTML is read as visible text: tags removed and whitespace collapsed, so a re-wra
 paragraph still matches. An install fragment is read twice: as written, to see where the
 model's name comes from, and as the build renders it, to see what a reader gets. The render is
 `substitute_tokens`, the function the build calls on a fragment.
+
+Enforces **INV-428** (registered 2026-11-16): the two model rules above. The effort rule
+below them is a separate subject and is not part of INV-428.
 
 ⚠️ **What the #13 checks cannot establish:** that a `model_capable` value names a model the
 assistant offers, or that a model ID exists. They do not report a page that names a second
