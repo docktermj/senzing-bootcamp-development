@@ -237,7 +237,7 @@ line and holds no copy of it, so changing the line changes the range.
   below covers both. The second proposes a dated clarification on INV-114, whose two paths now
   start from different roots.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** A source file that ships to some assistants and not others has a recorded reason, and no package carries the maintainer page. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-430, registered by the maintainer 2026-11-16).** A source file that ships to some assistants and not others has a recorded reason, and no package carries the maintainer page. The rule already shipping, quoted:
     - ⛔ **A source file that ships to some assistants and not others has a recorded reason.** — in `tests/test_partial_shipping_has_a_reason.py`
     - ⛔ **No package carries the maintainer page `model-selection.md`, and no package names `effort-mechanisms`.** — in `tests/test_partial_shipping_has_a_reason.py`
 

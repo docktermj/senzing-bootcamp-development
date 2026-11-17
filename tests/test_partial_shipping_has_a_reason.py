@@ -5,9 +5,11 @@ A file under `source/` normally reaches every assistant's package. A host's layo
 how `model-selection.md`, a maintainer page, stayed in the Claude package after the other four
 assistants dropped it: nothing asked why one package carried a file the others did not.
 
-⛔ **A source file that ships to some assistants and not others has a recorded reason.**
+⛔ **(INV-430) A source file that ships to some assistants and not others has a recorded reason.**
 
-⛔ **No package carries the maintainer page `model-selection.md`, and no package names `effort-mechanisms`.**
+⛔ **(INV-430) No package carries the maintainer page `model-selection.md`, and no package names `effort-mechanisms`.**
+
+Enforces **INV-430** (registered 2026-11-16).
 
 What must hold:
 

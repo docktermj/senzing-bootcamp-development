@@ -86,7 +86,10 @@ def _source_files(source_dir: Path, entry: str) -> list[Path]:
 
 
 def placed_files(host: Host, source_dir: Path) -> set[Path]:
-    """The source files this host's package carries (relative to ``source_dir``)."""
+    """The source files this host's package carries (relative to ``source_dir``).
+
+    A file that one host places and another drops needs a recorded reason (INV-430).
+    """
     placed: set[Path] = set()
     for entry, destination in host.layout.items():
         if destination is not None:
