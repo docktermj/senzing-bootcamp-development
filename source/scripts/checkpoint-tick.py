@@ -5,6 +5,11 @@ the guide of a module-completion record still missing once the module has closed
 Guarantees `docs/progress/recap_checkpoint.md` exists while a bootcamp is running,
 and reminds the guide to keep it current **before** anything is at risk.
 
+Once graduation has ended the bootcamp (``bootcamp_complete: true`` in the progress file
+or in the preferences, ``module_start_apparatus.bootcamp_complete()``) this hook stands
+down whole: no scaffold, no announcement and no missing-record reminder. Graduation
+folds and clears the checkpoint itself, and there is no module left to keep one for.
+
 Why this runs per turn rather than at session start. A bootcamp becomes active
 partway through a session — `config/bootcamp_progress.json` is written during
 onboarding — by which time the SessionStart hook has already run and found no
@@ -53,6 +58,7 @@ import json
 import os
 import sys
 
+import module_start_apparatus
 import recap_checkpoint
 import transition_reply
 
@@ -202,6 +208,11 @@ except (AttributeError, OSError, ValueError):
     payload = None
 
 if not recap_checkpoint.bootcamp_active():
+    sys.exit(0)
+
+# Not after graduation has ended the bootcamp: a finished bootcamp keeps no checkpoint,
+# so nothing is created, announced or reminded, and nothing is said about standing down.
+if module_start_apparatus.bootcamp_complete():
     sys.exit(0)
 
 created = recap_checkpoint.ensure_checkpoint()
