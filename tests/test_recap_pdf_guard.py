@@ -772,6 +772,83 @@ class StdlibFallbackMatchesTheFpdf2Certificate(unittest.TestCase):
         self.assertIn("Certificate of Completion", raw)
 
 
+def stdlib_text_lines(pdf_path):
+    """Page 1 of a stdlib-rendered PDF as ``[(size, x, y, text), ...]``, in drawing order.
+
+    The fallback writes one uncompressed ``BT /F<n> <size> Tf 1 0 0 1 <x> <y> Tm (...) Tj
+    ET`` per line, so the font size and the baseline are both in the page content. A blank
+    line is drawn too, as an empty string, and is in the list.
+    """
+    with open(pdf_path, "rb") as handle:
+        raw = handle.read().decode("latin-1")
+    first_page = re.search(r"stream\r?\n(.*?)\r?\nendstream", raw, re.S).group(1)
+    return [
+        (float(size), float(x), float(y), text)
+        for size, x, y, text in re.findall(
+            r"BT /F\d ([\d.]+) Tf 1 0 0 1 ([\d.]+) ([\d.]+) Tm \((.*?)\) Tj ET", first_page)
+    ]
+
+
+class StdlibFallbackSeparatesTheCoverTitleFromItsSubtitle(unittest.TestCase):
+    """#47: the fallback's page-1 title and subtitle no longer touch.
+
+    Every fallback line advanced 14 pt whatever its size, so the 14 pt subtitle sat 14 pt
+    under the 22 pt title. The generator is loaded from ``source/``: the script is the
+    same file in every assistant's package.
+
+    Distances are compared at one decimal place, the precision the page content carries.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        import importlib.util
+        from pathlib import Path
+
+        script = os.path.join(REPO_ROOT, "source", "scripts", "generate_recap_pdf.py")
+        spec = importlib.util.spec_from_file_location("recap_gen_cover_spacing", script)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules["recap_gen_cover_spacing"] = module
+        spec.loader.exec_module(module)
+        cls.recap = module.parse_recap(SPACING_RECAP)
+        out = os.path.join(tempfile.mkdtemp(), "stdlib.pdf")
+        assert module.render_with_stdlib(cls.recap, Path(out))
+        cls.lines = stdlib_text_lines(out)
+
+    def line(self, text):
+        found = [line for line in self.lines if line[3] == text]
+        self.assertEqual(1, len(found), "expected %r once on page 1" % text)
+        return found[0]
+
+    def test_the_title_and_subtitle_are_the_first_two_lines(self):
+        """The pair measured below is the cover pair, with nothing drawn between them."""
+        self.assertEqual([self.recap.title, "Completion Recap"],
+                         [line[3] for line in self.lines[:2]])
+
+    def test_the_subtitle_baseline_is_1_2_title_sizes_below_the_titles(self):
+        title_size, _x, title_y, _text = self.line(self.recap.title)
+        _size, _x, subtitle_y, _text = self.line("Completion Recap")
+        self.assertEqual(22.0, title_size)
+        distance = round(title_y - subtitle_y, 1)
+        self.assertGreaterEqual(distance, 26.4)
+        self.assertGreaterEqual(distance, round(1.2 * title_size, 1))
+
+    def test_the_line_under_the_subtitle_keeps_its_distance(self):
+        """The space was added above the subtitle only: what follows it is 14 pt below."""
+        _size, _x, subtitle_y, _text = self.lines[1]
+        _size, _x, next_y, _text = self.lines[2]
+        self.assertEqual(14.0, round(subtitle_y - next_y, 1))
+
+    def test_no_other_adjacent_pair_on_the_page_is_as_far_apart(self):
+        """The space went to the cover pair, not to every heading or every line."""
+        gaps = [round(upper[2] - lower[2], 1)
+                for upper, lower in zip(self.lines[1:], self.lines[2:])]
+        self.assertGreater(len(gaps), 10, "page 1 has too few lines to compare")
+        self.assertIn(14.0, gaps)
+        self.assertLess(max(gaps), 26.4)
+        headings = [line for line in self.lines[2:] if line[0] > 14.0]
+        self.assertTrue(headings, "page 1 has no heading larger than the subtitle to compare")
+
+
 class CheckModeContract(unittest.TestCase):
     """`--check` keeps its exit semantics: 0 when complete, non-zero on any gap."""
 

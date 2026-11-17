@@ -36,6 +36,85 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## three-generator-and-write-gate-messages-mislead
+
+- **Implemented:** 2026-11-17 (issue #47)
+- **Files changed:** `source/scripts/generate_recap_pdf.py`, `source/scripts/write-gate.py`,
+  `tests/test_certificate_name_source.py`, `tests/test_recap_pdf_guard.py`,
+  `tests/test_write_gate.py`, `specs/IMPLEMENTED.md` (this entry)
+- **MCP re-check:** n/a (no Senzing fact). Re-confirmed on 2026-11-17 against the change itself:
+  it rewords one warning, adds one sentence to one block message and adds space under one
+  title, and asserts nothing about Senzing. The license-payload pattern the write gate matches
+  is unchanged, byte for byte. No absence claim about the Senzing MCP server is made, so
+  INV-213's `owner-checked:` clause is not owed.
+- **Summary:** Three outputs that pointed the reader the wrong way now say what is true and
+  name a next step that works. They are findings 10, 15 and 16 of `dry-run-2026-11-17`.
+  - **The unprintable-name warning.** `generate_recap_pdf.py` said the name was "in" the
+    recap and said to record it as a `**Bootcamper:**` line, whichever file the name came
+    from. The certificate prints the preferences `name:` first and the recap's name only when
+    preferences has none, so only the preferences file changes what prints. The warning now
+    names the file the name was read from: the `--preferences` path when preferences has a
+    name, the input path when it does not. In the first case it says to change the top-level
+    `name:` in the preferences file, and in the second to record the name as the top-level
+    `name:` there. It still says to ask the bootcamper for the name to print (INV-113). The
+    missing-name warning and the NOTE about the two files disagreeing are unchanged.
+  - **The fallback's cover.** `render_with_stdlib` advances every text line 14 pt whatever
+    its size, so the 14 pt subtitle sat 14 pt under the 22 pt title and touched it. One gap
+    token of 12.4 pt now follows the title, which puts the two baselines 26.4 pt apart, 1.2
+    times the title size. Measured on one recap before and after the change: page 1 holds the
+    same 39 lines, the title is at the same position, and every later line is 12.4 pt lower.
+    No other pair of lines changed its distance. The fpdf2 renderer is unchanged.
+  - **The write gate's message.** The gate judges the whole payload, so an edit whose
+    replaced text holds a secret and whose new text does not is blocked, and was told "Use
+    environment variables instead." It is still blocked. Its message is now `SECRET_MSG`
+    followed by: "The possible secret is in the text being replaced, not in the new text. To
+    take it out of the file, write the whole file again without the secret." The addition is
+    made only when the payload parses, its tool name is `Edit`, and `tool_input.new_string`
+    is text the secret pattern does not match. A secret in both texts, a secret only in the
+    new text, a write, an edit with no `new_string`, and a payload that does not parse all
+    get `SECRET_MSG` alone, as before. The hook adapter gives the gate every assistant's
+    edit as `Edit` with its new text in `new_string`, so the rule has no per-assistant code,
+    and the added sentence names no assistant and no tool.
+  - **The inline pattern.** The gate's `re.search(` call moved into a function,
+    `holds_secret`, so the same pattern can judge the new text. Its three raw strings and the
+    name `data` are as they were, and `tests/test_secret_patterns_are_shared.py` still reads
+    the call and finds it identical to `secret_patterns.py`.
+  - **What the gate blocks is unchanged.** Exit codes are the same for every payload. One
+    blocked case has a longer stderr message.
+  - **A limit of the gate's rule, kept as the issue states it.** The addition is decided from
+    the new text alone, because the name of the key holding the replaced text differs between
+    assistants. An edit whose secret-shaped text is in neither text, in its file path for
+    instance, is also told the secret is in the text being replaced.
+  - **Tests.** 21 new tests in three existing modules. `tests/test_write_gate.py` gains 12:
+    the addition for each of the three secret classes, each case that keeps `SECRET_MSG`
+    alone, that the next step named is a write the gate allows, and every edit tool the four
+    adapter-run assistants declare, sent through the adapter. `SECRET_MSG` is read out of the
+    gate's source, so the tests compare against the gate's own text. The secrets are
+    synthetic, built from the shapes the module already used.
+    `tests/test_certificate_name_source.py` gains 5: both name sources, the paths given on
+    the command line, the absence of the `**Bootcamper:**` instruction, and a control.
+    `tests/test_recap_pdf_guard.py` gains 4: they render with `render_with_stdlib`, loaded
+    from `source/`, and read the font size and baseline of each page-1 line from the page
+    content. Negative control: with the two scripts as they were at `a8b1e5c` and the new
+    tests in place, 8 of the 21 fail, and the 13 that pin unchanged behavior pass.
+  - **Verified on Linux only**, with Python 3.12.3. No run on macOS or Windows happened and
+    no run on a real assistant happened, so no run is added to any
+    `hosts/<assistant>/checks.json`. The change adds no branch on the platform (INV-001): the
+    paths in the warning are the ones the command line gave, and the tests build the paths
+    they expect with `os.path.join`. What the adapter-driven test cannot establish is that an
+    assistant's own edit tool sends its new text under a key the adapter knows; it starts from
+    one argument shape, not from a captured payload.
+- **Invariants.** Establishes no new invariant. The register is not edited here (INV-365).
+  The change adds no hard-rule line. Three messages changed; none of them is a rule the
+  bootcamp binds later work to.
+  - **INV-109, for the maintainer to confirm.** INV-109 says the gate blocks "with
+    `SECRET_MSG`". For one blocked case the message is now `SECRET_MSG` followed by one more
+    sentence. The issue's decision table rules that INV-109 is untouched, so no
+    `PROPOSED AMENDMENT` block is written here. If "with `SECRET_MSG`" is read as "with
+    `SECRET_MSG` and nothing after it", INV-109 is owed a dated note, and that is the
+    maintainer's call through `/review-invariants`.
+- **Commit:** uncommitted
+
 ## hooks-and-the-hook-adapter-give-the-same-result-under-a-legacy-code-page
 
 - **Implemented:** 2026-11-17 (issue #25)

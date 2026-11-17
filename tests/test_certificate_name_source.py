@@ -17,10 +17,16 @@ missing. INV-110 measures loss, not correctness.
 These tests pin the precedence (preferences first, recap second, placeholder last), the
 tolerant read, and the divergence note.
 
+They also pin where the unprintable-name warning points (#47). It named the recap and said
+to record the name there, whichever file the name was read from, and only the preferences
+file changes the certificate. `TheUnprintableNameWarningNamesItsSource` asserts that it
+names the file the name was read from and sends the fix to preferences.
+
 Run:  python3 -m unittest discover -s tests
 """
 import importlib.util
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -218,6 +224,92 @@ class TheDivergenceIsReported(unittest.TestCase):
         root = project(header_name="docktermj", prefs="name: Dana Reyes\n")
         _code, _out, err, _pdf = render(root)
         self.assertRegex(err, r"(?i)printing the preferences value")
+
+
+# A name none of whose characters the built-in fonts can print, written as escapes so this
+# file stays ASCII here. It is a common placeholder name, not a person's.
+UNPRINTABLE_NAME = "\u674e\u660e"
+
+
+def unprintable_name_warning(root, args=()):
+    """The unprintable-name warning from a render of `root`, as one string.
+
+    stderr is decoded as UTF-8 with replacement characters, and no assertion reads the
+    name back out of it: a console that cannot encode the name escapes it.
+    """
+    proc = subprocess.run(
+        [sys.executable, SCRIPT, *args],
+        capture_output=True, cwd=root, env=dict(os.environ, PYTHONIOENCODING="utf-8"),
+    )
+    err = proc.stderr.decode("utf-8", errors="replace")
+    assert proc.returncode == 0, err
+    found = re.findall(r"WARNING: the bootcamper name [^\n]*", err)
+    assert len(found) == 1, err
+    return found[0]
+
+
+class TheUnprintableNameWarningNamesItsSource(unittest.TestCase):
+    """#47: the warning names the file the name was read from, and where the fix goes.
+
+    The certificate prints the preferences `name:` first and the recap's name only when
+    preferences has none, so the fix always goes to the preferences file.
+    """
+
+    RECAP_PATH = os.path.join("docs", "bootcamp_recap.md")
+    PREFERENCES = os.path.join("config", "bootcamp_preferences.yaml")  # the default
+
+    def test_a_name_from_preferences_names_the_preferences_file(self):
+        root = project(header_name="Ada Lovelace", prefs="name: %s\n" % UNPRINTABLE_NAME)
+        warning = unprintable_name_warning(root)
+        self.assertIn('" in %s contains ' % self.PREFERENCES, warning)
+        self.assertIn('change the top-level "name:" in %s' % self.PREFERENCES, warning)
+        self.assertNotIn(self.RECAP_PATH, warning)
+
+    def test_a_name_from_the_recap_names_the_recap_and_sends_the_fix_to_preferences(self):
+        for label, prefs in (("no preferences file", None),
+                             ("preferences without a name", "language: python\n")):
+            with self.subTest(preferences=label):
+                root = project(header_name=UNPRINTABLE_NAME, prefs=prefs)
+                warning = unprintable_name_warning(root)
+                self.assertIn('" in %s contains ' % self.RECAP_PATH, warning)
+                self.assertIn(
+                    'record it as the top-level "name:" in %s' % self.PREFERENCES, warning)
+
+    def test_the_paths_named_are_the_ones_given_on_the_command_line(self):
+        """`--input` and `--preferences`, not the defaults."""
+        root = project(header_name=UNPRINTABLE_NAME, prefs=None)
+        os.rename(os.path.join(root, "docs", "bootcamp_recap.md"),
+                  os.path.join(root, "docs", "my_recap.md"))
+        with open(os.path.join(root, "config", "my_prefs.yaml"), "w", encoding="utf-8") as fh:
+            fh.write("language: python\n")
+        recap_arg = os.path.join("docs", "my_recap.md")
+        prefs_arg = os.path.join("config", "my_prefs.yaml")
+        args = ("--input", recap_arg, "--preferences", prefs_arg)
+
+        from_recap = unprintable_name_warning(root, args)
+        self.assertIn('" in %s contains ' % recap_arg, from_recap)
+        self.assertIn('record it as the top-level "name:" in %s' % prefs_arg, from_recap)
+
+        with open(os.path.join(root, "config", "my_prefs.yaml"), "w", encoding="utf-8") as fh:
+            fh.write("name: %s\n" % UNPRINTABLE_NAME)
+        from_preferences = unprintable_name_warning(root, args)
+        self.assertIn('" in %s contains ' % prefs_arg, from_preferences)
+        self.assertIn('change the top-level "name:" in %s' % prefs_arg, from_preferences)
+        self.assertNotIn(recap_arg, from_preferences)
+
+    def test_neither_case_says_to_record_a_bootcamper_line(self):
+        for label, header, prefs in (
+                ("from preferences", "Ada Lovelace", "name: %s\n" % UNPRINTABLE_NAME),
+                ("from the recap", UNPRINTABLE_NAME, None)):
+            with self.subTest(source=label):
+                warning = unprintable_name_warning(project(header_name=header, prefs=prefs))
+                self.assertNotIn("**Bootcamper:**", warning)
+                self.assertIn("Ask the bootcamper for the name to print (INV-113)", warning)
+
+    def test_a_printable_name_gets_no_such_warning(self):
+        """The control: the warning is about the name, not about every render."""
+        _code, _out, err, _pdf = render(project(header_name="Ada Lovelace", prefs=None))
+        self.assertNotIn("WARNING: the bootcamper name", err)
 
 
 class GraduationPersistsToBothPlaces(unittest.TestCase):

@@ -4072,6 +4072,10 @@ def render_with_stdlib(recap: Recap, output: Path) -> bool:
                 add(chunk, font, size, indent)
 
         add(recap.title, "F2", 22, 0)
+        # Every text line advances `line_h` whatever its size, which put the 14pt subtitle
+        # 14pt under the 22pt title, touching it. This gap makes the pair's baselines 1.2
+        # times the title size apart; no other pair of lines changes (#47).
+        add("", "GAP", 22 * 1.2 - line_h, 0)
         add("Completion Recap", "F2", 14, 0)
         add("", "F1", 6, 0)
         ident, env = _partition_meta(recap.meta)
@@ -4684,12 +4688,20 @@ def main(argv: Optional[List[str]] = None) -> int:
         if unprintable:
             printable = _safe(unprintable).strip()
             shown = printable or CERTIFICATE_NAME_PLACEHOLDER
+            # Name the file the name was read from: preferences when it has one, else the
+            # recap (`certificate_name`). The fix goes to preferences either way, because
+            # the certificate reads that file first (#47).
+            if preferred_name:
+                read_from = args.preferences
+                fix = f'change the top-level "name:" in {args.preferences} to it'
+            else:
+                read_from = inp
+                fix = f'record it as the top-level "name:" in {args.preferences}'
             sys.stderr.write(
-                f'WARNING: the bootcamper name "{unprintable}" in {inp} contains '
+                f'WARNING: the bootcamper name "{unprintable}" in {read_from} contains '
                 f'{len(lost)} character(s) the recap PDF\'s built-in fonts cannot render '
                 f'({" ".join(lost)}); the Certificate of Completion will read "{shown}". '
-                f'Ask the bootcamper for the name to print (INV-113) and record it as '
-                f'"**Bootcamper:** <name>".\n'
+                f'Ask the bootcamper for the name to print (INV-113) and {fix}.\n'
             )
 
     used = "fpdf2"

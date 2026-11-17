@@ -29,11 +29,19 @@ cannot be imported directly — each case runs it as a subprocess with synthetic
 stdin and a temp project directory (holding `config/bootcamp_progress.json`, which
 is what activates the gate), then asserts the exit code (0 allow, 2 block).
 
+**The message for a secret that an edit only removes** (#47). The gate judges the whole
+payload, so an edit whose replaced text holds a secret and whose new text does not is
+blocked too, and "Use environment variables instead" pointed away from the next step that
+works. `SecretOnlyInTheReplacedText` asserts the addition to the message for that case and
+that every other payload keeps `SECRET_MSG` alone. What it blocks is unchanged (INV-109).
+
 These tests live OUTSIDE `source/` on purpose: `propagate.sh` mirrors all of
 `source/` into the public repo, so tests placed there would ship to bootcampers.
 
 Run:  python3 -m unittest discover -s tests
 """
+import ast
+import importlib.util
 import json
 import os
 import subprocess
@@ -43,6 +51,7 @@ import unittest
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GATE = os.path.join(REPO_ROOT, "source", "scripts", "write-gate.py")
+HOSTS = os.path.join(REPO_ROOT, "hosts")
 
 ALLOW, BLOCK = 0, 2
 
@@ -264,6 +273,156 @@ class SecretChecks(unittest.TestCase):
         self.assertEqual(
             run_gate("config/notes.md", content="mentions the AQAAAD prefix in prose")[0],
             ALLOW)
+
+
+def gate_constant(name):
+    """A string constant read out of the gate's source: the gate cannot be imported."""
+    with open(GATE, encoding="utf-8") as fh:
+        tree = ast.parse(fh.read())
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and any(
+                isinstance(target, ast.Name) and target.id == name for target in node.targets):
+            return ast.literal_eval(node.value)
+    raise AssertionError("write-gate.py no longer assigns %s" % name)
+
+
+def edit_payload(old, new, **extra):
+    """An edit as the gate receives it from every assistant: the new text in `new_string`."""
+    tool_input = dict({"file_path": "config/settings.txt", "old_string": old,
+                       "new_string": new}, **extra)
+    return json.dumps({"hook_event_name": "PreToolUse", "tool_name": "Edit",
+                       "tool_input": tool_input})
+
+
+class SecretOnlyInTheReplacedText(unittest.TestCase):
+    """#47: an edit that only removes a secret is still blocked, and told what works.
+
+    The secrets are synthetic, built from the same shapes `SecretChecks` uses.
+
+    What this does not establish: that an assistant's own edit tool sends its new text
+    under a key the adapter knows. `test_every_assistants_edit_gets_the_addition` starts
+    from one argument shape (`path`, `old_str`, `new_str`), not from a captured payload.
+    """
+
+    SECRETS = {
+        "PEM private key": "-----BEGIN RSA PRIVATE KEY-----\nabc",
+        "AWS access-key ID": "AKIA" + "A" * 16,
+        "Senzing license payload": "AQAAAD" + "abc123XYZ+/=" * 4,
+    }
+    CLEAN = "api_key = os.environ['API_KEY']"
+
+    @classmethod
+    def setUpClass(cls):
+        cls.secret_msg = gate_constant("SECRET_MSG")
+
+    def assert_secret_msg_alone(self, payload):
+        code, err = run_gate(raw=payload)
+        self.assertEqual(BLOCK, code)
+        self.assertEqual(self.secret_msg + "\n", err)
+
+    def test_the_message_read_from_the_gate_is_the_secret_message(self):
+        """INV-265: an empty constant would make every equality below vacuous."""
+        self.assertIn("hardcoded secret", self.secret_msg)
+        self.assertIn("Use environment variables instead.", self.secret_msg)
+
+    def test_an_edit_that_only_removes_a_secret_is_blocked_with_the_addition(self):
+        for label, secret in self.SECRETS.items():
+            with self.subTest(secret=label):
+                code, err = run_gate(raw=edit_payload("key = '%s'" % secret, self.CLEAN))
+                self.assertEqual(BLOCK, code)
+                self.assertTrue(err.startswith(self.secret_msg), err)
+                addition = err[len(self.secret_msg):]
+                self.assertIn("in the text being replaced", addition)
+                self.assertIn("write the whole file again without the secret", addition)
+
+    def test_the_addition_names_no_tool(self):
+        """The next step has to work on every assistant, so it names none of their tools."""
+        _code, err = run_gate(raw=edit_payload(self.SECRETS["AWS access-key ID"], self.CLEAN))
+        addition = err[len(self.secret_msg):]
+        self.assertTrue(addition.strip())
+        for word in ("Edit", "tool", "Bash"):
+            self.assertNotIn(word, addition)
+        self.assertNotIn(self.SECRETS["AWS access-key ID"], err,
+                         "the message must not echo the secret back")
+
+    def test_the_next_step_it_names_passes_the_gate(self):
+        """Writing the whole file again without the secret is a write the gate allows."""
+        payload = json.dumps({"hook_event_name": "PreToolUse", "tool_name": "Write",
+                              "tool_input": {"file_path": "config/settings.txt",
+                                             "content": self.CLEAN + "\n"}})
+        self.assertEqual((ALLOW, ""), run_gate(raw=payload))
+
+    def test_a_secret_in_both_the_old_and_the_new_text_gets_the_message_alone(self):
+        """The addition would be false: the new text holds a secret too."""
+        for label, secret in self.SECRETS.items():
+            with self.subTest(secret=label):
+                self.assert_secret_msg_alone(edit_payload(secret, "rotated: " + secret))
+
+    def test_a_secret_only_in_the_new_text_gets_the_message_alone(self):
+        self.assert_secret_msg_alone(
+            edit_payload(self.CLEAN, self.SECRETS["Senzing license payload"]))
+
+    def test_a_write_gets_the_message_alone(self):
+        for label, secret in self.SECRETS.items():
+            with self.subTest(secret=label):
+                self.assert_secret_msg_alone(json.dumps(
+                    {"hook_event_name": "PreToolUse", "tool_name": "Write",
+                     "tool_input": {"file_path": "config/settings.txt", "content": secret}}))
+
+    def test_a_payload_without_a_tool_name_gets_the_message_alone(self):
+        """The shape `SecretChecks` sends: nothing says it is an edit."""
+        self.assert_secret_msg_alone(json.dumps(
+            {"tool_input": {"file_path": "config/creds",
+                            "content": self.SECRETS["AWS access-key ID"]}}))
+
+    def test_an_edit_with_no_new_text_gets_the_message_alone(self):
+        """A patch arrives as an edit whose added lines are `content`: nothing to compare."""
+        self.assert_secret_msg_alone(json.dumps(
+            {"hook_event_name": "PreToolUse", "tool_name": "Edit",
+             "tool_input": {"file_path": "config/settings.txt",
+                            "content": self.SECRETS["PEM private key"]}}))
+
+    def test_a_payload_that_does_not_parse_gets_the_message_alone(self):
+        """The gate cannot tell old text from new, even when the text names both."""
+        self.assert_secret_msg_alone(
+            'garbage "tool_name":"Edit" "file_path":"config/x" "new_string":"clean" '
+            '"old_string":"-----BEGIN PRIVATE KEY-----"')
+
+    def test_an_edit_with_no_secret_is_allowed(self):
+        """The control: the new branch does not block an ordinary edit."""
+        self.assertEqual((ALLOW, ""), run_gate(raw=edit_payload("timeout = 5", "timeout = 9")))
+
+    def test_every_assistants_edit_gets_the_addition(self):
+        """Each assistant's edit tools, through the adapter, reach the same branch."""
+        spec = importlib.util.spec_from_file_location(
+            "hook_adapter_for_write_gate", os.path.join(HOSTS, "_shared", "hook_adapter.py"))
+        adapter = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(adapter)
+        secret = self.SECRETS["AWS access-key ID"]
+        checked = []
+        for host in sorted(os.listdir(HOSTS)):
+            profile_path = os.path.join(HOSTS, host, "host.json")
+            if not os.path.isfile(profile_path):
+                continue
+            with open(profile_path, encoding="utf-8") as fh:
+                options = json.load(fh).get("options") or {}
+            categories = (options.get("adapter") or {}).get("tool_categories") or {}
+            for tool in sorted(name for name, kind in categories.items() if kind == "edit"):
+                arguments = {"path": "config/settings.txt", "old_str": secret,
+                             "new_str": self.CLEAN}
+                calls = adapter.canonical_calls(tool, arguments, categories)
+                self.assertEqual(1, len(calls), (host, tool))
+                tool_name, tool_input = calls[0]
+                with self.subTest(host=host, tool=tool):
+                    code, err = run_gate(raw=json.dumps(
+                        {"hook_event_name": "PreToolUse", "tool_name": tool_name,
+                         "tool_input": tool_input}))
+                    self.assertEqual(BLOCK, code)
+                    self.assertTrue(err.startswith(self.secret_msg), err)
+                    self.assertIn("in the text being replaced", err)
+                checked.append((host, tool))
+        self.assertGreaterEqual(len({host for host, _tool in checked}), 3,
+                                "too few assistants declare an edit tool for this to mean much")
 
 
 class GateActivation(unittest.TestCase):
