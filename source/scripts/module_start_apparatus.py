@@ -227,8 +227,8 @@ def bootcamp_complete():
     so a project graduated before the progress-file write existed, which carries the flag
     only in preferences, still reads as finished, and so does one whose progress file is
     missing or malformed. The rule is stated in ``bootcamp-onboarding/SKILL.md`` step 2;
-    this is its one implementation, shared by ``session-start.py``, ``stop-nudge.py`` and
-    ``module-number-reminder.py`` (INV-300). Never raises."""
+    this is its one implementation, and every hook that asks whether the bootcamp is over
+    calls it (INV-300). Never raises."""
     return _progress_flag() or _preferences_flag()
 
 

@@ -36,6 +36,100 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## after-graduation-three-hooks-still-treat-the-bootcamp-as-in-progress
+
+- **Implemented:** 2026-11-17 (issue #32)
+- **Files changed:** `source/scripts/checkpoint-tick.py`, `source/scripts/precompact-recap.py`,
+  `source/scripts/session-end.py`, `source/scripts/module_start_apparatus.py`,
+  `source/skills/bootcamp-onboarding/SKILL.md`, `source/hooks/README.md`,
+  `tests/test_recap_hooks_stand_down_after_graduation.py` (new),
+  `specs/IMPLEMENTED.md` (this entry)
+- **MCP re-check:** n/a (no Senzing fact). Re-confirmed on 2026-11-17 against the change itself:
+  it changes what three hook scripts do on a finished bootcamp and what two texts say about
+  one helper's callers, and asserts nothing about Senzing. No absence claim about the Senzing
+  MCP server is made, so INV-213's `owner-checked:` clause is not owed.
+- **Summary:** Once graduation has ended the bootcamp, three hooks no longer keep, fold or
+  announce a recap checkpoint, and session end still stops the bootcamp's containers. This is
+  finding 8 of `dry-run-2026-11-17` and finding 23 of `production-readiness-audit-2026-11-17`.
+  Before the change the three hooks tested only `recap_checkpoint.bootcamp_active()`, which a
+  finished project satisfies because its progress file still records a module. A later prompt
+  recreated `docs/progress/recap_checkpoint.md` and told the guide to keep it current, and the
+  pre-compact hook printed "A Senzing bootcamp is in progress."
+  - **Each hook makes its own check.** Each of the three now calls
+    `module_start_apparatus.bootcamp_complete()`, as `session-start.py` and
+    `failed-run-net.py` do, after its `bootcamp_active()` gate. The flag in either file is
+    enough. `recap_checkpoint.bootcamp_active()` is not changed and does not read the flag,
+    so its other callers keep their behavior.
+  - **`checkpoint-tick.py` stands down whole.** On a finished project it creates no scaffold,
+    makes no announcement and gives no missing-record reminder. It writes no file, prints
+    nothing on stdout or stderr and exits 0. The check sits after the read of stdin, so the
+    hook still drains its payload first.
+  - **`precompact-recap.py` neither folds nor prints.** Its `bootcamp_active()` test gains
+    `and not module_start_apparatus.bootcamp_complete()`.
+  - **`session-end.py` skips only the fold.** The stop stays a statement of the
+    `bootcamp_active()` block, outside the completion check. Graduation records completion
+    before its own session ends, so a stop gated on completion would leave that session's
+    containers running.
+  - **What a finished project keeps.** A checkpoint that still holds a narrative is left as it
+    is, and so is a scaffold recreated before this fix. No hook removes either one.
+  - **No list of callers.** The docstring of `bootcamp_complete()` said the function was
+    shared by three named hooks, and step 2 of `bootcamp-onboarding/SKILL.md` named two. Both
+    had already left out `failed-run-net.py`. Each now says that every hook that asks whether
+    the bootcamp is over uses the one implementation, and names none.
+  - **The README rows.** The rows for the three hooks in `source/hooks/README.md` say what
+    each does once the bootcamp is complete, and their Gate cells name `bootcamp_complete()`
+    after `bootcamp_active()`. The pre-compact row's purpose now also names the reminder the
+    hook prints, which the row had left out. Each hook's docstring says the same.
+  - **Not changed.** The text under `source/hooks/fallbacks/`, as the issue decides. The
+    docstring of `stop-nudge.py` still says the rule is "shared with session start". That is
+    a third partial list of callers; the issue names two files, so it is left for a later
+    change.
+  - **Tests.** The new module holds 33 tests. Each hook runs as its own process in a scratch
+    project, with the flag in the progress file, with the flag only in preferences while the
+    progress file still records a module, and with both. A finished run must exit 0, write no
+    byte to stdout or stderr, and leave every path under the project as it was. Each silent
+    case has a twin that is in progress, where the hook still creates the scaffold and
+    announces it, folds and reminds, or folds and stops. The stdin case writes a payload
+    larger than a pipe buffer and fails if the hook exits before reading it. The container
+    cases run the real `session-end.py` in a child process whose CLI lookup and
+    `subprocess.run` are replaced first, so they show which commands the hook builds and run
+    no container command. The text checks read the callers out of the docstrings and the
+    skill, and the README rows against each script's code. Negative controls: in a throwaway
+    clone of `726342a` holding only the new test file, 18 of the 33 tests fail
+    (`FAILED (failures=31)`). Nine more controls run on every pass, each against a scratch
+    copy of the scripts or the text with one earlier line put back.
+  - **Not observed.** No real assistant ran these hooks after a graduation, and no container
+    runtime ran: the tests show what each script does in a scratch project. Verified on Linux
+    only, with Python 3.12.3. No run on macOS, on Windows or on a real assistant happened, so
+    no record is added to any `hosts/<assistant>/checks.json`. The change is standard library
+    only and adds no branch on the platform (INV-001).
+- **Invariants.** Establishes no new invariant (INV-309), and proposes a change to one in
+  force. The register is not edited here (INV-365). The change adds no hard-rule line:
+  `conformance.py since --since-last-audit` reports none for the range. INV-227's 2026-11-10
+  note makes a finished bootcamp a fourth case and says what session start does with one.
+  The block below proposes the dated note that would bind these three hooks too. Until the
+  maintainer applies it, only the test holds it. INV-101 is unchanged: session end still
+  stops the recorded containers while the progress file records a module.
+
+- **PROPOSED AMENDMENT to INV-227 — awaiting the maintainer's sign-off; NOT applied.**
+    - ⛔ **Once the bootcamp is complete it folds nothing and still stops the containers.** — in `source/hooks/README.md`
+    - ⛔ **Once the bootcamp is complete it folds nothing and prints nothing.** — in `source/hooks/README.md`
+    - ⛔ **it then creates no checkpoint and gives no reminder** — in `source/hooks/README.md`
+
+  INV-227's dated note of 2026-11-10 says what a finished bootcamp is and what session start
+  does with one. It does not say what the three recap hooks do once the bootcamp is finished,
+  and INV-101 says session end stops the recorded containers "when the bootcamp is active"
+  without saying whether a finished bootcamp counts. Without the note below, a later edit can
+  drop a hook's completion check, or move the stop inside it, and contradict no registered
+  rule. Enforced by `tests/test_recap_hooks_stand_down_after_graduation.py`.
+
+  Drafted wording follows, under the registered id. A new rule's id would be
+  written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
+
+  **INV-227** — (⚠️ **Dated note, 2026-11-17 (#32): on a finished bootcamp the recap hooks stand down, and session end still stops the bootcamp's containers; the four cases and the one implementation above are unchanged.** Once `module_start_apparatus.bootcamp_complete()` is true, `checkpoint-tick.py` and `precompact-recap.py` MUST write no file, print nothing on stdout or stderr and exit 0: no checkpoint scaffold, no announcement, no missing-record reminder, no fold and no "in progress" reminder. `checkpoint-tick.py` MUST still read its stdin to the end first. `session-end.py` MUST skip the fold and nothing else: it MUST still stop each container the progress file records, under `bootcamp_active()`, because graduation records completion before its own session ends (INV-101). Each of the three hooks makes the check itself, after its `bootcamp_active()` gate; `recap_checkpoint.bootcamp_active()` MUST NOT read the flag, and keeps its meaning. A checkpoint that still holds a narrative, and a scaffold already there, are left as they are: no hook removes or folds either. `module_start_apparatus.py` and `bootcamp-onboarding/SKILL.md` step 2 MUST NOT list the callers of `bootcamp_complete()`; each points at the one implementation. Observed (`dry-run-2026-11-17`, finding 8; `production-readiness-audit-2026-11-17`, finding 23): with the flag set, a later prompt recreated the checkpoint scaffold and told the guide to keep it current, and the pre-compact hook printed "A Senzing bootcamp is in progress." The rules above still bind. Enforced by `tests/test_recap_hooks_stand_down_after_graduation.py`, which runs each hook against the flag in the progress file, only in the preferences and in both, each with a twin that is in progress, and with negative controls; it **cannot** establish that a live assistant fires these hooks after graduation or what a real container runtime does, and it was run on Linux only.)
+
+- **Commit:** uncommitted
+
 ## powershell-writes-to-a-temp-directory-pass-the-write-gate-on-copilot
 
 - **Implemented:** 2026-11-17 (issue #33)

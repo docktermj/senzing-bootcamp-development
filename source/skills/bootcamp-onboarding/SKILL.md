@@ -41,7 +41,7 @@ bootcamper through setup and into the numbered module skills, one guided step at
      > 👉 **What would you like to explore?**
 
      Then help with whatever they ask. The bootcamp does not restart, and no module resumes.
-     `session-start.py` and `stop-nudge.py` read the flag with the same rule,
+     Every hook that asks whether the bootcamp is over reads the flag with the same rule,
      `module_start_apparatus.bootcamp_complete()`.
    - **Missing** -> this is a fresh bootcamp. Run the full onboarding in `onboarding-flow.md`.
    - **Present but recording no module** — empty, `{}`, malformed, not a JSON object, or
