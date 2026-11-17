@@ -320,9 +320,8 @@ GITIGNORE_BULLET = "- **`.gitignore`:**"
 PIN_FORM = "cd '<project root>' && <call>"
 #: The first "Every language" bullet, which states the pin.
 FIRST_BULLET = "- **Run every command from the project root"
-POINTER = ("Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no "
-           "test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md"
-           "#guide-run-blocks)).")
+POINTER = ("Guide-run; unverified on Windows: no test runs it there "
+           "([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).")
 #: What the first bullet says about the pin, and what each phrase is.
 PIN_PHRASES = (
     ("Never assume the shell is already at the root: pin it.", "the rule"),

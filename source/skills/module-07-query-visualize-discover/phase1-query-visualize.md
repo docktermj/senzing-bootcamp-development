@@ -1161,7 +1161,7 @@ The server MUST:
     python3 "{{host.scripts_dir}}/senzing_viz_server.py" --emit-standalone src/server/results_server.py
     ```
 
-    Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
+    Guide-run; unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
     Where `{{host.plugin_root}}` is unset, use the skill-relative fallback
     `{{host.scripts_relative}}/senzing_viz_server.py` (INV-252). The emit mode needs neither the vendored D3,
@@ -1224,7 +1224,7 @@ The server MUST:
     --name results_visualization --tabs all --query "<a name present in the loaded data>"
   ```
 
-  Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
+  Guide-run; unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
   ⛔ **"No headless capability" is a conclusion the helper reaches and reports, never one you reach
   first.** Enter the skip path on its **exit code** — it distinguishes its reasons — and never
@@ -1274,7 +1274,7 @@ python3 "{{host.scripts_dir}}/capture_screenshots.py" \
   --html docs/visualizations/results_visualization.html --verify-scale
 ```
 
-Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
+Guide-run; unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
 It opens the snapshot in headless Chrome with the graph pane 480 px wide, lets the interactive
 layout reach its first settle, and prints one line per check:
@@ -1339,7 +1339,7 @@ line:
 VIZ_PID=$!
 ```
 
-Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
+Guide-run; unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
 `<run command>` is `results_server`'s Run command from `../bootcamp-onboarding/ground-rules.md` →
 "Building and running a program", unchanged. Written as `A && B &`, the `&` backgrounds a subshell
@@ -1525,7 +1525,7 @@ python3 "{{host.scripts_dir}}/generate_discoveries_pdf.py" --subtitle "<the tabl
 # or, if {{host.plugin_root_var}} is unset: python3 {{host.scripts_fallback}}/generate_discoveries_pdf.py …
 ```
 
-Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
+Guide-run; unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
 That script is the discoveries **sibling** of the recap generator — do not point
 `generate_recap_pdf.py` at this document, which parses recap-shaped module sections and would

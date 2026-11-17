@@ -18,7 +18,9 @@
     "model_capable": "Opus 5.5",
     "skills_dir": "${CLAUDE_PLUGIN_ROOT}/skills",
     "session_control_examples": " (auto mode, auto-accept edits, permission mode, plan mode, fast mode, bypass permissions, background tasks, `/compact`, `/loop`)",
-    "dismissal_control_example": " — not \"Don't show again\", not any other"
+    "dismissal_control_example": " — not \"Don't show again\", not any other",
+    "shell_tool": "Bash",
+    "scripts_dir_powershell": "$env:CLAUDE_PLUGIN_ROOT/scripts"
   },
   "layout": {
     "skills": "skills",

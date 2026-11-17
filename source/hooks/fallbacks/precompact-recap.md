@@ -15,4 +15,10 @@ you are told the conversation is about to be compacted. Run:
 python3 "{{host.scripts_dir}}/precompact-recap.py" < /dev/null
 ```
 
+Where your shell is PowerShell, run this form instead:
+
+```powershell
+$null | python3 "{{host.scripts_dir_powershell}}/precompact-recap.py"
+```
+
 It is safe to run more than once.

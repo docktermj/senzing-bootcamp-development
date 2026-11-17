@@ -1487,7 +1487,7 @@ and makes one HTTP request; it never starts, stops or removes a container.
    python3 "{{host.scripts_dir}}/docker_lifecycle.py" viz-port <container>
    ```
 
-   Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
+   Guide-run; unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
    It prints the recorded `host_port`. Exit `3` means the container was created before SDK setup
    published the port: follow `../module-02-sdk-setup/SKILL.md` → "Publishing the visualization
@@ -1504,7 +1504,7 @@ and makes one HTTP request; it never starts, stops or removes a container.
      echo $!')
    ```
 
-   Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
+   Guide-run; unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
    `<server command>` is the module's own launch line with paths as the container sees them; a
    server in another language takes the address and the port through its own options. On Truth
@@ -1522,7 +1522,7 @@ and makes one HTTP request; it never starts, stops or removes a container.
    python3 "{{host.scripts_dir}}/docker_lifecycle.py" confirm-viz <container> --log logs/viz-server.log --wait 120
    ```
 
-   Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
+   Guide-run; unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
    It waits for the startup line, reads its `server_nonce=`, probes
    `http://127.0.0.1:<host_port>/api/stats` from the host, and prints `http://localhost:<host_port>`
@@ -1540,7 +1540,7 @@ and makes one HTTP request; it never starts, stops or removes a container.
    <runtime> exec <container> python3 -c "import socket; a = socket.gethostbyname(socket.gethostname()); s = socket.socket(); s.settimeout(1); print('listening' if s.connect_ex((a, 8080)) == 0 else 'free')"
    ```
 
-   Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
+   Guide-run; unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
    ⚠️ Never probe the host port to confirm teardown: while the container runs, the runtime can keep
    accepting connections on the published port whether or not a server listens behind it.
@@ -1608,7 +1608,7 @@ The lookup, by route:
   print(" ".join(str(p) for p in sorted(pids)))'
   ```
 
-  Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
+  Guide-run; unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
 Then act on what it names:
 

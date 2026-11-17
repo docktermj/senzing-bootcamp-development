@@ -36,6 +36,195 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## every-package-states-one-assistants-shell-as-the-guides-shell
+
+- **Implemented:** 2026-11-17 (issue #27)
+- **Files changed:** `hosts/claude/host.json`, `hosts/copilot/host.json`,
+  `hosts/kiro/host.json`, `hosts/chatgpt/host.json`, `hosts/gemini/host.json`,
+  `source/skills/bootcamp-onboarding/ground-rules.md`,
+  `source/skills/bootcamp-onboarding/module-completion.md`,
+  `source/skills/bootcamp-onboarding/packaging.md`,
+  `source/skills/bootcamp-preparation/SKILL.md`, `source/skills/graduation/SKILL.md`,
+  `source/skills/module-02-sdk-setup/SKILL.md`,
+  `source/skills/module-03b-truthset-visualization/phase1-visualization.md`,
+  `source/skills/module-03b-truthset-visualization/visualization-api-reference.md`,
+  `source/skills/module-04-data-collection/SKILL.md`,
+  `source/skills/module-07-query-visualize-discover/phase1-query-visualize.md`,
+  `source/commands/package-bootcamp.md`, `source/hooks/fallbacks/session-start.md`,
+  `source/hooks/fallbacks/checkpoint-tick.md`, `source/hooks/fallbacks/precompact-recap.md`,
+  `source/hooks/fallbacks/session-end.md`,
+  `tests/test_each_package_states_its_own_guide_shell.py` (new),
+  `tests/test_guide_run_blocks_declare_their_shell.py`,
+  `tests/test_build_and_run_statement.py`, `tests/test_container_route_build_and_run.py`,
+  `specs/IMPLEMENTED.md` (this entry)
+- **MCP re-check:** n/a (no Senzing fact). Re-confirmed on 2026-11-17 against the change itself:
+  it rewords what the bootcamp's own guide text says about the guide's shell, adds two values
+  to each assistant's profile, gives four commands that run the bootcamp's own scripts a
+  second form, and adds tests that read that text and those profiles. It asserts nothing
+  about Senzing. No absence claim about the Senzing MCP server is made, so INV-213's
+  `owner-checked:` clause is not owed.
+- **Summary:** Each package now states the guide-run rule for its own assistant. This is
+  finding 2 of `production-readiness-audit-2026-11-17`. Before the change all five packages
+  said a guide-run block runs "with its Bash tool" in "the guide's POSIX shell, which on
+  Windows is Git Bash", and the line after every guide-run block repeated it. That describes
+  one assistant: the other profiles name their shell tool `bash`, `execute_bash` and
+  `run_command`, one of them lists a PowerShell tool as well, and no
+  `hosts/<assistant>/checks.json` records a run on Windows.
+  - **The approach.** Two implementations were raced from `1f7c4d9` and judged against a rubric
+    written first. The one applied here states the values in each `host.json` and carries the
+    wording that differs in a `host:only` and a `host:except` block. The other had the build
+    derive the tool name from `hooks.tools.shell`, and changed `tools/bootcamp_build/` to do
+    it. No file under `tools/` changes here. The patch applied to `ef44a02` without a
+    conflict, after #25, #47, #33, #32, #31, #26 and #29 had merged, and was then read
+    against their guards.
+  - **The host values.** Each `hosts/<assistant>/host.json` gains two values under `vars`.
+    `shell_tool` is a second copy of that profile's `hooks.tools.shell`, needed because a
+    `{{host.…}}` token reads only `vars`; a test holds the two equal. `scripts_dir_powershell`
+    is `scripts_dir` with the plugin-root variable read as `$env:NAME`. The issue names one
+    value. The second exists because `"${PLUGIN_ROOT}/…"` in PowerShell reads a PowerShell
+    variable, which is empty: the failure INV-167's #505 note records.
+  - **The statement.** `ground-rules.md` → `#guide-run-blocks` stays the one statement
+    (INV-300). Its guide-run bullet is now written twice in the source, once per host block.
+
+    | Package | The tool it names | The shell it states |
+    |---|---|---|
+    | Claude | `Bash` | the guide's POSIX shell, which on Windows is Git Bash |
+    | GitHub Copilot | `bash` | whichever shell that tool provides; on Windows unverified |
+    | Kiro | `execute_bash` | whichever shell that tool provides; on Windows unverified |
+    | ChatGPT | `Bash` | whichever shell that tool provides; on Windows unverified |
+    | Gemini | `run_command` | whichever shell that tool provides; on Windows unverified |
+
+    The four packages below the first row also carry one more bullet, "Where the guide's shell
+    is PowerShell": the guide translates a guide-run block to Windows PowerShell 5.1 with the
+    table of 5.1 syntax limits in that section, runs the translation and treats the result as
+    unverified in that shell. A translated block that fails follows its own site's failure
+    rule. A PowerShell-only guide-run block is run directly, and the
+    `powershell.exe -NoProfile -Command …` call and its quoting apply only from a POSIX shell.
+    The Claude package's statement keeps its meaning. It differs from the earlier one in three
+    places: the tool is written `` `Bash` `` from the host value, the quoted line is the new
+    wording, and the PowerShell-only bullet opens "From a POSIX shell the guide runs it as one
+    call".
+  - **Three shared sentences are now conditions.** Each stated the guide's own shell as POSIX
+    in every package: the project root's spelling ("In a POSIX shell it is written with
+    forward slashes"), the native-Windows Build and Run call ("which from a POSIX shell is:")
+    and the PowerShell-only bullet's runner ("From a POSIX shell the guide runs it as one
+    call").
+  - **The line after a guide-run block.** One wording, the same bytes in every package, which
+    names no shell and no tool: "Guide-run; unverified on Windows: no test runs it there",
+    then the link to `#guide-run-blocks`. The source holds it at 54 sites in 11 files, and
+    the statement quotes it once in each host block. The issue counts 55: each package
+    carries 54 sites and one quoted copy.
+  - **The fallback commands.** `session-start.md`, `checkpoint-tick.md`, `precompact-recap.md`
+    and `session-end.md` each keep their POSIX command, which ends in `< /dev/null`, and gain
+    one sentence, "Where your shell is PowerShell, run this form instead:", and a `powershell`
+    fence under the same heading: `$null | python3 "{{host.scripts_dir_powershell}}/<name>.py"`.
+    No single form runs in both shells, because of the redirect and because of the
+    plugin-root variable, so each command is given in both. The text #29 put around those
+    commands is unchanged, and the new sentence names no hook. The fallback files stay exempt
+    from the line after a guide-run block. The Claude package's `host-rules.md` carries no
+    command, as before.
+  - **Known gap: no PowerShell form was executed, by anyone, in any PowerShell.** This machine
+    has no `pwsh`, `powershell` or `powershell.exe`. The 16 lines that are unexecuted are the
+    four commands in each of the four packages:
+    `$null | python3 "$env:PLUGIN_ROOT/scripts/<name>.py"` in the GitHub Copilot, ChatGPT and
+    Gemini packages and
+    `$null | python3 "$env:PLUGIN_ROOT/skills/bootcamp-onboarding/scripts/<name>.py"` in the
+    Kiro package, for `session-start`, `checkpoint-tick`, `precompact-recap` and
+    `session-end`. They are checked by reading only: each follows its POSIX form under the
+    same heading, runs the same script, takes the scripts directory from `$env:`, opens with
+    `$null |`, and carries none of `&&`, `||`, `<`, inline `python -c`, a bare `$NAME` or
+    `/dev/null`. Three things are assumed and not observed: that Windows PowerShell 5.1 runs
+    the line as written, that `$null |` closes the script's input as `< /dev/null` does, and
+    that the interpreter is named `python3` on Windows. The last is assumed by every hook
+    command and by the POSIX forms too.
+  - **A raced test class was left out.** The raced patch held a class, `ThePowerShellFormsRun`,
+    that ran each PowerShell form where `pwsh` or `powershell` is on `PATH` and skipped
+    elsewhere. It skipped where the patch was written and it skips here, so its first real
+    run would have been in CI, on both legs, never seen to pass. Nothing in this repository
+    runs a native command with `$null |` under `pwsh`, so reading could not establish that
+    it would pass. It is not shipped. No other test was changed to make up for it. What the
+    suite does run is each script on the input `$null |` is expected to hand it (no input, or
+    one empty line), which runs the script and not PowerShell.
+  - **Tests.** `tests/test_each_package_states_its_own_guide_shell.py` is new and holds 33
+    tests in five classes. It builds all five packages.
+    - `TheHostValueIsTheProfilesOwnTool` holds `vars.shell_tool` equal to `hooks.tools.shell`
+      and `vars.scripts_dir_powershell` to `vars.scripts_dir`, through the loader and from the
+      JSON on disk.
+    - `EachPackageStatesItsOwnToolAndShell` reads each built statement: the tool is the
+      profile's own, the shell sentence is the one for that assistant and appears once, the
+      other one is absent, and the four packages carry the PowerShell rule with the 5.1 table
+      above it. It scans every Markdown file of the four packages for a kind of shell or a
+      shell tool stated as the guide's own that the profile does not declare. A condition
+      ("in a POSIX shell, …") is not reported.
+    - `TheLineAfterABlockIsOneWordingEverywhere` reads every line that links the statement, in
+      every package: one wording, each link reaching that package's statement, and as many
+      sites as `source/` holds, derived and not a literal count (INV-246).
+    - `EveryFallbackCommandHasBothForms` reads each of the four built `host-rules.md` files as
+      "Known gap" above describes, and requires the Claude package's to hold no command.
+    - `ThePosixFormsRun` runs each POSIX form as written, with `sh`, from the built package,
+      in a throwaway bootcamp project with the input left open. A control removes the
+      redirect from the checkpoint command and sees it wait.
+    - Negative controls that run on every pass: a drifted, a missing and a bare-variable host
+      value; the Claude package read as each other assistant's and the reverse; the wording
+      before #27; another profile's tool name; each phrase of the PowerShell rule removed; the
+      5.1 table moved below the statement; a link that misses the statement; the PowerShell
+      forms removed; each banned shape; and a PowerShell form under another heading.
+    - Negative control run once, in a throwaway clone of `ef44a02` holding only the new test
+      file: 12 of the 33 tests fail (`FAILED (failures=91, errors=6)`), in four of the five
+      classes. `ThePosixFormsRun` passes there, since the POSIX forms did not change.
+  - **Three existing tests changed, in the wording they pin and nothing else.**
+    `tests/test_guide_run_blocks_declare_their_shell.py`: the `POINTER` constant is the new
+    line, the pattern for the tool reads `` `{{host.shell_tool}}` `` where it read "Bash", the
+    pattern for the PowerShell-only runner reads "From a POSIX shell the guide runs it as one
+    call", and its docstring says what #27 changed. `tests/test_build_and_run_statement.py`
+    and `tests/test_container_route_build_and_run.py` each hold their own copy of `POINTER`,
+    updated to match. Every other pattern and every negative control in those files is as it
+    was. `tests/test_windows_forms_at_hand_run_sites.py` imports `POINTER` and needed no edit.
+  - **Left as it is.** "There is no PowerShell fallback" stays shared: in the four packages it
+    still means a block that failed in the guide's shell is not retried through PowerShell.
+    The preamble the build writes at the top of `host-rules.md` names the scripts directory
+    in its POSIX spelling only. The docstrings of four other test modules still explain their
+    checks with "the guide's POSIX shell, Git Bash on Windows"; the checks hold in any POSIX
+    shell. Which assistants keep the POSIX statement is written in two places, the two marker
+    lines in `ground-rules.md` and `POSIX_SHELL_KNOWN` in the new test.
+  - **Not observed.** No real assistant read the reworded text, ran a guide-run block or
+    translated one. Which shell any assistant gives the guide on Windows is still not known,
+    for Claude as for the others: the Claude package keeps its statement because the issue
+    decided so, not because a run was recorded. Verified on Linux only, with Python 3.12.3.
+    No run on macOS, on Windows or on a real assistant happened, so no record is added to any
+    `hosts/<assistant>/checks.json`. The new test reads files as UTF-8 through `pathlib`; its
+    one class that starts a shell skips where there is no POSIX `sh` (INV-001).
+- **Invariants.** Establishes no new invariant (INV-309), and proposes a change to one in
+  force. The register is not edited here (INV-365). The change adds no hard-rule line:
+  `conformance.py since --since-last-audit` reports none for the range. INV-167's #508, #596
+  and #597 notes word the guide's shell as one assistant's, and the #508 note fixes the
+  pointer line that this change rewords. The block below proposes the dated note that scopes
+  them to the assistant. Until the maintainer applies it, only the tests hold the new
+  wording. INV-163's wording does not change, so it gets no block: the line after a block
+  still carries its disclosure. INV-300 is unchanged: the statement is still made once.
+
+- **PROPOSED AMENDMENT to INV-167 — awaiting the maintainer's sign-off; NOT applied.**
+    - ⛔ **It runs in whichever shell that tool provides, and which shell that is on Windows is unverified.** — in `source/skills/bootcamp-onboarding/ground-rules.md`
+    - ⛔ **the guide translates a guide-run block to Windows PowerShell 5.1 with the table of 5.1 syntax limits above, runs the translation, and treats the result as unverified in that shell** — in `source/skills/bootcamp-onboarding/ground-rules.md`
+    - ⛔ **Guide-run; unverified on Windows: no test runs it there** — in `source/skills/bootcamp-onboarding/ground-rules.md`
+
+  INV-167's #508, #596 and #597 notes say a guide-run block runs "with its Bash tool" in "the
+  guide's POSIX shell (Git Bash on Windows)", with no assistant named. That is one assistant's
+  shell. The other four profiles declare other shell tools, one declares a PowerShell tool as
+  well, and no `checks.json` records a run on Windows, so the registered wording asserts a
+  shell nobody has observed for four of the five packages. Since #27 the statement and the
+  pointer line say something the notes do not, and
+  `tests/test_guide_run_blocks_declare_their_shell.py`, the enforcer the #508 note names, pins
+  the new pointer wording. Without the note below the registry and its enforcer disagree.
+  Enforced by `tests/test_each_package_states_its_own_guide_shell.py`.
+
+  Drafted wording follows, under the registered id. A new rule's id would be
+  written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
+
+  **INV-167** — (⚠️ **Dated note, 2026-11-17 (#27): the guide's shell is stated per assistant, and the pointer line names no shell; the syntax rules above, the hand-run rule and the #505 note are unchanged.** The #508, #596 and #597 notes describe a guide whose shell tool is Bash and whose shell is POSIX, Git Bash on Windows. The Claude package keeps that statement by the maintainer's decision on #27; no run on Windows is recorded for any assistant, and a real run recorded in `hosts/<assistant>/checks.json` is what moves an assistant from one statement to the other. `ground-rules.md` `#guide-run-blocks` stays the one statement (INV-300) and MUST, in each assistant's package, name the guide's shell tool from that assistant's `shell_tool` host value, which MUST equal its `hooks.tools.shell`, and say which shell runs a guide-run block: the POSIX shell of those notes in a package that keeps that statement, today the Claude package alone; in every other package whichever shell the assistant's tool provides, with that shell on Windows stated as unverified (INV-163). In a POSIX shell those notes bind as written. Where the guide's shell is PowerShell, the guide MUST translate a guide-run block to Windows PowerShell 5.1 with that section's table of 5.1 syntax limits, run the translation and treat the result as unverified in that shell; a translated block that fails follows its own site's failure rule; and a PowerShell-only guide-run block is run directly, the `powershell.exe -NoProfile -Command …` call and its quoting applying only from a POSIX shell. The pointer line after a guide-run block MUST name no shell and no tool, in one wording at every site and in every assistant's package: "Guide-run; unverified on Windows: no test runs it there", linking `#guide-run-blocks`. A command in a built `host-rules.md` whose package does not state a POSIX shell MUST be given in a POSIX form and in a Windows PowerShell 5.1 form that meets the syntax rules above and the #505 note. Enforced by `tests/test_each_package_states_its_own_guide_shell.py`, which builds every assistant's package, and by `tests/test_guide_run_blocks_declare_their_shell.py`. Neither establishes which shell an assistant gives the guide on Windows, and neither executes a PowerShell form: the PowerShell forms are checked by reading and were unexecuted when this note was drafted (INV-163).)
+
+- **Commit:** uncommitted
+
 ## the-fallback-rules-and-the-ground-rules-state-opposite-facts-about-the-same-hooks
 
 - **Implemented:** 2026-11-17 (issue #29)

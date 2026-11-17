@@ -1,8 +1,8 @@
 """Every guide-run block declares its shell, and the schema DDL comes from the SDK container (#508, #597).
 
 INV-001 makes Windows a supported platform. A **guide-run** block is one the guide runs itself with
-its Bash tool, which on Windows is Git Bash. A **hand-run** block is one the Bootcamper types into
-their own terminal, the case #391 gave PowerShell 5.1 forms (INV-167).
+its shell tool. A **hand-run** block is one the Bootcamper types into their own terminal, the case
+#391 gave PowerShell 5.1 forms (INV-167).
 
 #508 found six guide-run blocks on SDK setup's container route that said nothing about which shell
 runs them, and pinned those six in a fixed tuple with an exact count. #597 found the same gap at
@@ -13,15 +13,22 @@ fences.
 The fix has three parts, and these tests pin each:
 
 1. **One statement.** `ground-rules.md` → "Windows and PowerShell" holds the policy once, under the
-   anchor `guide-run-blocks` (INV-300): guide-run blocks run in the guide's POSIX shell (Git Bash
-   on Windows) and need no PowerShell form; hand-run blocks need a PowerShell 5.1 form (INV-167).
-   Since #597 it also says how the guide runs a PowerShell-only guide-run block from that shell:
+   anchor `guide-run-blocks` (INV-300): guide-run blocks need no PowerShell form in a POSIX shell;
+   hand-run blocks need a PowerShell 5.1 form (INV-167).
+   Since #597 it also says how the guide runs a PowerShell-only guide-run block from a POSIX shell:
    one `powershell.exe -NoProfile -Command …` call, and blocks that share a variable in one call.
+   Since #27 it says which shell runs a guide-run block for each assistant, in one `host:only`
+   block and one `host:except` block, and names the tool from the `shell_tool` host value: a POSIX
+   shell, Git Bash on Windows, where that is known, and otherwise whichever shell the assistant's
+   tool provides, with what the guide does when that shell is PowerShell. This file reads
+   `source/`, which holds both blocks, so it pins the wording the packages share and the wording
+   of the first block; `test_each_package_states_its_own_guide_shell.py` reads each built package.
 2. **One pointer line after every guide-run block.** Every ```` ```bash ````, ```` ```sh ```` and
    PowerShell fence under `source/` is guide-run, and the paragraph after it must be the pointer,
    unless `HAND_RUN` below names it as hand-run with a one-line reason. The pointer links the
    anchor and carries the INV-163 "unverified on Windows" disclosure in the #391 wording
-   ("…unverified on Windows: no test runs it there."). A `HAND_RUN` entry is keyed on the file, the
+   ("…unverified on Windows: no test runs it there."). Since #27 it names no shell and no tool,
+   so it is the same line in every assistant's package. A `HAND_RUN` entry is keyed on the file, the
    nearest heading above the fence and the fence's first non-comment line, never on a line number
    (INV-246). An entry that matches no fence fails, so the list cannot go stale, and a listed fence
    that carries the pointer fails, so a block is never both. No site or pointer count is asserted.
@@ -64,6 +71,8 @@ sites.
 INV-167's 2026-10-12 note (#508, applied 2026-10-13) names this module as its enforcer. It reads
 the skill text and runs the schema block against stub runtimes: it does not establish that a live
 guide runs a guide-run block in its POSIX shell on Windows, which no test here can observe.
+That note, and the #596 and #597 notes after it, word the guide's shell as one assistant's; #27's
+entry in `specs/IMPLEMENTED.md` proposes the dated note that scopes them to the assistant.
 
 Run:  python3 -m unittest discover -s tests
 """
@@ -92,8 +101,7 @@ ANCHOR_ID = "guide-run-blocks"
 ANCHOR = f'<a id="{ANCHOR_ID}"></a>'
 LINK = f"../bootcamp-onboarding/ground-rules.md#{ANCHOR_ID}"
 #: The one pointer line, in the same wording at every site.
-POINTER = ("Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no "
-           f"test runs it there ([guide-run blocks]({LINK})).")
+POINTER = f"Guide-run; unverified on Windows: no test runs it there ([guide-run blocks]({LINK}))."
 #: The #391 disclosure's wording (`graduation/database-backup.md`), which the pointer reuses.
 DISCLOSURE = "unverified on Windows: no test runs it there"
 
@@ -209,13 +217,15 @@ def ground_rules_problems(text):
     body = statement(text)
     for pattern in (r"This is the canonical statement of which command blocks need a\s+PowerShell form",
                     r"\(INV-300\)",
-                    r"A guide-run block\*\* is one the guide runs itself with its Bash tool",
+                    r"A guide-run block\*\* is one the guide runs itself with its "
+                    r"`\{\{host\.shell_tool\}\}` tool",
                     r"guide's\s+POSIX shell, which on Windows is Git Bash, so it needs no PowerShell form",
                     r"A hand-run block\*\* is one the Bootcamper types",
                     r"needs a\s+PowerShell 5\.1 form that meets the rules above \(INV-167\)",
                     r"\(INV-163\)",
                     r"A PowerShell-only guide-run block\*\* is a guide-run block written only in PowerShell",
-                    r"runs it from its POSIX shell as one call, `powershell\.exe -NoProfile -Command …`",
+                    r"From a POSIX\s+shell the guide runs it as one call, "
+                    r"`powershell\.exe -NoProfile -Command …`",
                     r"blocks that share a variable\s+run in one call",
                     r"followed by the same line as any other guide-run block",
                     r"There is\s+no PowerShell fallback"):

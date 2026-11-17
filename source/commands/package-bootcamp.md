@@ -14,7 +14,7 @@ pinned numbered 👉 question about what should travel, then write the archive w
 python3 "{{host.scripts_dir}}/package_bootcamp.py" --profile <share|transfer>
 ```
 
-Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../skills/bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
+Guide-run; unverified on Windows: no test runs it there ([guide-run blocks](../skills/bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
 Two profiles: `share` carries the results — recap PDF, keepsake documents, visualizations
 and `production/`, with no database, no source data and no credentials. `transfer` adds the
