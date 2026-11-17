@@ -592,7 +592,7 @@ line and holds no copy of it, so changing the line changes the range.
   lines in a docstring, which `since` reports as outside its corpus. One block below covers
   both.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** The since-last-audit views take their range start from the ledger alone, and say when it is the fallback. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-432, registered by the maintainer 2026-11-16).** The since-last-audit views take their range start from the ledger alone, and say when it is the fallback. The rule already shipping, quoted:
     - ⛔ **The fallback commit is stated in the ledger's opening section and read from there.** — in `.claude/skills/production-readiness-audit/conformance.py`
     - ⛔ **A fallback run prints a FALLBACK line on stdout, every time, zero included.** — in `.claude/skills/production-readiness-audit/conformance.py`
 

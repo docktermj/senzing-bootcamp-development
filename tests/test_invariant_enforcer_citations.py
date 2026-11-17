@@ -960,7 +960,9 @@ NAMED_TEST = re.compile(r"tests/(test_[a-z0-9_]+\.py)")
 #: Same review: INV-252's 2026-11-16 note (issue #11) applied; it names
 #: test_kiro_skills_say_where_they_are.py, which now cites INV-252 back. Re-derived by running
 #: the extractor, which found 359, the new pair present by name and none removed.
-EXPECTED_PAIRS = 359
+#: Same review: INV-432 registered (issue #10), enforced by one test that cites it back.
+#: Re-derived by running the extractor, which found 360, the new pair present by name.
+EXPECTED_PAIRS = 360
 
 
 #: Adapted (one-repository migration, 2026-11-14): enforcers the register names that were not
