@@ -68,10 +68,25 @@ there would fail on checkouts that have nothing wrong with them. Since #10 an au
 `Commit:` is `uncommitted` no longer skips on its own: with no entry that resolves, the range
 starts at the fallback commit the ledger states, and this guard checks that range.
 
+⚠️ **Dated note (#49): both populations, in every range, at the source line.** `since` reports a
+rule inside the Markdown corpus with `+` and one outside it with `!`: in `docs/`, in
+`tools/bootcamp_build/`, or in a non-`.md` file under a scanned root.
+
+⛔ **Every line `since` reports, `+` or `!`, is checked in every range, at its whole source line.**
+
+Until #49 a `!` line was checked only in a range holding no `+` line, and against the
+110-character display text. An uncited rule in `hosts/kiro/host.json` passed in any range that
+also added a Markdown rule, and that file's location note, cited past column 110, would have
+been flagged in a range holding nothing else. `_full_source_line` is the one lookup both
+populations use. It falls back to the display text when it cannot name one source line, which
+can flag a cited rule and can never pass an uncited one. The fixtures are in
+`test_the_gate_checks_outside_lines_at_their_source.py`.
+
 Source spec:
 `specs/three-hard-rules-from-the-2026-08-28-loop-carry-no-citation-at-the-line.md`.
 
-Source issue: #74 (the reverse-contract gate silently discards every rule outside `source/`).
+Source issues: #74 (the reverse-contract gate silently discards every rule outside `source/`),
+#49 (the gate checks outside-the-corpus lines against truncated text).
 
 Run:  python3 -m unittest discover -s tests
 """
@@ -142,8 +157,12 @@ def outside_count(report):
     return int(m.group(1)) if m else 0
 
 
+#: The heading `since` prints above each file's `!` lines: `<path>  (<n>)`.
+OUTSIDE_HEADING = re.compile(r"^(?P<path>\S.*?)  \(\d+\)$")
+
+
 def outside_lines(report):
-    """The outside-corpus rule lines themselves (#143).
+    """The outside-corpus rule lines, each under the file `since` lists it in (#143, #49).
 
     ⛔ **Until `since` printed these, this guard could only compare the COUNT against zero.**
     That made any hard rule shipped in `docs/` or a non-`.md` file an unconditional failure
@@ -152,11 +171,15 @@ def outside_lines(report):
     A guard that cannot be satisfied teaches people to disable it.
 
     ⚠️ **The fix is not to stop failing; it is to apply the SAME test.** These lines get the
-    cited-or-deferred predicate the in-corpus ones get. What is lost relative to the in-corpus
-    path is only the file attribution -- the report groups them under a filename header this
-    parser does not need, because the predicate is per line.
+    cited-or-deferred predicate the in-corpus ones get.
+
+    Returns `(heading, line)` pairs, the shape of `Parsed.checked` (#49). Until #49 this
+    dropped the file heading, so a `!` line could not be resolved and was tested as displayed:
+    a citation past column 110 was invisible. `line` is the whole source line where
+    `_full_source_line` can name it, and the display text otherwise. `heading` is None for a
+    `!` line with no file heading above it, which is then tested as displayed.
     """
-    out, inside = [], False
+    out, inside, heading = [], False, None
     for raw in report.splitlines():
         if OUTSIDE_LINE.search(raw):
             inside = True
@@ -164,9 +187,13 @@ def outside_lines(report):
         if inside:
             stripped = raw.strip()
             if stripped.startswith("! "):
-                out.append(stripped[2:])
+                out.append((heading, _full_source_line(heading, stripped[2:])))
             elif stripped.startswith("These shipped a hard rule"):
                 break
+            else:
+                found = OUTSIDE_HEADING.match(stripped)
+                if found:
+                    heading = found.group("path")
     return out
 
 
@@ -263,13 +290,29 @@ def _full_source_line(relpath, body):
 
     Line-scoped by design (#425): the contract is a citation on the rule's OWN line (INV-183),
     and `since` reports source lines, so the unit read here is one line.
+
+    One lookup for the `+` and the `!` lines (#49). `since` strips the text it reports, so a
+    source line matches when, with its leading whitespace removed, it starts with that text;
+    matching the raw line never found an indented rule. The whole line is returned stripped, as
+    `since` reports it.
+
+    Returns `body`, the display text, when no single source line can be named: no heading, a
+    file that is missing or unreadable, no matching line, or more than one distinct matching
+    line. Taking the first of several could test an uncited rule against a longer line that
+    starts with the same words and carries a citation.
     """
-    path = REPO_ROOT / relpath
-    if path.exists():
-        for line in path.read_text(encoding="utf-8").split("\n"):
-            if line.startswith(body):
-                return line
-    return body
+    if not relpath:
+        return body
+    try:
+        text = (REPO_ROOT / relpath).read_text(encoding="utf-8")
+    except (OSError, ValueError):
+        return body
+    found = []
+    for line in text.split("\n"):
+        whole = line.strip()
+        if whole.startswith(body) and whole not in found:
+            found.append(whole)
+    return found[0] if len(found) == 1 else body
 
 
 def parse_since(since_output):
@@ -310,19 +353,22 @@ def parse_since(since_output):
     return Parsed(checked, unresolved, unknown_headings, reported)
 
 
-def announce(parsed):
+def announce(parsed, outside):
     """⛔ Report the breakdown on every run, **including the zeroes**.
 
     A count that appears only when it is non-zero makes its absence ambiguous: the reader
     cannot tell "no rules were added" from "the line was dropped again". One line, always, names
     the roots checked, so the scope is a decision on the record (INV-308). Written to stderr
     like the fpdf2 notice, for the same reason -- it is a notice, not output.
+
+    `outside` is what `outside_lines` returned. Those lines are checked in every range (#49),
+    so their number is part of the breakdown, a zero included.
     """
     sys.stderr.write(
         "[new-hard-rules] %d line(s) reported since the last audit: %d checked (%s), "
-        "%d unresolved\n"
+        "%d unresolved; %d outside the corpus, checked the same way\n"
         % (parsed.reported, len(parsed.checked), ", ".join(SCAN_ROOTS) or "no scanned root",
-           len(parsed.unresolved)))
+           len(parsed.unresolved), len(outside)))
     sys.stderr.flush()
 
 
@@ -369,7 +415,8 @@ class EveryNewHardRuleIsAccountedFor(unittest.TestCase):
                 "TheParserAgreesWithTheProducer, which FAILS on this rather than skipping")
 
         parsed = parse_since(since)
-        announce(parsed)
+        outside_rules = outside_lines(since)
+        announce(parsed, outside_rules)
 
         # ⛔ A line the parser cannot place is reported, never dropped. This is the defect
         # itself: 112 placeable lines were dropped here and the emptiness read as "none".
@@ -383,6 +430,32 @@ class EveryNewHardRuleIsAccountedFor(unittest.TestCase):
             [], [line for _h, line in parsed.unresolved],
             "%d reported rule line(s) could not be attributed to any file, so nothing can be "
             "checked at their source line" % len(parsed.unresolved))
+
+        # (#49) Both populations are checked before any skip below, so a `!` line is tested in
+        # every range: one that also holds `+` lines, and one whose ref was widened. Until #49
+        # this check sat inside `if not parsed.reported:`, and an uncited rule in `host.json`
+        # passed whenever the range also added a Markdown rule.
+        outside = outside_count(since)
+        unaccounted = self._unaccounted(line for _path, line in parsed.checked)
+        stray = self._unaccounted(line for _path, line in outside_rules)
+        complaints = []
+        if unaccounted:
+            complaints.append(
+                "a hard rule added since the last audit cites no invariant at its line AND is "
+                "named in no DEFERRED INVARIANT block. Those are the only two legitimate "
+                "states; silence is the reverse-contract defect. Either add the citation, or "
+                "record the deferral with its drafted wording:\n  " + "\n  ".join(unaccounted))
+        if stray:
+            # ⛔ (#143) Rules shipped where the corpus does not look. This used to fail
+            # outright and tell the reader to account for them in the ledger -- which the
+            # assertion could not observe, so the instruction cleared nothing. They now
+            # get the SAME cited-or-deferred predicate as the in-corpus lines.
+            complaints.append(
+                "%d hard-rule line(s) shipped where the checked corpus does not look "
+                "(`docs/`, `tools/bootcamp_build/`, or a non-`.md` file under the scanned "
+                "roots), and %d of them cite no invariant at the line AND appear in no "
+                "DEFERRED INVARIANT block:\n  %s" % (outside, len(stray), "\n  ".join(stray)))
+        self.assertEqual([], unaccounted + stray, "\n\n".join(complaints))
 
         if not parsed.reported:
             # ⛔ **Say WHICH kind of nothing this is.** An empty range and a range that never
@@ -404,19 +477,7 @@ class EveryNewHardRuleIsAccountedFor(unittest.TestCase):
             # it added none -- and this skip then called that an empty range. Four runs in one
             # session did exactly that. The producer now reports the outside count; an empty
             # range is only empty when that count is zero too.
-            outside = outside_count(since)
             if not is_an_empty_range(parsed.reported, outside):
-                # ⛔ (#143) Rules shipped where the corpus does not look. This used to fail
-                # outright and tell the reader to account for them in the ledger -- which the
-                # assertion could not observe, so the instruction cleared nothing. They now
-                # get the SAME cited-or-deferred predicate as the in-corpus lines.
-                stray = self._unaccounted(outside_lines(since))
-                self.assertEqual(
-                    [], stray,
-                    "%d hard-rule line(s) shipped where the checked corpus does not look "
-                    "(`docs/`, or a non-`.md` file under the scanned roots), and %d of them "
-                    "cite no invariant at the line AND appear in no DEFERRED INVARIANT block:"
-                    "\n  %s" % (outside, len(stray), "\n  ".join(stray)))
                 self.skipTest(
                     "%d hard-rule line(s) shipped outside the checked corpus; each cites an "
                     "invariant at its line or is named in a deferral. ⚠️ Accounted for, NOT "
@@ -426,15 +487,6 @@ class EveryNewHardRuleIsAccountedFor(unittest.TestCase):
                 "the report lists no hard-rule lines at all since the newest audit entry. The "
                 "ref was accepted as recorded (no SUSPECT-REF), and the outside count is zero "
                 "too, so this is an empty range rather than a range that missed the work")
-
-        unaccounted = self._unaccounted(line for _path, line in parsed.checked)
-
-        self.assertEqual(
-            [], unaccounted,
-            "a hard rule added since the last audit cites no invariant at its line AND is "
-            "named in no DEFERRED INVARIANT block. Those are the only two legitimate states; "
-            "silence is the reverse-contract defect. Either add the citation, or record the "
-            "deferral with its drafted wording:\n  " + "\n  ".join(unaccounted))
 
     def test_the_deferral_scan_is_not_vacuous(self):
         """⛔ INV-265 — an empty deferral corpus would make the escape hatch match nothing."""

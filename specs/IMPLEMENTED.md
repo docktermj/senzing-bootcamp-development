@@ -36,6 +36,83 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## the-cited-or-deferred-gate-checks-outside-the-corpus-lines-against-truncated-text
+
+- **Implemented:** 2026-11-17 (issue #49)
+- **Files changed:** `tests/test_new_hard_rules_are_cited_or_deferred.py`,
+  `tests/test_the_gate_checks_outside_lines_at_their_source.py` (new),
+  `tests/test_since_states_its_corpus.py` (one test, for the new return shape),
+  `specs/IMPLEMENTED.md` (this entry)
+- **MCP re-check:** n/a (no Senzing fact). Re-confirmed on 2026-11-17 against the change itself:
+  it decides which report lines a test module checks and what text it checks them against, and
+  asserts nothing about Senzing. No absence claim about the Senzing MCP server is made, so
+  INV-213's `owner-checked:` clause is not owed.
+- **Summary:** The cited-or-deferred gate now checks every line `conformance.py since` reports,
+  the `+` lines inside the Markdown corpus and the `!` lines outside it, in every range, and
+  tests each one against its whole source line. `conformance.py` is unchanged, and nothing in
+  a built package changes.
+  - **The heading is kept.** `outside_lines` returns `(heading, line)` pairs, the shape
+    `parse_since` already uses for `+` lines. The heading is the path on the `<path>  (<n>)`
+    line `since` prints above each file's `!` lines.
+  - **One lookup.** `_full_source_line` serves both populations. A source line matches when,
+    with its leading whitespace removed, it starts with the reported text, so an indented
+    line is found. Before, the raw line was compared with text `since` had stripped, and no
+    indented line matched in either population.
+  - **The fallback.** The display text is tested instead when no single source line can be
+    named: no heading above the line, a file that is missing or unreadable, no matching line,
+    or more than one distinct matching line. A cited rule can be flagged that way. An uncited
+    rule never passes. Before, the first match was taken, so an uncited rule could be tested
+    against a longer, cited line that starts with the same words.
+  - **Every range.** Both populations are checked before any skip. A range holding `+` lines
+    and an uncited `!` line now fails; before, the `+` line switched the outside check off.
+    One failure names the unaccounted lines of both populations.
+  - **Decided here, because the issue allows more than one reading.** Two matching lines are
+    distinct when they differ after leading and trailing whitespace is removed, so the same
+    rule at two indentations is one line. The check also runs before the `SUSPECT-REF` skip:
+    a widened range holding only an uncited `!` line now fails, where it skipped before. The
+    breakdown line on stderr gains the number of outside lines checked, a zero included.
+    Recorded on the issue as its Clarifications comment.
+  - **Unchanged.** A range holding only accounted-for `!` lines still ends in the skip that
+    says "Accounted for, NOT verified", and an empty range still skips as an empty range.
+  - **Not done.** The gate does not compare the number of `!` lines it read with the count on
+    the `OUTSIDE the corpus` line. The issue does not ask for it.
+  - **Measured on this branch, 2026-11-17.** `since --since-last-audit` reports 0 lines added
+    and 0 outside the corpus since `ffc5f4e`, so the live gate skips as an empty range and the
+    fixtures carry every case. The one hard-rule line in `hosts/kiro/host.json` has its first
+    citation 624 characters into the text `since` reports, past the 110 it displays; a range
+    holding only that line now comes out with no line unaccounted for.
+  - **Tests.** The new module holds 47 tests. It points the gate at throwaway trees with their
+    own ledger and runs the gate's own parser, lookup, predicate and test method over `since`
+    reports for them. One class runs `conformance.py since` itself over a throwaway git
+    repository and requires the gate to read the hand-built reports exactly as it reads the
+    real one. Another reads the real `hosts/kiro/host.json`. Negative controls, each run and
+    then reverted: the old lookup (30 failures, 1 error), `!` lines tested as displayed
+    (22 failures), `!` lines checked only in a range with no `+` line (5 failures), the
+    heading dropped (18 failures, 1 error), the `SUSPECT-REF` skip ahead of the check
+    (1 failure), and the first of several matches taken (4 failures).
+- **Invariants.** The register is not edited here (INV-365). The change ships one hard-rule
+  line, in the gate's docstring. `since` does not report it, because `tests/` is not a rule
+  home. The block below covers it.
+
+- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** The cited-or-deferred gate checks every line `since` reports, in every range, at its source line. The rule already shipping, quoted:
+    - ⛔ **Every line `since` reports, `+` or `!`, is checked in every range, at its whole source line.** — in `tests/test_new_hard_rules_are_cited_or_deferred.py`
+
+  Enforced by `tests/test_the_gate_checks_outside_lines_at_their_source.py`.
+
+  **Why it is not an existing invariant:** INV-282 says how a guard derives its matcher and
+  names the gate as one of its enforcers. INV-431 says `since` reports a hard rule added under
+  `hosts/` or `tools/bootcamp_build/`. INV-308 says a tool reports what it could not verify.
+  INV-183 is the duty to cite at the rule's own line. None of them says that the gate checks
+  the lines `since` marks `!`, that it does so in a range that also holds `+` lines, or which
+  text a reported line is tested against.
+
+  Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
+  invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
+
+  **INV-NNN** — The cited-or-deferred gate, `tests/test_new_hard_rules_are_cited_or_deferred.py`, MUST apply its check to every hard-rule line `conformance.py since` reports: the lines marked `+`, inside the Markdown corpus, and the lines marked `!`, outside it. It MUST do so in every range, including a range that holds both kinds and a range whose ref was widened, and before any skip. It MUST test each line against its whole source line and not against the 110-character text `since` displays. The source line is found in the file `since` lists the line under, and a source line matches when, with its leading whitespace removed, it starts with the displayed text. When no single source line can be named (no file heading, a file that is missing or unreadable, no matching line, or more than one distinct matching line), the gate MUST test the displayed text instead, so that a cited rule may be flagged and an uncited rule never passes. Enforced by `tests/test_the_gate_checks_outside_lines_at_their_source.py`, which runs the gate over fixture trees and **cannot** establish that a cited invariant governs the rule beside it, that `since` reports every rule a range adds, or that the gate read as many `!` lines as `since` counted. (Source: `the-cited-or-deferred-gate-checks-outside-the-corpus-lines-against-truncated-text`, GitHub issue #49, 2026-11-17.)
+
+- **Commit:** uncommitted
+
 ## auto-test-2026-11-17
 
 **Not a spec** — a dated record of an `/auto-test` run, **unattended**: the maintainer started

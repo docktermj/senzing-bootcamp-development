@@ -275,8 +275,10 @@ class HostSideInputsAreReportedWithTheRightMarker(unittest.TestCase):
                          "root, so the rule under it is checked by nothing")
         self.assertEqual([self.MARKDOWN[0]], [heading for heading, _line in parsed.checked])
         self.assertEqual(1, helpers.outside_count(report))
-        self.assertEqual(1, len(helpers.outside_lines(report)))
-        self.assertIn("A host-side rule", helpers.outside_lines(report)[0])
+        # (#49) Each `!` line comes back with the file heading `since` printed above it.
+        outside = helpers.outside_lines(report)
+        self.assertEqual(["hosts/kiro/host.json"], [heading for heading, _line in outside])
+        self.assertIn("A host-side rule", outside[0][1])
 
     def test_a_range_that_adds_nothing_still_names_the_new_roots(self):
         """A zero: the roots are stated as read on a run that found nothing in them."""
