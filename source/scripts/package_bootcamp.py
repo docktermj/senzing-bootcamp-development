@@ -372,8 +372,23 @@ def read_progress(project_root):
 
 
 def plugin_version():
-    """The plugin's own version, per INV-252's skill-relative resolution."""
+    """The version of the package this script ships in.
+
+    Read first from ``bootcamp_version`` in the ``bootcamp_host.json`` the build writes
+    beside this script, which every assistant's package carries (#31). Only when that file
+    gives no version -- it is missing, cannot be read, is not valid JSON, or holds no
+    non-empty string under that key -- are the two manifest paths below tried, per
+    INV-252's skill-relative resolution. Nothing is searched for.
+    """
     here = Path(__file__).resolve().parent
+    try:
+        with open(here / "bootcamp_host.json", encoding="utf-8") as fh:
+            host = json.load(fh)
+    except (OSError, ValueError):
+        host = None
+    built = host.get("bootcamp_version") if isinstance(host, dict) else None
+    if isinstance(built, str) and built.strip():
+        return built.strip()
     for candidate in (here.parent / "plugin.json", here.parent / ".claude-plugin" / "plugin.json"):
         try:
             with open(candidate, encoding="utf-8") as fh:

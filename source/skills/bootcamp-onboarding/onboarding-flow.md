@@ -49,9 +49,10 @@ reaches is not the plugin serving this run. With `{{host.plugin_root_var}}` empt
 banner report `v0.5.0` from a second checkout while `0.5.1` was running, and a version line that
 can be wrong is worse than none: its whole job is provenance.
 
-Every other step needing the plugin version resolves it the same way — the feedback entry
-(`feedback.md`), the recap header (`module-completion.md`) and the recap's provenance block
-(`../graduation/SKILL.md`) — so all four report one version.
+Two other steps resolve the manifest the same way as the WELCOME banner: the recap header
+(`module-completion.md`) and the recap's provenance block (`../graduation/SKILL.md`). The
+feedback entry (`feedback.md`) reads `bootcamp_version` from `bootcamp_host.json` first, and
+resolves the manifest this way only if that file cannot be read.
 
 ## 0b. MCP health check (required)
 

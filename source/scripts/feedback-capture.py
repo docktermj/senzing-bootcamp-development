@@ -36,10 +36,26 @@ def plugin_version():
     search for `plugin.json` then answers with the wrong checkout's version. This file
     always knows where it lives, so it answers with the value instead of a path.
 
-    Returns "Unknown" rather than guessing when the manifest cannot be read or parsed.
+    Read first from ``bootcamp_version`` in the ``bootcamp_host.json`` the build writes
+    beside this file, which every assistant's package carries, so the answer does not
+    depend on where an assistant keeps its manifest (#31). Only when that file gives no
+    version -- it is missing, cannot be read, is not valid JSON, or holds no non-empty
+    string under that key -- is the manifest above this file's directory read. Both are
+    fixed paths from this file: nothing is searched for (INV-252).
+
+    Returns "Unknown" rather than guessing when neither can be read or parsed.
     """
+    here = os.path.dirname(os.path.abspath(__file__))
+    try:
+        with open(os.path.join(here, "bootcamp_host.json"), encoding="utf-8") as handle:
+            host = json.load(handle)
+    except (OSError, ValueError):
+        host = None
+    built = host.get("bootcamp_version") if isinstance(host, dict) else None
+    if isinstance(built, str) and built.strip():
+        return built.strip()
     manifest = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        os.path.dirname(here),
         ".claude-plugin",
         "plugin.json",
     )
