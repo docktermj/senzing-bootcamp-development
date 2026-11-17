@@ -29,7 +29,7 @@ and two of the five pages set an effort that the bootcamp never mentions again.
   Lowercase, each space and dot a hyphen, `claude-` in front: "Opus 5.5" gives
   `claude-opus-5-5`. The ID stays literal in the fragment, and the command carries no flag
   but `--model` and `--permission-mode auto`.
-- ⛔ **No install page mentions an effort.**
+- ⛔ **(INV-429) No install page mentions an effort.**
   The bootcamper runs at their assistant's default effort, and the pages say nothing about it.
 
 ⚠️ **Choosing a model once, before the bootcamp starts, is not a switch.** The install
@@ -42,6 +42,10 @@ model's name comes from, and as the build renders it, to see what a reader gets.
 
 Enforces **INV-428** (registered 2026-11-16): the two model rules above. The effort rule
 below them is a separate subject and is not part of INV-428.
+
+Enforces **INV-429** (registered 2026-11-16): the effort rule. It searches each fragment's
+visible text for the word "effort"; it does not recognize a level named without that word,
+and it does not read the shared page template `site/_install.html`.
 
 ⚠️ **What the #13 checks cannot establish:** that a `model_capable` value names a model the
 assistant offers, or that a model ID exists. They do not report a page that names a second
