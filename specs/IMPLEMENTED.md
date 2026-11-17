@@ -36,6 +36,159 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## dry-run-2026-11-17
+
+**Not a spec** — a dated record of a dry run, phases 1 and 2, **unattended**: the maintainer
+started it and was away. Phase 3 was not run.
+
+- **Implemented:** 2026-11-17 (**18 findings recorded below; none fixed; none filed — each needs
+  the maintainer to file it; four upstream messages drafted, none sent**)
+- **Files changed:** this record only.
+- **MCP re-check:** Senzing MCP server `sz-mcp-coworker` 1.46.1, 2026-11-17, docs index built
+  2026-11-14. Tools called, read-only: `get_capabilities`, `search_docs`, `get_sdk_reference`,
+  `sdk_guide`, `find_examples`, `generate_scaffold`, `mapping_workflow` (synthetic labels, no
+  data), `explain_error_code`, `get_sample_data`, `analyze_record`, `reporting_guide` (no
+  content call). `submit_feedback` and `download_resource` were never called. Outcome by
+  finding below: two shipped claims are contradicted by the server, several rationales no
+  longer reproduce, and the calls the bootcamp makes are still accepted.
+- **Baseline.** Branch `1-docktermj-5` at `ffc5f4e`, tree clean, suite green at
+  `Ran 9601 tests`, `OK (skipped=13)`.
+- **Environment.** Present: the `senzing` package, `/opt/senzing/er/lib/libSz.so` (loads only
+  with `LD_LIBRARY_PATH` set, on this machine), `fpdf2` 2.8.5, `pdftoppm`, `docker`,
+  Google Chrome, `ffmpeg`. Absent: `imageio_ffmpeg`, `chromium`. No container was started.
+- **Phase 1, verified correct.** Every `action=`, `topic=`, `workflow=`, `platform=` and
+  `category=` literal in `source/` is valid on the server. `mapping_workflow` start and
+  advance, its enforcement notice, `sdk_guide` install, configure and load, `get_sample_data`,
+  `generate_scaffold` initialize, the why-key fields, and `explain_error_code` for 7426,
+  SENZ7221 and SENZ9000 are as the shipped text states. No `add_data_source` or `G2Engine`
+  appears in shipped text. `hosts/` holds no MCP call text.
+- **Phase 1, the dated negatives.** `coverage_reports.py negatives --server 1.46.1` lists 40
+  markers, all due; `unmarked` lists none. Re-asked: 1 false (finding 2), 26 hold, 7 hold in
+  part, 4 are stale beyond a wording drift (`ground-rules.md:629`, `phaseD-validation.md:504`,
+  `visualization-api-reference.md:516`, `phase2-data-mapping.md:876`), 2 were not re-asked
+  (`ground-rules.md:1056`, `:1083`). ⚠️ Every `search_docs` re-ask read the top 3 to 5 hits,
+  not the default 10, so a "holds" here is weaker than the marker's own check.
+- **Phase 2, verified correct.** All eleven Claude hook entries and every adapter event on the
+  four other assistants are silent outside a bootcamp. The write gate held on about 75 cases.
+  The fold hooks are idempotent. The recap PDF rendered with fpdf2 at 36 pages with 13 of 13
+  images, and its pages were looked at; a Latin name with accents renders, and a CJK name falls
+  back with a warning. The video, screenshot, discoveries and packaging scripts ran. With
+  `LD_LIBRARY_PATH` set, the real engine loaded four records into a scratch SQLite database and
+  the visualization server answered every endpoint on 127.0.0.1.
+- **Findings, most serious first. All open, none filed.** P1 is phase 1, P2 is phase 2.
+  1. **P2-F1. Three hooks and the adapter fail under a Windows legacy code page.** Simulated
+     with `PYTHONIOENCODING=cp1252`; not run on Windows. `write-gate.py:47`,
+     `stop-nudge.py:233` and `feedback-capture.py:52` read stdin as text, so a payload holding
+     a curly quote raises `UnicodeDecodeError`; the write gate then exits 1 where it should
+     block, and through the Copilot adapter the write is allowed. `stop-nudge.py:303` cannot
+     print 👉. `hosts/_shared/hook_adapter.py:402-404` loses the session-start context.
+     `checkpoint-tick.py:197` already reads bytes for this reason. Verdict: plugin.
+  2. **P1-F3. A shipped negative is false.** `module-02-sdk-setup/SKILL.md:1879-1884` says a
+     `search_docs` query for the record limit returns EULA prose with no figure. The top hit is
+     now the FAQ "What is the 500 record limit…". The routing to `sdk_guide` still works; the
+     stated reason does not. `tests/test_record_limit_negative_is_rescoped.py` and
+     `tests/test_prescribed_search_queries.py:712` pin the retired wording. Verdict: plugin.
+  3. **P1-F1. "Preview Release — Unsupported" is relayed as fact and the server no longer
+     carries it.** `module-02-sdk-setup/SKILL.md:676-682` (also `:671`, `:706`). The Scoop
+     bucket README came back in full with no such notice; for the Homebrew tap only the
+     prescribed query's top four hits were read.
+     owner-checked: `search_docs` is the corpus route for both READMEs and the one the text
+     names — the Scoop README returned whole, without the notice; `sdk_guide(topic='install')`
+     for `macos_arm` and `windows` carries no such wording. `tests/test_sdk_update_offer.py`
+     pins the retired wording. Verdict: plugin; the Homebrew half needs one more read.
+  4. **P2-F2. On the four non-Claude packages the feedback hook says the version is
+     "Unknown"**, and the packager records "unknown" on ChatGPT and Kiro.
+     `feedback-capture.py:39-43` and `package_bootcamp.py:377` look for a Claude manifest
+     path; `bootcamp_host.json` beside each script carries the version. Verdict: plugin.
+  5. **P1-F2. The server indexes the bootcamp's own repositories.**
+     `find_examples(query='multi-source')` returns only two bootcamp `CHANGELOG.md` files, and
+     a `search_docs` query ranks a bootcamp script first. No shipped text says a hit from a
+     bootcamp repository is not Senzing evidence. The marker at
+     `phaseC-multi-source.md:214` still holds; its rationale does not. Verdict: both.
+  6. **P1-F5. `get_sdk_reference(topic='flags', filter=<method>)` changed shape.** It returns
+     lines of text under group headers, with no `source_file`, and points at a `flag_details`
+     topic that no shipped file names. `phaseD-validation.md:492-495`,
+     `ground-rules.md:819-822`, `phase2b-discover.md:34-36`. Verdict: plugin.
+  7. **P1-F4. That compact list renders "depends on" and "member of" as `NAME = X`**, which
+     reads as a definition; `phase1-query-visualize.md:317-322` sends the guide there for the
+     opposite lesson. Verdict: both.
+  8. **P2-F3. After graduation, three hooks still treat the bootcamp as in progress.**
+     `checkpoint-tick.py:204`, `precompact-recap.py:18` and `session-end.py:21` test
+     `bootcamp_active()` and not `bootcamp_complete()`, so a later prompt recreates the recap
+     checkpoint. Verdict: plugin.
+  9. **P2-F4. PowerShell writes to a temp directory pass the write gate on Copilot.**
+     `hosts/copilot/host.json:68` maps `powershell` to the shell tool, and
+     `write-gate.py:180` and `:319` parse POSIX shell only. Verdict: plugin.
+  10. **P2-F5. The unprintable-name warning names the wrong file.**
+      `generate_recap_pdf.py:4688-4692` says to fix the name in the recap; only the preferences
+      file changes the certificate. Verdict: plugin.
+  11. **P1-F6. The mixed-type rationale is stale** (`phase2-data-mapping.md:595-602`): the
+      server no longer declares `record_type` as an enum and now says to send the dominant
+      type itself. The guidance is still right. Verdict: plugin.
+  12. **P2-F7. Three gaps in what the packager promises**: symlinked directories are left out
+      and not named (`package_bootcamp.py:247`); UTF-16 text is not scanned for secrets
+      (`:346`); and the `share` profile carries the feedback file and the recap checkpoint,
+      which the consent question does not name. Verdict: plugin; the third is a design call.
+  13. **P2-F6. The stop nudge prints a traceback on an undecodable transcript**
+      (`stop-nudge.py:171` catches `OSError` only). Verdict: plugin.
+  14. **P1-F7. A consequence the text calls observation-only is now documented**
+      (`phase2-data-mapping.md:865-873`). Verdict: plugin, low.
+  15. **P2-F8. In the stdlib PDF fallback the page-1 title and subtitle touch**
+      (`generate_recap_pdf.py:4074-4075`). Verdict: plugin, cosmetic.
+  16. **P2-F9. The write gate blocks an Edit that removes a secret**, with a message telling
+      the guide to do what it is doing (`write-gate.py:421-427`). Verdict: plugin, low.
+  17. **P1-F8. Two server tools disagree on the Las Vegas source count** (11 against 10). The
+      bootcamp hardcodes neither. Verdict: mcp-server.
+  18. **P1-F9. Two server documents disagree on the Java jar name** (`sz-sdk-java.jar` against
+      `sz-sdk.jar`). The bootcamp uses the second only. Verdict: mcp-server.
+  - **Stale wording, claim still true:** `module-02-sdk-setup/SKILL.md:1649` and `:2381`,
+    `module-05-data-quality-mapping/SKILL.md:97`, and two quotations of server text at
+    `phase2-data-mapping.md:190-191` and `:398` that the server has reworded.
+  - **Confirmed by execution from `production-readiness-audit-2026-11-17`:** its findings 3
+    (slash command in the session-start message), 17 (the adapter half) and 18.
+- **Upstream messages, drafted and not yet sent — each needs maintainer approval.** Four: on the flags list (finding 7), the indexed bootcamp repositories
+  (finding 5), the source count (finding 17) and the jar name (finding 18). Findings 5 and 7
+  are `both`, so their messages belong inside a GitHub issue; 17 and 18 are `mcp-server`.
+  Upstream: not yet sent — needs maintainer approval. The drafted text, as of server 1.46.1:
+  - **Flags list (finding 7).** "`get_sdk_reference(topic='flags', filter=<method>)` (tried
+    with export_json_entity_report, why_records, find_network_by_entity_id) returns one line
+    per flag, and the tool description says composites are shown as `NAME = A|B|C`. Several
+    lines use `=` for relationships that are not composites:
+    `SZ_INCLUDE_MATCH_KEY_DETAILS = SZ_ENTITY_INCLUDE_ALL_RELATIONS` (the row for that flag
+    says it 'is dependent on using one of' the relations flags) and
+    `SZ_ENTITY_INCLUDE_RECORD_JSON_DATA = SZ_RECORD_DEFAULT_FLAGS` (the row says 'Member of').
+    A reader takes these as definitions and may pass the dependent flag alone. The export
+    listing also carries `SZ_EXPORT_INCLUDE — (undocumented)` and `SZ_ENTITY — (undocumented)`,
+    which look like name prefixes. Suggest a distinct marker for 'requires' and 'member of'."
+  - **Indexed bootcamp repositories (finding 5).** "The example and docs corpus includes
+    Senzing bootcamp plugin repositories. `find_examples(query='multi-source')` returns only
+    two results, both CHANGELOG.md files from those repositories, one with provenance
+    'official'. `search_docs(query='NEED_REEVALUATION how entity final state')` ranks a
+    bootcamp helper script first. These are teaching-plugin housekeeping files, not Senzing SDK
+    examples, and a client that treats this server as its source of Senzing facts can be handed
+    its own text. Suggest excluding these repositories, or at least their changelogs and
+    non-SDK scripts."
+  - **Source count (finding 17).** "`get_capabilities` describes the las-vegas dataset as
+    '11 sources', while `get_sample_data(dataset='list')` names 10 and
+    `get_sample_data(dataset='las-vegas', source='list')` returns 'Found 10 sources'."
+  - **Jar name (finding 18).** "The anti-patterns article 'Ecosystem and Dependencies' shows
+    artifactId `sz-sdk-java` and `/opt/senzing/er/sdk/java/sz-sdk-java.jar`. The Java SDK
+    reference served by search_docs shows artifactId `sz-sdk` and
+    `${SENZING_PATH}/er/sdk/java/sz-sdk.jar`, and the sdk_guide install gotchas for macos_arm
+    and windows also use `sz-sdk.jar`. One of the two is wrong."
+- **Invariants.** This record establishes no invariant and queues no block.
+- **Coverage limits.** ⛔ Phase 3 was not run, so the conversational layer is untested.
+  Phase 1 did not reach `reporting_guide` content (Modules 6 and 7), `mapping_workflow` steps 4
+  to 8, several `sdk_guide` and `generate_scaffold` topics, or about 25 prescribed
+  `search_docs` queries. Phase 2 ran no real assistant, no Windows or macOS machine and no
+  container; findings 1 and 9 are simulations.
+- **Mistakes in this run.** Both phases were run by agents under a no-change limit, so no
+  finding was drafted here as it was found; this entry was written from their reports
+  afterwards, and nothing was re-run by the lead. Phase 1's re-asks were looser than the
+  markers in three ways its report lists. Phase 2's scratch loader was written from memory,
+  not from the server.
+- **Commit:** uncommitted
+
 ## production-readiness-audit-2026-11-17
 
 **Not a spec** — a dated record of an audit run, **unattended**: the maintainer started it and
