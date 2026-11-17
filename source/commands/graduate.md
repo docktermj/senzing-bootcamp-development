@@ -9,7 +9,7 @@ First, decide whether there is a bootcamp to graduate by what
 exists: follow `../skills/bootcamp-onboarding/SKILL.md` → "Fresh start vs. resume — decided
 by the progress file's CONTENT, not its existence" (INV-227, INV-300). Where that rule reads a
 fresh start, whether the file is missing or records no module, tell the bootcamper there is no
-bootcamp to graduate and offer to start one with `/start-bootcamp`, instead of graduating.
+bootcamp to graduate and offer to start one with `{{host.invoke_start_bootcamp}}`, instead of graduating.
 
 Invoke the `graduation` skill and follow it: show the BOOTCAMP GRADUATION banner, present
 the graduation preface (journey map, before/after, step overview, estimated time), show the
@@ -22,7 +22,12 @@ and the single closing 👉 question ("Is there anything else you would like to 
 
 Only after the bootcamper declines further exploration, render the terminal
 `END OF SENZING BOOTCAMP` banner exactly once, then, as a plain line right after it, the one
-`/package-bootcamp` line the `graduation` skill pins, verbatim: "Run `/package-bootcamp`
+<!-- host:only claude -->
+`{{host.invoke_package_bootcamp}}` line the `graduation` skill pins, verbatim: "Run `{{host.invoke_package_bootcamp}}`
+<!-- host:end -->
+<!-- host:except claude -->
+`{{host.invoke_package_bootcamp}}` line the `graduation` skill pins, verbatim: "Say {{host.invoke_package_bootcamp}}
+<!-- host:end -->
 anytime to bundle your bootcamp results into one zip you can archive, move to another machine,
 or share with others." That line is the final output (INV-057): no 👉 question follows it.
 Never show the banner or the line while exploration is still continuing, and never end

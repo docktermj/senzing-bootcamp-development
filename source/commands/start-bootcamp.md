@@ -11,7 +11,7 @@ first checked before the rest:
 - **A finished bootcamp** (`bootcamp_complete: true` in `config/bootcamp_progress.json` or in
   `config/bootcamp_preferences.yaml`, whatever else the progress file holds or whether it
   exists) -> do not start onboarding and do not offer to resume a module. Say the bootcamp is
-  complete, name `/package-bootcamp`, and ask with one open 👉 question what they would like to
+  complete, name `{{host.invoke_package_bootcamp}}`, and ask with one open 👉 question what they would like to
   explore, in the form the skill's step 2 pins.
 - **No file** -> start onboarding from the beginning.
 - **A file recording no module** (empty, `{}`, malformed, not a JSON object, or `current_module`

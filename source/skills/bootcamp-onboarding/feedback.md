@@ -6,7 +6,12 @@ module, or graduation. Feedback is saved locally to
 unless the bootcamper explicitly asks.
 
 This workflow is triggered by `feedback-capture.py` where a hook runs it on this
-assistant ("to capture bootcamp feedback"), by the `/bootcamp-feedback` command, or
+<!-- host:only claude -->
+assistant ("to capture bootcamp feedback"), by the `{{host.invoke_bootcamp_feedback}}` command, or
+<!-- host:end -->
+<!-- host:except claude -->
+assistant ("to capture bootcamp feedback"), or
+<!-- host:end -->
 whenever the bootcamper says something like "bootcamp feedback", "I have feedback", or
 "report an issue". Follow `ground-rules.md`: one 👉 question per turn (INV-251), end the turn on it.
 

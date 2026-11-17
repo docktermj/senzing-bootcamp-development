@@ -26,11 +26,26 @@ and no `?`, and names no archive path, because graduation runs no packager (INV-
 `TheEndingNamesThePackager` pins it in graduation's item 4 and checks, on every discovered
 ending surface, that `/package-bootcamp` is mentioned after the last banner mention.
 
+⚠️ **Dated note, 2026-11-17 (issue #28): the line is read in each assistant's built package,
+in that assistant's own form.** The Claude package ships `/package-bootcamp` and keeps the
+line above. Every other package ships the operation as a skill and names it by the request its
+install page gives, so its line reads "Say "Back up the bootcamp" anytime to bundle your
+bootcamp results into one zip you can archive, move to another machine, or share with
+others." The source holds both in host blocks, so `TheEndingNamesThePackager` and
+`TheItem4CheckIsNotVacuous` read every package (`_invocations.py`) and hold each to its own
+line. No case was retired; each now runs once per assistant.
+
 Run:  python3 -m unittest discover -s tests
 """
 import re
+import sys
 import unittest
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _invocations import (  # noqa: E402
+    HOSTS, PACKAGE_LINE_COMMAND, PACKAGE_LINE_REQUEST, invocation, mention, package_line,
+    package_text)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PLUGIN = REPO_ROOT / "source"
@@ -73,12 +88,20 @@ def offer_sites():
     return tuple(p for p in shipped_markdown()
                  if OFFER.search(p.read_text(encoding="utf-8")))
 
-# The one line shown right after the banner's fence (#894), pinned verbatim.
-PACKAGE_LINE = (
-    "Run `/package-bootcamp` anytime to bundle your bootcamp results into one zip you can "
-    "archive, move to another machine, or share with others."
-)
-PACKAGE_COMMAND = "/package-bootcamp"
+# The one line shown right after the banner's fence (#894), pinned verbatim in both of its
+# forms (issue #28): the slash command in a package that ships commands, the request in
+# every other. `package_line(host)` is the one an assistant's package carries.
+PACKAGE_LINES = (PACKAGE_LINE_COMMAND, PACKAGE_LINE_REQUEST)
+
+
+def packager(host):
+    """How ``host``'s package names the packaging operation: its own host value."""
+    return invocation(host, "package-bootcamp")
+
+
+def rendered(path, host):
+    """A source file's text as ``host``'s built package carries it."""
+    return package_text(host, path.relative_to(PLUGIN).as_posix())
 
 # Graduation's closing step, item 4: from its numbered heading to the end of its section.
 ITEM_4 = re.compile(r"^4\. \*\*Terminal banner\b.*?(?=^## |\Z)", re.S | re.M)
@@ -199,11 +222,13 @@ def item_4(text):
     return m.group(0) if m else None
 
 
-def item_4_problems(text):
+def item_4_problems(text, host):
     """What item 4 gets wrong about the package line; empty when it is right.
 
     A function of the text, not of the file, so the controls below can feed it a mutant.
+    ``text`` is graduation as ``host``'s package carries it, held to that assistant's line.
     """
+    PACKAGE_LINE, PACKAGE_COMMAND = package_line(host), packager(host)
     item = item_4(text)
     if item is None:
         return ["graduation's item 4 ('4. **Terminal banner') was not found"]
@@ -232,47 +257,75 @@ class TheEndingNamesThePackager(unittest.TestCase):
     """#894: the last thing the Bootcamper sees reminds them `/package-bootcamp` exists."""
 
     def test_the_pinned_line_has_no_question_and_no_path(self):
-        self.assertNotIn("👉", PACKAGE_LINE)
-        self.assertNotIn("?", PACKAGE_LINE)
-        for path_shape in ("backups/", ".zip", "\\"):
-            self.assertNotIn(path_shape, PACKAGE_LINE,
-                             "the package line names an archive path, and graduation runs no "
-                             "packager, so none exists yet (INV-251)")
+        for PACKAGE_LINE in PACKAGE_LINES:
+            with self.subTest(line=PACKAGE_LINE[:30]):
+                self.assertNotIn("👉", PACKAGE_LINE)
+                self.assertNotIn("?", PACKAGE_LINE)
+                for path_shape in ("backups/", ".zip", "\\"):
+                    self.assertNotIn(path_shape, PACKAGE_LINE,
+                                     "the package line names an archive path, and graduation "
+                                     "runs no packager, so none exists yet (INV-251)")
+
+    def test_every_assistant_has_one_of_the_two_pinned_lines(self):
+        """Issue #28: the slash form on the Claude package, the request form on the others."""
+        self.assertEqual(PACKAGE_LINE_COMMAND, package_line("claude"))
+        self.assertIn("`/package-bootcamp`", PACKAGE_LINE_COMMAND)
+        others = [host for host in HOSTS if host != "claude"]
+        self.assertGreaterEqual(len(others), 4)
+        for host in others:
+            with self.subTest(host=host):
+                self.assertEqual(PACKAGE_LINE_REQUEST, package_line(host))
+        self.assertIn("\"Back up the bootcamp\"", PACKAGE_LINE_REQUEST)
+        self.assertNotIn("/", PACKAGE_LINE_REQUEST)
 
     def test_item_4_shows_the_pinned_line_right_after_the_banner(self):
-        self.assertEqual([], item_4_problems(read(GRADUATION_SKILL)))
+        for host in HOSTS:
+            with self.subTest(host=host):
+                self.assertEqual([], item_4_problems(rendered(GRADUATION_SKILL, host), host))
 
     def test_the_pinned_line_appears_once_in_graduation(self):
-        self.assertEqual(1, read(GRADUATION_SKILL).count(PACKAGE_LINE),
-                         "the pinned package line must appear exactly once in graduation, "
-                         "together with the banner")
+        for host in HOSTS:
+            with self.subTest(host=host):
+                text = rendered(GRADUATION_SKILL, host)
+                self.assertEqual(1, text.count(package_line(host)),
+                                 "the pinned package line must appear exactly once in "
+                                 "graduation, together with the banner")
+                self.assertEqual(1, sum(text.count(line) for line in PACKAGE_LINES),
+                                 "graduation carries another assistant's form of the line")
 
     def test_item_4_shows_it_on_every_path_and_preset(self):
-        item = item_4(read(GRADUATION_SKILL))
-        self.assertIsNotNone(item)
-        after = item[item.index(PACKAGE_LINE):]
-        self.assertIn("after Step 2's Abort", after)
-        self.assertIn("under every verbosity preset, including `minimal`", after)
+        for host in HOSTS:
+            with self.subTest(host=host):
+                item = item_4(rendered(GRADUATION_SKILL, host))
+                self.assertIsNotNone(item)
+                after = item[item.index(package_line(host)):]
+                self.assertIn("after Step 2's Abort", after)
+                self.assertIn("under every verbosity preset, including `minimal`", after)
 
     def test_the_command_surface_gives_the_same_order(self):
-        text = flat(read(GRADUATE_COMMAND))
-        line = text.find(PACKAGE_LINE)
-        self.assertNotEqual(-1, line,
-                            "commands/graduate.md does not carry the pinned package line")
-        self.assertGreater(line, text.rfind(TERMINAL_BANNER),
-                           "commands/graduate.md puts the package line before the banner")
-        self.assertIn("That line is the final output (INV-057): no 👉 question follows it.",
-                      text)
+        for host in HOSTS:
+            with self.subTest(host=host):
+                text = flat(rendered(GRADUATE_COMMAND, host))
+                line = text.find(package_line(host))
+                self.assertNotEqual(-1, line, "commands/graduate.md does not carry the pinned "
+                                              "package line")
+                self.assertGreater(line, text.rfind(TERMINAL_BANNER),
+                                   "commands/graduate.md puts the package line before the banner")
+                self.assertIn("That line is the final output (INV-057): no 👉 question follows "
+                              "it.", text)
 
     def test_graduation_says_it_ends_on_the_banner_and_its_line(self):
-        text = flat(read(GRADUATION_SKILL))
-        ends = re.findall(r"ends on the (?:terminal )?END OF SENZING BOOTCAMP banner and its "
-                          r"one `/package-bootcamp` line \(INV-057\)", text)
-        self.assertEqual(2, len(ends),
-                         "the overview and the preface's closing sentence must both say "
-                         "graduation ends on the banner and its one /package-bootcamp line")
-        self.assertNotRegex(text, r"ends on the (?:terminal )?END OF SENZING BOOTCAMP banner "
-                                  r"\(INV-057\)")
+        for host in HOSTS:
+            with self.subTest(host=host):
+                text = flat(rendered(GRADUATION_SKILL, host))
+                ends = re.findall(r"ends on the (?:terminal )?END OF SENZING BOOTCAMP banner "
+                                  r"and its one %s line \(INV-057\)"
+                                  % re.escape(mention(host, "package-bootcamp")), text)
+                self.assertEqual(2, len(ends),
+                                 "the overview and the preface's closing sentence must both say "
+                                 "graduation ends on the banner and its one package line")
+                self.assertNotRegex(text, r"ends on the (?:terminal )?END OF SENZING BOOTCAMP "
+                                          r"banner \(INV-057\)")
 
     def test_the_packager_is_named_after_the_banner_on_every_ending_surface(self):
         """Structural, in the style of `test_the_banner_is_described_after_the_closing_question`.
@@ -282,42 +335,58 @@ class TheEndingNamesThePackager(unittest.TestCase):
         about what the Bootcamper sees last.
         """
         for path in ending_surfaces():
-            with self.subTest(path=path.name):
-                text = read(path)
-                banner = text.rfind(TERMINAL_BANNER)
-                self.assertNotEqual(-1, banner, "terminal banner not found")
-                self.assertGreater(
-                    text.rfind(PACKAGE_COMMAND),
-                    banner,
-                    "%s does not mention /package-bootcamp after its last mention of the "
-                    "terminal banner (#894)" % path.name,
-                )
+            for host in HOSTS:
+                with self.subTest(path=path.name, host=host):
+                    text = rendered(path, host)
+                    banner = text.rfind(TERMINAL_BANNER)
+                    self.assertNotEqual(-1, banner, "terminal banner not found")
+                    self.assertGreater(
+                        text.rfind(packager(host)),
+                        banner,
+                        "%s does not mention %s after its last mention of the "
+                        "terminal banner (#894)" % (path.name, packager(host)),
+                    )
 
 
 class TheItem4CheckIsNotVacuous(unittest.TestCase):
     """The checker fails each defect it exists to catch, on a mutant of the shipped text."""
 
-    def setUp(self):
-        self.text = read(GRADUATION_SKILL)
-        self.assertEqual([], item_4_problems(self.text))
+    def each(self):
+        """``(host, graduation as its package carries it, its pinned line)``, the shipped text
+        first shown to pass."""
+        for host in HOSTS:
+            with self.subTest(host=host):
+                text = rendered(GRADUATION_SKILL, host)
+                self.assertEqual([], item_4_problems(text, host))
+                yield host, text, package_line(host)
 
     def test_a_missing_line_fails(self):
-        self.assertTrue(item_4_problems(self.text.replace(PACKAGE_LINE, "")))
+        for host, text, PACKAGE_LINE in self.each():
+            self.assertTrue(item_4_problems(text.replace(PACKAGE_LINE, ""), host))
 
     def test_a_line_inside_the_fence_fails(self):
-        mutant = self.text.replace(TERMINAL_BANNER + "  🎓🎓🎓",
-                                   TERMINAL_BANNER + "  🎓🎓🎓\n" + PACKAGE_LINE)
-        mutant = mutant.replace("```\n\n     " + PACKAGE_LINE + "\n", "```\n", 1)
-        self.assertNotEqual(self.text, mutant)
-        self.assertTrue(item_4_problems(mutant))
+        for host, text, PACKAGE_LINE in self.each():
+            mutant = text.replace(TERMINAL_BANNER + "  🎓🎓🎓",
+                                  TERMINAL_BANNER + "  🎓🎓🎓\n" + PACKAGE_LINE)
+            mutant = mutant.replace("```\n\n     " + PACKAGE_LINE + "\n", "```\n", 1)
+            self.assertNotEqual(text, mutant)
+            self.assertTrue(item_4_problems(mutant, host))
 
     def test_a_reworded_line_fails(self):
-        mutant = self.text.replace(PACKAGE_LINE, PACKAGE_LINE.replace("anytime", "now"))
-        self.assertTrue(item_4_problems(mutant))
+        for host, text, PACKAGE_LINE in self.each():
+            mutant = text.replace(PACKAGE_LINE, PACKAGE_LINE.replace("anytime", "now"))
+            self.assertTrue(item_4_problems(mutant, host))
 
     def test_a_dropped_final_output_sentence_fails(self):
-        mutant = self.text.replace("That line is the final output.", "")
-        self.assertTrue(item_4_problems(mutant))
+        for host, text, PACKAGE_LINE in self.each():
+            mutant = text.replace("That line is the final output.", "")
+            self.assertTrue(item_4_problems(mutant, host))
+
+    def test_another_assistants_line_fails(self):
+        """Issue #28: a package that shows the other form of the line is reported."""
+        for host, text, PACKAGE_LINE in self.each():
+            other = next(line for line in PACKAGE_LINES if line != PACKAGE_LINE)
+            self.assertTrue(item_4_problems(text.replace(PACKAGE_LINE, other), host))
 
 
 class TestGraduationOfferIsWordedOnce(unittest.TestCase):

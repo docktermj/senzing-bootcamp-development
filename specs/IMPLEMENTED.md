@@ -36,6 +36,189 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## slash-commands-are-named-to-bootcampers-on-four-assistants-that-ship-no-command
+
+- **Implemented:** 2026-11-17 (issue #28)
+- **Files changed:** `hosts/claude/host.json`, `hosts/copilot/host.json`,
+  `hosts/kiro/host.json`, `hosts/chatgpt/host.json`, `hosts/gemini/host.json`,
+  `source/commands/graduate.md`, `source/commands/start-bootcamp.md`,
+  `source/scripts/session-start.py`, `source/scripts/feedback-capture.py`,
+  `source/scripts/package_bootcamp.py`, `source/skills/bootcamp-onboarding/SKILL.md`,
+  `source/skills/bootcamp-onboarding/feedback.md`,
+  `source/skills/bootcamp-onboarding/ground-rules.md`,
+  `source/skills/bootcamp-onboarding/notes.md`,
+  `source/skills/bootcamp-onboarding/packaging.md`, `source/skills/graduation/SKILL.md`,
+  `source/skills/module-07-query-visualize-discover/phase2-discover.md`,
+  `source/skills/module-07-query-visualize-discover/phase2b-discover.md`,
+  `tests/_invocations.py` (new),
+  `tests/test_each_package_names_an_operation_in_its_own_form.py` (new),
+  `tests/test_graduation_ending_surfaces.py`,
+  `tests/test_a_finished_bootcamp_is_never_resumed.py`,
+  `tests/test_generated_data_supports_its_success_criteria.py`,
+  `tests/test_coherence_sweep_523.py`, `tests/test_resume_requires_a_recorded_module.py`,
+  `tests/test_bootcamp_build_hosts.py`, `specs/IMPLEMENTED.md` (this entry)
+- **MCP re-check:** n/a (no Senzing fact). Re-confirmed on 2026-11-17 against the change itself:
+  it changes how the bootcamp's own text names the bootcamp's own five operations, replaces
+  one value in each assistant's profile with six, and adds tests that read that text and
+  those profiles. It asserts nothing about Senzing. No absence claim about the Senzing MCP
+  server is made, so INV-213's `owner-checked:` clause is not owed.
+- **Summary:** Each package now names a bootcamp operation in the form its own assistant is
+  given. This is finding 3 of `production-readiness-audit-2026-11-17`, confirmed by execution
+  in `dry-run-2026-11-17`. Before the change the shared text named `/start-bootcamp`,
+  `/bootcamp-feedback`, `/bootcamp-note`, `/graduate` and `/package-bootcamp` on every
+  assistant. Only the Claude package ships those as commands. The GitHub Copilot, Kiro,
+  ChatGPT and Gemini packages carry the same operations as skills, and their install pages
+  tell the bootcamper to ask in plain English. Measured with the pattern the new test uses,
+  each of those four packages held 28 lines with a slash form before the change and holds
+  none after it. The Claude package holds 29 before and after.
+  - **The approach.** Two implementations were raced from `a8b1e5c` and judged against a
+    rubric written first. The one applied here uses two mechanisms the build already has: a
+    host value for an inline mention, and a `host:only claude` / `host:except claude` block
+    where the sentence itself must differ. The other used host values only, with one verb
+    value, and left sentences such as `Reached by the "Back up the bootcamp" command.` in
+    the four packages. No file under `tools/` changes.
+  - **Applying it to `41f0f96`.** #47, #33, #32, #31, #26, #29 and #27 merged after the patch
+    was cut. A three-way apply left four files in conflict, each where #29 had reworded a
+    hook statement: `feedback.md`, `notes.md`, `packaging.md` and `graduation/SKILL.md`. Those
+    four were taken as they are on `main` and the patch's edits were made again on the
+    current wording by a script whose every anchor must match exactly once. Three blocks
+    differ from the raced patch for that reason: the `feedback.md` block and the first
+    `notes.md` block carry #29's "`feedback-capture.py` where a hook runs it on this
+    assistant" in both halves, and the `notes.md` block spans two lines so the sentence stays
+    whole. `packaging.md` keeps #29's text below its block. The other 22 files applied as
+    raced.
+  - **The host values.** `command_prefix` is removed from all five `host.json` files; nothing
+    read it. In its place each profile declares six values under `vars`:
+
+    | Value | Claude | GitHub Copilot, Kiro, ChatGPT, Gemini |
+    |---|---|---|
+    | `invoke_start_bootcamp` | `/start-bootcamp` | `"Start the bootcamp"` |
+    | `invoke_bootcamp_feedback` | `/bootcamp-feedback` | `"Bootcamp feedback"` |
+    | `invoke_bootcamp_note` | `/bootcamp-note` | `"Make a note"` |
+    | `invoke_graduate` | `/graduate` | `"Graduate"` |
+    | `invoke_package_bootcamp` | `/package-bootcamp` | `"Back up the bootcamp"` |
+    | `invoke_package_bootcamp_in_string` | `/package-bootcamp` | `'Back up the bootcamp'` |
+
+    The first five are named after the files in `source/commands/`, so a test derives the
+    names. The sixth is not in the issue's table. It exists because the message
+    `session-start.py` prints sits inside a double-quoted Python string whose bytes must not
+    change in the Claude package, and a double-quoted request placed there leaves a script
+    that does not parse. A test holds the sixth equal to the fifth with `"` written as `'`.
+  - **The source.** 35 tokens in 13 files. Nine block pairs in eight files, each pair with
+    the same number of lines in both halves: the closing line of graduation, the
+    finished-bootcamp reply, the Module 7 line the bootcamper is shown, the quote of the
+    closing line in `commands/graduate.md`, and five sentences to the guide in `packaging.md`,
+    `notes.md` (two), `feedback.md` and `ground-rules.md`. Inside a block the operation still
+    comes from the host value, so each phrase has one home.
+  - **What the four packages now say.** They render these lines identically; quoted from the
+    built GitHub Copilot package.
+    - Closing line of graduation: `Say "Back up the bootcamp" anytime to bundle your bootcamp
+      results into one zip you can archive, move to another machine, or share with others.`
+    - Finished-bootcamp reply: `> Your Senzing bootcamp is complete. Say "Back up the
+      bootcamp" anytime to bundle your bootcamp results into one zip you can archive, move to
+      another machine, or share with others.`
+    - `session-start.py` on a finished project, run from the built package: `… say the
+      bootcamp is complete, name 'Back up the bootcamp', and end on the one open question it
+      pins, asking what they would like to explore.` The output is ASCII-only in all five
+      packages.
+    - Module 7: `You can report it by saying "Bootcamp feedback"."`
+    - An inline mention is the request in code format, for example ``and suggest
+      `"Bootcamp feedback"`.``
+  - **The Claude package is unchanged, all of it.** Every package was built from `41f0f96`
+    before the first edit and again from the final tree, with
+    `python3 -m tools.bootcamp_build build --out <dir>`. `diff -r` of the two `plugins/claude`
+    trees prints nothing, and a SHA-256 list of its 92 files is the same before and after; 45
+    of them are `.md` and 26 are `.py`. The built `site/`, `public/` and the three catalogs
+    are identical too. The 52 files that differ are 13 in each of the other four packages.
+  - **Tests.** `tests/test_each_package_names_an_operation_in_its_own_form.py` is new and
+    holds 31 tests in six classes; `tests/_invocations.py` is the helper it and the converted
+    tests share. It builds every package and the site.
+    - `NoRequestPackageNamesASlashCommand` reads every file of every package that ships no
+      commands, with no exceptions list, a file that is not UTF-8 included. The names come
+      from `source/commands/`, and the pattern is the one
+      `tests/test_documented_commands_match_the_shipped_set.py` holds, so a name inside a path
+      is not a match. Controls: the same scan finds all five in the Claude package, planted
+      forms are found, path shapes are not, and a sixth name is covered.
+    - `EveryAssistantDeclaresEachOperation` holds Claude's values to the slash commands and
+      each other assistant's value to the phrase in the "Say" column of its own built install
+      page, in the row for the same operation. Words are compared and the style of the
+      quotation marks is not. It also holds that no profile declares `command_prefix`.
+    - `TheClosingLineIsPinnedInBothForms` pins both forms of the closing line, the finished
+      reply and the quote in the graduate operation, and that no package carries the other
+      form.
+    - `TheFinishedMessageIsAscii` runs each package's own built `session-start.py` on a
+      finished project.
+    - `AChangedSentenceReadsWhole` pins the Module 7 line in both forms and fails where a
+      request is called a "command".
+    - `TheSetsAreNotEmpty` fails when the commands, the assistants or the install-page rows
+      come back empty (INV-265).
+    - Negative control run once, in a throwaway clone of `41f0f96` holding only the two new
+      files: 22 of the 31 tests fail (`FAILED (failures=54, errors=47)`).
+  - **Six existing tests changed, and no case was retired.** Each pinned a slash form by
+    reading `source/`, where the form is now a token or sits beside its other form in a
+    block. Each now reads every built package and holds the form that package uses: the
+    slash form on the Claude package and the request form on each of the other four. No test
+    method was removed from any of the six; ten were added.
+    `tests/test_graduation_ending_surfaces.py` (18 to 20 test methods),
+    `tests/test_a_finished_bootcamp_is_never_resumed.py` (25 to 30, which now runs each
+    package's built scripts), `tests/test_generated_data_supports_its_success_criteria.py`
+    (35 to 36), `tests/test_coherence_sweep_523.py` (29 to 30) and
+    `tests/test_resume_requires_a_recorded_module.py` (29 to 30).
+    `tests/test_bootcamp_build_hosts.py` keeps its 14: its check that a command turned into a
+    skill keeps its instructions now renders the command for the host before counting lines,
+    because a command can hold a host block.
+  - **Left as it is.** "Offer the command" in `packaging.md` stays shared: the issue puts the
+    word "command" with no slash form out of scope. `source/hooks/README.md` still names the
+    slash commands and ships in the Claude package only. The install pages and each
+    `site.commands_note` are read by the new test and not changed. A later change of form for
+    one assistant is values-only at the 19 token sites outside blocks, and moves that
+    assistant across the nine block pairs; `test_one_assistant_ships_commands_and_the_others_do_not`
+    fails first and says so.
+  - **Two rendered sentences nest straight quotes.** `"… You can report it by saying
+    "Bootcamp feedback"."` and `verbatim: "Say "Back up the bootcamp" anytime …"`. The
+    closing line is pinned with straight double quotes, and both sites quote a line to say.
+  - **Not observed.** No real assistant read the changed text. Whether saying a request, or
+    typing `/name` or `$name`, reaches the operation on GitHub Copilot, Kiro, ChatGPT or
+    Gemini is still unverified, as the issue scopes it, and no record is added to any
+    `hosts/<assistant>/checks.json`. Verified on Linux only, with Python 3.12.3. The change is
+    text and host values: no script logic, path or encoding changes, the printed message
+    stays ASCII, and the tests are stdlib `unittest` reading files as UTF-8 (INV-001).
+- **Invariants.** Establishes no new invariant (INV-309), and proposes a change to one in
+  force. The register is not edited here (INV-365). The change adds no hard-rule line and
+  changes the wording of none. INV-057's 2026-11-10 note pins the closing line in the slash
+  form with no assistant named, and the block below proposes the dated note that gives it per
+  assistant. INV-102's 2026-11-10 note calls that line "its one `/package-bootcamp` line";
+  the issue has the INV-057 note cover it, and it does. **One sentence of the drafted note
+  goes beyond the issue, as an assumption:** INV-227, INV-239, INV-254 and INV-392 also name
+  an operation by its slash command, and the note says the same reading applies to them. It
+  is one block and not five so the maintainer rules once; the sentence can be struck, or
+  made four notes, at review. INV-388 names the command only as where a defect was observed
+  and is left alone. Until the maintainer applies the note, only the tests hold the request
+  form. The docstring of `tests/test_each_package_names_an_operation_in_its_own_form.py`
+  describes the amendment as drafted for `/review-invariants`; INV-386 wants it reworded when
+  the note is registered.
+
+- **PROPOSED AMENDMENT to INV-057 — awaiting the maintainer's sign-off; NOT applied.**
+    - ⛔ **Render the terminal banner, verbatim, exactly once, then the one `{{host.invoke_package_bootcamp}}` line below it, verbatim.** — in `source/skills/graduation/SKILL.md`
+
+  INV-057's 2026-11-10 note pins the closing line as "Run `/package-bootcamp` anytime to
+  bundle your bootcamp results…" on every assistant. Only the Claude package ships that slash
+  command. The other four packages carry the operation as a skill, and their install pages
+  tell the bootcamper to ask for it in plain English. Since #28 each package shows the line
+  in its own assistant's form, taken from that assistant's `invoke_package_bootcamp` host
+  value, and `tests/test_graduation_ending_surfaces.py`, the enforcer the 2026-11-10 note
+  names, pins both forms. Without the note below the register still reads as requiring the
+  slash form everywhere, so the registry and its enforcer disagree, and the next editor
+  writes the slash form back into shared text: a command nobody has run on those assistants,
+  in the last line their bootcampers see.
+
+  Drafted wording follows, under the registered id. A new rule's id would be
+  written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
+
+  **INV-057** — (⚠️ **Dated note, 2026-11-17 (#28): the closing line names the packaging operation in the assistant's own form.** In a package that ships the slash command, which today is the Claude package alone, the line reads, verbatim, "Run `/package-bootcamp` anytime to bundle your bootcamp results into one zip you can archive, move to another machine, or share with others." In every other package it reads, verbatim, "Say "Back up the bootcamp" anytime to bundle your bootcamp results into one zip you can archive, move to another machine, or share with others.", which names the request that assistant's install page gives. Each assistant's form is its `invoke_package_bootcamp` value in `hosts/<assistant>/host.json`. The finished-bootcamp reply in `bootcamp-onboarding/SKILL.md` step 2 uses the same sentence in the same form. Where INV-102's 2026-11-10 note says "its one `/package-bootcamp` line", read the line in the assistant's own form. The same reading applies where INV-227, INV-239, INV-254 and INV-392 name an operation by its slash command: a package names the operation in its assistant's own form, the `invoke_<command>` value for that command. The rest of the 2026-11-10 note is unchanged: the line is shown exactly once, together with the banner, as a plain line outside its fence, on the normal path and after the production build's Abort alike, under every verbosity preset; it is a statement with no 👉 and no question, names no archive path, and nothing follows it (INV-251). Enforced by `tests/test_graduation_ending_surfaces.py` and `tests/test_each_package_names_an_operation_in_its_own_form.py`, which build every assistant's package. Neither establishes that saying the request reaches the operation on a real assistant; no such run was recorded when this note was drafted.)
+
+- **Commit:** uncommitted
+
 ## every-package-states-one-assistants-shell-as-the-guides-shell
 
 - **Implemented:** 2026-11-17 (issue #27)

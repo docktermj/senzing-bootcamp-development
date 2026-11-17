@@ -45,6 +45,14 @@ still matches.
 Extends **INV-239** (generated data carries the flaws it should and none it should not), as
 INV-239's registered 2026-10-09 note (#459) states.
 
+⚠️ **Dated note, 2026-11-17 (issue #28): Module 7 is read in each assistant's built package.**
+The Claude package points to `/bootcamp-feedback`. Every other package ships that operation as
+a skill and names it by the request its install page gives, so its paragraph suggests
+`"Bootcamp feedback"` and the line the bootcamper is shown ends "You can report it by saying
+"Bootcamp feedback"." `Module7ReportsAGenerationDefect` and the language check read every
+package (`_invocations.py`) and hold each to its own form. Modules 1 and 4 name no operation
+and are still read from `source/`. No case was retired.
+
 Source issue: #459.
 
 Stdlib only; nothing under ``source/`` is imported (INV-108).
@@ -57,6 +65,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _invocations import HOSTS, mention, package_text  # noqa: E402
 from _wrapped_text import blocks  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -137,8 +146,24 @@ def step_4a():
     return body[i:body.index("### 4b.", i)]
 
 
-def discover():
-    return squash(DISCOVER.read_text(encoding="utf-8"))
+def discover(host):
+    """Module 7's discover phase as ``host``'s built package carries it (issue #28)."""
+    return squash(package_text(host, DISCOVER.relative_to(PLUGIN).as_posix()))
+
+
+def each_host(test):
+    """Every assistant, each in a subtest of its own."""
+    for host in HOSTS:
+        with test.subTest(host=host):
+            yield host
+
+
+def report_line(host):
+    """The last sentence the bootcamper is shown, in ``host``'s form (issue #28): the slash
+    command on the Claude package, the request its install page gives on every other."""
+    if host == "claude":
+        return "You can report it with `/bootcamp-feedback`.\""
+    return "You can report it by saying \"Bootcamp feedback\".\""
 
 
 def m7_paragraph(text):
@@ -264,8 +289,11 @@ def m7_reports_a_bootcamp_defect(t):
                               r"your data", t))
 
 
-def m7_points_to_feedback(t):
-    return "`/bootcamp-feedback`" in t
+def m7_points_to_feedback(t, host="claude"):
+    """The guide is told to suggest the feedback operation by ``host``'s name for it, and the
+    line the bootcamper is shown names it in a whole sentence."""
+    return ("and suggest %s: \"This scenario promised" % mention(host, "bootcamp-feedback") in t
+            and report_line(host) in t)
 
 
 def m7_covers_both_fallbacks(t):
@@ -295,12 +323,12 @@ def m7_keeps_other_wording(t):
                 and "stands as written" not in t)
 
 
-def step7_reports_a_defect(t):
+def step7_reports_a_defect(t, host="claude"):
     return bool(re.search(r"(?i)generated data is missing the relationships its scenario "
                           r"promised", t)
                 and re.search(r"(?i)bootcamp defect rather than a property of the Bootcamper's "
                               r"data", t)
-                and "`/bootcamp-feedback`" in t
+                and mention(host, "bootcamp-feedback") in t
                 # #615 points it at step 4d's INV-239 paragraph, as its siblings say; the fixture
                 # below keeps the wording it was written with.
                 and re.search(r"(?i)the condition in step 4d?'s (?:INV-239|generated-scenario) "
@@ -333,6 +361,16 @@ RECORD_ONLY_STEP7_BULLET = squash("""
      relationships its scenario promised, that this is a bootcamp defect rather than a property of
      the Bootcamper's data, and suggest `/bootcamp-feedback`. Then continue below.
 """)
+
+
+#: The predicates that read how an assistant names the feedback operation (issue #28). The
+#: fixtures above keep the wording they were written with, which is the Claude package's.
+NAMES_THE_OPERATION = (m7_points_to_feedback, step7_reports_a_defect)
+
+
+def holds(predicate, text, host):
+    """``predicate`` on ``text``, read in ``host``'s form where the predicate names an operation."""
+    return predicate(text, host) if predicate in NAMES_THE_OPERATION else predicate(text)
 
 
 # --- The sample, read without a YAML library. ---
@@ -575,40 +613,60 @@ class Module7ReportsAGenerationDefect(unittest.TestCase):
     )
 
     def test_it_follows_the_step_4d_fallback(self):
-        text = discover()
-        fallback = text.index("**If no 2+ degree pair is found after three hubs,**")
-        self.assertLess(fallback, text.index(M7_HEAD))
-        self.assertLess(text.index(M7_HEAD), text.index("Show the shortest path of relationships"))
+        for host in each_host(self):
+            text = discover(host)
+            fallback = text.index("**If no 2+ degree pair is found after three hubs,**")
+            self.assertLess(fallback, text.index(M7_HEAD))
+            self.assertLess(text.index(M7_HEAD),
+                            text.index("Show the shortest path of relationships"))
 
     def test_each_clause_is_in_the_paragraph(self):
-        text = m7_paragraph(discover())
-        for name, predicate in self.CASES:
-            with self.subTest(clause=name):
-                self.assertTrue(predicate(text))
+        for host in HOSTS:
+            text = m7_paragraph(discover(host))
+            for name, predicate in self.CASES:
+                with self.subTest(host=host, clause=name):
+                    self.assertTrue(holds(predicate, text, host))
 
     def test_negative_control_each_clause_fails_without_the_paragraph(self):
-        text = discover()
-        stripped = cut(text, m7_paragraph(text))
-        for name, predicate in self.CASES:
-            if predicate is m7_points_to_feedback:
-                continue  # step 7's bullet names it too; its own control is below
-            with self.subTest(clause=name):
-                self.assertFalse(predicate(stripped))
+        for host in HOSTS:
+            text = discover(host)
+            stripped = cut(text, m7_paragraph(text))
+            for name, predicate in self.CASES:
+                with self.subTest(host=host, clause=name):
+                    self.assertFalse(holds(predicate, stripped, host))
+
+    def test_the_paragraph_names_the_operation_in_each_assistants_form_only(self):
+        """Issue #28: the slash form on the Claude package, the request form on the others, and
+        a paragraph in the other form is reported."""
+        others = [host for host in HOSTS if host != "claude"]
+        self.assertGreaterEqual(len(others), 4)
+        self.assertEqual("`/bootcamp-feedback`", mention("claude", "bootcamp-feedback"))
+        for host in others:
+            with self.subTest(host=host):
+                self.assertEqual("`\"Bootcamp feedback\"`", mention(host, "bootcamp-feedback"))
+                self.assertNotIn("/bootcamp-feedback", discover(host))
+                self.assertFalse(m7_points_to_feedback(m7_paragraph(discover("claude")), host))
+                self.assertFalse(m7_points_to_feedback(m7_paragraph(discover(host)), "claude"))
+                self.assertFalse(step7_reports_a_defect(m7_step7_bullet(discover("claude")), host))
+                self.assertFalse(step7_reports_a_defect(m7_step7_bullet(discover(host)), "claude"))
 
     def test_step_7_reports_it_before_its_explanation(self):
-        text = discover()
-        self.assertTrue(step7_reports_a_defect(m7_step7_bullet(text)))
-        graceful = text.index("7. **Graceful fallback (no relationships in data):**")
-        self.assertLess(graceful, text.index(M7_STEP7_HEAD))
+        for host in each_host(self):
+            text = discover(host)
+            self.assertTrue(step7_reports_a_defect(m7_step7_bullet(text), host))
+            graceful = text.index("7. **Graceful fallback (no relationships in data):**")
+            self.assertLess(graceful, text.index(M7_STEP7_HEAD))
 
     def test_negative_control_step_7_without_the_bullet(self):
-        text = discover()
-        self.assertFalse(step7_reports_a_defect(cut(text, m7_step7_bullet(text))))
+        for host in each_host(self):
+            text = discover(host)
+            self.assertFalse(step7_reports_a_defect(cut(text, m7_step7_bullet(text)), host))
 
     def test_step_7_covers_the_criteria_trigger(self):
-        text = discover()
-        self.assertTrue(step7_covers_the_criteria(m7_step7_bullet(text)))
-        self.assertFalse(step7_covers_the_criteria(cut(text, m7_step7_bullet(text))))
+        for host in each_host(self):
+            text = discover(host)
+            self.assertTrue(step7_covers_the_criteria(m7_step7_bullet(text)))
+            self.assertFalse(step7_covers_the_criteria(cut(text, m7_step7_bullet(text))))
 
     def test_negative_control_the_record_only_trigger_fails(self):
         """The judging widened b's trigger: the record-only paragraph and bullet must fail the
@@ -624,15 +682,16 @@ class Module7ReportsAGenerationDefect(unittest.TestCase):
 
     def test_the_fallback_wording_names_the_data_by_provenance(self):
         """#790: both fallbacks keep their wording, with the owner named by the subtitle table."""
-        text = discover()
-        self.assertIn("\"In [the data], every pair I checked is directly connected, so there's no "
-                      "path of 2 or more degrees to show. Here is `find_path` on a direct "
-                      "connection instead.\"", text)
-        self.assertIn("State: \"[The data] doesn't contain disclosed relationships, so I'll explain "
-                      "what this would look like with connected data.\"", text)
-        self.assertNotIn("In your data, every pair", text)
-        self.assertNotIn("Your data doesn't contain", text)
-        self.assertIn("{\"status\": \"skipped\", \"reason\": \"no_relationships\"}", text)
+        for host in each_host(self):
+            text = discover(host)
+            self.assertIn("\"In [the data], every pair I checked is directly connected, so there's "
+                          "no path of 2 or more degrees to show. Here is `find_path` on a direct "
+                          "connection instead.\"", text)
+            self.assertIn("State: \"[The data] doesn't contain disclosed relationships, so I'll "
+                          "explain what this would look like with connected data.\"", text)
+            self.assertNotIn("In your data, every pair", text)
+            self.assertNotIn("Your data doesn't contain", text)
+            self.assertIn("{\"status\": \"skipped\", \"reason\": \"no_relationships\"}", text)
 
 
 def unscoped_readers(rel, text):
@@ -680,10 +739,12 @@ class ItStaysLanguageAgnostic(unittest.TestCase):
 
     def test_the_new_text_names_no_language_or_tool(self):
         branch = synthesized_branch()
-        text = (lead(branch) + entry(branch) + self_check(branch) + m7_paragraph(discover())
-                + m7_step7_bullet(discover()))
-        self.assertNotRegex(text, LANGUAGE, "the rule must state the property, not an "
-                                            "implementation (language-agnostic, per INVARIANTS.md)")
+        for host in each_host(self):
+            text = (lead(branch) + entry(branch) + self_check(branch)
+                    + m7_paragraph(discover(host)) + m7_step7_bullet(discover(host)))
+            self.assertNotRegex(text, LANGUAGE, "the rule must state the property, not an "
+                                                "implementation (language-agnostic, per "
+                                                "INVARIANTS.md)")
 
 
 if __name__ == "__main__":

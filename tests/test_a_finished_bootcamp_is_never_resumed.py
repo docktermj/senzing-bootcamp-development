@@ -26,6 +26,15 @@ What changed, and what this file asserts:
 - **The journey map.** On a finished bootcamp every row is ✅, Bootcamp graduation included,
   with no 🔄.
 
+⚠️ **Dated note, 2026-11-17 (issue #28): the finished start is read in each assistant's built
+package, in that assistant's own form.** The Claude package names `/package-bootcamp`. Every
+other package names the request its install page gives, "Back up the bootcamp": in double
+quotes in the pinned reply, and in straight single quotes in the message `session-start.py`
+prints, which stays ASCII-only. So every check of the finished message, of step 2's pinned
+lines and of the start operation's finished case runs once per assistant, on that assistant's
+built scripts and text (`_invocations.py`), and so does each of their negative controls. The
+checks that name no operation still read `source/`. No case was retired.
+
 Enforces the finished case drafted as an amendment to **INV-227** (#905): a resume decision is
 made on recorded content, and a finished bootcamp is a fourth case ahead of the other three.
 
@@ -46,6 +55,10 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _invocations import (  # noqa: E402
+    HOSTS, PACKAGE_IN_STRING, load_host, mention, package_line, package_text, scripts_dir)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PLUGIN = REPO_ROOT / "source"
@@ -93,16 +106,32 @@ def read(path):
     return path.read_text(encoding="utf-8")
 
 
-class Scripts:
-    """The plugin's top-level scripts, or a scratch copy of them with mutations applied."""
+def rendered(path, host):
+    """A source file's text as ``host``'s built package carries it (issue #28)."""
+    return package_text(host, path.relative_to(PLUGIN).as_posix())
 
-    def __init__(self, test, mutations=None):
-        self.dir = SCRIPTS
+
+def each_host(test):
+    """Every assistant, each in a subtest of its own."""
+    for host in HOSTS:
+        with test.subTest(host=host):
+            yield host
+
+
+class Scripts:
+    """The plugin's top-level scripts, or a scratch copy of them with mutations applied.
+
+    With ``host`` they are the scripts of that assistant's built package, which is where the
+    finished message names the packaging operation in the assistant's own form (issue #28).
+    """
+
+    def __init__(self, test, mutations=None, host=None):
+        self.dir = origin = SCRIPTS if host is None else scripts_dir(host)
         if mutations:
             tmp = tempfile.TemporaryDirectory()
             test.addCleanup(tmp.cleanup)
             self.dir = Path(tmp.name)
-            for path in SCRIPTS.glob("*.py"):
+            for path in origin.glob("*.py"):
                 shutil.copy(path, self.dir / path.name)
             for name, (old, new) in mutations.items():
                 source = read(self.dir / name)
@@ -146,8 +175,9 @@ def project(test, progress, preferences):
     return root
 
 
-def session_start_problems(out, finished):
-    """What is wrong with session start's message for a finished (or active) project."""
+def session_start_problems(out, finished, host):
+    """What is wrong with session start's message for a finished (or active) project, as
+    ``host``'s built script prints it."""
     text = out.decode("utf-8")
     if not finished:
         return [] if RESUME_LEAD in text else ["an active bootcamp lost its resume offer"]
@@ -156,7 +186,7 @@ def session_start_problems(out, finished):
         problems.append("a finished bootcamp was offered a resume")
     if "Module-start reminder" in text:
         problems.append("a finished bootcamp got a module-start reminder")
-    for needed in ("bootcamp is complete", "/package-bootcamp",
+    for needed in ("bootcamp is complete", "name %s," % load_host(host).vars[PACKAGE_IN_STRING],
                    "Do not offer to resume a module and do not run onboarding",
                    "bootcamp-onboarding/SKILL.md step 2"):
         if needed not in text:
@@ -183,11 +213,25 @@ class EveryReaderUsesTheEitherFileRule(unittest.TestCase):
                                  scripts.predicate(self, project(self, progress, preferences)))
 
     def test_session_start(self):
-        scripts = Scripts(self)
-        for case, progress, preferences, finished in MATRIX:
-            with self.subTest(case=case):
-                out = scripts.run(self, SESSION_START, project(self, progress, preferences))
-                self.assertEqual([], session_start_problems(out, finished))
+        for host in HOSTS:
+            scripts = Scripts(self, host=host)
+            for case, progress, preferences, finished in MATRIX:
+                with self.subTest(host=host, case=case):
+                    out = scripts.run(self, SESSION_START, project(self, progress, preferences))
+                    self.assertEqual([], session_start_problems(out, finished, host))
+
+    def test_the_finished_message_names_the_operation_in_each_assistants_form(self):
+        """Issue #28: the slash command on the Claude package, the request on the others."""
+        others = [host for host in HOSTS if host != "claude"]
+        self.assertGreaterEqual(len(others), 4)
+        for host in HOSTS:
+            with self.subTest(host=host):
+                out = Scripts(self, host=host).run(self, SESSION_START,
+                                                   project(self, GRADUATED, FLAG))
+                named = (b"name /package-bootcamp," if host == "claude"
+                         else b"name 'Back up the bootcamp',")
+                self.assertIn(named, out)
+                self.assertEqual(host == "claude", b"/package-bootcamp" in out)
 
     def test_the_stop_nudge(self):
         scripts = Scripts(self)
@@ -232,14 +276,17 @@ class AFinishedProjectNeverRunsOnboarding(unittest.TestCase):
     """The edge cases: a finished project whose progress file is missing or malformed."""
 
     def test_progress_missing_preferences_flag_set(self):
-        out = Scripts(self).run(self, SESSION_START, project(self, None, FLAG))
-        self.assertEqual([], session_start_problems(out, True))
+        for host in each_host(self):
+            out = Scripts(self, host=host).run(self, SESSION_START, project(self, None, FLAG))
+            self.assertEqual([], session_start_problems(out, True, host))
 
     def test_progress_malformed_preferences_flag_set(self):
-        for raw in ('{"current_module": ', "", "[1, 2]", '{"current_module": null}'):
-            with self.subTest(progress=raw):
-                out = Scripts(self).run(self, SESSION_START, project(self, raw, FLAG))
-                self.assertEqual([], session_start_problems(out, True))
+        for host in HOSTS:
+            for raw in ('{"current_module": ', "", "[1, 2]", '{"current_module": null}'):
+                with self.subTest(host=host, progress=raw):
+                    out = Scripts(self, host=host).run(self, SESSION_START,
+                                                       project(self, raw, FLAG))
+                    self.assertEqual([], session_start_problems(out, True, host))
 
     def test_control_the_same_projects_without_the_flag_say_nothing(self):
         """Without the flag these are fresh starts, and session start stays silent (INV-227)."""
@@ -341,8 +388,9 @@ class GraduationWritesTheProgressFile(unittest.TestCase):
         self.assertEqual("python", progress["language"])
         root = project(self, progress, "name: Ada\n")
         self.assertEqual("True", Scripts(self).predicate(self, root))
-        out = Scripts(self).run(self, SESSION_START, root)
-        self.assertEqual([], session_start_problems(out, True))
+        for host in each_host(self):
+            out = Scripts(self, host=host).run(self, SESSION_START, root)
+            self.assertEqual([], session_start_problems(out, True, host))
 
 
 def finished_case(text):
@@ -351,24 +399,26 @@ def finished_case(text):
     return flat(re.sub(r"(?m)^\s*>[ \t]?", "", m.group(1))) if m else None
 
 
-#: The pinned lines, as read with the quote markers removed.
-FINISHED_LINES = (
-    "in this form: Your Senzing bootcamp is complete. Run `/package-bootcamp` anytime to "
-    "bundle your bootcamp results into one zip you can archive, move to another machine, or "
-    "share with others. 👉 **What would you like to explore?**"
-)
+def finished_lines(host):
+    """The pinned lines, as read with the quote markers removed, in ``host``'s form: the
+    closing line of graduation is the reply's second sentence (issue #28)."""
+    return ("in this form: Your Senzing bootcamp is complete. %s "
+            "👉 **What would you like to explore?**" % package_line(host))
 
 
-def step_two_problems(text):
+def step_two_problems(text, host):
     case = finished_case(text)
     if case is None:
         return ["step 2 has no Finished case directly before the Missing case"]
+    FINISHED_LINES = finished_lines(host)
     problems = []
     for label, pattern in (
             ("either file", r"`bootcamp_complete: true` in `config/bootcamp_progress\.json` "
                             r"\*\*or\*\* in `config/bootcamp_preferences\.yaml`"),
             ("even when missing or malformed", r"even when it is missing or malformed"),
             ("no onboarding, no resume", r"Run no onboarding and make no resume offer"),
+            ("the operation named", r"Say the bootcamp is complete, name %s, and end on one "
+                                    r"open question" % re.escape(mention(host, "package-bootcamp"))),
             ("the pinned lines", re.escape(FINISHED_LINES))):
         if not re.search(pattern, case):
             problems.append("the Finished case does not state %s" % label)
@@ -379,7 +429,7 @@ def step_two_problems(text):
     return problems
 
 
-def command_problems(text):
+def command_problems(text, host):
     m = re.search(r"- \*\*A finished bootcamp\*\* (.*?)\n- \*\*No file\*\*", text, re.S)
     if m is None:
         return ["/start-bootcamp has no finished case directly before the No file case"]
@@ -389,7 +439,7 @@ def command_problems(text):
                                           "`config/bootcamp_preferences.yaml`"),
                           ("no onboarding", "do not start onboarding"),
                           ("no resume", "do not offer to resume a module"),
-                          ("the packager", "`/package-bootcamp`"),
+                          ("the packager", mention(host, "package-bootcamp")),
                           ("one open 👉", "one open 👉 question")):
         if needed not in case:
             problems.append("/start-bootcamp's finished case does not state %s" % label)
@@ -399,10 +449,23 @@ def command_problems(text):
 class TheFinishedStartIsStated(unittest.TestCase):
 
     def test_onboarding_step_two(self):
-        self.assertEqual([], step_two_problems(read(ONBOARDING)))
+        for host in each_host(self):
+            self.assertEqual([], step_two_problems(rendered(ONBOARDING, host), host))
 
     def test_the_start_command(self):
-        self.assertEqual([], command_problems(read(START_COMMAND)))
+        for host in each_host(self):
+            self.assertEqual([], command_problems(rendered(START_COMMAND, host), host))
+
+    def test_the_pinned_lines_are_the_slash_form_on_claude_and_the_request_elsewhere(self):
+        """Issue #28: both forms, word for word."""
+        tail = (" anytime to bundle your bootcamp results into one zip you can archive, move to "
+                "another machine, or share with others. 👉 **What would you like to explore?**")
+        lead = "in this form: Your Senzing bootcamp is complete. "
+        for host in each_host(self):
+            named = "Run `/package-bootcamp`" if host == "claude" else "Say \"Back up the bootcamp\""
+            self.assertEqual(lead + named + tail, finished_lines(host))
+            self.assertEqual("`/package-bootcamp`" if host == "claude"
+                             else "`\"Back up the bootcamp\"`", mention(host, "package-bootcamp"))
 
 
 JOURNEY_CLAUSE = re.compile(
@@ -445,31 +508,65 @@ class NegativeControls(unittest.TestCase):
 
     def test_a_predicate_reading_preferences_only_is_caught(self):
         """The old rule: a project whose flag is in the progress file only reads as active."""
-        scripts = Scripts(self, {BUILDER: ("return _progress_flag() or _preferences_flag()",
-                                           "return _preferences_flag()")})
-        root = project(self, GRADUATED, NO_FLAG)
-        self.assertEqual("False", scripts.predicate(self, root))
-        self.assertTrue(session_start_problems(scripts.run(self, SESSION_START, root), True))
+        for host in each_host(self):
+            scripts = Scripts(self, {BUILDER: ("return _progress_flag() or _preferences_flag()",
+                                               "return _preferences_flag()")}, host=host)
+            root = project(self, GRADUATED, NO_FLAG)
+            self.assertEqual("False", scripts.predicate(self, root))
+            self.assertEqual([], session_start_problems(
+                Scripts(self, host=host).run(self, SESSION_START, root), True, host),
+                "(control) the unmutated script no longer passes")
+            self.assertTrue(session_start_problems(scripts.run(self, SESSION_START, root),
+                                                   True, host))
 
     def test_a_predicate_reading_progress_only_is_caught(self):
         """A project graduated before the write existed would read as active again."""
-        scripts = Scripts(self, {BUILDER: ("return _progress_flag() or _preferences_flag()",
-                                           "return _progress_flag()")})
-        root = project(self, LEFT_ON_LAST_MODULE, FLAG)
-        self.assertTrue(session_start_problems(scripts.run(self, SESSION_START, root), True))
+        for host in each_host(self):
+            scripts = Scripts(self, {BUILDER: ("return _progress_flag() or _preferences_flag()",
+                                               "return _progress_flag()")}, host=host)
+            root = project(self, LEFT_ON_LAST_MODULE, FLAG)
+            self.assertEqual([], session_start_problems(
+                Scripts(self, host=host).run(self, SESSION_START, root), True, host),
+                "(control) the unmutated script no longer passes")
+            self.assertTrue(session_start_problems(scripts.run(self, SESSION_START, root),
+                                                   True, host))
 
     def test_a_session_start_without_the_finished_check_is_caught(self):
-        scripts = Scripts(self, {SESSION_START: (
-            "if module_start_apparatus.bootcamp_complete():\n"
-            "    recap_checkpoint.write_utf8(sys.stdout, FINISHED",
-            "if False:\n"
-            "    recap_checkpoint.write_utf8(sys.stdout, FINISHED")})
-        out = scripts.run(self, SESSION_START, project(self, LEFT_ON_LAST_MODULE, FLAG))
-        self.assertIn("a finished bootcamp was offered a resume",
-                      session_start_problems(out, True))
-        out = scripts.run(self, SESSION_START, project(self, None, FLAG))
-        self.assertTrue(session_start_problems(out, True),
-                        "a missing progress file with the flag set did not fail")
+        for host in each_host(self):
+            scripts = Scripts(self, {SESSION_START: (
+                "if module_start_apparatus.bootcamp_complete():\n"
+                "    recap_checkpoint.write_utf8(sys.stdout, FINISHED",
+                "if False:\n"
+                "    recap_checkpoint.write_utf8(sys.stdout, FINISHED")}, host=host)
+            out = scripts.run(self, SESSION_START, project(self, LEFT_ON_LAST_MODULE, FLAG))
+            self.assertIn("a finished bootcamp was offered a resume",
+                          session_start_problems(out, True, host))
+            out = scripts.run(self, SESSION_START, project(self, None, FLAG))
+            self.assertTrue(session_start_problems(out, True, host),
+                            "a missing progress file with the flag set did not fail")
+
+    def test_a_finished_message_in_another_assistants_form_is_caught(self):
+        """Issue #28: each package's message names the operation in its own form only."""
+        forms = {load_host(host).vars[PACKAGE_IN_STRING] for host in HOSTS}
+        self.assertGreaterEqual(len(forms), 2, "every assistant names the operation one way")
+        for host in each_host(self):
+            mine = load_host(host).vars[PACKAGE_IN_STRING]
+            other = sorted(forms - {mine})[0]
+            scripts = Scripts(self, {SESSION_START: ("name %s," % mine, "name %s," % other)},
+                              host=host)
+            out = scripts.run(self, SESSION_START, project(self, GRADUATED, FLAG))
+            self.assertEqual(["the finished message does not say %r" % ("name %s," % mine)],
+                             session_start_problems(out, True, host))
+
+    def test_a_finished_message_that_is_not_ascii_is_caught(self):
+        """The request in the curly quotes the install page uses would break a console."""
+        for host in each_host(self):
+            mine = load_host(host).vars[PACKAGE_IN_STRING]
+            scripts = Scripts(self, {SESSION_START: ("name %s," % mine,
+                                                     "name %s, \u201cnow\u201d," % mine)}, host=host)
+            out = scripts.run(self, SESSION_START, project(self, GRADUATED, FLAG))
+            self.assertEqual(["the finished message is not ASCII (a Windows console can break "
+                              "it)"], session_start_problems(out, True, host))
 
     def test_a_stop_nudge_with_its_own_preferences_check_is_caught(self):
         old = "return module_start_apparatus.bootcamp_complete()"
@@ -482,15 +579,29 @@ class NegativeControls(unittest.TestCase):
                                       "so the matrix cannot tell the two rules apart")
 
     def test_a_dropped_finished_case_is_caught(self):
-        text = read(ONBOARDING)
-        mutant = text.replace("- **Finished** —", "- **Done** —", 1)
-        self.assertTrue(step_two_problems(mutant))
-        two = text.replace("👉 **What would you like to explore?**",
-                           "👉 **What would you like to explore?** 👉 **Resume?**", 1)
-        self.assertTrue(step_two_problems(two))
-        command = read(START_COMMAND)
-        self.assertTrue(command_problems(command.replace("do not offer to resume a module",
-                                                         "offer to resume", 1)))
+        for host in each_host(self):
+            text = rendered(ONBOARDING, host)
+            self.assertEqual([], step_two_problems(text, host))
+            mutant = text.replace("- **Finished** —", "- **Done** —", 1)
+            self.assertTrue(step_two_problems(mutant, host))
+            two = text.replace("👉 **What would you like to explore?**",
+                               "👉 **What would you like to explore?** 👉 **Resume?**", 1)
+            self.assertTrue(step_two_problems(two, host))
+            command = rendered(START_COMMAND, host)
+            self.assertEqual([], command_problems(command, host))
+            self.assertTrue(command_problems(command.replace("do not offer to resume a module",
+                                                             "offer to resume", 1), host))
+
+    def test_step_two_in_another_assistants_form_is_caught(self):
+        """Issue #28: a package whose reply or mention is in the other form is reported."""
+        for host in each_host(self):
+            other = next(candidate for candidate in HOSTS
+                         if package_line(candidate) != package_line(host))
+            self.assertEqual(["the Finished case does not state the operation named",
+                              "the Finished case does not state the pinned lines"],
+                             step_two_problems(rendered(ONBOARDING, other), host))
+            self.assertEqual(["/start-bootcamp's finished case does not state the packager"],
+                             command_problems(rendered(START_COMMAND, other), host))
 
     def test_a_journey_map_with_graduation_current_is_caught(self):
         text = read(GROUND_RULES)

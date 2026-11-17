@@ -23,6 +23,13 @@ its section list (INV-108).
 
 Source issue: #523.
 
+⚠️ **Dated note, 2026-11-17 (issue #28): item 13(a) is read in each assistant's built
+package.** Its two passages tell the guide to suggest the feedback operation. The Claude
+package names `/bootcamp-feedback`; every other package names the request its install page
+gives, `"Bootcamp feedback"`. So item 13(a) and its control run once per assistant
+(`_invocations.py`), each held to its own form. The other items name no operation and still
+read `source/`. No case was retired.
+
 Run:  python3 -m unittest discover -s tests
 """
 import importlib.util
@@ -30,6 +37,9 @@ import re
 import sys
 import unittest
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _invocations import HOSTS, mention, package_text  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PLUGIN = REPO_ROOT / "source"
@@ -440,7 +450,14 @@ class Item11Wording(unittest.TestCase):
 
 # --- Item 13(a): generated data is never described as the Bootcamper's (INV-239) ------------
 
-def generation_defect_problems(passage, where):
+def rendered(path, host):
+    """A source file's text as ``host``'s built package carries it (issue #28)."""
+    return package_text(host, path.relative_to(PLUGIN).as_posix())
+
+
+def generation_defect_problems(passage, where, host):
+    """``passage`` is read in ``host``'s form: it suggests the feedback operation by the
+    name that assistant's package gives it."""
     f = flat(passage)
     if not f:
         return ["%s is missing" % where]
@@ -449,8 +466,8 @@ def generation_defect_problems(passage, where):
         problems.append("%s does not carry the INV-239 generation-defect framing" % where)
     if "defect in that generated data" not in f:
         problems.append("%s does not call it a defect in the generated data" % where)
-    if "`/bootcamp-feedback`" not in f:
-        problems.append("%s does not suggest /bootcamp-feedback" % where)
+    if "and suggest %s." % mention(host, "bootcamp-feedback") not in f:
+        problems.append("%s does not suggest %s" % (where, mention(host, "bootcamp-feedback")))
     if "step 4d" not in f or "INV-300" not in f:
         problems.append("%s does not point at step 4d's statement (INV-300)" % where)
     return problems
@@ -467,16 +484,39 @@ def step_4e_zero_edges(text):
 class Item13aGeneratedDataIsTheBootcamps(unittest.TestCase):
 
     def test_step_4a_and_step_4e_use_the_framing(self):
-        self.assertEqual([], generation_defect_problems(step_4a_fallback(read(DISCOVER_A)),
-                                                        "step 4a's fallback"))
-        self.assertEqual([], generation_defect_problems(step_4e_zero_edges(read(DISCOVER_B)),
-                                                        "step 4e's zero-edge report"))
+        for host in HOSTS:
+            with self.subTest(host=host):
+                self.assertEqual([], generation_defect_problems(
+                    step_4a_fallback(rendered(DISCOVER_A, host)), "step 4a's fallback", host))
+                self.assertEqual([], generation_defect_problems(
+                    step_4e_zero_edges(rendered(DISCOVER_B, host)), "step 4e's zero-edge report",
+                    host))
 
     def test_control_a_missing_framing_is_reported(self):
-        text = read(DISCOVER_B)
-        passage = step_4e_zero_edges(text)
-        cut = passage[:passage.index("⛔ **(INV-239)")]
-        self.assertTrue(generation_defect_problems(cut, "step 4e's zero-edge report"))
+        for host in HOSTS:
+            with self.subTest(host=host):
+                passage = step_4e_zero_edges(rendered(DISCOVER_B, host))
+                cut = passage[:passage.index("⛔ **(INV-239)")]
+                self.assertTrue(generation_defect_problems(cut, "step 4e's zero-edge report",
+                                                           host))
+
+    def test_each_assistant_is_held_to_its_own_form(self):
+        """Issue #28: the slash form on the Claude package, the request form on the others;
+        a passage in the other form is reported, and only for that."""
+        self.assertEqual("`/bootcamp-feedback`", mention("claude", "bootcamp-feedback"))
+        others = [host for host in HOSTS if host != "claude"]
+        self.assertGreaterEqual(len(others), 4)
+        for host in others:
+            with self.subTest(host=host):
+                self.assertEqual("`\"Bootcamp feedback\"`", mention(host, "bootcamp-feedback"))
+                for path, cut_out, where in ((DISCOVER_A, step_4a_fallback, "step 4a's fallback"),
+                                             (DISCOVER_B, step_4e_zero_edges, "step 4e's report")):
+                    self.assertEqual(
+                        ["%s does not suggest `\"Bootcamp feedback\"`" % where],
+                        generation_defect_problems(cut_out(rendered(path, "claude")), where, host))
+                    self.assertEqual(
+                        ["%s does not suggest `/bootcamp-feedback`" % where],
+                        generation_defect_problems(cut_out(rendered(path, host)), where, "claude"))
 
 
 # --- Item 14(a): the font-safety fixture carries every required section ---------------------

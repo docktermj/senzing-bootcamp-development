@@ -186,9 +186,15 @@ connections between entities using `find_network` and `find_path`.
    generate households and the chains between them, which give a path of 2 or more degrees. Reaching
    this fallback, or step 7's, on such a scenario means the bootcamp's generated data is missing what
    its scenario promised, not that the Bootcamper's data lacks it. Say so plainly with the fallback,
-   and suggest `/bootcamp-feedback`: "This scenario promised households and related people, so there
+   and suggest `{{host.invoke_bootcamp_feedback}}`: "This scenario promised households and related people, so there
+<!-- host:only claude -->
    should be a path of 2 or more degrees here. It's missing because of a defect in the data the
-   bootcamp generated, not anything about your data. You can report it with `/bootcamp-feedback`."
+   bootcamp generated, not anything about your data. You can report it with `{{host.invoke_bootcamp_feedback}}`."
+<!-- host:end -->
+<!-- host:except claude -->
+   should be a path of 2 or more degrees here. It's missing because of a defect in the data the
+   bootcamp generated, not anything about your data. You can report it by saying {{host.invoke_bootcamp_feedback}}."
+<!-- host:end -->
    On a CORD source, the Bootcamper's own data, or a generated scenario with no `relationship_intent`
    and no success criterion naming households or related parties, there is no defect to report: say
    the fallback alone, with [the data] named as above, so a generated scenario's data is still named
@@ -228,7 +234,7 @@ connections between entities using `find_network` and `find_path`.
      INV-239 paragraph, including a scenario whose success criteria name households or related
      parties), first say that the bootcamp's generated data is missing the relationships its
      scenario promised, that this is a bootcamp defect rather than a property of the Bootcamper's
-     data, and suggest `/bootcamp-feedback`. Then continue below.
+     data, and suggest `{{host.invoke_bootcamp_feedback}}`. Then continue below.
    - State: "[The data] doesn't contain disclosed relationships, so I'll explain what this would
      look like with connected data." For [The data], use the words after "found in" in the
      subtitle that the loaded sources' `provenance` picks in the
@@ -371,7 +377,7 @@ supported systems.
    `data/exports/<system>/`, which it recreates on every run. Build and run it with that
    section's commands.
    ⛔ **(INV-392) The export is this step's deliverable, so it is written to a durable path a packaging profile reaches, never to the scratch directory.**
-   `data/exports/` is a sibling of `data/senzing-ready/`: `/package-bootcamp` carries it on
+   `data/exports/` is a sibling of `data/senzing-ready/`: `{{host.invoke_package_bootcamp}}` carries it on
    **both** profiles, and graduation copies it to `production/data/exports/` at the same path
    relative to the project root, which is what keeps this program's own output path true once it
    is copied there verbatim (INV-186). `data/temp/` is the scratch directory **both** packaging
@@ -391,7 +397,7 @@ supported systems.
    ⛔ **(INV-239) On a generated scenario that promised households** (the condition in step 4d's
    INV-239 paragraph, stated once there, INV-300), never say the Bootcamper's data has no
    relationships: say the data the bootcamp generated is missing the relationships its scenario
-   promised, that this is a defect in that generated data, and suggest `/bootcamp-feedback`.
+   promised, that this is a defect in that generated data, and suggest `{{host.invoke_bootcamp_feedback}}`.
    When the fields asked for are on no node, report the attribute count as zero and name item 7's
    `get_record` pass as the first cause to check.
 10. **Hand over.** When the edge count is above zero, give the path of each written file and of the
