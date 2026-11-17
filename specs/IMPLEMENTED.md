@@ -36,6 +36,134 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## four-packages-point-at-hooks-readme-md-which-they-do-not-carry
+
+- **Implemented:** 2026-11-17 (issue #26)
+- **Files changed:** `source/skills/bootcamp-onboarding/SKILL.md`,
+  `source/skills/bootcamp-onboarding/ground-rules.md`, `source/scripts/stop-nudge.py`,
+  `source/scripts/feedback-capture.py`, `source/scripts/write-gate.py`,
+  `tests/test_partial_shipping_has_a_reason.py`, `specs/IMPLEMENTED.md` (this entry)
+- **MCP re-check:** n/a (no Senzing fact). Re-confirmed on 2026-11-17 against the change itself:
+  it removes pointers at one of the bootcamp's own pages, states the two switches one of the
+  bootcamp's own scripts reads, and says what the bootcamp's own write gate blocks. It asserts
+  nothing about Senzing. No absence claim about the Senzing MCP server is made, so INV-213's
+  `owner-checked:` clause is not owed.
+- **Summary:** No shared text points at `hooks/README.md` any more, and the stop-nudge off
+  switch is stated in the ground rules, which every package carries. This is finding 1 of
+  `production-readiness-audit-2026-11-17`. Before the change, four prose sites and four script
+  comment lines named the page in all five packages, while the Copilot, Kiro, ChatGPT and
+  Gemini layouts drop it. The page was also the only place the off switch was documented, so
+  those four packages did not say how to turn the nudge off.
+  - **The four prose sites.** Each pointer is removed in every package, the Claude package
+    included, and no `host:only` block keeps one.
+    - `bootcamp-onboarding/SKILL.md`, the resume step: the sentence that sent the reader to
+      the page for "each hook's gate and why" now gives the reason. The onboarding preface
+      creates the progress file empty, no module is recorded until Bootcamp preparation's
+      final write, and each of the four hooks has work to do in that window.
+    - `ground-rules.md`, the worked-steer trigger record: the pointer is dropped. The sentence
+      already says what `failed-run-net.py` does.
+    - `ground-rules.md`, the write-gate bullet under "File placement": "lists everything it
+      blocks" pointed at the page. The bullet now says the gate also blocks a file write that
+      holds an obvious hardcoded secret, which is the one thing the page said and the bullet
+      did not. The rest of the bullet is unchanged, and #29 rewrites it.
+    - `ground-rules.md`, the administrative-writes bullet under "Progress and state": the
+      "(see …)" pointer is dropped and the line re-wrapped. The claim that no harness setting
+      suppresses a write's inline diff keeps its wording. Whether it holds on assistants other
+      than Claude was not checked: the issue puts that out of scope.
+  - **The four comment lines.** `stop-nudge.py` (two), `feedback-capture.py` and `write-gate.py`
+    no longer name the page. Three lose "(hooks/README.md, Gate column)". The fourth, on the
+    opt-out gate, now reads "see nudge_disabled() below", the function that reads the two
+    switches. No code changed. The issue cites `write-gate.py:35`; the line was at 55 on
+    `a465a9f`, and it was found by its text.
+  - **The off switch.** One new list item under "Closing questions" in `ground-rules.md`. It
+    says the switches apply where the hook that re-opens a turn runs, so it does not say the
+    nudge is active: on Kiro that hook runs only if the bootcamper installed the hooks. It
+    names no hook event, because the event has no one name across the assistants. It gives
+    both switches: the `SENZING_BOOTCAMP_DISABLE_STOP_NUDGE` environment variable set to `1`,
+    `true`, `yes` or `on`, and the top-level key `disable_stop_nudge: true` in
+    `config/bootcamp_preferences.yaml`. It says how to turn the nudge back on: unset the
+    variable, or set the key to `false` or remove it. It cites INV-055.
+  - **Left as it is.** `source/hooks/README.md`, every `hosts/*/host.json` and the page's
+    `PARTIAL` entry are unchanged, so no package gains or loses a file. The bullet above the
+    new item still calls the hook "the plugin's `Stop` hook", and the "File placement" bullets
+    still say `PreToolUse`: those event names in shared text belong to #29.
+  - **Tests.** `tests/test_partial_shipping_has_a_reason.py` goes from 25 tests to 38.
+    - `dropped_references()` takes the partial files from the shipped sets, and for each one
+      reads every file of every built package that drops it, looking in the file's bytes for
+      the source path and for the path a carrying package uses. The test asserts that all five
+      packages were built, that at least one partial file was checked, that the files checked
+      are exactly the partial ones, that each is covered by a `PARTIAL` entry and each entry
+      has a file checked, and that every dropping package was read in full (INV-265). Six
+      partial files are checked today: the five under `commands/` and `hooks/README.md`.
+    - A second test holds the issue's first criterion in all five packages: no file names
+      `hooks/README.md` except the page itself where a package carries it.
+    - Three tests read the ground rules of each built package: both switch names are there;
+      one list item holds the variable, the key and its file, the four values and the way
+      back; and that item is conditional, names no event from any assistant's mapping and does
+      not name the page. The item is read through `tests/_wrapped_text.py` with whitespace
+      collapsed (INV-346). A fourth holds the four values against `truthy()` in the script.
+    - Negative controls that run on every pass: four on scratch packages (a pointer in a
+      skill, a pointer in a script comment, the path a carrier uses, and nothing to report),
+      one that writes a pointer into a copy of a built package for each partial file, and two
+      for the event and item readers.
+    - Negative controls run once, each in a throwaway clone: against `a465a9f` with only the
+      new test file, 6 of the 38 tests fail (`FAILED (failures=27)`); with one change made at
+      a time on this branch (each of the eight pointers put back, and nine changes to the new
+      item), each of 17 mutations fails the module.
+  - **Known limits.** The scan finds a path written out in full with forward slashes. It does
+    not find a path put together at run time or a file named by its base name alone, and it
+    is not the general check that every path a package names resolves inside that package,
+    which the issue puts out of scope. The off-switch tests show the switches are named, not
+    that a hook reads them on any assistant.
+  - **Not observed.** No real assistant read the reworded text or ran the hook. Verified on
+    Linux only, with Python 3.12.3. No run on macOS, on Windows or on a real assistant
+    happened, so no record is added to any `hosts/<assistant>/checks.json`. The new test code
+    is standard library only, compares package paths in posix form and adds no branch on the
+    platform (INV-001).
+- **Invariants.** Establishes no new invariant (INV-309), and proposes a change to two in
+  force. The register is not edited here (INV-365). The change adds no hard-rule line that a
+  `conformance.py` view reads: `conformance.py since --since-last-audit` reports none for the
+  range. It adds one hard-rule line to the test's docstring, which the first block below
+  quotes. INV-430 says which files may be partial and does not say that a package must not
+  name one it drops. INV-055 says the opt-out is documented and does not say where, and until
+  this change four packages did not document it. Until the maintainer applies the notes
+  below, only the test holds either rule. INV-003 is the invariant the finding was filed
+  under; its wording is not touched.
+
+- **PROPOSED AMENDMENT to INV-430 — awaiting the maintainer's sign-off; NOT applied.**
+    - ⛔ **No package names a partial source file it drops.** — in `tests/test_partial_shipping_has_a_reason.py`
+
+  INV-430 requires a recorded reason for a file that ships to some assistants and not others,
+  and says outright that its test "does not check that every path a package names resolves
+  inside that package". A partial file is the one case where shared text is known to point at
+  nothing: text outside a host marker reaches every package, and four packages told the guide
+  to read a page they do not carry. Without the note below, a later edit can put such a
+  pointer back and contradict no registered rule. Enforced by
+  `tests/test_partial_shipping_has_a_reason.py`.
+
+  Drafted wording follows, under the registered id. A new rule's id would be
+  written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
+
+  **INV-430** — (⚠️ **Dated note, 2026-11-17 (#26): a package MUST NOT name a partial source file it drops; the rule above is unchanged.** No file in an assistant's package may hold the path of a source file that ships to some assistants and not to that one: neither the file's path under `source/` nor the path a package that carries it uses. This binds Markdown and scripts alike, a comment included. `hooks/README.md` is the standing case and is held more tightly: it ships to the Claude package only, and no file in any package, the Claude package included, may name it except the page itself. Where shared text needs a fact such a file states, it states the fact. Observed (`production-readiness-audit-2026-11-17`, finding 1): four prose sites and four script comment lines named `hooks/README.md` in all five packages while four layouts dropped it. Enforced by `tests/test_partial_shipping_has_a_reason.py`, which takes the partial files from the shipped sets, requires each to be one a `PARTIAL` entry covers, and searches the bytes of every file in each built package that drops one; it fails when no partial file was checked or a package was not built. It **cannot** find a path put together at run time or a file named by its base name alone, and the limit stated above stands: it does not check that every path a package names resolves inside that package.)
+
+- **PROPOSED AMENDMENT to INV-055 — awaiting the maintainer's sign-off; NOT applied.**
+    - ⛔ **Where the hook that re-opens a turn to ask for a missing closing question runs, the bootcamper can turn it off with either of two switches** — in `source/skills/bootcamp-onboarding/ground-rules.md`
+
+  INV-055 requires "a documented opt-out" and does not say where it is documented. The only
+  place was `hooks/README.md`, which ships to the Claude package alone, so the Copilot, Kiro,
+  ChatGPT and Gemini packages carried the switches in a script and documented them nowhere.
+  Without the note below, the item can be dropped from the ground rules, or moved back into a
+  file only one package carries, and contradict no registered rule. The issue did not ask for
+  this block: it is written because the change ships a test that holds more than INV-055
+  says. Enforced by `tests/test_partial_shipping_has_a_reason.py`.
+
+  Drafted wording follows, under the registered id. A new rule's id would be
+  written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
+
+  **INV-055** — (⚠️ **Dated note, 2026-11-17 (#26): where the opt-out is documented; the two switches above are unchanged.** Both switches MUST be stated in `skills/bootcamp-onboarding/ground-rules.md`, which every assistant's package carries, in one list item: the `SENZING_BOOTCAMP_DISABLE_STOP_NUDGE` environment variable with the values the script reads as on (`1`, `true`, `yes`, `on`), the top-level key `disable_stop_nudge: true` in `config/bootcamp_preferences.yaml`, and how to turn the nudge back on. That item MUST say it applies where the hook that re-opens a turn runs, because hooks do not run on every assistant, and MUST name no assistant's hook event, because the event has no one name. `hooks/README.md` documents the switches too and ships to the Claude package only, so it cannot be the only place. Enforced by `tests/test_partial_shipping_has_a_reason.py`, which reads the ground rules of all five built packages; it **cannot** establish that a hook reads the switches on any assistant. What the script does with each switch is held by `tests/test_stop_nudge_silence_and_opt_outs.py`.)
+
+- **Commit:** uncommitted
+
 ## the-feedback-hook-and-the-packager-report-the-bootcamp-version-as-unknown-on-non-claude-packages
 
 - **Implemented:** 2026-11-17 (issue #31)

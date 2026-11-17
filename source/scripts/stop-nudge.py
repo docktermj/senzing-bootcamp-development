@@ -15,9 +15,9 @@ gate passes:
      project", not "is a bootcamp in progress" (INV-227). The onboarding preface
      creates the file empty and nothing records a module until Bootcamp
      preparation's final write, yet the preface and every preparation gate end on a
-     pinned 👉 question, so the net must cover them too (hooks/README.md, Gate column).
+     pinned 👉 question, so the net must cover them too.
   3. The bootcamper opted out (env var or preferences key) -> stay silent. Gives a
-     documented way to disable/quiet the nudge (see hooks/README.md).
+     documented way to disable/quiet the nudge (see nudge_disabled() below).
   3b. The bootcamp is complete (``bootcamp_complete: true`` in the progress file or in
      preferences; graduation sets both before the terminal "END OF SENZING BOOTCAMP"
      banner) -> stay silent, so the net never nudges for a closing question after the

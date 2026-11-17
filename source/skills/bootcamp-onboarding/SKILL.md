@@ -74,7 +74,9 @@ bootcamper through setup and into the numbered module skills, one guided step at
    start over. `recap_checkpoint.bootcamp_active()` now encodes this same three-way rule, so the
    recap hooks stay silent in that window. The four hooks that serve onboarding itself
    (`stop-nudge.py`, `write-gate.py`, `feedback-capture.py`, `module-number-reminder.py`) gate
-   on the file's existence on purpose; [`hooks/README.md`](../../hooks/README.md) gives each hook's gate and why.
+   on the file's existence on purpose: the onboarding preface creates the file empty and no module
+   is recorded until Bootcamp preparation's final write, and each of the four has work to do in
+   that window.
 
    This step is where the rule is stated: session start (`ground-rules.md` → "Session start")
    and `/graduate` point here rather than restating it (INV-227, INV-300).

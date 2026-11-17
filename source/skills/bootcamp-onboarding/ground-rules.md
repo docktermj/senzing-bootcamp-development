@@ -404,8 +404,7 @@ copy (INV-300).
   `module-completion.md` Step 0b, to show a steer that was due and never shown and to file a
   reversal that was never filed.
   A trigger 1 failure the guide repairs without recording it is caught by a hook, `failed-run-net.py`,
-  which reminds the guide when it happens and names it again at the module's transition
-  (`hooks/README.md`).
+  which reminds the guide when it happens and names it again at the module's transition.
 - **Two lines, after the fix.** The steer is shown once the fix has run (from Data processing on,
   its first line comes before the fix: see below), in this shape:
 
@@ -883,8 +882,8 @@ The caller says which entity to pick. Everything below is the same for all three
   `nuget.config` (SDK setup's project-local package source). Never put `.py`,
   `.md` (except README), `.jsonl`, `.csv`, or non-config `.json` in the root.
 - The plugin's PreToolUse write-gate blocks every write outside the project, as the first bullet
-  of this section states (INV-200); `../../hooks/README.md` lists everything it blocks. File-type
-  placement inside the project is your responsibility.
+  of this section states (INV-200); it also blocks a file write that holds an obvious hardcoded
+  secret. File-type placement inside the project is your responsibility.
 - ⛔ **On Java, a prescribed `snake_case` filename collides with the class name — declare the class
   package-private rather than renaming either (INV-237).** Every `.[ext]` filename in this bootcamp
   is written in a `snake_case` idiom that is correct for Python and has no class/file coupling.
@@ -1267,8 +1266,8 @@ it is spelled correctly wherever the module is named.
 
 - Progress -> `config/bootcamp_progress.json`. Preferences -> `config/bootcamp_preferences.yaml`.
 - **Batch administrative writes and keep them small (INV-012).** Every Write/Edit renders its diff
-  inline to the bootcamper, and no harness setting suppresses that today (see
-  `../../hooks/README.md`), so the only lever is to write **rarely** and **small**. Therefore:
+  inline to the bootcamper, and no harness setting suppresses that today, so the only lever is
+  to write **rarely** and **small**. Therefore:
   update config at **step and module boundaries, not on every sub-step**; batch related fields into
   a **single** write instead of one write per field; prefer a **minimal edit** of the changed key
   over a full-file rewrite; and keep the config files small. Administrative writes are not narrated
@@ -1539,3 +1538,10 @@ the 👉 protocol above).
 
 - YOU own the closing 👉 question at the end of each yielding turn. The plugin's `Stop` hook is
   a safety net that fires only if you forget - do not rely on it.
+- **Turning that safety net off.** Where the hook that re-opens a turn to ask for a missing
+  closing question runs, the bootcamper can turn it off with either of two switches (INV-055).
+  One is the `SENZING_BOOTCAMP_DISABLE_STOP_NUDGE` environment variable, set to `1`, `true`, `yes`
+  or `on` in the environment the hook runs in. The other is the top-level key
+  `disable_stop_nudge: true` in `config/bootcamp_preferences.yaml`, which holds for the project.
+  To turn it back on, undo the one that was used: unset the variable, or set the key to `false` or
+  remove it.
