@@ -26,8 +26,7 @@
     "scripts": "scripts",
     "docs": "docs",
     "hooks/README.md": null,
-    "hooks/fallbacks": null,
-    "docs/model-selection.md": null
+    "hooks/fallbacks": null
   },
   "hooks": {
     "command": "python3 \"{{host.plugin_root}}/scripts/{script}\" {event}",

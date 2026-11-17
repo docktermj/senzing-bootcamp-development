@@ -36,6 +36,128 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## a-maintainer-page-ships-in-the-claude-package-only-and-links-to-a-file-no-package-carries
+
+- **Implemented:** 2026-11-16 (issue #12)
+- **Files changed:** `docs/model-selection.md` (moved from `source/docs/model-selection.md`),
+  `hosts/chatgpt/host.json`, `hosts/copilot/host.json`, `hosts/gemini/host.json`,
+  `hosts/kiro/host.json`, `source/skills/bootcamp-onboarding/ground-rules.md` (one line),
+  `tests/test_partial_shipping_has_a_reason.py` (new), `tests/test_model_guidance_sync.py`,
+  `tests/test_interface_naming.py`, `tests/test_model_docs_name_no_switch.py`,
+  `tests/test_model_selection_covers_every_skill.py`,
+  `tests/test_hard_rule_detector_sees_mid_line_stop_signs.py`,
+  `tests/test_any_language_citations_name_the_right_rule.py`, `specs/IMPLEMENTED.md` (this entry)
+- **MCP re-check:** n/a (no Senzing fact). Re-confirmed on 2026-11-16 against the change itself:
+  it moves a maintainer page, removes four layout entries and adds two invariant ids to one
+  line of the ground rules, and asserts nothing about Senzing. No absence claim about the
+  Senzing MCP server is made, so INV-213's `owner-checked:` clause is not owed.
+- **Summary:** The maintainer page on model and effort is now `docs/model-selection.md` in this
+  repository, beside `docs/effort-mechanisms.md`, and no package carries it. A new test holds
+  one table of the source paths that ship to some assistants and not others, with a reason
+  for each. Audit finding 5 of `production-readiness-audit-2026-11-16`.
+  - **The move.** `git mv`, so the page's history follows it. Five lines changed, in four
+    places, and nothing else: its two paths to the onboarding skill now start
+    `../source/skills/`; it names the research page as `effort-mechanisms.md`, beside this
+    file; and its staleness note says "this file or the shipped plugin". Its tables, model
+    names, prices and dates are untouched.
+  - **The layouts.** The `"docs/model-selection.md": null` entry is gone from the ChatGPT,
+    GitHub Copilot, Gemini and Kiro layouts. The Claude layout never named the page. The Claude
+    package goes from 93 files to 92; the other four keep their counts (92, 92, 92 and 93).
+  - **One line of shipped text changed, which the issue did not foresee.** The page was the
+    only file under `source/` that cited INV-114 and INV-140. With it gone,
+    `coverage_reports.py shipped` listed both, and
+    `tests/test_every_invariant_is_cited_in_shipped_text.py` failed. That guard says to add the
+    id at the site that states the rule, so the lead-in to the working-depth table in
+    `ground-rules.md` now ends "row (INV-140). This table is the authoritative copy
+    (INV-114):" where it ended "row:". Every package's `ground-rules.md` gains those words.
+    The issue's Compatibility section says the other four packages are unchanged; they change
+    by this one line. Issue #12's Clarifications comment records it.
+  - **The new test.** `tests/test_partial_shipping_has_a_reason.py` takes, for every file under
+    `source/`, the set of assistants whose layout places it, from the build's own
+    `placed_files()`, and holds that against all five built packages. `PARTIAL` has two
+    entries: `commands` and `hooks/README.md`. A partial path that no entry covers fails. An
+    entry fails when it names no source file, or covers a file that ships to every assistant
+    or to none. A directory entry covers the files under it. The ten files under
+    `source/hooks/fallbacks/` ship to no assistant and need no entry. The same module fails
+    when a package carries `model-selection.md`, when a file in any package holds the text
+    `effort-mechanisms`, and when a path the page names does not resolve from `docs/`.
+  - **Tests repointed, none deleted.** Six modules read the page at its new path: the five the
+    issue names and `tests/test_any_language_citations_name_the_right_rule.py`. Four
+    assertions kept their text and changed what they are about:
+    - `test_model_guidance_sync.py` walked the Claude package to find superseded model names
+      and met the page there. The page is now named in `shipped_markdown()`, and a new case
+      fails if it drops out of the scan. The table comparison now holds the Claude package's
+      `ground-rules.md` against a page outside the package.
+    - `test_interface_naming.py` said no shipped file names a model or effort control. Its
+      third file is now the maintainer page, which is not shipped.
+    - `test_hard_rule_detector_sees_mid_line_stop_signs.py` reads its fixture line in a file
+      that `rules` no longer reads. It asserts what the classifier does with the line, which is
+      the same.
+    - `test_any_language_citations_name_the_right_rule.py` counted the page as shipped text.
+      Its two floors on shipped text now read shipped text alone, and a new assertion holds
+      the page's INV-124 citation by name.
+    A test that scans all of `source/` no longer reads the page.
+  - **Measured on this branch, 2026-11-16.** `rules` and `per-rule` report 848 hard-rule lines
+    before and after, 275 with no citation at the rule: the page held no hard-rule line. Their
+    `CORPUS:` line goes from `source (55 file(s))` to `source (54 file(s))`. `size` goes from
+    55 files and 278,859 words to 54 files and 276,964 words. `duplication` goes from 264
+    repeated passages across 168 file pairs to 228 across 166: the 35 passages the page shared
+    with `ground-rules.md` are no longer counted, because `duplication` reads `source/` alone.
+    `since --since-last-audit` and `reverse-check --since-last-audit` print the same report
+    before and after. `coverage_reports.py shipped` lists nothing, as before.
+  - **Negative controls, each run and then reverted.** With the page back under `source/` and
+    the four `null` entries restored, the new module reports 4 failures, among them
+    `docs/model-selection.md (only in: claude)`. With `docs/examples` dropped from one layout
+    it reports 1 failure. With `hooks/README.md` placed by every layout it reports 2, the
+    stale entry among them. With one skill file naming `docs/effort-mechanisms.md` it
+    reports 5, one for each package. Before the ground-rules line changed, the full suite
+    failed on `test_no_invariant_naming_a_shipped_artifact_is_uncited`.
+  - **Known limits.** The table records a reason; it cannot establish that the reason is true
+    or still current. The test does not cover a file one package takes from
+    `hosts/<assistant>/files/`, and it does not check that every path a package names resolves
+    inside that package: the issue puts that general test out of scope. The page's opening
+    sentence still says it "does not ship as bootcamper-facing content", which is true and no
+    longer the whole of it; the issue limits edits to what the move requires.
+- **Invariants.** The register is not edited here (INV-365). The change ships two hard-rule
+  lines, in the new test's docstring, which no `conformance.py` view reads. The first block
+  below covers both. The second proposes a dated clarification on INV-114, whose two paths now
+  start from different roots.
+
+- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** A source file that ships to some assistants and not others has a recorded reason, and no package carries the maintainer page. The rule already shipping, quoted:
+    - ⛔ **A source file that ships to some assistants and not others has a recorded reason.** — in `tests/test_partial_shipping_has_a_reason.py`
+    - ⛔ **No package carries the maintainer page `model-selection.md`, and no package names `effort-mechanisms`.** — in `tests/test_partial_shipping_has_a_reason.py`
+
+  Enforced by `tests/test_partial_shipping_has_a_reason.py`.
+
+  **Why it is not an existing invariant:** The build already stops on a source file that a
+  host's layout neither places nor drops, so a drop is always written down. Nothing asks why.
+  No registered invariant says the five packages carry the same source files, names a layout,
+  or says where a maintainer page lives. INV-426 holds one table identical in every package and
+  INV-252 holds where a package says its files are; neither reaches which files a package
+  carries.
+
+  Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
+  invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
+
+  **INV-NNN** — A file under `source/` MUST ship to every assistant's package or to none, unless its path, or a directory above it, has an entry in the `PARTIAL` table of `tests/test_partial_shipping_has_a_reason.py` that states the reason in a sentence. A file ships to an assistant when that assistant's layout in `hosts/<assistant>/host.json` places it in the package. An entry MUST be added in the change that makes a path partial and removed in the change that ends that: an entry that names no source file, or that covers a file now shipping to every assistant or to none, is a defect. A page written for maintainers MUST NOT live under `source/`. `docs/model-selection.md` is such a page: no package may carry it, and no file in any package may name `docs/effort-mechanisms.md`, which no package carries. Enforced by `tests/test_partial_shipping_has_a_reason.py`, which takes the shipped sets from the build's `placed_files()` and holds them against all five built packages. It **cannot** establish that a recorded reason is true or still current, or recognize a maintainer page other than the one it names; it does not cover a file one package takes from `hosts/<assistant>/files/`, and it does not check that every path a package names resolves inside that package. (Source: `a-maintainer-page-ships-in-the-claude-package-only-and-links-to-a-file-no-package-carries`, GitHub issue #12, 2026-11-16.)
+
+- **PROPOSED AMENDMENT to INV-114 — awaiting the maintainer's sign-off; NOT applied.**
+    - ⛔ **`ground-rules.md` is the authoritative copy of this table; the copy below is derived.** — in `docs/model-selection.md`
+
+  INV-114 names two files. When it was written both shipped in the plugin, so both paths
+  started at the package root. `docs/model-selection.md` now starts at the root of this
+  repository and no package carries the page. The words are the same and name a different
+  place. Without the note below, a reader looks for the derived copy inside a package and
+  finds none, and nothing registered says the page is still held to the rule. Enforced by
+  `tests/test_model_guidance_sync.py`.
+
+  Drafted wording follows, under the registered id. A new rule's id would be
+  written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
+
+  **INV-114** — (⚠️ **Dated clarification, 2026-11-16 (issue #12): the derived copy is a maintainer page that no package carries; the rules above are unchanged.** `docs/model-selection.md` is a path from the root of the development repository, where the page moved from `source/docs/`. It is not bootcamper-facing. The authoritative table is the "Working depth by stage" table in `skills/bootcamp-onboarding/ground-rules.md`, which every assistant's package carries and which cites this invariant at the table. `tests/test_model_guidance_sync.py` still holds the page to this rule: its table and its level instructions match the authoritative copy, it carries a dated verification note, and it names a superseded model only inside that note.)
+
+- **Commit:** uncommitted
+
 ## the-never-ask-list-names-one-assistants-controls-in-every-package
 
 - **Implemented:** 2026-11-16 (issue #14)

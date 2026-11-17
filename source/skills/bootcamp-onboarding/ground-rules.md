@@ -1484,7 +1484,7 @@ the 👉 protocol above).
 - **Working depth by stage.** How carefully you work follows the stage you are in, by instruction
   alone. Find the stage in this table, read its effort level, and work to that level's instruction
   until the stage ends. One row per stage, in the order the bootcamp runs them, and one level per
-  row:
+  row (INV-140). This table is the authoritative copy (INV-114):
 
   | Stage | Effort |
   |---|---|

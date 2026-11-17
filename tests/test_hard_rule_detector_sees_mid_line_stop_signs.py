@@ -34,7 +34,6 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CONFORMANCE = REPO_ROOT / ".claude/skills/production-readiness-audit/conformance.py"
-PLUGIN = REPO_ROOT / "source"
 
 
 def load():
@@ -144,8 +143,11 @@ class NounUsesStayOut(unittest.TestCase):
 
         Line-scoped by design (#424): ``conformance.py`` classifies one line at a time, and this
         asserts what that classifier does with the line.
+
+        #12 moved the page from `source/docs/` to `docs/`: it is read at its new path, and the
+        line is the same line.
         """
-        path = PLUGIN / "docs" / "model-selection.md"
+        path = REPO_ROOT / "docs" / "model-selection.md"
         self.assertTrue(path.is_file(), "fixture file moved: %s" % path)
         offenders = [
             (i, line.strip()) for i, line in
