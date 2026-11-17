@@ -15,7 +15,7 @@
     "assistant": "ChatGPT",
     "scripts_relative": "../../scripts",
     "docs_relative": "../../docs",
-    "model_capable": "a high-capability Codex model",
+    "model_capable": "GPT-5.6 Terra",
     "skills_dir": "..",
     "session_control_examples": "",
     "dismissal_control_example": ""

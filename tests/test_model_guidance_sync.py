@@ -31,12 +31,21 @@ no package carries it. The superseded-name scan used to reach it by walking the 
 is now named in `shipped_markdown()`, and `test_the_maintainer_page_is_in_the_scan` fails if
 it drops out. Every other check reads the same page at its new path. No case was retired.
 
+⚠️ **Dated note, 2026-11-16 (#13): the Claude install fragments are read as the build renders
+them.** `site-install.html` now takes its model name from `{{host.model_capable}}`, so the
+name a reader sees is in the rendered page and not in the file. `repo_doc_text()` puts the
+Claude host's values in with `substitute_tokens`, the function the build calls on a fragment.
+The model ID stays literal in the fragment. No case was retired, and one control was added: a
+superseded `model_capable` value reaches the scan through the fragment.
+
 Run:  python3 -m unittest discover -s tests
 """
+import dataclasses
 import os
 import re
 import unittest
-from _built import built  # the Claude package, built from source/
+from _built import built, load_host  # the Claude package, built from source/
+from tools.bootcamp_build.render import substitute_tokens  # noqa: E402
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PLUGIN = os.path.join(str(built("claude")))
@@ -129,6 +138,8 @@ TABLE_HEADER = "| Stage | Effort |"
 # HTML; the names and IDs sit in their text as written, so they are matched as text. A listed
 # file that is missing now fails (`test_every_repo_doc_exists_and_one_names_a_model`) where
 # the old loop skipped it silently.
+# Since #13 a fragment is read as the build renders it (`repo_doc_text`): the display name in
+# `site-install.html` is `{{host.model_capable}}`, and only the model ID is in its text as written.
 CLAUDE_FRAGMENTS = os.path.join(REPO_ROOT, "hosts", "claude", "fragments")
 REPO_DOCS = [
     os.path.join(REPO_ROOT, "README.md"),
@@ -137,6 +148,18 @@ REPO_DOCS = [
     os.path.join(CLAUDE_FRAGMENTS, "site-install.html"),
     os.path.join(CLAUDE_FRAGMENTS, "site-tips.html"),
 ]
+
+
+def repo_doc_text(path, host=None):
+    """The text of one scanned file, a Claude install fragment as the build renders it (#13).
+
+    ``host`` is the profile whose values go in; the Claude host's when none is given.
+    """
+    with open(path, encoding="utf-8") as fh:
+        text = fh.read()
+    if os.path.dirname(path) == CLAUDE_FRAGMENTS:
+        text = substitute_tokens(text, host or load_host("claude"), path)
+    return text
 
 
 def shipped_markdown():
@@ -184,8 +207,7 @@ class NoSupersededModelReferences(unittest.TestCase):
     def test_no_superseded_names_or_ids(self):
         offenders = []
         for path in shipped_markdown():
-            with open(path, encoding="utf-8") as fh:
-                text = fh.read()
+            text = repo_doc_text(path)
             rel = os.path.relpath(path, REPO_ROOT)
             offenders += superseded_offenders(
                 rel, text, exempt_note=(path == STALENESS_NOTE_FILE)
@@ -211,8 +233,7 @@ class NoSupersededModelReferences(unittest.TestCase):
             with self.subTest(path=rel):
                 self.assertTrue(os.path.isfile(path), "%s is listed in REPO_DOCS and missing" % rel)
             if os.path.isfile(path):
-                with open(path, encoding="utf-8") as fh:
-                    text = fh.read()
+                text = repo_doc_text(path)
                 if "Opus 5.5" in text and "claude-opus-5-5" in text:
                     naming.append(rel)
         self.assertIn("hosts/claude/fragments/site-install.html", naming,
@@ -222,8 +243,7 @@ class NoSupersededModelReferences(unittest.TestCase):
     def test_a_superseded_name_in_the_install_fragment_is_reported(self):
         """Negative control: the walkthrough's own model step, one generation back."""
         path = os.path.join(CLAUDE_FRAGMENTS, "site-install.html")
-        with open(path, encoding="utf-8") as fh:
-            text = fh.read()
+        text = repo_doc_text(path)
         self.assertEqual([], superseded_offenders("fragment", text))
         stale = text.replace("<strong>Opus 5.5</strong>", "<strong>Opus 5</strong>").replace(
             "claude-opus-5-5", "claude-opus-5")
@@ -232,6 +252,16 @@ class NoSupersededModelReferences(unittest.TestCase):
             ["fragment: 'Opus 5' should be 'Opus 5.5'",
              "fragment: 'claude-opus-5' should be 'claude-opus-5-5'"],
             superseded_offenders("fragment", stale))
+
+    def test_a_superseded_model_capable_reaches_the_scan_through_the_fragment(self):
+        """Negative control (#13): the fragment's display name is the host's `model_capable`."""
+        path = os.path.join(CLAUDE_FRAGMENTS, "site-install.html")
+        with open(path, encoding="utf-8") as fh:
+            self.assertIn("{{host.model_capable}}", fh.read())
+        claude = load_host("claude")
+        stale = dataclasses.replace(claude, vars=dict(claude.vars, model_capable="Opus 5"))
+        self.assertEqual(["fragment: 'Opus 5' should be 'Opus 5.5'"],
+                         superseded_offenders("fragment", repo_doc_text(path, stale)))
 
     def test_the_staleness_note_is_found_and_names_what_it_supersedes(self):
         """The exemption is earned: the note exists and is what explains the supersession."""

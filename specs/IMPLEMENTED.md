@@ -36,6 +36,120 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## the-install-page-and-the-welcome-name-different-models-on-chatgpt
+
+- **Implemented:** 2026-11-16 (issue #13)
+- **Files changed:** `hosts/chatgpt/host.json`, `hosts/chatgpt/fragments/site-install.html`,
+  `hosts/chatgpt/fragments/site-tips.html`, `hosts/claude/fragments/site-install.html`,
+  `tests/test_model_docs_name_no_switch.py`, `tests/test_model_guidance_sync.py`,
+  `tests/README.md` (one phrase), `specs/IMPLEMENTED.md` (this entry)
+- **MCP re-check:** n/a (no Senzing fact). Re-confirmed on 2026-11-16 against the change itself:
+  it changes which model two install pages and one welcome name, removes the effort steps from
+  two install pages and adds tests. It asserts nothing about Senzing. No absence claim about
+  the Senzing MCP server is made, so INV-213's `owner-checked:` clause is not owed.
+- **Summary:** On ChatGPT the install page, the model tip and the welcome now name one model,
+  from one value, and no assistant's install page sets or names an effort. Audit finding 6 of
+  `production-readiness-audit-2026-11-16`.
+  - **ChatGPT's `model_capable`.** It was "a high-capability Codex model" and is now
+    "GPT-5.6 Terra", the name the install page already carried. The built ChatGPT welcome and
+    the ChatGPT model tip both read "GPT-5.6 Terra suits it well". The name was moved, not
+    re-checked against Codex: the issue says so, and no run on a real assistant was made. No
+    `hosts/<assistant>/checks.json` gained an entry.
+  - **The install fragments.** The Claude and ChatGPT fragments name the model through
+    `{{host.model_capable}}` and nowhere as literal text: the Claude Desktop step, the Claude
+    CLI sentence and the ChatGPT step. They are the first fragments to use a host token. The
+    build already substitutes tokens in a fragment, so the build tool did not change.
+  - **Effort removed.** Six mentions are gone: "Choose the Effort medium", "at medium effort"
+    and `--effort medium` on Claude, "Choose the effort Medium" on ChatGPT, and the word from
+    the two lines that introduce those steps, which now read "set the mode and model" and
+    "select the model". The Claude CLI command reads
+    `claude --model claude-opus-5-5 --permission-mode auto`. The ChatGPT step keeps its
+    lettered list, now with one item, because the issue removes words and keeps the lines.
+  - **What a build shows.** Three built files differ from `main`, measured by building both:
+    one line of the ChatGPT package's `onboarding-flow.md`, and the Claude and ChatGPT install
+    pages. The Copilot, Gemini and Kiro install fragments are byte-for-byte unchanged, and the
+    other four packages are unchanged.
+  - **The new checks**, in `tests/test_model_docs_name_no_switch.py`, on all five assistants.
+    Each install fragment is read as written and as the build renders it, with
+    `substitute_tokens`, the function the build calls on a fragment.
+    - A fragment that names a model must use the token, must not spell its own
+      `model_capable` value, and must render that value. A fragment names a model when its
+      visible text holds the word "model" or its source holds the token. One that names none
+      passes; Copilot, Gemini and Kiro are in that state. The rendered page is also held
+      against the built welcome, so both sides are read. The check fails when the Claude or the
+      ChatGPT page names no model, so it cannot pass on nothing (INV-265).
+    - The Claude CLI command must equal `claude --model <ID> --permission-mode auto`, where
+      the ID is derived from Claude's `model_capable`: "Opus 5.5" gives `claude-opus-5-5`. A
+      page with no such command is reported.
+    - No fragment's rendered visible text may hold the word "effort".
+  - **Negative controls, in the module.** The retired ChatGPT pairing, a page saying
+    "GPT-5.6 Terra" under a welcome saying "a high-capability Codex model", is reported with
+    two problems. A model spelled out in place of the token is reported, in every place and in
+    one. A stale model ID, the command with `--effort medium` and a moved `model_capable` are
+    each reported. Each of the six removed effort mentions is reported, and an effort put back
+    on the real ChatGPT and Claude pages is reported. Against the host files as they were on
+    `main`, run in a throwaway clone, the module reports 16 failures.
+  - **Existing tests changed, because the old expectation is now wrong.** Three, none deleted:
+    - `test_model_docs_name_no_switch.py`: the walkthrough check read the Claude fragment as
+      written and looked for "Choose the Model Opus 5.5". It now reads the rendered text.
+      The samples for the mid-bootcamp-switch pattern quoted `--effort medium` and "select the
+      model and effort:"; they quote the new wording.
+    - `test_model_guidance_sync.py`: two cases looked for "Opus 5.5" in the Claude fragment as
+      written. The superseded-name scan now reads the Claude fragments as rendered, through
+      one function, `repo_doc_text()`. One control was added: a superseded `model_capable`
+      value reaches the scan through the fragment.
+    `tests/test_interface_naming.py` passes unchanged. With the host edits alone, the full
+    suite failed on exactly those three cases.
+  - **Tests.** 18 added: 17 in `test_model_docs_name_no_switch.py`, which goes from 13 to 30,
+    and one in `test_model_guidance_sync.py`. No new file reads a corpus line by line.
+  - **Audit views, measured 2026-11-16.** `conformance.py since --since-last-audit` prints the
+    same report before and after: 2 lines added in the corpus, 6 outside it. The fragments are
+    `.html` and hold no hard-rule line.
+    `tests/test_new_hard_rules_are_cited_or_deferred.py` passes.
+  - **Known limits.** The checks cannot establish that a `model_capable` value names a model
+    the assistant offers, or that a model ID exists. They do not report a page that names a
+    second model beside the token. The model tips stay literal text, held to `model_capable`
+    by the existing tip test. The effort check reads the fragments, not the shared page
+    template `site/_install.html`.
+- **Invariants.** The register is not edited here (INV-365). The change ships three hard-rule
+  lines, in the test module's docstring, which no `conformance.py` view reads. The two blocks
+  below cover them: one for the model, one for the effort, because they are two subjects.
+  INV-426 is not amended: it governs what the bootcamp asks and what a package ships, and an
+  install page is neither.
+
+- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** An install page that names a model names the welcome's model, from one value. The rule already shipping, quoted:
+    - ⛔ **An install page that names a model takes the name from `{{host.model_capable}}`, the value the welcome is built from.** — in `tests/test_model_docs_name_no_switch.py`
+    - ⛔ **The model ID in the Claude CLI start command is the one derived from Claude's `model_capable`.** — in `tests/test_model_docs_name_no_switch.py`
+
+  Enforced by `tests/test_model_docs_name_no_switch.py`.
+
+  **Why it is not an existing invariant:** INV-426 says the welcome names one suitable model
+  exactly once, and says nothing of the install pages. INV-114 says model guidance names only
+  current models and IDs. A current name on the install page and a different one in the
+  welcome contradicts neither, and that is the state ChatGPT was in.
+
+  Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
+  invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
+
+  **INV-NNN** — Where an assistant's install page (`hosts/<assistant>/fragments/site-install.html`) names a model, it MUST take the name from `{{host.model_capable}}`, the value in `hosts/<assistant>/host.json` that the welcome's one-model statement is built from, and MUST NOT spell that value as literal text. An install page MAY name no model. The model ID in the Claude CLI start command is a second spelling of the same value: it stays literal in the fragment, it MUST equal the ID derived from Claude's `model_capable` (lowercase, each space and dot replaced by a hyphen, prefixed with `claude-`), and the command MUST read `claude --model <that ID> --permission-mode auto`. Enforced by `tests/test_model_docs_name_no_switch.py`, which reads each fragment as written and as the build renders it, holds the rendered page against the built welcome, and fails when the Claude or the ChatGPT page names no model, so that it cannot pass on five pages that name none (INV-265). It **cannot** establish that a `model_capable` value names a model the assistant offers, or that a model ID exists. It does not report a page that names a second model beside the token, or a model named without the word "model" and without the token. The model tips in `site-tips.html` stay literal text, held to the same value by the same module. (Source: `the-install-page-and-the-welcome-name-different-models-on-chatgpt`, GitHub issue #13, 2026-11-16.)
+
+- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** No install page sets or names an effort. The rule already shipping, quoted:
+    - ⛔ **No install page mentions an effort.** — in `tests/test_model_docs_name_no_switch.py`
+
+  Enforced by `tests/test_model_docs_name_no_switch.py`.
+
+  **Why it is not an existing invariant:** INV-426 holds the bootcamp to never asking for an
+  effort change and to shipping nothing that sets one. An install page is in no package, and a
+  step taken once before the bootcamp starts is not a change made during it. So two install
+  pages set an effort, three did not, and none contradicted a registered rule.
+
+  Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
+  invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
+
+  **INV-NNN** — An assistant's install page (`hosts/<assistant>/fragments/site-install.html`) MUST NOT mention a reasoning effort: no step that sets one, no command flag that sets one, and no sentence that names a level. The Bootcamper runs at their assistant's default effort, and how carefully the guide works at each stage is set by instruction alone (INV-426). Enforced by `tests/test_model_docs_name_no_switch.py`, which searches the visible text of every assistant's install fragment, as the build renders it, for the word "effort", and requires each of the five fragments to hold text. It reads the fragments, not the shared page template `site/_install.html`. (Source: `the-install-page-and-the-welcome-name-different-models-on-chatgpt`, GitHub issue #13, 2026-11-16.)
+
+- **Commit:** uncommitted
+
 ## a-maintainer-page-ships-in-the-claude-package-only-and-links-to-a-file-no-package-carries
 
 - **Implemented:** 2026-11-16 (issue #12)

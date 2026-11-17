@@ -38,11 +38,10 @@
                 </ol>
               </li>
               <li>
-                On the bottom, set the mode, model and effort:
+                On the bottom, set the mode and model:
                 <ol class="substeps" type="a">
                   <li>Choose the Mode <strong>auto</strong> for a smooth ride.</li>
-                  <li>Choose the Model <strong>Opus 5.5</strong>.</li>
-                  <li>Choose the Effort <strong>medium</strong>.</li>
+                  <li>Choose the Model <strong>{{host.model_capable}}</strong>.</li>
                 </ol>
               </li>
               <li>
@@ -89,8 +88,8 @@
                 <div class="cmd"><pre><code>cd senzing-bootcamp</code></pre></div>
               </li>
               <li>
-                Start the Claude Code CLI on <strong>Opus 5.5</strong> at medium effort, with <code>--permission-mode auto</code> for the smoothest ride:
-                <div class="cmd"><pre><code>claude --model claude-opus-5-5 --effort medium --permission-mode auto</code></pre></div>
+                Start the Claude Code CLI on <strong>{{host.model_capable}}</strong>, with <code>--permission-mode auto</code> for the smoothest ride:
+                <div class="cmd"><pre><code>claude --model claude-opus-5-5 --permission-mode auto</code></pre></div>
               </li>
               <li>
                 Start the bootcamp. Tell Claude:
