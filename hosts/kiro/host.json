@@ -16,7 +16,9 @@
     "scripts_relative": "../bootcamp-onboarding/scripts",
     "docs_relative": "../bootcamp-onboarding/docs",
     "model_capable": "Opus 5.5",
-    "skills_dir": ".."
+    "skills_dir": "..",
+    "session_control_examples": "",
+    "dismissal_control_example": ""
   },
   "layout": {
     "skills": "skills",

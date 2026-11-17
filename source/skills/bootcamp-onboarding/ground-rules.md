@@ -118,8 +118,8 @@ skill should read and follow this file.
   The rules above govern a question's count, shape and placement; this one governs where it came
   from. If you cannot point to the step in a skill file that specifies a question, it is not a
   bootcamp question and must not be asked. In particular, **never present a session- or host-level
-  control as a bootcamp question** — auto mode, auto-accept edits, permission mode, plan mode, fast
-  mode, background tasks, `/compact`, `/loop`. Those belong to the bootcamper's {{host.assistant}} session, not
+  control as a bootcamp question** — a mode, a permission setting or a conversation
+  command{{host.session_control_examples}}. Those belong to the bootcamper's {{host.assistant}} session, not
   to the bootcamp, and asking about one is not made legitimate by the host surfacing that control
   alongside the bootcamp. **There is no exception:** the bootcamp asks the bootcamper to operate no
   {{host.assistant}}-interface control at all, and the model and the reasoning effort are two of
@@ -1401,15 +1401,15 @@ the 👉 protocol above).
 - **Repeat the question:** if they ask to hear the current question again ("repeat that", "what
   was the question"), re-present the current pending 👉 question verbatim. Do not invent a new
   one, and do not advance.
-- **A host control the bootcamper raises — in any form:** whether they **ask about** auto mode,
-  auto-accept edits, permission mode, plan mode, fast mode, background tasks, `/compact`, `/loop` or
+- **A host control the bootcamper raises — in any form:** whether they **ask about** a mode, a
+  permission setting, a conversation command{{host.session_control_examples}} or
   any other setting belonging to their {{host.assistant}} session rather than to the bootcamp, **or tell you
   that a prompt for one appeared over the bootcamp**, answer in **one sentence** — it is their
   session setting, the bootcamp neither needs nor recommends a value — and then re-present the
   pending 👉 question verbatim (see below). Do not turn it into a gate, do not offer to change it for
   them, and do **not** claim the bootcamp can suppress or override a host control: the plugin ships
   skills, hooks and commands, none of which reach their interface. **Do not name a dismissal
-  affordance either** — not "Don't show again", not any other — because directing them to a control
+  affordance either**{{host.dismissal_control_example}} — because directing them to a control
   that silences a host prompt is directing them to operate a {{host.assistant}}-interface control, and the
   bootcamp asks them to operate none (INV-247).
 - **Ask-once:** ask each question only once. Do not re-ask a question the bootcamper already
