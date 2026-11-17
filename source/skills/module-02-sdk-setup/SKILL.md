@@ -826,12 +826,14 @@ For the `docker` path (Intel Mac, Python on macOS/Windows, or Windows without Sc
   base `senzing-bootcamp`, and append an entry to a `docker_containers` list in
   `config/bootcamp_progress.json` — at least its `name`, the `runtime` you actually used
   (`docker`, `podman`, or `container` for Apple's `container` CLI) and its `host_port`; also
-  `image` and `purpose` when handy. **Record the runtime truthfully**: the hooks stop and report each container with
+  `image` and `purpose` when handy. **Record the runtime truthfully**: the lifecycle scripts stop and report each container with
   the CLI named there, so a wrong value means a container is reported under a tool that never
-  started it. An entry with no `runtime` is treated as `docker`. The `SessionEnd` hook stops
-  recorded containers on exit (`<runtime> stop`, not remove) and `SessionStart` surfaces them on
-  resume so they can be restarted or regenerated. (The list key stays `docker_containers` for
-  compatibility with in-flight bootcamps, whatever runtime its entries name.)
+  started it. An entry with no `runtime` is treated as `docker`. Whether or not a hook backs it
+  on this assistant (`../bootcamp-onboarding/host-rules.md` says which safeguards you carry out
+  yourself), `session-end.py` stops recorded containers at close-out (`<runtime> stop`, not
+  remove) and `session-start.py` reports them on resume so they can be restarted or
+  regenerated. (The list key stays `docker_containers` for compatibility with in-flight
+  bootcamps, whatever runtime its entries name.)
 - **Install the chosen language's toolchain in the container.** Every program on this path is
   built and run inside the container, in the container-route form that
   `../bootcamp-onboarding/ground-rules.md` → "Building and running a program" gives; do not restate
@@ -878,8 +880,8 @@ For the `docker` path (Intel Mac, Python on macOS/Windows, or Windows without Sc
 **Naming a container the bootcamp creates.** This is the canonical statement of the rule; the
 container route above and Step 7's PostgreSQL Option 1 link here rather than restating it
 (INV-300). A fixed name such as `senzing-bootcamp` collides with the same name from another
-bootcamp project on this machine, and the lifecycle hooks find containers by exact name, so one
-project's `SessionEnd` would stop, and its `SessionStart` would report, the other's container.
+bootcamp project on this machine, and the lifecycle scripts find containers by exact name, so one
+project's close-out would stop, and its session start would report, the other's container.
 
 1. **Take the name from the helper; never choose one yourself.** From the project root, on the
    host, with the site's base name (`senzing-bootcamp` for the SDK container,
@@ -2199,7 +2201,8 @@ config with `sdk_guide(topic='configure', ...)` — never hand-construct
 2. Record the container for lifecycle tracking (INV-101): append it to `docker_containers` in
    `config/bootcamp_progress.json` — its `name` (`<pg-container>`), the `runtime` you actually used
    (`docker`, or `podman` / `container` if that is what started it), and `host_port`
-   (`<host_port>`) — so the SessionEnd hook stops it on exit and SessionStart offers to restart it.
+   (`<host_port>`) — so that, whether or not a hook backs it on this assistant, `session-end.py`
+   stops it at close-out and `session-start.py` offers to restart it.
    An entry with no `host_port` means `5432`, the only port earlier projects used. From here on,
    `<pg-runtime>` is that recorded `runtime` (INV-195).
 3. Wait until the server is ready (poll `<pg-runtime> exec <pg-container> pg_isready`).

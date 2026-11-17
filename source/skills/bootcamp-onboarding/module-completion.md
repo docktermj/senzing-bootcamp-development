@@ -272,7 +272,7 @@ Only then display the one-line confirmation: `Recap updated: {Name}.`
 ### 2d. Finalize the in-progress checkpoint
 
 During the module you kept an in-progress recap at `docs/progress/recap_checkpoint.md`
-(see `ground-rules.md` → "Progress and state"), and the plugin's durability hooks may
+(see `ground-rules.md` → "Progress and state"), and the bootcamp's fold scripts may
 have folded it into `docs/bootcamp_recap.md` as a `<!-- RECAP-CHECKPOINT:START -->` …
 `<!-- RECAP-CHECKPOINT:END -->` block. Now that the finalized `## {Name}` section is
 appended (2b), that block is superseded. Do two things:
@@ -282,8 +282,9 @@ appended (2b), that block is superseded. Do two things:
   recap clean and never rewrites a completed `## {Name}` section).
 - Clear `docs/progress/recap_checkpoint.md` (empty the file or delete it) so the next
   module starts a fresh checkpoint. Either is safe: `checkpoint-tick.py` lays a fresh
-  empty scaffold back down on the next turn if you delete it, and an emptied file is
-  treated as an unfilled scaffold — the fold hooks skip both rather than appending an
+  empty scaffold back down if you delete it (on the next turn where a hook runs it;
+  where none does, when you run it as `host-rules.md` says), and an emptied file is
+  treated as an unfilled scaffold — the fold skips both rather than appending an
   empty block to the recap.
 
 ### 2e. Save this module's B-roll entry
