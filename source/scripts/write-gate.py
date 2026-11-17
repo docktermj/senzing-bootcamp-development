@@ -70,6 +70,12 @@ SECRET_MSG = (
     "Write blocked: a possible hardcoded secret was detected. Use environment "
     "variables instead."
 )
+# Added to SECRET_MSG when an edit is blocked for a secret its new text does not hold:
+# "use environment variables" alone points away from the next step that works (#47).
+SECRET_REPLACED_MSG = (
+    " The possible secret is in the text being replaced, not in the new text. To take "
+    "it out of the file, write the whole file again without the secret."
+)
 
 # System temp / Downloads locations to block (outside-project writes only). Prefix
 # entries match the start of the normalized, lower-cased path; substring entries
@@ -428,12 +434,42 @@ if where == "outside":
 # Secrets: PEM private keys, AWS access-key IDs, and raw Senzing license payloads
 # (base64 blobs with the documented AQAAAD prefix). The long base64 tail keeps the
 # check off prose that merely mentions "AQAAAD" and off .lic file *paths*.
-if re.search(
-    r"BEGIN (?:RSA |EC |DSA |OPENSSH |PGP )?PRIVATE KEY"
-    r"|AKIA[0-9A-Z]{16}"
-    r"|AQAAAD[A-Za-z0-9+/=]{16,}",
-    data,
-):
-    block(SECRET_MSG)
+def holds_secret(data):
+    """True when `data` matches a secret pattern.
+
+    `tests/test_secret_patterns_are_shared.py` reads the `re.search(` call below out of
+    this file's text, so its shape and the name `data` stay as they are.
+    """
+    if re.search(
+        r"BEGIN (?:RSA |EC |DSA |OPENSSH |PGP )?PRIVATE KEY"
+        r"|AKIA[0-9A-Z]{16}"
+        r"|AQAAAD[A-Za-z0-9+/=]{16,}",
+        data,
+    ):
+        return True
+    return False
+
+
+def secret_is_only_replaced(payload):
+    """True for an edit whose new text holds no secret, when the payload does.
+
+    The edit is blocked either way, because the gate judges the whole payload. This only
+    decides whether the message adds where the secret is. A payload that does not parse
+    cannot tell old text from new, so it gets SECRET_MSG alone. Every assistant's edit
+    arrives as tool_name "Edit" with its new text in tool_input.new_string.
+    """
+    try:
+        parsed = json.loads(payload)
+    except ValueError:
+        return False
+    if not isinstance(parsed, dict) or parsed.get("tool_name") != "Edit":
+        return False
+    tool_input = parsed.get("tool_input")
+    new_text = tool_input.get("new_string") if isinstance(tool_input, dict) else None
+    return isinstance(new_text, str) and not holds_secret(new_text)
+
+
+if holds_secret(data):
+    block(SECRET_MSG + (SECRET_REPLACED_MSG if secret_is_only_replaced(data) else ""))
 
 sys.exit(0)
