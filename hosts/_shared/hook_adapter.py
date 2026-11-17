@@ -16,6 +16,12 @@ this is: its tool names, its result dialect, and the scripts each event runs.
 A hook must never break the assistant it runs in. Anything that goes wrong here ends
 quietly, allowing the action; set ``SENZING_BOOTCAMP_HOOK_DEBUG=1`` to see why on stderr.
 
+Nothing here depends on the encoding the console gives Python (a legacy code page on
+Windows). The payload is read as bytes and decoded as UTF-8. Each script is given ASCII JSON
+and its output is read as bytes, so its exit code is used even when that output is not valid
+UTF-8. Every JSON this writes is ASCII-escaped, and plain text and stderr are written as
+UTF-8 bytes.
+
 Standard library only.
 """
 
@@ -70,9 +76,26 @@ RESULT_KIND_KEYS = ("result_type", "resultType", "status")
 FAILED_KINDS = ("failure", "failed", "error", "rejected", "denied")
 
 
+def write_text(stream, text):
+    """Write ``text`` to ``stream`` as UTF-8 bytes, whatever encoding the stream has.
+
+    A Windows console gives ``sys.stdout`` and ``sys.stderr`` a legacy code page, which
+    cannot write some characters and writes others as bytes that are not valid UTF-8. A
+    character UTF-8 cannot encode (a lone surrogate) is written as a backslash escape. A
+    stream with no ``buffer`` (a text buffer a caller passed in) is given the text itself.
+    """
+    raw = getattr(stream, "buffer", None)
+    if raw is None:
+        stream.write(text)
+        return
+    stream.flush()
+    raw.write(text.encode("utf-8", errors="backslashreplace"))
+    raw.flush()
+
+
 def debug(message):
     if os.environ.get(DEBUG_ENV):
-        sys.stderr.write(f"bootcamp hook adapter: {message}\n")
+        write_text(sys.stderr, f"bootcamp hook adapter: {message}\n")
 
 
 def first(mapping, keys, kind=str):
@@ -246,7 +269,10 @@ def canonical_transcript(path, dialect):
     The scripts read a JSON-lines transcript of ``{"type": "user"|"assistant", "message":
     {"content": ...}}`` records. ``event-data`` transcripts carry the same content as
     ``{"type": "user.message"|"assistant.message", "data": {"content": ...}}`` events.
-    Returns ``(path, temporary)``; a temporary copy is the caller's to delete.
+    Returns ``(path, temporary)``; a temporary copy is the caller's to delete. The copy is
+    ASCII JSON, like every other JSON this adapter writes: a lone surrogate in a message
+    cannot be encoded as UTF-8, and failing on one here ended every event of the session
+    quietly, a block included.
     """
     if not path or dialect in (None, "canonical"):
         return path, False
@@ -271,7 +297,7 @@ def canonical_transcript(path, dialect):
         "w", encoding="utf-8", suffix=".jsonl", prefix="bootcamp-transcript-", delete=False)
     with handle:
         for record in records:
-            handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+            handle.write(json.dumps(record) + "\n")
     return handle.name, True
 
 
@@ -281,7 +307,9 @@ def final_message(path, dialect, wait_seconds=FINAL_MESSAGE_WAIT_SECONDS):
     Some assistants run the stop hook before the turn's last message is on disk, so a single
     read finds nothing and the closing-question check stays silent (seen in one assistant, where
     the same transcript read a moment later holds the message). This waits briefly for it.
-    Returns None when the dialect is not one this reads, or no message appears in time.
+    Returns None when the dialect is not one this reads, or no message appears in time. A
+    transcript that is not valid UTF-8 is unreadable, as ``canonical_transcript`` treats it:
+    ``UnicodeDecodeError`` is a ``ValueError``, not an ``OSError``.
     """
     if dialect != "event-data" or not path:
         return None
@@ -298,7 +326,7 @@ def final_message(path, dialect, wait_seconds=FINAL_MESSAGE_WAIT_SECONDS):
                         continue
                     if isinstance(event, dict):
                         events.append(event)
-        except OSError:
+        except (OSError, ValueError):
             events = []
         last_user = max((i for i, e in enumerate(events) if e.get("type") == "user.message"), default=-1)
         for event in events[last_user + 1:]:
@@ -397,24 +425,38 @@ class Result:
 
 
 def run_script(script, payload, project, environ, host):
-    return subprocess.run(
+    """Run one hook script with a canonical payload. Returns the completed process, its
+    ``stdout`` and ``stderr`` as text.
+
+    Bytes go in and bytes come out, so no locale and no console code page takes part. The
+    payload is ASCII JSON, which a script reads the same under any encoding. The output is
+    decoded here as UTF-8 with replacement characters: a strict decode raised on output
+    that was not valid UTF-8, and the script's exit code, a block included, was lost with
+    it.
+    """
+    completed = subprocess.run(
         [sys.executable, str(HERE / script)],
-        input=json.dumps(payload, ensure_ascii=False),
-        text=True,
-        encoding="utf-8",
+        input=json.dumps(payload).encode("ascii"),
         capture_output=True,
         cwd=str(project),
         env=dict(environ, SENZING_BOOTCAMP_HOST=host),
         timeout=SCRIPT_TIMEOUT_SECONDS,
         check=False,
     )
+    completed.stdout = completed.stdout.decode("utf-8", errors="replace")
+    completed.stderr = completed.stderr.decode("utf-8", errors="replace")
+    return completed
 
 
 # --- results in the assistant's dialect -------------------------------------------------
 
 
 def write_result(event, result, dialect, out, err):
-    """Write ``result`` the way the assistant reads it. Returns the exit code."""
+    """Write ``result`` the way the assistant reads it. Returns the exit code.
+
+    JSON is ASCII-escaped, and plain text and a denial reason are written as UTF-8 bytes
+    (``write_text``), so the bytes are the same whatever encoding ``out`` and ``err`` have.
+    """
     context = "\n\n".join(result.context)
     stopping = event == "stop"
 
@@ -427,7 +469,7 @@ def write_result(event, result, dialect, out, err):
             body = {"additionalContext": context}
         else:
             return 0
-        out.write(json.dumps(body, ensure_ascii=False) + "\n")
+        out.write(json.dumps(body) + "\n")
         return 0
 
     if dialect == "steps":  # always one JSON object, always exit 0
@@ -439,26 +481,26 @@ def write_result(event, result, dialect, out, err):
             body = {"injectSteps": [{"userMessage": context}]}
         else:
             body = {}
-        out.write(json.dumps(body, ensure_ascii=False) + "\n")
+        out.write(json.dumps(body) + "\n")
         return 0
 
     if dialect == "text":  # stdout is context, a non-zero exit blocks, a stop cannot be held
         if result.deny:
-            err.write(result.deny + "\n")
+            write_text(err, result.deny + "\n")
             return 2
         if context and not stopping:
-            out.write(context + "\n")
+            write_text(out, context + "\n")
         return 0
 
     # "canonical": the dialect the scripts themselves speak
     if result.deny:
-        err.write(result.deny + "\n")
+        write_text(err, result.deny + "\n")
         return 2
     if stopping and result.keep_going:
-        out.write(json.dumps({"decision": "block", "reason": result.keep_going}, ensure_ascii=False) + "\n")
+        out.write(json.dumps({"decision": "block", "reason": result.keep_going}) + "\n")
     elif context and not stopping:
         body = {"hookSpecificOutput": {"hookEventName": CANONICAL_EVENT[event], "additionalContext": context}}
-        out.write(json.dumps(body, ensure_ascii=False) + "\n")
+        out.write(json.dumps(body) + "\n")
     return 0
 
 

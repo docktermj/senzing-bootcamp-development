@@ -513,8 +513,9 @@ class TheReminderIsStatedOnce(unittest.TestCase):
 
     def test_negative_control_a_pasted_copy_is_caught(self):
         source = SESSION_START.read_text(encoding="utf-8")
-        mutant = source.replace("print(message)",
-                                'print(message + " Present the journey map.")', 1)
+        mutant = source.replace('write_utf8(sys.stdout, message + "\\n")',
+                                'write_utf8(sys.stdout, message + " Present the journey map.\\n")',
+                                1)
         self.assertNotEqual(source, mutant, "the mutation no longer applies")
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "session-start.py"

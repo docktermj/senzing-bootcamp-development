@@ -74,10 +74,28 @@ def bootcamp_active():
     return current_module() is not None
 
 
+def write_utf8(stream, text):
+    """Write ``text`` to ``stream`` as UTF-8 bytes, whatever encoding the stream has (#25).
+
+    A hook's plain-text output and its stderr are read as UTF-8, by the assistant or by
+    the hook adapter. A Windows console gives ``sys.stdout`` and ``sys.stderr`` a legacy
+    code page instead: it writes an em dash as a byte that is not valid UTF-8, and cannot
+    write some characters at all. A character UTF-8 cannot encode (a lone surrogate) is
+    written as a backslash escape, so this never raises on text. A stream with no
+    ``buffer`` (one a caller replaced with a text buffer) is given the text itself."""
+    raw = getattr(stream, "buffer", None)
+    if raw is None:
+        stream.write(text)
+        return
+    stream.flush()
+    raw.write(text.encode("utf-8", errors="backslashreplace"))
+    raw.flush()
+
+
 def _report(message):
     """Say what happened, on stderr. A silent no-op is the failure mode here
     (INV-111): the checkpoint went missing for ten modules with no signal."""
-    sys.stderr.write("recap-checkpoint: %s\n" % message)
+    write_utf8(sys.stderr, "recap-checkpoint: %s\n" % message)
 
 
 def current_module():

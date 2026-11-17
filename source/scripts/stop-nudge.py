@@ -57,7 +57,10 @@ originate a 👉 question (INV-247), so the reason tells the model to continue t
 next step that asks rather than add a question to a step that asks nothing.
 
 Cross-platform: invoked as a ``type: command`` hook whose ``command`` names the
-interpreter and this script, quoted (``python3 "<path>"``), per INV-052.
+interpreter and this script, quoted (``python3 "<path>"``), per INV-052. The payload is
+read as bytes and decoded as UTF-8, and the JSON on stdout is ASCII-escaped, so no console
+code page can break either (#25). A transcript that is not valid UTF-8 is unreadable, as a
+missing one is; a preferences file that is not valid UTF-8 still gives up its ASCII keys.
 """
 import json
 import os
@@ -116,10 +119,12 @@ def truthy(value):
 def pref_flag(key):
     """True if a top-level ``key: <truthy>`` entry is set in
     config/bootcamp_preferences.yaml. The YAML is scanned line-by-line so no
-    third-party parser is required (INV-052: python3-only)."""
+    third-party parser is required (INV-052: python3-only). A file that is not valid
+    UTF-8 (a name saved as cp1252, say) is read with replacement characters, so it
+    never raises and its ASCII keys, the opt-out among them, are still read (#25)."""
     prefs = os.path.join("config", "bootcamp_preferences.yaml")
     try:
-        with open(prefs, encoding="utf-8") as fh:
+        with open(prefs, encoding="utf-8", errors="replace") as fh:
             for line in fh:
                 stripped = line.strip()
                 if stripped.startswith("#") or ":" not in stripped:
@@ -156,7 +161,8 @@ def bootcamp_complete():
 
 def current_turn_records(transcript_path):
     """Return the transcript records produced since the last real user prompt (the
-    current turn), or None if the transcript cannot be read."""
+    current turn), or None if the transcript cannot be read. One that is not valid
+    UTF-8 cannot be: ``UnicodeDecodeError`` is a ``ValueError``, not an ``OSError`` (#25)."""
     records = []
     try:
         with open(transcript_path, encoding="utf-8") as fh:
@@ -168,7 +174,7 @@ def current_turn_records(transcript_path):
                     records.append(json.loads(line))
                 except ValueError:
                     continue
-    except OSError:
+    except (OSError, ValueError):
         return None
 
     # Find the last genuine user prompt; the current turn is everything after it.
@@ -230,7 +236,9 @@ def settled_final_text(records):
     return None
 
 
-data = sys.stdin.read()
+# Bytes, decoded as UTF-8: a text-mode read takes the console code page on Windows, where
+# it failed on a curly quote and misread a 👉 in last_assistant_message (#25).
+data = sys.stdin.buffer.read().decode("utf-8", errors="replace")
 try:
     payload = json.loads(data)
 except ValueError:
@@ -284,7 +292,8 @@ if not final_text.strip():
 # All gates passed: block once and ask for the single closing question. Gate 1
 # releases on the very next Stop, so this blocks at most one time. The reason makes
 # a false block harmless: the model checks its own last message and never repeats a
-# question it already asked.
+# question it already asked. The JSON is ASCII-escaped: the reason carries 👉, which a
+# console code page cannot encode, and a JSON reader sees the same text either way (#25).
 print(json.dumps({
     "decision": "block",
     "reason": (
@@ -300,5 +309,5 @@ print(json.dumps({
         "turn to yield, add exactly one closing question, prefixed with 👉 and "
         "bolded, inviting the next step. If the bootcamp is complete, add nothing."
     ),
-}, ensure_ascii=False))
+}))
 sys.exit(0)

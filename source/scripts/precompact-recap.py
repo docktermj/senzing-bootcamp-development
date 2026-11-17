@@ -9,7 +9,8 @@ narrative even though the session continues. When a bootcamp is active this hook
      docs/progress/recap_checkpoint.md current at each step.
 
 Non-blocking. Cross-platform: invoked as a ``type: command`` hook whose ``command`` names the
-interpreter and this script, quoted (``python3 "<path>"``), per INV-052.
+interpreter and this script, quoted (``python3 "<path>"``), per INV-052. The reminder is
+written to stdout as UTF-8 bytes, whatever encoding the console gives Python (#25).
 """
 import sys
 
@@ -17,10 +18,11 @@ import recap_checkpoint
 
 if recap_checkpoint.bootcamp_active():
     recap_checkpoint.fold_checkpoint()
-    print(
+    recap_checkpoint.write_utf8(
+        sys.stdout,
         "A Senzing bootcamp is in progress. Keep the current module's in-progress "
         "recap saved to docs/progress/recap_checkpoint.md (append-only, refreshed at "
-        "each step boundary) so no progress narrative is lost when context is summarized."
+        "each step boundary) so no progress narrative is lost when context is summarized.\n"
     )
 
 sys.exit(0)
