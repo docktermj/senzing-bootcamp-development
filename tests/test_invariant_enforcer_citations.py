@@ -948,7 +948,21 @@ NAMED_TEST = re.compile(r"tests/(test_[a-z0-9_]+\.py)")
 #: back. Re-derived by running the extractor, which found 349.
 #: 2026-11-16, second review of the day: INV-427 registered (audit, PR #3), enforced by one
 #: test that cites it back. Re-derived by running the extractor, which found 350.
-EXPECTED_PAIRS = 350
+#: 2026-11-16, third review of the day: INV-428 registered (issue #13), enforced by one test
+#: that cites it back. Re-derived by running the extractor, which found 351, the new pair
+#: present by name.
+#: Same review: INV-429 registered (issue #13), enforced by the same test, which cites it
+#: back. Re-derived by running the extractor, which found 352, the new pair present by name.
+#: Same review: INV-430 registered (issue #12), enforced by one test that cites it back.
+#: Re-derived by running the extractor, which found 353, the new pair present by name.
+#: Same review: INV-431 registered (issue #9), enforced by five tests that each cite it back.
+#: Re-derived by running the extractor, which found 358, the five new pairs present by name.
+#: Same review: INV-252's 2026-11-16 note (issue #11) applied; it names
+#: test_kiro_skills_say_where_they_are.py, which now cites INV-252 back. Re-derived by running
+#: the extractor, which found 359, the new pair present by name and none removed.
+#: Same review: INV-432 registered (issue #10), enforced by one test that cites it back.
+#: Re-derived by running the extractor, which found 360, the new pair present by name.
+EXPECTED_PAIRS = 360
 
 
 #: Adapted (one-repository migration, 2026-11-14): enforcers the register names that were not

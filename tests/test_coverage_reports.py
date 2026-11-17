@@ -29,6 +29,10 @@ Three properties, one per way it could rot:
 No phrase-level pattern (#438): its line reads are of the index lines of `specs/INVARIANTS.md`,
 which is outside the in-scope corpora, as #424 recorded (INV-346).
 
+Enforces **INV-431** (registered 2026-11-16): the audit and review tools read every directory
+the build takes package text from. This module holds its own tool's part of that rule on
+fixture trees; it cannot establish that a directory added later has joined the roots.
+
 Run:  python3 -m unittest discover -s tests
 """
 import importlib.util

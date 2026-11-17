@@ -34,6 +34,9 @@ Stdlib only; the maintainer script is loaded by path, never imported as a packag
 
 Source issue: #10 (the since-last-audit views cannot run in this repository).
 
+Enforces **INV-432** (registered 2026-11-16). It builds throwaway repositories, so it cannot
+establish that the commit the live ledger states is the right one to measure from.
+
 Run:  python3 -m unittest discover -s tests
 """
 import importlib.util

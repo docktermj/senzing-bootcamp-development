@@ -36,6 +36,403 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## auto-test-2026-11-17
+
+**Not a spec** — a dated record of an `/auto-test` run, **unattended**: the maintainer started
+it and was away. The MCP probe only; no walk was asked for, so none ran.
+
+- **Implemented:** 2026-11-17 (**0 BREAKING, 10 WATCH, 14 INFO; nothing fixed; nothing filed —
+  each needs the maintainer to triage it**)
+- **Files changed:** this record only. The baseline `mcp-snapshot.json` was not refreshed:
+  accepting a server change is the maintainer's decision.
+- **MCP re-check:** Senzing MCP server 1.46.1, 2026-11-17, by `mcp_probe.py` through
+  `autotest.py` at `bdd9d19`. `submit_feedback` and `download_resource` are blocked by flag.
+  Outcome: no value the bootcamp sends is rejected and the static contract in
+  `tests/test_mcp_call_contracts.py` holds; the server's prose has changed since the baseline.
+- **Summary:** No regression detected by the probe. No interaction invariant was checked, and
+  phase 3 with the maintainer is not yet done.
+  - **WATCH, server prose changed since the committed baseline, each to be re-read:** the
+    server `instructions` text; the descriptions of `find_examples`, `get_sdk_reference`,
+    `mapping_workflow`, `reporting_guide`, `sdk_guide` and `search_docs`; and the
+    `get_capabilities` response, whose `common_confabulations` feed `CONFABULATIONS`.
+    `dry-run-2026-11-17` findings 6 and 11 are two places where that prose moved under
+    shipped text.
+  - **WATCH, `silent-accept`, known since 2026-07-27:** `search_docs.category` accepts a
+    nonsense value without an error, so a typo returns wrongly scoped results. Server side.
+  - **WATCH, `contract-stale`:** `CONTRACT_VERIFIED_ON` is 2026-08-12, 97 days old against a
+    limit of 90. Re-verify and bump it.
+  - The full report is `~/senzing-autotest/reports/20261117-091143-terse.json`, outside this
+    repository.
+- **Invariants.** This record establishes no invariant and queues no block.
+- **Commit:** uncommitted
+
+## dry-run-2026-11-17
+
+**Not a spec** — a dated record of a dry run, phases 1 and 2, **unattended**: the maintainer
+started it and was away. Phase 3 was not run.
+
+- **Implemented:** 2026-11-17 (**18 findings recorded below; none fixed; none filed — each needs
+  the maintainer to file it; four upstream messages drafted, none sent**)
+- **Files changed:** this record only.
+- **MCP re-check:** Senzing MCP server `sz-mcp-coworker` 1.46.1, 2026-11-17, docs index built
+  2026-11-14. Tools called, read-only: `get_capabilities`, `search_docs`, `get_sdk_reference`,
+  `sdk_guide`, `find_examples`, `generate_scaffold`, `mapping_workflow` (synthetic labels, no
+  data), `explain_error_code`, `get_sample_data`, `analyze_record`, `reporting_guide` (no
+  content call). `submit_feedback` and `download_resource` were never called. Outcome by
+  finding below: two shipped claims are contradicted by the server, several rationales no
+  longer reproduce, and the calls the bootcamp makes are still accepted.
+- **Baseline.** Branch `1-docktermj-5` at `ffc5f4e`, tree clean, suite green at
+  `Ran 9601 tests`, `OK (skipped=13)`.
+- **Environment.** Present: the `senzing` package, `/opt/senzing/er/lib/libSz.so` (loads only
+  with `LD_LIBRARY_PATH` set, on this machine), `fpdf2` 2.8.5, `pdftoppm`, `docker`,
+  Google Chrome, `ffmpeg`. Absent: `imageio_ffmpeg`, `chromium`. No container was started.
+- **Phase 1, verified correct.** Every `action=`, `topic=`, `workflow=`, `platform=` and
+  `category=` literal in `source/` is valid on the server. `mapping_workflow` start and
+  advance, its enforcement notice, `sdk_guide` install, configure and load, `get_sample_data`,
+  `generate_scaffold` initialize, the why-key fields, and `explain_error_code` for 7426,
+  SENZ7221 and SENZ9000 are as the shipped text states. No `add_data_source` or `G2Engine`
+  appears in shipped text. `hosts/` holds no MCP call text.
+- **Phase 1, the dated negatives.** `coverage_reports.py negatives --server 1.46.1` lists 40
+  markers, all due; `unmarked` lists none. Re-asked: 1 false (finding 2), 26 hold, 7 hold in
+  part, 4 are stale beyond a wording drift (`ground-rules.md:629`, `phaseD-validation.md:504`,
+  `visualization-api-reference.md:516`, `phase2-data-mapping.md:876`), 2 were not re-asked
+  (`ground-rules.md:1056`, `:1083`). ⚠️ Every `search_docs` re-ask read the top 3 to 5 hits,
+  not the default 10, so a "holds" here is weaker than the marker's own check.
+- **Phase 2, verified correct.** All eleven Claude hook entries and every adapter event on the
+  four other assistants are silent outside a bootcamp. The write gate held on about 75 cases.
+  The fold hooks are idempotent. The recap PDF rendered with fpdf2 at 36 pages with 13 of 13
+  images, and its pages were looked at; a Latin name with accents renders, and a CJK name falls
+  back with a warning. The video, screenshot, discoveries and packaging scripts ran. With
+  `LD_LIBRARY_PATH` set, the real engine loaded four records into a scratch SQLite database and
+  the visualization server answered every endpoint on 127.0.0.1.
+- **Findings, most serious first. All open, none filed.** P1 is phase 1, P2 is phase 2.
+  1. **P2-F1. Three hooks and the adapter fail under a Windows legacy code page.** Simulated
+     with `PYTHONIOENCODING=cp1252`; not run on Windows. `write-gate.py:47`,
+     `stop-nudge.py:233` and `feedback-capture.py:52` read stdin as text, so a payload holding
+     a curly quote raises `UnicodeDecodeError`; the write gate then exits 1 where it should
+     block, and through the Copilot adapter the write is allowed. `stop-nudge.py:303` cannot
+     print 👉. `hosts/_shared/hook_adapter.py:402-404` loses the session-start context.
+     `checkpoint-tick.py:197` already reads bytes for this reason. Verdict: plugin.
+  2. **P1-F3. A shipped negative is false.** `module-02-sdk-setup/SKILL.md:1879-1884` says a
+     `search_docs` query for the record limit returns EULA prose with no figure. The top hit is
+     now the FAQ "What is the 500 record limit…". The routing to `sdk_guide` still works; the
+     stated reason does not. `tests/test_record_limit_negative_is_rescoped.py` and
+     `tests/test_prescribed_search_queries.py:712` pin the retired wording. Verdict: plugin.
+  3. **P1-F1. "Preview Release — Unsupported" is relayed as fact and the server no longer
+     carries it.** `module-02-sdk-setup/SKILL.md:676-682` (also `:671`, `:706`). The Scoop
+     bucket README came back in full with no such notice; for the Homebrew tap only the
+     prescribed query's top four hits were read.
+     owner-checked: `search_docs` is the corpus route for both READMEs and the one the text
+     names — the Scoop README returned whole, without the notice; `sdk_guide(topic='install')`
+     for `macos_arm` and `windows` carries no such wording. `tests/test_sdk_update_offer.py`
+     pins the retired wording. Verdict: plugin; the Homebrew half needs one more read.
+  4. **P2-F2. On the four non-Claude packages the feedback hook says the version is
+     "Unknown"**, and the packager records "unknown" on ChatGPT and Kiro.
+     `feedback-capture.py:39-43` and `package_bootcamp.py:377` look for a Claude manifest
+     path; `bootcamp_host.json` beside each script carries the version. Verdict: plugin.
+  5. **P1-F2. The server indexes the bootcamp's own repositories.**
+     `find_examples(query='multi-source')` returns only two bootcamp `CHANGELOG.md` files, and
+     a `search_docs` query ranks a bootcamp script first. No shipped text says a hit from a
+     bootcamp repository is not Senzing evidence. The marker at
+     `phaseC-multi-source.md:214` still holds; its rationale does not. Verdict: both.
+  6. **P1-F5. `get_sdk_reference(topic='flags', filter=<method>)` changed shape.** It returns
+     lines of text under group headers, with no `source_file`, and points at a `flag_details`
+     topic that no shipped file names. `phaseD-validation.md:492-495`,
+     `ground-rules.md:819-822`, `phase2b-discover.md:34-36`. Verdict: plugin.
+  7. **P1-F4. That compact list renders "depends on" and "member of" as `NAME = X`**, which
+     reads as a definition; `phase1-query-visualize.md:317-322` sends the guide there for the
+     opposite lesson. Verdict: both.
+  8. **P2-F3. After graduation, three hooks still treat the bootcamp as in progress.**
+     `checkpoint-tick.py:204`, `precompact-recap.py:18` and `session-end.py:21` test
+     `bootcamp_active()` and not `bootcamp_complete()`, so a later prompt recreates the recap
+     checkpoint. Verdict: plugin.
+  9. **P2-F4. PowerShell writes to a temp directory pass the write gate on Copilot.**
+     `hosts/copilot/host.json:68` maps `powershell` to the shell tool, and
+     `write-gate.py:180` and `:319` parse POSIX shell only. Verdict: plugin.
+  10. **P2-F5. The unprintable-name warning names the wrong file.**
+      `generate_recap_pdf.py:4688-4692` says to fix the name in the recap; only the preferences
+      file changes the certificate. Verdict: plugin.
+  11. **P1-F6. The mixed-type rationale is stale** (`phase2-data-mapping.md:595-602`): the
+      server no longer declares `record_type` as an enum and now says to send the dominant
+      type itself. The guidance is still right. Verdict: plugin.
+  12. **P2-F7. Three gaps in what the packager promises**: symlinked directories are left out
+      and not named (`package_bootcamp.py:247`); UTF-16 text is not scanned for secrets
+      (`:346`); and the `share` profile carries the feedback file and the recap checkpoint,
+      which the consent question does not name. Verdict: plugin; the third is a design call.
+  13. **P2-F6. The stop nudge prints a traceback on an undecodable transcript**
+      (`stop-nudge.py:171` catches `OSError` only). Verdict: plugin.
+  14. **P1-F7. A consequence the text calls observation-only is now documented**
+      (`phase2-data-mapping.md:865-873`). Verdict: plugin, low.
+  15. **P2-F8. In the stdlib PDF fallback the page-1 title and subtitle touch**
+      (`generate_recap_pdf.py:4074-4075`). Verdict: plugin, cosmetic.
+  16. **P2-F9. The write gate blocks an Edit that removes a secret**, with a message telling
+      the guide to do what it is doing (`write-gate.py:421-427`). Verdict: plugin, low.
+  17. **P1-F8. Two server tools disagree on the Las Vegas source count** (11 against 10). The
+      bootcamp hardcodes neither. Verdict: mcp-server.
+  18. **P1-F9. Two server documents disagree on the Java jar name** (`sz-sdk-java.jar` against
+      `sz-sdk.jar`). The bootcamp uses the second only. Verdict: mcp-server.
+  - **Stale wording, claim still true:** `module-02-sdk-setup/SKILL.md:1649` and `:2381`,
+    `module-05-data-quality-mapping/SKILL.md:97`, and two quotations of server text at
+    `phase2-data-mapping.md:190-191` and `:398` that the server has reworded.
+  - **Confirmed by execution from `production-readiness-audit-2026-11-17`:** its findings 3
+    (slash command in the session-start message), 17 (the adapter half) and 18.
+- **Upstream messages, drafted and not yet sent — each needs maintainer approval.** Four: on the flags list (finding 7), the indexed bootcamp repositories
+  (finding 5), the source count (finding 17) and the jar name (finding 18). Findings 5 and 7
+  are `both`, so their messages belong inside a GitHub issue; 17 and 18 are `mcp-server`.
+  Upstream: not yet sent — needs maintainer approval. The drafted text, as of server 1.46.1:
+  - **Flags list (finding 7).** "`get_sdk_reference(topic='flags', filter=<method>)` (tried
+    with export_json_entity_report, why_records, find_network_by_entity_id) returns one line
+    per flag, and the tool description says composites are shown as `NAME = A|B|C`. Several
+    lines use `=` for relationships that are not composites:
+    `SZ_INCLUDE_MATCH_KEY_DETAILS = SZ_ENTITY_INCLUDE_ALL_RELATIONS` (the row for that flag
+    says it 'is dependent on using one of' the relations flags) and
+    `SZ_ENTITY_INCLUDE_RECORD_JSON_DATA = SZ_RECORD_DEFAULT_FLAGS` (the row says 'Member of').
+    A reader takes these as definitions and may pass the dependent flag alone. The export
+    listing also carries `SZ_EXPORT_INCLUDE — (undocumented)` and `SZ_ENTITY — (undocumented)`,
+    which look like name prefixes. Suggest a distinct marker for 'requires' and 'member of'."
+  - **Indexed bootcamp repositories (finding 5).** "The example and docs corpus includes
+    Senzing bootcamp plugin repositories. `find_examples(query='multi-source')` returns only
+    two results, both CHANGELOG.md files from those repositories, one with provenance
+    'official'. `search_docs(query='NEED_REEVALUATION how entity final state')` ranks a
+    bootcamp helper script first. These are teaching-plugin housekeeping files, not Senzing SDK
+    examples, and a client that treats this server as its source of Senzing facts can be handed
+    its own text. Suggest excluding these repositories, or at least their changelogs and
+    non-SDK scripts."
+  - **Source count (finding 17).** "`get_capabilities` describes the las-vegas dataset as
+    '11 sources', while `get_sample_data(dataset='list')` names 10 and
+    `get_sample_data(dataset='las-vegas', source='list')` returns 'Found 10 sources'."
+  - **Jar name (finding 18).** "The anti-patterns article 'Ecosystem and Dependencies' shows
+    artifactId `sz-sdk-java` and `/opt/senzing/er/sdk/java/sz-sdk-java.jar`. The Java SDK
+    reference served by search_docs shows artifactId `sz-sdk` and
+    `${SENZING_PATH}/er/sdk/java/sz-sdk.jar`, and the sdk_guide install gotchas for macos_arm
+    and windows also use `sz-sdk.jar`. One of the two is wrong."
+- **Invariants.** This record establishes no invariant and queues no block.
+- **Coverage limits.** ⛔ Phase 3 was not run, so the conversational layer is untested.
+  Phase 1 did not reach `reporting_guide` content (Modules 6 and 7), `mapping_workflow` steps 4
+  to 8, several `sdk_guide` and `generate_scaffold` topics, or about 25 prescribed
+  `search_docs` queries. Phase 2 ran no real assistant, no Windows or macOS machine and no
+  container; findings 1 and 9 are simulations.
+- **Mistakes in this run.** Both phases were run by agents under a no-change limit, so no
+  finding was drafted here as it was found; this entry was written from their reports
+  afterwards, and nothing was re-run by the lead. Phase 1's re-asks were looser than the
+  markers in three ways its report lists. Phase 2's scratch loader was written from memory,
+  not from the server.
+- **Commit:** uncommitted
+
+## production-readiness-audit-2026-11-17
+
+**Not a spec** — a dated record of an audit run, **unattended**: the maintainer started it and
+was away. It follows the six issues merged on 2026-11-16 (#9 to #14) and the invariant review
+that registered INV-428 to INV-432.
+
+- **Implemented:** 2026-11-17 (**33 findings recorded below; none fixed; none filed — each needs
+  the maintainer to file it**)
+- **Files changed:** this record only.
+- **MCP re-check:** n/a (no Senzing fact). Every finding is internal consistency, and no
+  Senzing MCP tool was called. No absence claim is made about the Senzing MCP server, so
+  INV-213's `owner-checked:` clause is not owed. Findings that would rest on what an
+  assistant other than Claude does are listed as not checked, not asserted.
+- **Baseline.** Branch `1-docktermj-5` at `419de72`, tree clean.
+  - **Suite green:** `Ran 9601 tests`, `OK (skipped=13)`.
+  - `citations.py verify` clean at 430 invariants; `bootcamp_build check` OK;
+    `coverage_reports.py shipped` lists nothing; `pending_invariants.py list` shows
+    `pending: 0`, three held.
+  - `since --since-last-audit` resolved `dc79183` from `production-readiness-audit-2026-11-16`,
+    for the first time: 2 hard-rule lines added in the corpus, both cited at the line
+    (INV-427, INV-308), and 6 outside it, each cited (INV-431, INV-432, INV-308, INV-252).
+    `reverse-check` says `NOT CLEAN` for one reason: one of the two lines is on the maintainer
+    surface, which `per-rule` does not read.
+  - Reachable here: `fpdf2`, `pdftoppm`, `docker`, Google Chrome. Not found: `chromium`.
+- **Scope, chosen deliberately.** Not a full forward sweep. Three read-only sweeps, each
+  re-verified, and the lead read the most serious findings against the files again:
+  1. forward, over the invariants the six merges touched (INV-114, 247, 252, 426 to 432), in
+     all five built packages and the site pages;
+  2. the five packages side by side: file lists, rendered differences, cross-references,
+     install pages, hooks, and the layout documents;
+  3. what the previous audit skipped: the per-module outcome blocks (INV-028 to INV-050), 38 of
+     the 95 enumerating invariants, duplicated passages and the heaviest files.
+- **Verdict by property.**
+  - **Consistent:** no. Shared text states one assistant's facts in all five packages (A2-02,
+    A2-03, A2-04, A2-05, F2, F4).
+  - **Coherent:** mostly. Two wrong or stale citations (F5) and several drifted restatements
+    (A3-5, A3-6, A3-7).
+  - **Complete:** no. Four packages point at a file they do not carry (A2-01), and one step
+    assumes a choice no step makes (A3-2).
+  - **Concise:** not a verdict. One duplicated deliverable found (A3-10); file sizes are
+    unchanged in kind from the previous audit.
+- **Verified correct.**
+  - INV-028 to INV-049: every outcome is produced where the invariant, as amended, says; the
+    banners, journey map, stage table and module list are byte-identical across packages.
+  - INV-247: no non-Claude package names a Claude control or "Don't show again", apart from
+    F6; both rules read as complete sentences in all five.
+  - INV-428, INV-429, INV-426, INV-430, INV-432 and the INV-114 and INV-252 notes hold at
+    every site found. `options.skill_location_sources` matches `hosts/kiro/checks.json`.
+  - 38 enumerating invariants match what ships: INV-001, 016, 029, 047, 048, 057, 065, 074,
+    094, 099, 103, 107, 133, 137, 140, 141, 155, 157, 195, 248, 249, 255, 260, 281, 340, 342,
+    354, 367, 368, 375, 413, 419, 426, 431, and INV-050 except A3-3.
+  - Every other relative path, anchor and `file.md → "Heading"` reference resolves in all five
+    packages; each install page's verification note matches its `checks.json`.
+- **Findings, most serious first. All open, none filed.** Ids are the sweep's own: A2 is the
+  cross-package sweep, A3 the outcome and enumeration sweep, F the forward sweep.
+  1. **A2-01. Four packages send the guide to `hooks/README.md`, which they do not carry.**
+     `hosts/{copilot,kiro,chatgpt,gemini}/host.json:28` maps it to null, and
+     `source/skills/bootcamp-onboarding/SKILL.md:77` and `ground-rules.md:408`, `:886` and
+     `:1271` name it in every package. It is also the only place the stop-nudge off switch is
+     documented. The recorded reason for the drop does not cover the references.
+  2. **A2-02. Every package states one assistant's shell as the guide's shell.**
+     `ground-rules.md:1134-1135` says a guide-run block runs "with its Bash tool" in "the
+     guide's POSIX shell, which on Windows is Git Bash", and 55 stamps repeat it. The hosts'
+     own profiles name the shell tool `bash`, `execute_bash` and `run_command`, and Copilot's
+     lists a PowerShell tool. INV-163 registers the sentence with no assistant scope. What
+     shell each assistant uses on Windows was not checked.
+  3. **A2-03 and A3-1, found twice. Slash commands are named to bootcampers on four assistants
+     that ship no command.** 28 mentions per non-Claude package, among them the line
+     `graduation/SKILL.md:1943` pins verbatim ("Run `/package-bootcamp` anytime…"), which
+     INV-057's 2026-11-10 note pins in that form. Every `host.json` declares `command_prefix`
+     (`$` on ChatGPT) and nothing uses it. Whether typing the command works on those
+     assistants was not checked.
+  4. **A2-04. The fallback rules and the ground rules state opposite facts about the same
+     hooks**, in the four non-Claude packages. `source/hooks/fallbacks/*.md:3` says "Nothing
+     checks a write before it happens"; `ground-rules.md:860`, `:885`, `:1296-1302`, `:1540`
+     and `module-02-sdk-setup/SKILL.md:831` say a hook does. The fallback exists, so no
+     safeguard is missing. `module-05…/phase3-test-load.md:389` already uses a neutral form.
+  5. **F1. INV-427 is written for every file the guide is told to read, and ships at one
+     site.** The instruction is at `bootcamp-onboarding/SKILL.md:23` only. Each package has 17
+     other Markdown files over the 30,000 characters Kiro's read was cut at. If INV-427 means
+     the first-turn ground rules only, its first clause is wider than the rule.
+  6. **A3-2. Windows with Python has two install routes and no step chooses.**
+     `module-02-sdk-setup/SKILL.md:688-694` describes a container and WSL2; `:628` says
+     "Detect first, do not ask"; `:2711-2712` says "Do NOT offer alternatives".
+  7. **A2-05. The MCP failure message names `.mcp.json` in every package**
+     (`onboarding-flow.md:82`). Copilot and Kiro ship `mcp.json`; Gemini ships
+     `mcp_config.json`.
+  8. **F2. The Kiro package says both that Kiro gives no skill path and that "the harness
+     supplies that directory"** (`onboarding-flow.md:39-41`, shared text, against the note
+     appended to every Kiro skill).
+  9. **A3-3. INV-050 says `config/license.json` is "written in Module 4"** and that "Module 2
+     only reads the detected limit" (`specs/INVARIANTS.md:177`, `:239-243`). Module 2 Step 5a
+     saves it first (`module-02-sdk-setup/SKILL.md:1816`), as INV-244 and INV-295 require. The
+     invariant's text is what is stale; a dated note on INV-050 is owed and is not drafted as
+     a block here, because the wording is the maintainer's.
+  10. **A2-06. The Kiro install page's Python requirement contradicts the Kiro package**
+      (`hosts/kiro/fragments/site-before.html:2`: "Python 3.10 or later… `python3`, `python`
+      or `py`"; the package and the other four pages require `python3` on `PATH`).
+  11. **F3. The Kiro location note gives two instructions for one condition.** With
+      `KIRO_HOME` set and the bootcamp absent, one sentence sends the guide to `.kiro` in the
+      home directory and the next says "look only inside `powers/` in the Kiro home".
+  12. **F4. A Claude model ID is the example in all five packages**
+      (`feedback.md:191`: `"claude-opus-5-5[1m] / high"`). The build's foreign-term match is
+      case-sensitive, so lowercase `claude-` passes.
+  13. **A2-07. Two packages name an interface their install page does not cover**: VS Code on
+      Copilot (`hosts/copilot/fragments/interface-naming.md:9`) and the Codex CLI on ChatGPT
+      (`hosts/chatgpt/fragments/interface-naming.md:3,8`).
+  14. **A3-4. `selected_modules` is kept in two files and the text disagrees on which is
+      read** (`bootcamp-preparation/SKILL.md:440-442` against `ground-rules.md:1437-1438`).
+  15. **F5. Two citations name the wrong invariant.** `ground-rules.md:1486-1487` cites
+      INV-140 for "one level per row", which is INV-141; `:1518-1520` lists INV-141 among the
+      retired nudge rules, and it is in force.
+  16. **A2-08. The Kiro package calls itself "plugin" on 127 lines and "Power" on 3**;
+      `package_noun` is read by the certificate only.
+  17. **A2-09. The ChatGPT and Kiro hook matchers exclude tools their own adapter maps**
+      (`hosts/chatgpt/host.json:46-50` against `:77-83`). The assistants' real tool names were
+      not checked.
+  18. **A2-10. Kiro's hook-install disclosure describes three of the five hooks it installs**
+      (`hosts/kiro/files/skills/bootcamp-hooks-setup/SKILL.md:18-26`).
+  19. **F6. `visualization-api-reference.md:1627-1628` names a "background-task" mechanism** in
+      four packages whose control list is empty. It is a technical note, not a question.
+  20. **A3-5. The module-completion citation has drifted across module closes**: Modules 1 and
+      2 omit Step 0, and Module 5 puts the summary before the recap, against the fixed order
+      in `module-completion.md:4-11`.
+  21. **A3-6. Module 4 offers synthesized data beside free raw data at Step 2 and calls it a
+      last resort 900 lines later** (`module-04-data-collection/SKILL.md:868-876`, `:1786`).
+  22. **A3-7. "all four report one version"** (`onboarding-flow.md:52-54`) no longer describes
+      the feedback entry, which reads `bootcamp_host.json` first. The values agree.
+  23. **A3-8. Three stale lists or pointers in shipped text**: the readers of
+      `bootcamp_complete()`, the readers of the generated-scenario marker, and
+      `hooks/fallbacks/checkpoint-tick.md:4-5` naming the wrong file as the rule's owner.
+  24. **A2-11. One layout sentence is false in the Kiro package**
+      (`graduation/SKILL.md:786-787`).
+  25. **A2-12. Update and uninstall steps are uneven across the five install pages.**
+  26. **A2-13. The ChatGPT catalog and manifest give different categories**
+      (`tools/bootcamp_build/emit.py:602`, `hosts/chatgpt/host.json:61`).
+  27. **A2-14. The Copilot package breaks its own interface-naming rule** ("the Copilot app").
+  28. **A3-9. `source/scripts/package_bootcamp.py:150` names the wrong test file** for a pin
+      that `tests/test_quoted_sizes_say_what_they_missed.py` holds.
+  29. **A3-10. Module 5 step 18 writes two overlapping per-source documents**
+      (`phase2-data-mapping.md:1935`, `:1944-1946`).
+  30. **A2-15. Layout documents state things the build no longer does**: `tests/README.md`
+      names `propagate.sh`; `README.md` and `.claude/CLAUDE.md` list three markers where
+      `host:except` is a fourth; `README.md:31` says text outside a marker is copied
+      unchanged; `README.md:49` overstates what `check` fails on.
+  31. **A3-11. Maintainer skills cite guards that are not in this repository**:
+      `tests/test_specs_are_frozen.py`, `specs/FROZEN-MANIFEST.txt` and `propagate.sh`. The
+      absent tests are accepted in `NOT_CARRIED`; the invariant text that names them is not
+      queued for a note.
+  32. **F7. Maintainer text lags the tools.** `production-readiness-audit/SKILL.md:167-168`
+      and `:180-181` and `since --help` describe the range start without the fallback;
+      `duplication` and `size` print no roots line, which INV-431 asks of every view; and
+      `docs/model-selection.md:145-146` says every shipped skill has a row where it has 12.
+  33. **Carried from the previous run, still open and not filed:** the cited-or-deferred gate
+      checks outside-the-corpus lines against 110-character display text, on a path that does
+      not run on today's range.
+- **Invariants.** This record establishes no invariant and queues no block. Findings 9 and 31
+  each call for a dated note on a registered invariant, and finding 5 for a decision about
+  INV-427's scope; the wording of each is the maintainer's, so none is drafted here.
+- **Coverage limits.** ⛔ The conversational invariants (INV-005, INV-006, INV-008, INV-009,
+  INV-014, INV-251 and every gate ordering rule) were not tested; reading cannot establish
+  them and they need `dry-run` phase 3. No assistant was run. About 55 enumerating invariants
+  were not checked. `module-02-sdk-setup/SKILL.md`, `phase2-data-mapping.md`,
+  `phase1-query-visualize.md` and the Module 6 phases were searched, not read in full. What a
+  non-Claude assistant's tools, events, shell and commands really are was not checked.
+- **Mistakes in this run.** The sweeps were done by three agents and the lead re-read only
+  the first twelve findings against the files; the rest stand on the agents' own second
+  check. One sweep first reported two recorded items as new and withdrew them.
+- **Commit:** uncommitted
+
+## invariant-review-2026-11-16-loop
+
+**Not a spec** — the record of a third `/review-invariants` session on 2026-11-16, attended by
+the maintainer. It decided the eight blocks the unattended run of that day queued, from issues
+#9 to #14. A review record mints ids and adds citations; it establishes no invariant of its own.
+
+- **Implemented:** 2026-11-16
+- **Files changed:** `specs/INVARIANTS.md`, `specs/IMPLEMENTED.md`,
+  `tools/bootcamp_build/emit.py`,
+  `.claude/skills/production-readiness-audit/conformance.py`,
+  `tests/test_invariant_enforcer_citations.py`, `tests/test_model_docs_name_no_switch.py`,
+  `tests/test_partial_shipping_has_a_reason.py`, `tests/test_since_states_its_corpus.py`,
+  `tests/test_the_gate_sees_every_scanned_root.py`,
+  `tests/test_reverse_check_counts_what_it_cannot_test.py`,
+  `tests/test_sites_states_the_corpus_it_scanned.py`, `tests/test_coverage_reports.py`,
+  `tests/test_kiro_skills_say_where_they_are.py`,
+  `tests/test_since_last_audit_falls_back_to_the_ledgers_commit.py`
+- **MCP re-check:** n/a (no Senzing fact)
+- **Summary:** The maintainer gave a verdict on each block, one at a time, and every verdict
+  was to register or apply the drafted wording unchanged. Nothing was held, amended or split.
+  - **Registered, five new invariants:** INV-428 (an install page that names a model takes it
+    from `model_capable`, issue #13), INV-429 (no install page mentions an effort, issue #13),
+    INV-430 (a source file ships to every assistant or to none unless a reason is recorded,
+    issue #12), INV-431 (the audit and review tools read every directory the build takes
+    package text from, issue #9), INV-432 (the since-last-audit views take their range start
+    from the ledger alone, issue #10).
+  - **Applied, three dated notes:** on INV-114 (the derived table is a maintainer page no
+    package carries, issue #12), on INV-247 (the class of control binds on every assistant;
+    the list is one assistant's dated examples, issue #14), on INV-252 (a stated location
+    holds on every supported platform and its sources are recorded, issue #11).
+  - **One citation outside a block's site list.** INV-430 names a shipped artifact, and no
+    shipped text cited it, so `tests/test_every_invariant_is_cited_in_shipped_text.py` failed
+    after the registration. One sentence in the `placed_files()` docstring of
+    `tools/bootcamp_build/emit.py` now cites it.
+  - **Enforcer pairs.** `EXPECTED_PAIRS` went from 350 to 360, re-derived by running the
+    extractor after each decision: one pair each for INV-428, INV-429, INV-430 and INV-432,
+    five for INV-431, and one for the INV-252 note, whose test gained its back-citation.
+  - **What remains.** The queue is empty: `pending: 0`. Three blocks stay held, each with its
+    recorded revisit condition, and none of those conditions was met in this session.
+  - **Verification.** After each decision: `citations.py verify` clean, `pending_invariants.py
+    check` with no mismatch and no unresolved quote, and the full suite, last read as
+    `Ran 9601 tests`, `OK (skipped=13)`.
+- **Commit:** uncommitted
+
 ## the-install-page-and-the-welcome-name-different-models-on-chatgpt
 
 - **Implemented:** 2026-11-16 (issue #13)
@@ -117,7 +514,7 @@ line and holds no copy of it, so changing the line changes the range.
   INV-426 is not amended: it governs what the bootcamp asks and what a package ships, and an
   install page is neither.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** An install page that names a model names the welcome's model, from one value. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-428, registered by the maintainer 2026-11-16).** An install page that names a model names the welcome's model, from one value. The rule already shipping, quoted:
     - ⛔ **An install page that names a model takes the name from `{{host.model_capable}}`, the value the welcome is built from.** — in `tests/test_model_docs_name_no_switch.py`
     - ⛔ **The model ID in the Claude CLI start command is the one derived from Claude's `model_capable`.** — in `tests/test_model_docs_name_no_switch.py`
 
@@ -133,7 +530,7 @@ line and holds no copy of it, so changing the line changes the range.
 
   **INV-NNN** — Where an assistant's install page (`hosts/<assistant>/fragments/site-install.html`) names a model, it MUST take the name from `{{host.model_capable}}`, the value in `hosts/<assistant>/host.json` that the welcome's one-model statement is built from, and MUST NOT spell that value as literal text. An install page MAY name no model. The model ID in the Claude CLI start command is a second spelling of the same value: it stays literal in the fragment, it MUST equal the ID derived from Claude's `model_capable` (lowercase, each space and dot replaced by a hyphen, prefixed with `claude-`), and the command MUST read `claude --model <that ID> --permission-mode auto`. Enforced by `tests/test_model_docs_name_no_switch.py`, which reads each fragment as written and as the build renders it, holds the rendered page against the built welcome, and fails when the Claude or the ChatGPT page names no model, so that it cannot pass on five pages that name none (INV-265). It **cannot** establish that a `model_capable` value names a model the assistant offers, or that a model ID exists. It does not report a page that names a second model beside the token, or a model named without the word "model" and without the token. The model tips in `site-tips.html` stay literal text, held to the same value by the same module. (Source: `the-install-page-and-the-welcome-name-different-models-on-chatgpt`, GitHub issue #13, 2026-11-16.)
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** No install page sets or names an effort. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-429, registered by the maintainer 2026-11-16).** No install page sets or names an effort. The rule already shipping, quoted:
     - ⛔ **No install page mentions an effort.** — in `tests/test_model_docs_name_no_switch.py`
 
   Enforced by `tests/test_model_docs_name_no_switch.py`.
@@ -237,7 +634,7 @@ line and holds no copy of it, so changing the line changes the range.
   below covers both. The second proposes a dated clarification on INV-114, whose two paths now
   start from different roots.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** A source file that ships to some assistants and not others has a recorded reason, and no package carries the maintainer page. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-430, registered by the maintainer 2026-11-16).** A source file that ships to some assistants and not others has a recorded reason, and no package carries the maintainer page. The rule already shipping, quoted:
     - ⛔ **A source file that ships to some assistants and not others has a recorded reason.** — in `tests/test_partial_shipping_has_a_reason.py`
     - ⛔ **No package carries the maintainer page `model-selection.md`, and no package names `effort-mechanisms`.** — in `tests/test_partial_shipping_has_a_reason.py`
 
@@ -255,7 +652,7 @@ line and holds no copy of it, so changing the line changes the range.
 
   **INV-NNN** — A file under `source/` MUST ship to every assistant's package or to none, unless its path, or a directory above it, has an entry in the `PARTIAL` table of `tests/test_partial_shipping_has_a_reason.py` that states the reason in a sentence. A file ships to an assistant when that assistant's layout in `hosts/<assistant>/host.json` places it in the package. An entry MUST be added in the change that makes a path partial and removed in the change that ends that: an entry that names no source file, or that covers a file now shipping to every assistant or to none, is a defect. A page written for maintainers MUST NOT live under `source/`. `docs/model-selection.md` is such a page: no package may carry it, and no file in any package may name `docs/effort-mechanisms.md`, which no package carries. Enforced by `tests/test_partial_shipping_has_a_reason.py`, which takes the shipped sets from the build's `placed_files()` and holds them against all five built packages. It **cannot** establish that a recorded reason is true or still current, or recognize a maintainer page other than the one it names; it does not cover a file one package takes from `hosts/<assistant>/files/`, and it does not check that every path a package names resolves inside that package. (Source: `a-maintainer-page-ships-in-the-claude-package-only-and-links-to-a-file-no-package-carries`, GitHub issue #12, 2026-11-16.)
 
-- **PROPOSED AMENDMENT to INV-114 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-114 — applied 2026-11-16 by the maintainer.**
     - ⛔ **`ground-rules.md` is the authoritative copy of this table; the copy below is derived.** — in `docs/model-selection.md`
 
   INV-114 names two files. When it was written both shipped in the plugin, so both paths
@@ -345,7 +742,7 @@ line and holds no copy of it, so changing the line changes the range.
   bind the rule by kind and name the list as one assistant's examples. Until the maintainer
   applies it, only the test holds them.
 
-- **PROPOSED AMENDMENT to INV-247 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-247 — applied 2026-11-16 by the maintainer.**
     - ⛔ **Every 👉 question traces to a step in a shipped skill file — never originate one (INV-247).** — in `source/skills/bootcamp-onboarding/ground-rules.md`
     - ⛔ **never present a session- or host-level control as a bootcamp question** — in `source/skills/bootcamp-onboarding/ground-rules.md`
     - ⛔ **Do not name a dismissal affordance either** — in `source/skills/bootcamp-onboarding/ground-rules.md`
@@ -443,7 +840,7 @@ line and holds no copy of it, so changing the line changes the range.
   block below covers it. One existing hard-rule comment in `conformance.py` was reworded and
   cites INV-308 at the line.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** The audit and review tools read every directory the build takes package text from. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-431, registered by the maintainer 2026-11-16).** The audit and review tools read every directory the build takes package text from. The rule already shipping, quoted:
     - ⛔ **A directory the build takes package text from is read by the audit and review tools.** — in `.claude/skills/production-readiness-audit/conformance.py`
 
   The other two tools state their roots as constants and carry no rule line:
@@ -520,7 +917,7 @@ line and holds no copy of it, so changing the line changes the range.
   note on INV-252 that would bind the new wording and the record. Until the maintainer applies
   it, only the test holds them.
 
-- **PROPOSED AMENDMENT to INV-252 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-252 — applied 2026-11-16 by the maintainer.**
     - ⛔ **(INV-252) Read the files from there. If `KIRO_HOME` is set and the bootcamp is not under it, look under `.kiro` in the user's home directory next.** — in `hosts/kiro/host.json`
 
   INV-252, as amended on 2026-11-16, requires a package to state where a skill's files are when
@@ -592,7 +989,7 @@ line and holds no copy of it, so changing the line changes the range.
   lines in a docstring, which `since` reports as outside its corpus. One block below covers
   both.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** The since-last-audit views take their range start from the ledger alone, and say when it is the fallback. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-432, registered by the maintainer 2026-11-16).** The since-last-audit views take their range start from the ledger alone, and say when it is the fallback. The rule already shipping, quoted:
     - ⛔ **The fallback commit is stated in the ledger's opening section and read from there.** — in `.claude/skills/production-readiness-audit/conformance.py`
     - ⛔ **A fallback run prints a FALLBACK line on stdout, every time, zero included.** — in `.claude/skills/production-readiness-audit/conformance.py`
 

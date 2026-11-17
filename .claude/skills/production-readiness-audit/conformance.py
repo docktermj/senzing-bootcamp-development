@@ -13,7 +13,7 @@ the audit; it has run a grep.
     size           Goldilocks measurements for the concision pass
     all            every scan
 
-⛔ **A directory the build takes package text from is read by the audit and review tools.**
+⛔ **(INV-431) A directory the build takes package text from is read by the audit and review tools.**
 Today that is `source`, `hosts` and `tools/bootcamp_build/`, named in `SCAN_ROOTS` and
 `UNCOUNTED_RULE_HOMES` below. One added later joins those constants, and the roots of
 `pending_invariants.py sites` and of `coverage_reports.py`, in the change that adds it. The
@@ -458,7 +458,7 @@ FALLBACK_FIELD = re.compile(r"(?m)^[ \t]*-[ \t]+\*\*Fallback commit:\*\*[ \t]*(.
 def _ledger_fallback(repo, text, why):
     """The fallback range start the ledger states, or None after saying what was read (#10).
 
-    ⛔ **The fallback commit is stated in the ledger's opening section and read from there.**
+    ⛔ **(INV-432) The fallback commit is stated in the ledger's opening section and read from there.**
     This file holds no fallback hash of its own. A hash kept here would be a second copy of a
     fact the ledger owns, and the two would disagree the first time the maintainer moved one.
 
@@ -507,7 +507,7 @@ def last_audit_ref(repo):
     range starts at the fallback commit the ledger states (`_ledger_fallback`, #10). An entry
     that resolves always wins; the fallback is read only after every entry has been tried.
 
-    ⛔ **A fallback run prints a FALLBACK line on stdout, every time, zero included.** The line
+    ⛔ **(INV-432) A fallback run prints a FALLBACK line on stdout, every time, zero included.** The line
     names the commit and the entries that were skipped, so a range measured from the fallback is
     never read as one measured from an audit.
 

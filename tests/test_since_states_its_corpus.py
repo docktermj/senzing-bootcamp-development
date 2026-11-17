@@ -39,6 +39,10 @@ Source issues: #108, #9.
 
 Stdlib only; the producer is loaded by path (INV-108).
 
+Enforces **INV-431** (registered 2026-11-16): the audit and review tools read every directory
+the build takes package text from. This module holds its own tool's part of that rule on
+fixture trees; it cannot establish that a directory added later has joined the roots.
+
 Run:  python3 -m unittest discover -s tests
 """
 import importlib.util

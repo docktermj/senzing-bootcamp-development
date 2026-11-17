@@ -14,6 +14,9 @@ location rests on: an observed run, documentation, or nothing.
 This module reads the note's wording and the record's shape. It cannot establish where Kiro
 installs a Power on any platform; only a run on that platform can, and
 ``hosts/kiro/checks.json`` records the ones that happened.
+
+Enforces the note on **INV-252** dated 2026-11-16 (issue #11), applied by the maintainer that
+day: the stated location holds on every supported platform and its sources are recorded.
 """
 
 import json
