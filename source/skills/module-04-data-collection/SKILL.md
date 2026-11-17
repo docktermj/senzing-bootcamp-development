@@ -1151,7 +1151,7 @@ ls -lh data/raw/
 head -5 "<file_path>"
 ```
 
-Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
+Guide-run; unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
 **Checkpoint:** write step 3 to `config/bootcamp_progress.json`.
 

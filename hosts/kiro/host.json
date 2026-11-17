@@ -18,7 +18,9 @@
     "model_capable": "Opus 5.5",
     "skills_dir": "..",
     "session_control_examples": "",
-    "dismissal_control_example": ""
+    "dismissal_control_example": "",
+    "shell_tool": "execute_bash",
+    "scripts_dir_powershell": "$env:PLUGIN_ROOT/skills/bootcamp-onboarding/scripts"
   },
   "layout": {
     "skills": "skills",

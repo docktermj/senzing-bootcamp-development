@@ -18,7 +18,9 @@
     "model_capable": "GPT-5.6 Terra",
     "skills_dir": "..",
     "session_control_examples": "",
-    "dismissal_control_example": ""
+    "dismissal_control_example": "",
+    "shell_tool": "Bash",
+    "scripts_dir_powershell": "$env:PLUGIN_ROOT/scripts"
   },
   "layout": {
     "skills": "skills",

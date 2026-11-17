@@ -970,25 +970,26 @@ For example, System verification's `verify_pipeline` is `<dir>` = `src/system_ve
   cd '<project root>' && <call>
   ```
 
-  Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
+  Guide-run; unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
   `<project root>` is the absolute path of the directory the session started in, the working
-  directory the bootcamp treats as the project. It is written with forward slashes (`C:/Users/...`
-  in Git Bash) and single-quoted, with a `'` in the path written as `'\''`. `<call>` is the table's
-  Build or Run command, or a project-creation command below. On native Windows `<call>` is the
-  `powershell.exe` call the next bullet gives, unchanged: PowerShell inherits the directory, so its
-  relative dot-source of the env script resolves too. When the `cd` fails, `&&` stops the call, so
-  the command never runs from a drifted directory; report it as that step's build or run failure.
+  directory the bootcamp treats as the project. In a POSIX shell it is written with forward slashes
+  (`C:/Users/...` in Git Bash) and single-quoted, with a `'` in the path written as `'\''`. `<call>`
+  is the table's Build or Run command, or a project-creation command below. On native Windows
+  `<call>` is the `powershell.exe` call the next bullet gives, unchanged: PowerShell inherits the
+  directory, so its relative dot-source of the env script resolves too. When the `cd` fails, `&&`
+  stops the call, so the command never runs from a drifted directory; report it as that step's
+  build or run failure.
   On SDK setup's `docker` route the call takes no pin: `-w /app` already fixes its directory inside
   the container.
 - **On native Windows (not SDK setup's `docker` route), the guide runs every Build and Run command
-  itself, one call per command**, from its POSIX shell:
+  itself, one call per command**, which from a POSIX shell is:
 
   ```bash
   powershell.exe -NoProfile -Command '. .\src\scripts\senzing-env.ps1; <command>'
   ```
 
-  Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
+  Guide-run; unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
   `<command>` is the table's Build or Run command unchanged. The guide's shell cannot hold the
   `.ps1` script's environment, so each call dot-sources it again. The call is quoted and run as
@@ -1008,7 +1009,7 @@ For example, System verification's `verify_pipeline` is `<dir>` = `src/system_ve
   <runtime> exec -w /app <container> bash -c '. src/scripts/senzing-env.sh && <command>'
   ```
 
-  Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
+  Guide-run; unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
   `<command>` is the table's Build or Run command unchanged. `<runtime>` and `<container>` are the
   `runtime` and `name` of the SDK container's entry in `config/bootcamp_progress.json` →
@@ -1134,15 +1135,32 @@ PowerShell form — never a copied `&&`.
 **Guide-run and hand-run blocks.** This is the canonical statement of which command blocks need a
 PowerShell form; each guide-run site links here rather than restating it (INV-300).
 
-- **A guide-run block** is one the guide runs itself with its Bash tool. It runs in the guide's
-  POSIX shell, which on Windows is Git Bash, so it needs no PowerShell form, and the 5.1 limits
-  above (`&&`, inline `python -c`, heredocs) do not apply to it. No test runs it on Windows, so
-  it is followed by one line, in the same wording at every site, that links here and says so
-  (INV-163): "Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows:
-  no test runs it there."
+<!-- host:only claude -->
+- **A guide-run block** is one the guide runs itself with its `{{host.shell_tool}}` tool. It runs
+  in the guide's POSIX shell, which on Windows is Git Bash, so it needs no PowerShell form, and
+  the 5.1 limits above (`&&`, inline `python -c`, heredocs) do not apply to it. No test runs it
+  on Windows, so it is followed by one line, in the same wording at every site, that links here
+  and says so (INV-163): "Guide-run; unverified on Windows: no test runs it there."
+<!-- host:end -->
+<!-- host:except claude -->
+- **A guide-run block** is one the guide runs itself with its `{{host.shell_tool}}` tool. It runs
+  in whichever shell that tool provides, and which shell that is on Windows is unverified. The
+  block is written for a POSIX shell: in one it runs as written and needs no PowerShell form, and
+  the 5.1 limits above (`&&`, inline `python -c`, heredocs) do not apply to it. No test runs it
+  on Windows, so it is followed by one line, in the same wording at every site, that links here
+  and says so (INV-163): "Guide-run; unverified on Windows: no test runs it there."
+- **Where the guide's shell is PowerShell,** the guide translates a guide-run block to Windows
+  PowerShell 5.1 with the table of 5.1 syntax limits above, runs the translation, and treats the
+  result as unverified in that shell: no test runs a translated block. A translated block that
+  fails follows its own site's failure rule. What is already PowerShell needs no translation and
+  is run directly, as written: a PowerShell-only guide-run block, and the command that the
+  native-Windows Build and Run call quotes in "Building and running a program". The
+  `powershell.exe -NoProfile -Command …` call the next bullet gives, and its `'\''` quoting,
+  apply only from a POSIX shell. Blocks that share a variable still run in one call.
+<!-- host:end -->
 - **A PowerShell-only guide-run block** is a guide-run block written only in PowerShell, because
-  what it checks exists only on Windows (SDK setup's Scoop and `SUPPORTPATH` checks). The guide
-  runs it from its POSIX shell as one call, `powershell.exe -NoProfile -Command …`, with the block
+  what it checks exists only on Windows (SDK setup's Scoop and `SUPPORTPATH` checks). From a POSIX
+  shell the guide runs it as one call, `powershell.exe -NoProfile -Command …`, with the block
   as the command, single-quoted so that shell passes every `$` through unchanged (write a `'`
   inside it as `'\''`). `-NoProfile` keeps the Bootcamper's PowerShell profile out of the result.
   It runs in Windows PowerShell 5.1, so the rules above apply to it. Each call is a new

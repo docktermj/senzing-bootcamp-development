@@ -242,7 +242,7 @@ python3 "{{host.scripts_dir}}/generate_recap_pdf.py" --check
 # or, if {{host.plugin_root_var}} is unset: python3 {{host.scripts_fallback}}/generate_recap_pdf.py --check
 ```
 
-Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
+Guide-run; unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
 It reads `docs/bootcamp_recap.md` and writes no PDF. This is the same validator graduation runs,
 moved to where a finding still costs one correction instead of eleven.
@@ -380,7 +380,7 @@ python3 <helper> --html docs/visualizations/{name}.html --out-dir docs/visualiza
     --name {name} --single
 ```
 
-Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
+Guide-run; unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
 ⛔ **`--single`, not "no `--tabs`".** An omitted `--tabs` does not mean "no tabs", it means **all
 six** — so the helper requests six tabs the page does not have, skips each one and reports it
@@ -411,7 +411,7 @@ a short `{name}`):
        --name {name} --tabs graph,stats,matchkeys,features,overlap,probe
    ```
 
-   Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
+   Guide-run; unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
    Resolve `<helper>` as `{{host.scripts_dir}}/capture_screenshots.py` (command/hook
    context) or `{{host.scripts_relative}}/capture_screenshots.py` relative to a module skill. It tries several

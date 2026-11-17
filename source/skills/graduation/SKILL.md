@@ -693,7 +693,7 @@ python3 "{{host.scripts_dir}}/normalize_docs_markdown.py"
 # or, if {{host.plugin_root_var}} is unset: python3 {{host.scripts_fallback}}/normalize_docs_markdown.py
 ```
 
-Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
+Guide-run; unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
 It applies blank lines around headings (MD022), fenced blocks (MD031) and lists (MD032); a language
 on every fenced block (MD040); and `**Label:**` colon spacing (a space after the colon, none
@@ -750,7 +750,7 @@ should look professional). Install it **robustly**, never with a bare `pip`:
   data/temp/recap-venv/Scripts/python -m pip install fpdf2
   ```
 
-  Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it
+  Guide-run; unverified on Windows: no test runs it
   there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
   Then run the generator with **that venv's** Python (below) so it imports `fpdf2`.
@@ -779,7 +779,7 @@ data/temp/recap-venv/bin/python "{{host.scripts_dir}}/generate_recap_pdf.py"
 data/temp/recap-venv/Scripts/python "{{host.scripts_dir}}/generate_recap_pdf.py"
 ```
 
-Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it
+Guide-run; unverified on Windows: no test runs it
 there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
 If `{{host.plugin_root}}` is not set in the current context, resolve the script
@@ -790,7 +790,7 @@ relative to this skill's directory instead (this skill lives at
 python3 {{host.scripts_fallback}}/generate_recap_pdf.py
 ```
 
-Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
+Guide-run; unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
 The script reads `docs/bootcamp_recap.md` and writes `docs/bootcamp_recap.pdf`.
 
@@ -1154,7 +1154,7 @@ data/temp/recap-venv/Scripts/python -m pip install piper-tts
 data/temp/recap-venv/Scripts/python -m piper.download_voices en_US-ljspeech-high --data-dir data/temp/piper-voices
 ```
 
-Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it
+Guide-run; unverified on Windows: no test runs it
 there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
 When every step succeeds, **run `--check` and the render below with the venv's Python** from then on.
@@ -1184,7 +1184,7 @@ data/temp/recap-venv/bin/python "{{host.scripts_dir}}/generate_recap_video.py" -
 data/temp/recap-venv/bin/python "{{host.scripts_dir}}/generate_recap_video.py"
 ```
 
-Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
+Guide-run; unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
 ⛔ **(INV-340) Graduation never passes `--no-voice`, to `--check` or to the render.** The flag is an
 opt-out for tests and manual renders, and the renderer prints a `WARNING:` line whenever it is passed.
@@ -1247,7 +1247,7 @@ data/temp/recap-venv/Scripts/python -m pip install imageio-ffmpeg
 data/temp/recap-venv/Scripts/python "{{host.scripts_dir}}/generate_recap_video.py"
 ```
 
-Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it
+Guide-run; unverified on Windows: no test runs it
 there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
 On no, or when the venv or the install fails, skip the video and keep the storyboard.
@@ -1486,7 +1486,7 @@ python3 "{{host.scripts_dir}}/scan_uncopied_paths.py"
 # or, if {{host.plugin_root_var}} is unset: python3 {{host.scripts_fallback}}/scan_uncopied_paths.py
 ```
 
-Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
+Guide-run; unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
 It searches the text of every file under `production/src/`, in any language, for a
 project-relative path that exists in the project but not in `production/`, which is everything
@@ -1648,7 +1648,7 @@ python3 "{{host.scripts_dir}}/normalize_docs_markdown.py" --docs-dir production
 # or, if {{host.plugin_root_var}} is unset: python3 {{host.scripts_fallback}}/normalize_docs_markdown.py --docs-dir production
 ```
 
-Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
+Guide-run; unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
 It applies the same rules as in Step 1a and globs top-level `production/*.md` only, never
 recursing — so nothing under `production/src/`, `production/config/` or a copied `docs/` subtree is
@@ -1690,7 +1690,7 @@ python3 "{{host.scripts_dir}}/generate_document_pdf.py" \
 # or, if {{host.plugin_root_var}} is unset: python3 {{host.scripts_fallback}}/generate_document_pdf.py …
 ```
 
-Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
+Guide-run; unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
 ⛔ **Pass `--subtitle`.** The cover's subtitle defaults to the discoveries line, "What Senzing
 found in your data" — true of the discoveries document and wrong on either of these. It is the

@@ -353,7 +353,7 @@ Read `programming_language` from `config/bootcamp_preferences.yaml`:
     cp "$VIZ_SRC/vendor/d3.v7.min.js" data/temp/truthset-viz/vendor/
   ```
 
-  Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
+  Guide-run; unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
   The in-container `<viz-server-path>` is then `data/temp/truthset-viz/senzing_viz_server.py`. The
   copy lands in the mounted project, so the container sees it at `/app/data/temp/truthset-viz/` with
@@ -415,7 +415,7 @@ python3 <viz-server-path> \
   --no-serve
 ```
 
-Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
+Guide-run; unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
 ⛔ **Title it after this module, never after System Verification.** The Truth Set belongs to this
 module alone — System Verification uses synthetic records and does not visualize it (INV-082/INV-087)
@@ -461,7 +461,7 @@ python3 <viz-server-path> \
 VIZ_PID=$!
 ```
 
-Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
+Guide-run; unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
 ⛔ **Source the env on its own line. If the launch is written `A && B &`, `$!` is the subshell, not
 the server.** `&` binds to the whole `&&` list, so the shell backgrounds a subshell and the server
@@ -650,7 +650,7 @@ python3 "{{host.scripts_dir}}/capture_screenshots.py" \
   --name truthset_verification --tabs all --query "<a name present in the Truth Set>"
 ```
 
-Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
+Guide-run; unverified on Windows: no test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).
 
 ⛔ **(INV-122) "No headless capability" is a conclusion the helper reaches and reports, never one
 you reach first.** Enter the skip path on its **exit code**, never on an assumption that browser

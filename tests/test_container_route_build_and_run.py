@@ -86,9 +86,8 @@ RUNNING_ELSEWHERE = "## Running a file you just wrote, when the run happens some
 FORM = "<runtime> exec -w /app <container> bash -c '. src/scripts/senzing-env.sh && <command>'"
 #: Any statement of the wrapping, in either shell: what no other file may restate (INV-300).
 WRAPPING = re.compile(r"exec -w /app \S+ (?:ba)?sh -c '\. src/scripts/senzing-env\.sh")
-POINTER = ("Guide-run in the guide's POSIX shell (Git Bash on Windows); unverified on Windows: no "
-           "test runs it there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md"
-           "#guide-run-blocks)).")
+POINTER = ("Guide-run; unverified on Windows: no test runs it there "
+           "([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-blocks)).")
 #: The native-Windows form (#786), which the guide runs from Git Bash, one call per command.
 WINDOWS_FORM = "powershell.exe -NoProfile -Command '. .\\src\\scripts\\senzing-env.ps1; <command>'"
 WINDOWS_BULLET = "- **On native Windows (not SDK setup's `docker` route)"
