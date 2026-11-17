@@ -170,7 +170,7 @@ the run rather than from a figure written here, which is how the previous baseli
 - **`reverse-check --since-last-audit`** takes that set and asks, of each line, whether an
   invariant is cited **at it** — then prints a `VERDICT`. ⛔ **(INV-308) It says `clean` only when every
   added line was both tested and cited.** Lines it cannot test are counted and named as
-  `UNTESTED`, because `per-rule`'s corpus is the plugin alone while `since` reaches the
+  `UNTESTED`, because `per-rule` reads the plugin and the Markdown under `hosts/` while `since` also reaches the
   maintainer surface: the procedure this replaced compared those two spans silently and reported
   clean over 93 lines citing nothing (#80). ⚠️ A line it reports is a candidate — the other
   legitimate state is a `DEFERRED INVARIANT` block naming the rule, which lives in the ledger
@@ -250,7 +250,7 @@ removing it silently breaks every citation that resolved to it.
    ```
 
    `both` includes **`shipped`** — invariants that name a shipped artifact and that no file
-   under `source/` cites. Read it alongside `conformance.py rules` in Step 3: the two are the
+   under `source/`, `hosts/` or `tools/bootcamp_build/` cites. Read it alongside `conformance.py rules` in Step 3: the two are the
    same contract from opposite ends, and `rules` alone cannot see a rule that is registered,
    guarded by a test, and named at no step (the INV-212 case).
 

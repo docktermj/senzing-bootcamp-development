@@ -49,7 +49,8 @@ is not buried under legitimate entries:
     ``specs/``.
 
 ``unmarked``
-    The complement of ``negatives``: dated absence claims in **shipped plugin prose** that carry
+    The complement of ``negatives``: dated absence claims in **shipped prose** — Markdown under
+    ``PROSE_ROOTS``, the plugin and each assistant's own text under ``hosts/`` — that carry
     no marker. ``negatives`` can only list what is already tagged, so an unmarked negative is
     invisible to it by construction — and nothing else looks either.
     ``tests/test_dated_negatives_are_marked.py`` scans ``tests/*.py`` assertion lines, and
@@ -124,7 +125,13 @@ NEGATIVE_OPT_OUT = "MCP-NEGATIVE-SCAN: ignore-file"
 #: spec body is in the frozen archive (INV-307) and is never re-verified, so its negatives are
 #: history, and an `IMPLEMENTED.md` entry's `MCP re-check:` field is a point-in-time record of
 #: the check its run made.
-NEGATIVE_ROOTS = ("source", "tests", os.path.join(".claude", "skills"), "docs")
+#:
+#: `hosts` joined at #9: each assistant's own package text lives there and ships as `source/`
+#: does, so a marker written in it is a live claim, and until #9 it was on no worklist.
+NEGATIVE_ROOTS = ("source", "tests", os.path.join(".claude", "skills"), "docs", "hosts")
+#: The file types read under those roots. Named once, so the scan and the corpus line the
+#: report prints cannot disagree about it.
+NEGATIVE_SUFFIXES = (".md", ".py")
 #: `specs/DECLINED.md` is the one exception, and it is a file rather than a root so that
 #: including it does not open the rest of `specs/`. A declined spec is never implemented, and
 #: the frozen archive (INV-307) is what justifies excluding the rest of `specs/`: its spec
@@ -137,10 +144,11 @@ NEGATIVE_ROOTS = ("source", "tests", os.path.join(".claude", "skills"), "docs")
 #: looking evidenced — which is what happened on 2026-08-13 (`specs/DECLINED.md`'s
 #: `no-route-for-bootcampers-who-cannot-add-an-mcp-server` note).
 NEGATIVE_EXTRA_FILES = (os.path.join("specs", "DECLINED.md"),)
-#: Where shipped prose lives, for the `unmarked` report. Only the plugin: a spec or a test may
+#: Where shipped prose lives, for the `unmarked` report. Only what ships: a spec or a test may
 #: discuss an absence freely, and both have their own mechanisms (the INV-307 freeze, INV-217,
-#: the assertion-line guard).
-PROSE_ROOT = os.path.join("source")
+#: the assertion-line guard). `hosts` joined at #9, because an assistant's fragments and the
+#: files copied into its package are shipped prose as much as the plugin's are.
+PROSE_ROOTS = ("source", "hosts")
 #: The 13 MCP tools. Restated here rather than imported from a test, because this script is the
 #: dependency and not the dependent — `tests/test_declined_ledger.py` imports its grammar FROM here.
 MCP_TOOLS = (
@@ -342,6 +350,28 @@ TEXT_SUFFIXES = frozenset(
     (".md", ".py", ".json", ".yaml", ".yml", ".sh", ".ps1", ".txt", ".js", ".html", ".css")
 )
 
+#: Where a citation counts as shipped, for the `shipped` report: the plugin and the host-side
+#: inputs the build turns into package text (#9). An assistant's fragment or `host.json`, or a
+#: note the build tool appends from its own source, reaches a bootcamper as `source/` does,
+#: so an invariant cited only there is cited in shipped text. The inputs are read, never a
+#: built package: a citation has to be written in a source line.
+SHIPPED_ROOTS = ("source", "hosts", os.path.join("tools", "bootcamp_build"))
+
+
+def _walk_roots(repo, roots):
+    """`os.walk` over each root in turn. A root that is not there yields nothing."""
+    for root in roots:
+        for step in os.walk(os.path.join(repo, root)):
+            yield step
+
+
+def _named_roots(roots, last="or"):
+    """`a/, b/ or c/` — a root list as a report prints it, read from the constant it scans."""
+    names = ["%s/" % root.replace(os.sep, "/") for root in roots]
+    if len(names) < 2:
+        return "".join(names)
+    return "%s %s %s" % (", ".join(names[:-1]), last, names[-1])
+
 
 def _index_groups(inv_txt):
     """{group name: {INV ids}} from `### Index by subject`, or {} when absent."""
@@ -363,7 +393,7 @@ def find_uncited_in_shipped(repo):
 
     Three filters, and the second two are what make the output worth reading:
 
-    1. Not cited by any file under `source/`.
+    1. Not cited by any text file under `SHIPPED_ROOTS`.
     2. Not in the `INVARIANTS.md` index group that binds the development environment — those
        are *supposed* to be absent from shipped text, and flagging them trains the reader to
        skip the whole report.
@@ -387,9 +417,8 @@ def find_uncited_in_shipped(repo):
 
     # Text only: `source/` also carries the certificate PDF and screenshot assets, and
     # `_read` raises UnicodeDecodeError on them. A citation can only live in text anyway.
-    plugins = os.path.join(repo, "source")
     cited = set()
-    for root, _dirs, files in os.walk(plugins):
+    for root, _dirs, files in _walk_roots(repo, SHIPPED_ROOTS):
         for name in files:
             if os.path.splitext(name)[1].lower() not in TEXT_SUFFIXES:
                 continue
@@ -424,7 +453,10 @@ def find_uncited_in_shipped(repo):
 def report_shipped(repo):
     """Invariants that bind a shipped artifact and that no shipped file cites."""
     hits, ungrouped = find_uncited_in_shipped(repo)
-    print("== Invariants naming a shipped artifact that NO file under source/ cites ==")
+    # The roots are in the heading, so every run names what it read, a run with no hit
+    # included (#9). Read from the constant the scan walks, never restated.
+    print("== Invariants naming a shipped artifact that NO file under %s cites =="
+          % _named_roots(SHIPPED_ROOTS))
     print("The mirror of the `invariants` report, which looks at tests/ only. A rule that")
     print("names a file, module or step must be reachable AT that step (INV-183); one that")
     print("is cited nowhere in shipped text is a rule the guide cannot look up.")
@@ -543,7 +575,7 @@ def _scan_files(repo):
         for dirpath, dirnames, filenames in os.walk(base):
             dirnames[:] = sorted(d for d in dirnames if d not in SKIP_DIRS)
             for name in sorted(filenames):
-                if name.endswith((".md", ".py")):
+                if name.endswith(NEGATIVE_SUFFIXES):
                     yield os.path.join(dirpath, name)
     for rel in NEGATIVE_EXTRA_FILES:                   # named files, not roots — see above
         path = os.path.join(repo, rel)
@@ -891,9 +923,8 @@ def _prose_units(text):
 
 def find_unmarked_negatives(repo):
     """[(date, relpath, lineno, phrase, excerpt)] for dated tool-absence prose with no marker."""
-    base = os.path.join(repo, PROSE_ROOT)
     found = []
-    for dirpath, dirnames, filenames in os.walk(base):
+    for dirpath, dirnames, filenames in _walk_roots(repo, PROSE_ROOTS):
         dirnames[:] = sorted(d for d in dirnames if d not in SKIP_DIRS)
         for name in sorted(filenames):
             if not name.endswith(".md"):
@@ -937,6 +968,10 @@ def report_unmarked(repo):
     print("behavior rather than a live claim. The date is what separates the two: undated prose")
     print("is not re-checkable, so it is not reported. Vocabulary is a phrase list and evadable")
     print("by paraphrase — a miss is weak evidence, a hit is worth reading.")
+    print()
+    # Printed on every run, the clean one included (#9): "none" is a statement about these
+    # roots and no others.
+    print("CORPUS: %s — `.md` files only." % _named_roots(PROSE_ROOTS, last="and"))
     print()
     if not found:
         print("  (none — every dated tool-absence claim in shipped prose carries a marker)")
@@ -997,6 +1032,13 @@ def report_negatives(repo, current_server=None):
     print("reaches an invariant looking reviewed (INV-194). The `owner:` line below is the")
     print("route the claim actually rests on; if it is where the fact lives, the negative")
     print("is about ROUTING and the reader should be sent there instead.")
+    print()
+    # Printed on every run, before any branch that returns early (#9): a worklist with no
+    # marker from a root has to show that the root was read.
+    print("CORPUS: %s — %s files only — plus the file %s."
+          % (_named_roots(NEGATIVE_ROOTS, last="and"),
+             " and ".join("`%s`" % suffix for suffix in NEGATIVE_SUFFIXES),
+             ", ".join(rel.replace(os.sep, "/") for rel in NEGATIVE_EXTRA_FILES)))
     print()
     malformed = find_malformed_negatives(repo)
     if malformed:

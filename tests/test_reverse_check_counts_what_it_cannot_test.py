@@ -47,12 +47,21 @@ check, is still asserted, and the stub was still asserted not to carry the broke
 removed the stub, so that assertion now reads the loop's repo overlay,
 `.claude/skill-overlays/unattended-issue-loop.md`.
 
+⚠️ **Dated note (#9): `per-rule` reads the host-side Markdown too.** The first paragraph is
+the history of the defect. Since #9 `rules` and `per-rule` read Markdown under `hosts/` as well
+as the plugin, through one function, `rule_markdown()`, and this view tests against that same
+call. So a rule added to a Markdown file under `hosts/` is TESTED, and the maintainer surface
+is what remains UNTESTED. `HostSideMarkdownIsInTheTestedCorpus` pins both halves.
+
 Built on throwaway git repositories: this repository's own history cannot produce a range with
 an uncited plugin rule, an untested maintainer-surface rule and a clean range on demand.
 
 Stdlib only; the maintainer script is loaded by path, never imported as a package (INV-108).
 
-Source issue: #80.
+No phrase-level pattern (#9): its line reads are of `conformance.py`'s stdout, where the unit is
+the report line the view prints, and of no Markdown prose.
+
+Source issues: #80, #9.
 
 Run:  python3 -m unittest discover -s tests
 """
@@ -80,7 +89,13 @@ def git(repo, *args):
     return done.stdout.strip()
 
 
-def build(tmp, plugin_lines="", surface_lines=""):
+#: Where the fixture's host-side rule goes: a Markdown fragment, the shape `hosts/` holds.
+HOST_FRAGMENT = "hosts/demo/fragments/note.md"
+#: A change that adds no hard rule, for a range that has to exist and report nothing.
+PROSE = "Plain prose that states no hard rule.\n"
+
+
+def build(tmp, plugin_lines="", surface_lines="", host_lines=""):
     """A repo with one commit to diff against, then the given rules added on top."""
     repo = Path(tmp)
     git(repo, "init", "--quiet", "--initial-branch", "main")
@@ -100,6 +115,10 @@ def build(tmp, plugin_lines="", surface_lines=""):
         surface = repo / ".claude" / "skills" / "demo"
         surface.mkdir(parents=True)
         (surface / "SKILL.md").write_text("# demo skill\n\n" + surface_lines, encoding="utf-8")
+    if host_lines:
+        fragment = repo / HOST_FRAGMENT
+        fragment.parent.mkdir(parents=True)
+        fragment.write_text("# demo fragment\n\n" + host_lines, encoding="utf-8")
     git(repo, "add", "-A")
     git(repo, "commit", "--quiet", "-m", "feat: the rules under test")
     return repo, base
@@ -111,6 +130,16 @@ def check(repo, base):
         capture_output=True, text=True, cwd=str(repo))
     if done.returncode != 0:
         raise AssertionError("reverse-check exited %d: %s" % (done.returncode, done.stderr))
+    return done.stdout
+
+
+def view(repo, *args):
+    """A whole-corpus view (`rules`, `per-rule`) run against the fixture repository."""
+    done = subprocess.run(
+        [sys.executable, str(CONFORMANCE), "--repo", str(repo)] + list(args),
+        capture_output=True, text=True, cwd=str(repo))
+    if done.returncode != 0:
+        raise AssertionError("%s exited %d: %s" % (args, done.returncode, done.stderr))
     return done.stdout
 
 
@@ -278,17 +307,130 @@ class TheCorporaAreReadFromTheViewsThemselves(unittest.TestCase):
             shutil.rmtree(tmp, ignore_errors=True)
 
     def test_the_view_does_not_restate_the_corpus_as_a_literal(self):
-        """⛔ A second spelling of the corpus is the defect this view reports, one level up."""
+        """⛔ A second spelling of the corpus is the defect this view reports, one level up.
+
+        Re-anchored at #9: the call `per-rule` makes is `rule_markdown(repo, plugin)` now that
+        its corpus spans two roots, so that is the call this view has to make too. Both bodies
+        are read, where the earlier form read this view's alone and took `per-rule`'s on trust.
+        """
         src = CONFORMANCE.read_text(encoding="utf-8")
         body = src[src.index("def cmd_reverse_check"):src.index("def cmd_duplication")]
+        per_rule = src[src.index("def cmd_per_rule"):src.index("def added_rule_lines")]
+        call = "rule_markdown(repo, plugin)"
         self.assertIn(
-            "shipped_markdown(plugin)", body,
+            call, per_rule,
+            "`per-rule` no longer reads its corpus through %s, so the assertion below would "
+            "compare the reverse check with a call nothing else makes" % call)
+        self.assertIn(
+            call, body,
             "the reverse check no longer derives the tested corpus from the same call `per-rule` "
             "makes; if it now carries its own path literal, the two can disagree silently")
-        self.assertNotIn(
-            '"source"', body,
-            "the reverse check hardcodes the corpus path. It must come from `paths()`, or this "
-            "view and the view it decides about can drift apart")
+        for literal in ('"source"', '"hosts"'):
+            with self.subTest(literal=literal):
+                self.assertNotIn(
+                    literal, body,
+                    "the reverse check hardcodes a corpus path. It must come from the function "
+                    "`per-rule` reads, or this view and the view it decides about can drift "
+                    "apart")
+
+
+@unittest.skipUnless(shutil.which("git"), "git is required to build the fixture repository")
+class HostSideMarkdownIsInTheTestedCorpus(unittest.TestCase):
+    """#9 — `rules` and `per-rule` read Markdown under `hosts/`, so this view can test it."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp(prefix="reverse-check-")
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_an_uncited_host_rule_is_tested_not_untested(self):
+        repo, base = build(self.tmp, host_lines=UNCITED)
+        out = check(repo, base)
+        self.assertRegex(out, r"TESTED\s+1 line\(s\)",
+                         "a hard rule added to a Markdown file under `hosts/` was not "
+                         "tested:\n%s" % out)
+        self.assertRegex(out, r"UNTESTED 0 line\(s\)",
+                         "a rule under `hosts/` was counted as untested, as it was while "
+                         "`per-rule` read the plugin alone:\n%s" % out)
+        self.assertRegex(out, r"UNCITED %s:\d+" % HOST_FRAGMENT,
+                         "the uncited host rule is not named with its file and line:\n%s" % out)
+        self.assertIn("VERDICT: NOT CLEAN", out, out)
+
+    def test_a_cited_host_rule_leaves_the_run_clean(self):
+        """The control for the test above: tested and cited is the one clean state."""
+        repo, base = build(self.tmp, host_lines=CITED)
+        out = check(repo, base)
+        self.assertRegex(out, r"TESTED\s+1 line\(s\)[^\n]*1 cited at the line, 0 NOT cited")
+        self.assertIn("VERDICT: clean", out, out)
+
+    def test_the_maintainer_surface_is_still_untested_beside_it(self):
+        """Widening to `hosts/` did not widen to the surface `per-rule` leaves out."""
+        repo, base = build(self.tmp, host_lines=CITED, surface_lines=CITED)
+        out = check(repo, base)
+        self.assertRegex(out, r"TESTED\s+1 line\(s\)")
+        self.assertRegex(out, r"UNTESTED 1 line\(s\)")
+        untested = next(line for line in out.splitlines() if "UNTESTED" in line)
+        self.assertNotIn("hosts", untested,
+                         "`hosts` is named among the roots this view cannot test:\n%s" % out)
+
+    def test_the_tested_corpus_names_both_roots_when_nothing_was_added(self):
+        """A zero: the roots are named on a run that found nothing under them."""
+        repo, base = build(self.tmp, plugin_lines=PROSE)
+        out = check(repo, base)
+        tested = next(line for line in out.splitlines() if "TESTED" in line)
+        self.assertRegex(tested, r"TESTED\s+0 line\(s\) in source, hosts\b", out)
+
+    def test_per_rule_and_rules_list_a_host_rule(self):
+        repo, _base = build(self.tmp, host_lines=UNCITED)
+        for name in ("per-rule", "rules"):
+            with self.subTest(view=name):
+                out = view(repo, name)
+                self.assertIn(
+                    HOST_FRAGMENT, out,
+                    "`%s` does not list the file under `hosts/` that holds a hard rule:\n%s"
+                    % (name, out))
+                self.assertIn("Never ship a rule that cites nothing at its own line", out)
+                self.assertRegex(out, r"\n   1 hard-rule lines",
+                                 "the host rule is not in `%s`'s total:\n%s" % (name, out))
+
+    def test_a_rule_in_a_non_markdown_host_file_is_not_listed(self):
+        """The whole-corpus views read Markdown only, under `hosts/` as under `source/`."""
+        repo, _base = build(self.tmp, plugin_lines=PROSE)
+        (repo / "hosts" / "demo").mkdir(parents=True)
+        (repo / "hosts" / "demo" / "host.json").write_text(
+            '{"note": "%s"}\n' % UNCITED.strip(), encoding="utf-8")
+        for name in ("per-rule", "rules"):
+            with self.subTest(view=name):
+                out = view(repo, name)
+                self.assertNotIn("host.json", out)
+                self.assertRegex(out, r"\n   0 hard-rule lines")
+
+    def test_both_views_state_what_they_read_and_what_they_did_not(self):
+        """On a run that finds nothing under `hosts/`, and on one where `hosts/` is absent."""
+        with_hosts, _base = build(self.tmp, host_lines=PROSE)
+        bare = tempfile.mkdtemp(prefix="reverse-check-")
+        self.addCleanup(shutil.rmtree, bare, ignore_errors=True)
+        without_hosts, _base = build(bare, plugin_lines=PROSE)
+        for repo, count in ((with_hosts, 1), (without_hosts, 0)):
+            for name in ("per-rule", "rules"):
+                with self.subTest(view=name, host_files=count):
+                    out = view(repo, name)
+                    self.assertRegex(out, r"\n   0 hard-rule lines")
+                    corpus = next((line for line in out.splitlines() if "CORPUS:" in line), "")
+                    self.assertIn("source (1 file(s))", corpus,
+                                  "`%s` does not name `source` as read:\n%s" % (name, out))
+                    self.assertIn("hosts (%d file(s))" % count, corpus,
+                                  "`%s` does not name `hosts` as read, with the number of "
+                                  "files it read there:\n%s" % (name, out))
+                    self.assertIn("`.md` only", corpus)
+                    not_read = out[out.index("NOT READ:"):]
+                    self.assertIn("non-`.md` files under source and hosts", not_read,
+                                  "`%s` does not say the non-Markdown files under `hosts/` "
+                                  "were not read:\n%s" % (name, out))
+                    self.assertIn("tools/bootcamp_build/", not_read,
+                                  "`%s` does not say `tools/bootcamp_build/` was not read:\n%s"
+                                  % (name, out))
 
 
 class TheDocumentsCallTheViewRatherThanCarryingTheScript(unittest.TestCase):

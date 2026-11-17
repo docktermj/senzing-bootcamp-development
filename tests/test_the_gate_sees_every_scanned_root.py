@@ -20,16 +20,27 @@ nothing. #233 found the premise no longer held (the reasons are in the gate's do
 removed the split, so a line under every scanned root, `.claude/` roots included, lands in the
 population the citation check reads. `test_every_scanned_root_is_checked` pins that decision.
 
+⚠️ **Dated note (#9): `hosts` is a scanned root.** The classes above feed every root in
+`SCAN_ROOTS` through the parser, so they covered it the moment it joined. What they cannot
+show is that the citation check then decides a host-side rule, so
+`AHostSideRuleIsCheckedLikeAnyOther` runs the gate's own predicate, and the gate's own test,
+over a rule reported under `hosts/`.
+
 Stdlib only; both modules are imported by path (INV-108).
 
-Source issue: #74 (the reverse-contract gate silently discards every rule outside `source/`).
+Source issues: #74 (the reverse-contract gate silently discards every rule outside `source/`),
+#9 (the audit tools read the host-side inputs).
 
 Run:  python3 -m unittest discover -s tests
 """
+import contextlib
 import importlib.util
+import io
 import sys
+import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CONFORMANCE = REPO_ROOT / ".claude" / "skills" / "production-readiness-audit" / "conformance.py"
@@ -158,6 +169,80 @@ class EveryScannedRootIsPlaced(unittest.TestCase):
             "a scanned root's line did not reach the citation check. Every root in SCAN_ROOTS, "
             "the maintainer surface included, is checked with the same predicate (#233); a "
             "root counted but not checked is the gap #233 closed")
+
+
+class AHostSideRuleIsCheckedLikeAnyOther(unittest.TestCase):
+    """#9 — a rule `since` reports under `hosts/` gets the cited-or-deferred check.
+
+    The headings name files that do not exist, so the gate's source-line lookup falls back to
+    the reported text and each fixture decides its line alone. The ledger is replaced by one
+    holding no deferral, so a rule can only be cleared by a citation on its line.
+    """
+
+    HEADINGS = ("hosts/chatgpt/fragments/fixture-9.md",
+                "hosts/kiro/files/skills/fixture-9/SKILL.md")
+    UNCITED = "⛔ **Never search the filesystem for a fixture file.**"
+    CITED = "⛔ **(INV-252) Never search the filesystem for a fixture file.**"
+
+    def setUp(self):
+        self.gate = load(GATE, "gate_under_test")
+        tmp = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        ledger = tmp / "IMPLEMENTED.md"
+        ledger.write_text("# Implemented\n\n## an-entry-with-no-deferral\n", encoding="utf-8")
+        self.enterContext(mock.patch.object(self.gate, "IMPLEMENTED", ledger))
+
+    @staticmethod
+    def report(heading, rule):
+        return ("== hard-rule lines added since deadbee (shipped markdown + the .claude/ "
+                "surface)\n\n   %s\n     + %s\n" % (heading, rule))
+
+    def unaccounted(self, heading, rule):
+        parsed = self.gate.parse_since(self.report(heading, rule))
+        self.assertEqual([], parsed.unknown_headings,
+                         "the gate does not place %r under a scanned root" % heading)
+        self.assertEqual(1, len(parsed.checked),
+                         "the rule under %r did not reach the checked population" % heading)
+        return self.gate.EveryNewHardRuleIsAccountedFor._unaccounted(
+            line for _heading, line in parsed.checked)
+
+    def test_the_roots_the_gate_reads_include_hosts(self):
+        """Read from the producer, as `_scan_roots` always has: no private copy (INV-308)."""
+        self.assertIn("hosts", self.gate.SCAN_ROOTS)
+        self.assertEqual(tuple(load(CONFORMANCE, "conformance_roots").SCAN_ROOTS),
+                         tuple(self.gate.SCAN_ROOTS))
+        for heading in self.HEADINGS:
+            with self.subTest(heading=heading):
+                self.assertEqual("hosts", self.gate._root_of(heading))
+
+    def test_an_uncited_host_rule_is_flagged(self):
+        for heading in self.HEADINGS:
+            with self.subTest(heading=heading):
+                self.assertEqual(
+                    [self.UNCITED], self.unaccounted(heading, self.UNCITED),
+                    "an uncited rule under `hosts/`, named in no deferral, was not flagged")
+
+    def test_a_cited_host_rule_is_not_flagged(self):
+        """The control: the check decides the line, it does not fail everything under hosts/."""
+        for heading in self.HEADINGS:
+            with self.subTest(heading=heading):
+                self.assertEqual([], self.unaccounted(heading, self.CITED))
+
+    def test_the_gate_s_own_test_fails_on_an_uncited_host_rule(self):
+        """The assertion path, not only the predicate: the gate's test goes red."""
+        case = self.gate.EveryNewHardRuleIsAccountedFor(
+            "test_each_rule_added_since_the_last_audit_is_cited_or_deferred")
+        for rule, failures in ((self.UNCITED, 1), (self.CITED, 0)):
+            with self.subTest(rule=rule):
+                since = self.report(self.HEADINGS[0], rule)
+                result = unittest.TestResult()
+                with mock.patch.object(self.gate, "conformance", lambda *a: since), \
+                        contextlib.redirect_stderr(io.StringIO()):
+                    case.run(result)
+                self.assertEqual([], result.errors)
+                self.assertEqual(
+                    failures, len(result.failures),
+                    "the gate's own test did not decide a rule reported under `hosts/` "
+                    "(skipped: %s)" % result.skipped)
 
 
 class AnUnknownRootIsNamedRatherThanIgnored(unittest.TestCase):

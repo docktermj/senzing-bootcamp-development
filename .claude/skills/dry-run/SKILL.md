@@ -95,7 +95,7 @@ and its entire factual foundation. Start there unless the maintainer says otherw
    offline suite can assert, so they are phase 3's business rather than test debt), and the
    **development rules** that remain. `shipped` is its mirror on the other side of
    the contract: invariants that **name a shipped artifact** (a path, module, step or bundled
-   script) and that no file under `source/` cites, so the rule binds a step the guide cannot
+   script) and that no file under `source/`, `hosts/` or `tools/bootcamp_build/` cites, so the rule binds a step the guide cannot
    look it up from (INV-183). It is the question `conformance.py rules` cannot ask — that scan
    is satisfied by *any* `INV-NNN` in a section, which is how it reported **0** on 2026-08-13
    while INV-212 was named nowhere near the step it was registered from. Development-environment
@@ -115,7 +115,7 @@ and its entire factual foundation. Start there unless the maintainer says otherw
    whatever it finds. The `auto-test` skill can call it the same way.
 
    `unmarked` is `negatives`' complement and the newer half of phase 1's worklist: dated
-   tool-absence claims in **shipped plugin prose that carry no marker**, which `negatives` cannot
+   tool-absence claims in **shipped prose (the plugin and `hosts/`) that carry no marker**, which `negatives` cannot
    see because it only lists what is already tagged. The **date** is the discriminator — undated
    prose explaining how a tool behaves is not a re-checkable claim and is not reported. A hit needs
    judgment (it may be prose *about* behavior), which is why this reports rather than gates, and

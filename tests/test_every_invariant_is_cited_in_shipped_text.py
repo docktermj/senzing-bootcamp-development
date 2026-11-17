@@ -24,6 +24,11 @@ version of that assertion. `shipped` scans **`source/` only**, so nothing writte
 it. That asymmetry is what makes this guard possible at all, and it is why the failure message names
 the ids rather than hiding them.
 
+⚠️ **Dated note (#9): `shipped` reads the host-side inputs too.** Its roots are now `source/`,
+`hosts/` and `tools/bootcamp_build/`, so an invariant cited only in an assistant's own package text
+or in the build tool passes this guard. It still reads nothing under `tests/`, so the asymmetry
+above holds.
+
 The maintainer chose this over registering a second invariant (2026-08-14): the rule would largely
 restate INV-183 for a new moment in time, and a mechanical check over the whole class is worth more
 than another sentence.

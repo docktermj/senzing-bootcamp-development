@@ -32,10 +32,18 @@ caveat was pinned in the `review-invariants` command file as well as the skill. 
 the skill (measured 2026-09-29, Claude Code 2.1.284, #241), so the command never ran; #262
 deleted it. The skill's caveat is still asserted, with the same pattern.
 
+⚠️ **Dated note (#9): the scan is widened to the host-side inputs, and to nothing else.** The
+first paragraphs are the state #77 left. Since #9 the candidate scan reads three roots: the
+plugin, `hosts/` and `tools/bootcamp_build/`, where each assistant's own package text and the
+notes the build appends live. `.json` joined the candidate suffixes, for every root at once, so
+the scanned and not-scanned counts still measure one population. `.claude/` and `tests/` are
+still outside the scan, so the caveat the skill carries still holds for a rule shipping there.
+`TheScanReadsTheHostSideInputs` pins all of it.
+
 Stdlib only; the helper is loaded by path and its module-level roots are pointed at a temporary
 tree, since it takes no `--repo` argument (INV-108).
 
-Source issue: #77.
+Source issues: #77, #9.
 
 Run:  python3 -m unittest discover -s tests
 """
@@ -219,6 +227,145 @@ class TheScopeIsStatedOnEveryBranch(unittest.TestCase):
             "the narrow half will think a site elsewhere cannot be cited:\n%s" % out)
 
 
+#: The same candidate rule, as a host-side input carries it: a JSON string value, and a string
+#: constant in the build tool's source. Each shares two rare words with the drafted wording.
+HOST_JSON_RULE = '{\n  "note": "⛔ **Every provenance claim names its supplier.**"\n}\n'
+BUILD_TOOL_RULE = 'NOTE = (\n    "⛔ Every provenance claim names its supplier. "\n)\n'
+
+
+def write(root, relpath, text):
+    path = root / relpath
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+
+
+def count(pattern, out):
+    """The number a scope line carries, or None when the line is not there."""
+    found = re.search(pattern, out)
+    return int(found.group(1)) if found else None
+
+
+class TheScanReadsTheHostSideInputs(unittest.TestCase):
+    """#9 — `hosts/`, its `.json` included, and `tools/bootcamp_build/` are candidate corpus.
+
+    ⚠️ One candidate file per fixture. The scan keeps a term only while it appears in a small
+    minority of files, and in a tree this small that means two: the named site and one more.
+    A fixture holding the rule in three files finds nothing, for a reason that has nothing to
+    do with which roots are read.
+    """
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp(prefix="sites-scope-")
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def candidates(self, out):
+        """The lines of the CANDIDATES block, without the scope statement under it."""
+        block = out[out.index("-- CANDIDATES"):]
+        return block[:block.index("SCANNED")]
+
+    def test_a_candidate_in_host_json_is_listed(self):
+        root = build(self.tmp, with_candidate=False)
+        write(root, "hosts/kiro/host.json", HOST_JSON_RULE)
+        out = sites_output(root)
+        self.assertRegex(
+            self.candidates(out), r"hosts/kiro/host\.json:2\s+shares: provenance, supplier",
+            "a rule in `hosts/kiro/host.json` sharing the block's rare words is not listed as "
+            "a candidate:\n%s" % out)
+
+    def test_a_candidate_in_the_build_tool_is_listed(self):
+        root = build(self.tmp, with_candidate=False)
+        write(root, "tools/bootcamp_build/emit.py", BUILD_TOOL_RULE)
+        out = sites_output(root)
+        self.assertRegex(
+            self.candidates(out),
+            r"tools/bootcamp_build/emit\.py:2\s+shares: provenance, supplier",
+            "a rule in `tools/bootcamp_build/emit.py` sharing the block's rare words is not "
+            "listed as a candidate:\n%s" % out)
+
+    def test_the_same_rule_outside_the_scanned_roots_is_not_a_candidate(self):
+        """The control: it is the root that admits the two above, not the wording."""
+        root = build(self.tmp, with_candidate=False)
+        write(root, "tools/elsewhere/emit.py", BUILD_TOOL_RULE)
+        out = sites_output(root)
+        self.assertIn("(none found)", self.candidates(out), out)
+        self.assertNotIn("tools/elsewhere", self.candidates(out))
+
+    def test_hosts_is_scanned_and_no_longer_reported_as_not_scanned(self):
+        root = build(self.tmp, with_candidate=True)
+        write(root, "hosts/kiro/host.json", "{}\n")
+        write(root, "hosts/kiro/fragments/hooks-setup.md", "# a fragment\n")
+        write(root, "hosts/_shared/hook_adapter.py", "# an adapter\n")
+        out = sites_output(root)
+        self.assertEqual(3, count(r"SCANNED hosts: (\d+) file", out), out)
+        not_scanned = next(line for line in out.splitlines() if "NOT SCANNED" in line)
+        self.assertNotIn("hosts/", not_scanned,
+                         "`hosts/` is still reported as not scanned:\n%s" % out)
+        self.assertEqual(
+            3, count(r"NOT SCANNED (\d+) file", out),
+            "the three host files moved the not-scanned count; they are scanned:\n%s" % out)
+
+    def test_no_file_under_the_build_tool_is_counted_as_not_scanned(self):
+        """`tools/bootcamp_build/` is scanned; a sibling directory under `tools/` is not."""
+        root = build(self.tmp, with_candidate=True)
+        write(root, "tools/bootcamp_build/emit.py", "# the emitter\n")
+        write(root, "tools/bootcamp_build/neutrality.json", "{}\n")
+        out = sites_output(root)
+        self.assertEqual(2, count(r"SCANNED tools/bootcamp_build: (\d+) file", out), out)
+        self.assertEqual(3, count(r"NOT SCANNED (\d+) file", out),
+                         "a file under `tools/bootcamp_build/` was counted as not scanned:\n%s"
+                         % out)
+        write(root, "tools/elsewhere/helper.py", "# not the build tool\n")
+        out = sites_output(root)
+        self.assertEqual(2, count(r"SCANNED tools/bootcamp_build: (\d+) file", out), out)
+        self.assertEqual(4, count(r"NOT SCANNED (\d+) file", out), out)
+        self.assertRegex(out, r"NOT SCANNED[^\n]*tools/ 1\b")
+
+    def test_the_two_counts_measure_one_set_of_suffixes(self):
+        """`.json` is admitted for every root, so each count moves by it; `.html` moves neither."""
+        root = build(self.tmp, with_candidate=True)
+        before = sites_output(root)
+        write(root, "source/hooks/hooks.json", "{}\n")          # scanned root, new suffix
+        write(root, "tests/fixture.json", "{}\n")               # outside the scan, new suffix
+        write(root, "hosts/kiro/fragments/site-tips.html", "<p>x</p>\n")
+        write(root, "tests/page.html", "<p>x</p>\n")
+        after = sites_output(root)
+        self.assertEqual(count(r"SCANNED source: (\d+) file", before) + 1,
+                         count(r"SCANNED source: (\d+) file", after),
+                         "a `.json` file under the scanned root is not in the scanned count")
+        self.assertEqual(count(r"NOT SCANNED (\d+) file", before) + 1,
+                         count(r"NOT SCANNED (\d+) file", after),
+                         "a `.json` file outside the scan is not in the not-scanned count, so "
+                         "the two counts measure different suffixes")
+        self.assertEqual(0, count(r"SCANNED hosts: (\d+) file", after),
+                         "an `.html` file was counted as scanned; it is not a candidate suffix")
+        module = load()
+        self.assertIn(".json", module.SITE_SUFFIXES)
+        self.assertIn(
+            "one set of suffixes: %s" % ", ".join(module.SITE_SUFFIXES), after,
+            "the scope statement does not say which suffixes both counts measure:\n%s" % after)
+
+    def test_a_root_with_nothing_under_it_is_still_named_as_read(self):
+        """A zero: the fixture has no `hosts/` and no `tools/`, and the scope says 0 for each."""
+        for with_candidate in (True, False):
+            with self.subTest(with_candidate=with_candidate):
+                tmp = tempfile.mkdtemp(prefix="sites-scope-")
+                self.addCleanup(shutil.rmtree, tmp, ignore_errors=True)
+                out = sites_output(build(tmp, with_candidate=with_candidate))
+                self.assertEqual(0, count(r"SCANNED hosts: (\d+) file", out), out)
+                self.assertEqual(0, count(r"SCANNED tools/bootcamp_build: (\d+) file", out), out)
+
+    def test_the_roots_are_computed_when_the_scan_runs(self):
+        """A caller pointing the helper at another tree gets that tree's host-side inputs."""
+        root = build(self.tmp, with_candidate=False)
+        module = load()
+        module.REPO, module.PLUGIN = root, root / "source"
+        self.assertEqual(
+            [root / "source", root / "hosts", root / "tools" / "bootcamp_build"],
+            list(module.scan_roots()))
+
+
 class IneligibleFilesAreCountedApart(unittest.TestCase):
     """⚠️ "Not scanned" and "could be a site" are different sets (#92).
 
@@ -287,8 +434,9 @@ class TheDocumentsCarryTheCaveat(unittest.TestCase):
         self.assertRegex(
             text.lower(), r"scan (?:covers|reads) (?:one root|the plugin)",
             "SKILL.md tells the maintainer to derive the site set from `sites` without saying "
-            "that its candidate scan reads one root. For an invariant shipping in `.claude/` "
-            "or `tests/` that instruction points at a scan covering none of it")
+            "that its candidate scan reads the plugin and the host-side inputs only. For an "
+            "invariant shipping in `.claude/` or `tests/` that instruction points at a scan "
+            "covering none of it")
 
 
 if __name__ == "__main__":

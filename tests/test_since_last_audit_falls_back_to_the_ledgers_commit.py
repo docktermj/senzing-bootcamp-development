@@ -370,8 +370,8 @@ class AFallbackRunIsAnOrdinaryRun(FixtureRepository):
         """Derived above; pinned here so the equality is not two empty reports agreeing."""
         not_clean = self.view("reverse-check", ledger(self.first, UNRESOLVED))
         self.assertIn("VERDICT: NOT CLEAN", not_clean.stdout)
-        self.assertRegex(not_clean.stdout, r"TESTED\s+1 line\(s\) in source -- 0 cited at the "
-                                           r"line, 1 NOT cited")
+        self.assertRegex(not_clean.stdout, r"TESTED\s+1 line\(s\) in source, hosts -- 0 cited "
+                                           r"at the line, 1 NOT cited")
         self.assertRegex(not_clean.stdout, r"UNTESTED 1 line\(s\)")
         clean = self.view("reverse-check", ledger(self.third, UNRESOLVED))
         self.assertIn("VERDICT: clean", clean.stdout)
