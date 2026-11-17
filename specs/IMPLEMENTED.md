@@ -36,6 +36,50 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## invariant-review-2026-11-16-loop
+
+**Not a spec** — the record of a third `/review-invariants` session on 2026-11-16, attended by
+the maintainer. It decided the eight blocks the unattended run of that day queued, from issues
+#9 to #14. A review record mints ids and adds citations; it establishes no invariant of its own.
+
+- **Implemented:** 2026-11-16
+- **Files changed:** `specs/INVARIANTS.md`, `specs/IMPLEMENTED.md`,
+  `tools/bootcamp_build/emit.py`,
+  `.claude/skills/production-readiness-audit/conformance.py`,
+  `tests/test_invariant_enforcer_citations.py`, `tests/test_model_docs_name_no_switch.py`,
+  `tests/test_partial_shipping_has_a_reason.py`, `tests/test_since_states_its_corpus.py`,
+  `tests/test_the_gate_sees_every_scanned_root.py`,
+  `tests/test_reverse_check_counts_what_it_cannot_test.py`,
+  `tests/test_sites_states_the_corpus_it_scanned.py`, `tests/test_coverage_reports.py`,
+  `tests/test_kiro_skills_say_where_they_are.py`,
+  `tests/test_since_last_audit_falls_back_to_the_ledgers_commit.py`
+- **MCP re-check:** n/a (no Senzing fact)
+- **Summary:** The maintainer gave a verdict on each block, one at a time, and every verdict
+  was to register or apply the drafted wording unchanged. Nothing was held, amended or split.
+  - **Registered, five new invariants:** INV-428 (an install page that names a model takes it
+    from `model_capable`, issue #13), INV-429 (no install page mentions an effort, issue #13),
+    INV-430 (a source file ships to every assistant or to none unless a reason is recorded,
+    issue #12), INV-431 (the audit and review tools read every directory the build takes
+    package text from, issue #9), INV-432 (the since-last-audit views take their range start
+    from the ledger alone, issue #10).
+  - **Applied, three dated notes:** on INV-114 (the derived table is a maintainer page no
+    package carries, issue #12), on INV-247 (the class of control binds on every assistant;
+    the list is one assistant's dated examples, issue #14), on INV-252 (a stated location
+    holds on every supported platform and its sources are recorded, issue #11).
+  - **One citation outside a block's site list.** INV-430 names a shipped artifact, and no
+    shipped text cited it, so `tests/test_every_invariant_is_cited_in_shipped_text.py` failed
+    after the registration. One sentence in the `placed_files()` docstring of
+    `tools/bootcamp_build/emit.py` now cites it.
+  - **Enforcer pairs.** `EXPECTED_PAIRS` went from 350 to 360, re-derived by running the
+    extractor after each decision: one pair each for INV-428, INV-429, INV-430 and INV-432,
+    five for INV-431, and one for the INV-252 note, whose test gained its back-citation.
+  - **What remains.** The queue is empty: `pending: 0`. Three blocks stay held, each with its
+    recorded revisit condition, and none of those conditions was met in this session.
+  - **Verification.** After each decision: `citations.py verify` clean, `pending_invariants.py
+    check` with no mismatch and no unresolved quote, and the full suite, last read as
+    `Ran 9601 tests`, `OK (skipped=13)`.
+- **Commit:** uncommitted
+
 ## the-install-page-and-the-welcome-name-different-models-on-chatgpt
 
 - **Implemented:** 2026-11-16 (issue #13)
