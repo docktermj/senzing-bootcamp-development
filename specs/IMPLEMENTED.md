@@ -36,6 +36,36 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## auto-test-2026-11-17
+
+**Not a spec** — a dated record of an `/auto-test` run, **unattended**: the maintainer started
+it and was away. The MCP probe only; no walk was asked for, so none ran.
+
+- **Implemented:** 2026-11-17 (**0 BREAKING, 10 WATCH, 14 INFO; nothing fixed; nothing filed —
+  each needs the maintainer to triage it**)
+- **Files changed:** this record only. The baseline `mcp-snapshot.json` was not refreshed:
+  accepting a server change is the maintainer's decision.
+- **MCP re-check:** Senzing MCP server 1.46.1, 2026-11-17, by `mcp_probe.py` through
+  `autotest.py` at `bdd9d19`. `submit_feedback` and `download_resource` are blocked by flag.
+  Outcome: no value the bootcamp sends is rejected and the static contract in
+  `tests/test_mcp_call_contracts.py` holds; the server's prose has changed since the baseline.
+- **Summary:** No regression detected by the probe. No interaction invariant was checked, and
+  phase 3 with the maintainer is not yet done.
+  - **WATCH, server prose changed since the committed baseline, each to be re-read:** the
+    server `instructions` text; the descriptions of `find_examples`, `get_sdk_reference`,
+    `mapping_workflow`, `reporting_guide`, `sdk_guide` and `search_docs`; and the
+    `get_capabilities` response, whose `common_confabulations` feed `CONFABULATIONS`.
+    `dry-run-2026-11-17` findings 6 and 11 are two places where that prose moved under
+    shipped text.
+  - **WATCH, `silent-accept`, known since 2026-07-27:** `search_docs.category` accepts a
+    nonsense value without an error, so a typo returns wrongly scoped results. Server side.
+  - **WATCH, `contract-stale`:** `CONTRACT_VERIFIED_ON` is 2026-08-12, 97 days old against a
+    limit of 90. Re-verify and bump it.
+  - The full report is `~/senzing-autotest/reports/20261117-091143-terse.json`, outside this
+    repository.
+- **Invariants.** This record establishes no invariant and queues no block.
+- **Commit:** uncommitted
+
 ## dry-run-2026-11-17
 
 **Not a spec** — a dated record of a dry run, phases 1 and 2, **unattended**: the maintainer
