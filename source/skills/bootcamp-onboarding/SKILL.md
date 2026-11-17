@@ -31,10 +31,15 @@ bootcamper through setup and into the numbered module skills, one guided step at
      it is missing or malformed -> graduation has ended the bootcamp. Either file is enough:
      graduation's closing step writes the flag to both, and a project graduated before it
      wrote the progress file carries it in preferences only. Run no onboarding and make no
-     resume offer. Say the bootcamp is complete, name `/package-bootcamp`, and end on one open
+     resume offer. Say the bootcamp is complete, name `{{host.invoke_package_bootcamp}}`, and end on one open
      question, in this form:
 
-     > Your Senzing bootcamp is complete. Run `/package-bootcamp` anytime to bundle your
+<!-- host:only claude -->
+     > Your Senzing bootcamp is complete. Run `{{host.invoke_package_bootcamp}}` anytime to bundle your
+<!-- host:end -->
+<!-- host:except claude -->
+     > Your Senzing bootcamp is complete. Say {{host.invoke_package_bootcamp}} anytime to bundle your
+<!-- host:end -->
      > bootcamp results into one zip you can archive, move to another machine, or share with
      > others.
      >
@@ -79,7 +84,7 @@ bootcamper through setup and into the numbered module skills, one guided step at
    that window.
 
    This step is where the rule is stated: session start (`ground-rules.md` → "Session start")
-   and `/graduate` point here rather than restating it (INV-227, INV-300).
+   and `{{host.invoke_graduate}}` point here rather than restating it (INV-227, INV-300).
 
 ## Onboarding sequence (fresh start)
 

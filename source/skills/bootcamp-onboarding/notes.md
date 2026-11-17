@@ -12,8 +12,14 @@ It is the bootcamper's, it stays on their machine, and it ends up in their keeps
 rather than in anyone's inbox. Saved to `docs/bootcamp_notes.md` and folded into
 `docs/bootcamp_recap.pdf` at graduation.
 
+<!-- host:only claude -->
 Triggered by `feedback-capture.py` where a hook runs it on this assistant, by the
-`/bootcamp-note` command, or whenever the bootcamper says something like "make a note",
+`{{host.invoke_bootcamp_note}}` command, or whenever the bootcamper says something like "make a note",
+<!-- host:end -->
+<!-- host:except claude -->
+Triggered by `feedback-capture.py` where a hook runs it on this assistant, or
+whenever the bootcamper says something like "make a note",
+<!-- host:end -->
 "remind me", "jot this down", "don't let me forget" or "note to self". Follow
 `ground-rules.md`: one 👉 question per yielding turn (INV-251), and the turn ends on it.
 
@@ -82,8 +88,14 @@ The banner is a statement, not a question; it never counts against INV-251.
 not ask.** "Remind me to check the truth-set counts" *is* the note. Asking what they would
 like to note makes them say it twice — the pointless question INV-006 and INV-012 forbid.
 
-Only when the trigger carried no content ("make a note", `/bootcamp-note` with no
+<!-- host:only claude -->
+Only when the trigger carried no content ("make a note", `{{host.invoke_bootcamp_note}}` with no
 argument), ask this pinned question (INV-056) and end the turn on it:
+<!-- host:end -->
+<!-- host:except claude -->
+Only when the trigger carried no content ("make a note" and nothing more), ask this
+pinned question (INV-056) and end the turn on it:
+<!-- host:end -->
 
 > 👉 **What would you like to note?**
 

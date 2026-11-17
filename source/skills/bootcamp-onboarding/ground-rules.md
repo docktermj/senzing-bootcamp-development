@@ -1404,8 +1404,14 @@ the 👉 protocol above).
   verdict (INV-249). (Whether or not a hook backs it on this assistant, catching the request is
   yours; where a hook runs it, `feedback-capture.py` surfaces the request during a bootcamp.)
 - **Make a note:** whenever the bootcamper says "make a note", "note to self", "jot this down",
+<!-- host:only claude -->
   "remind me", "don't let me forget", "add a to-do", "for my notes", or invokes
-  `/bootcamp-note`, run the note workflow in `notes.md` and append the entry to
+  `{{host.invoke_bootcamp_note}}`, run the note workflow in `notes.md` and append the entry to
+<!-- host:end -->
+<!-- host:except claude -->
+  "remind me", "don't let me forget", "add a to-do" or "for my notes",
+  run the note workflow in `notes.md` and append the entry to
+<!-- host:end -->
   `docs/bootcamp_notes.md`. The workflow opens with a pinned 📌 **BOOTCAMP NOTE** entry banner
   and closes with a pinned 📌 **NOTE SAVED — BACK TO THE BOOTCAMP** exit banner (a statement)
   before the pending 👉 question resumes (INV-254, INV-255). Notes are folded into the recap at

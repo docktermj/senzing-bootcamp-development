@@ -149,7 +149,7 @@ NOT_PRESENT = "not present in this project"
 #: `ast.literal_eval`, and a name inside it would make every packaging rule unreadable to the guard
 #: that checks them. `tests/test_package_bootcamp.py` pins the two together.
 #: ⚠️ It is the one absent candidate root a Bootcamper is about to CREATE rather than simply not
-#: have: `/package-bootcamp` writes it, after this measurement, for whoever answers "everything to
+#: have: `{{host.invoke_package_bootcamp}}` writes it, after this measurement, for whoever answers "everything to
 #: continue elsewhere". So a `transfer` size measured without it is a size measured without the
 #: largest thing that profile exists to carry, and the report below says so in as many words.
 DATABASE_BACKUP_ROOT = "backups/revisit"

@@ -51,6 +51,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from _built import built  # the Claude package, built from source/
+from _invocations import HOSTS, mention, package_text  # every package, for issue #28
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCRIPTS = built("claude") / "scripts"
@@ -406,6 +407,22 @@ class TheRuleIsStatedOnceAndPointedAt(unittest.TestCase):
         self.assertRegex(text, r"This step is where the rule is stated: session start .* and "
                                r"`/graduate` point here rather than restating it "
                                r"\(INV-227, INV-300\)")
+
+    def test_every_package_says_it_in_its_assistants_form(self):
+        """Issue #28: the sentence names the graduate operation as each assistant's package
+        does, the slash command on Claude and the request its install page gives elsewhere."""
+        self.assertEqual("`/graduate`", mention("claude", "graduate"))
+        others = [host for host in HOSTS if host != "claude"]
+        self.assertGreaterEqual(len(others), 4)
+        for host in HOSTS:
+            with self.subTest(host=host):
+                if host in others:
+                    self.assertEqual("`\"Graduate\"`", mention(host, "graduate"))
+                text = flat(package_text(host, "skills/bootcamp-onboarding/SKILL.md"))
+                self.assertRegex(text, r"This step is where the rule is stated: session start "
+                                       r".* and %s point here rather than restating it "
+                                       r"\(INV-227, INV-300\)" % re.escape(mention(host, "graduate")))
+                self.assertEqual(host == "claude", "`/graduate` point here" in text)
 
     def test_session_start_points_at_the_rule(self):
         text = section(GROUND_RULES.read_text(encoding="utf-8"), "## Session start")

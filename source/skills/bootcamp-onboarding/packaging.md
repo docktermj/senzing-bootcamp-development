@@ -13,7 +13,12 @@ the machine is the bootcamper's action, and the closing summary names the path s
 `backups/revisit/` **in place** (INV-094), which is a save point on *this* machine. This
 flow makes that portable, and reuses it rather than duplicating it.
 
-Reached by the `/package-bootcamp` command. ⚠️ **There is no hook for this flow** — unlike
+<!-- host:only claude -->
+Reached by the `{{host.invoke_package_bootcamp}}` command. ⚠️ **There is no hook for this flow** — unlike
+<!-- host:end -->
+<!-- host:except claude -->
+Reached by the request {{host.invoke_package_bootcamp}}. ⚠️ **There is no hook for this flow** — unlike
+<!-- host:end -->
 `notes.md`, whose `feedback-capture.py` clause is real where a hook runs it, nothing intercepts
 prompts on packaging vocabulary on any assistant. So **recognize these as a request for it and
 offer the command**: "back up the bootcamp", "archive this", "move this to another machine",

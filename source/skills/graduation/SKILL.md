@@ -32,7 +32,7 @@ Bootcamp graduation is the terminal bookend module. Like every module it opens w
 apparatus — journey map, before/after framing, a step overview, and an estimated time — adapted to
 a terminal module (INV-102; see "Bootcamp graduation preface" below). Because no
 next-module transition applies, it shows no `✅ Module complete` line and no transition question,
-and it ends on the terminal END OF SENZING BOOTCAMP banner and its one `/package-bootcamp` line
+and it ends on the terminal END OF SENZING BOOTCAMP banner and its one `{{host.invoke_package_bootcamp}}` line
 (INV-057). (Bootcamp graduation is NOT apparatus-exempt — contrast the exemptions for Bootcamp
 preparation (INV-075) and Module 0 (INV-078).)
 
@@ -79,7 +79,7 @@ them to one line under `concise`. Refer to modules by name, never number (INV-07
    inventing a number. Suppress under `minimal`; one line under `concise`.
 
 Bootcamp graduation is terminal, so it has no "what's next / next module" line and no `✅ Module complete`
-transition — it ends on the END OF SENZING BOOTCAMP banner and its one `/package-bootcamp` line
+transition — it ends on the END OF SENZING BOOTCAMP banner and its one `{{host.invoke_package_bootcamp}}` line
 (INV-057). What the bootcamper carries forward is the recap PDF and the `production/` project.
 
 ## After the preface
@@ -1868,7 +1868,7 @@ This runs exactly once, after the report, before graduation is reported finished
 1. **Guarantee the recap PDF exists.** Confirm `docs/bootcamp_recap.pdf` exists and is non-empty. If it is missing, re-run Step 1b (or the inline fallback) once so a valid PDF exists before you announce it. Never announce an artifact you have not confirmed exists at its path.
 2. **Emit one closing announcement** naming only the artifacts confirmed to exist. State that the recap PDF at `docs/bootcamp_recap.pdf` opens with a summary page and then walks through every completed module, capturing that module's Information Shared, Questions & Responses, Actions Taken, and End-of-Module Summary, and that the source lives at `docs/bootcamp_recap.md`. Name the `production/` project and its `GRADUATION_REPORT.md` and `MIGRATION_CHECKLIST.md`; after Step 2's Abort, name `docs/GRADUATION_REPORT.md` instead and none of `production/`'s files, since this run wrote none. Frame the PDF as a keepsake to revisit and share with their team.
 
-   **Add exactly one line** offering `/package-bootcamp`, which gathers the recap, the keepsake
+   **Add exactly one line** offering `{{host.invoke_package_bootcamp}}`, which gathers the recap, the keepsake
    documents, the visualizations and `production/` into a single zip under `backups/packages/` they
    can archive, move to another machine, or hand to a colleague.
 
@@ -1931,8 +1931,8 @@ Then stop and wait. This is the single closing question for the whole bootcamp.
 
    - **Wants to keep exploring** (asks a question, names a topic, or otherwise continues): help them, then offer the closing question again when they are ready. Do **not** show the terminal banner yet — it must never pre-empt continued exploration.
    - **Declines** ("no", "I'm done", "that's all", "nothing else"): the bootcamp is complete. Do these two things, in order:
-     1. **Stand down the closing-question nudge and record completion, silently.** Set a top-level `bootcamp_complete: true` key in `config/bootcamp_preferences.yaml` (a single minimal edit; do not narrate it). In the same step, write `config/bootcamp_progress.json`: set `bootcamp_complete: true`, `completed_at` to the current time in ISO 8601, `current_module: "graduation"` and `current_step: null`, and append `graduation` to `modules_completed` if it is absent, keeping every other key as it is. Make both writes on the normal path and after Step 2's Abort alike. Where a hook runs it, `{{host.scripts_relative}}/stop-nudge.py` reads the flag and will not nudge for a closing 👉 question once the bootcamp is over — so the terminal banner, which ends the turn with no 👉, is not re-opened. Session start and `/start-bootcamp` read either file's flag as a finished bootcamp (`../bootcamp-onboarding/SKILL.md` step 2), so the progress file never presents the last module as current.
-     2. **Render the terminal banner, verbatim, exactly once, then the one `/package-bootcamp` line below it, verbatim.** The banner bookends the WELCOME banner that opened the bootcamp (start) and the BOOTCAMP GRADUATION banner (finish) with a clear end-of-bootcamp marker; the line reminds the bootcamper how to keep or share what they built.
+     1. **Stand down the closing-question nudge and record completion, silently.** Set a top-level `bootcamp_complete: true` key in `config/bootcamp_preferences.yaml` (a single minimal edit; do not narrate it). In the same step, write `config/bootcamp_progress.json`: set `bootcamp_complete: true`, `completed_at` to the current time in ISO 8601, `current_module: "graduation"` and `current_step: null`, and append `graduation` to `modules_completed` if it is absent, keeping every other key as it is. Make both writes on the normal path and after Step 2's Abort alike. Where a hook runs it, `{{host.scripts_relative}}/stop-nudge.py` reads the flag and will not nudge for a closing 👉 question once the bootcamp is over — so the terminal banner, which ends the turn with no 👉, is not re-opened. Session start and `{{host.invoke_start_bootcamp}}` read either file's flag as a finished bootcamp (`../bootcamp-onboarding/SKILL.md` step 2), so the progress file never presents the last module as current.
+     2. **Render the terminal banner, verbatim, exactly once, then the one `{{host.invoke_package_bootcamp}}` line below it, verbatim.** The banner bookends the WELCOME banner that opened the bootcamp (start) and the BOOTCAMP GRADUATION banner (finish) with a clear end-of-bootcamp marker; the line reminds the bootcamper how to keep or share what they built.
 
      ```text
      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1940,7 +1940,12 @@ Then stop and wait. This is the single closing question for the whole bootcamp.
      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
      ```
 
-     Run `/package-bootcamp` anytime to bundle your bootcamp results into one zip you can archive, move to another machine, or share with others.
+<!-- host:only claude -->
+     Run `{{host.invoke_package_bootcamp}}` anytime to bundle your bootcamp results into one zip you can archive, move to another machine, or share with others.
+<!-- host:end -->
+<!-- host:except claude -->
+     Say {{host.invoke_package_bootcamp}} anytime to bundle your bootcamp results into one zip you can archive, move to another machine, or share with others.
+<!-- host:end -->
 
      That line is the final output. Show it as a plain line right after the banner's fence, never inside it. No 👉 question follows it, and nothing else does; the turn simply ends. It is a statement, not a question, and it names no archive path, because graduation runs no packager and no archive exists yet (INV-251). Show it on the normal path and after Step 2's Abort alike, and under every verbosity preset, including `minimal`, exactly like the banner.
 

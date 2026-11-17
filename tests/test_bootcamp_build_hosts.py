@@ -22,6 +22,7 @@ from tools.bootcamp_build.emit import build_host, unmapped_hooks, uses_adapter, 
 from tools.bootcamp_build.model import (  # noqa: E402
     HOOK_EVENTS, SOURCE_DIR, host_ids, load_declaration, load_hosts,
 )
+from tools.bootcamp_build.render import render_text  # noqa: E402
 from tools.bootcamp_build.validate import skill_problems  # noqa: E402
 
 EXPECTED_HOSTS = ["chatgpt", "claude", "copilot", "gemini", "kiro"]
@@ -84,7 +85,12 @@ class Packages(unittest.TestCase):
                 skill = build.root / "skills" / path.stem / "SKILL.md"
                 if not skill.is_file():
                     continue
-                source_body = path.read_text(encoding="utf-8").split("---\n", 2)[2]
+                # The command as this host is given it (issue #28): a command can hold a host
+                # block, whose marker lines and other hosts' lines reach no package.
+                source_text = render_text(path.read_text(encoding="utf-8"), build.host,
+                                          f"source/commands/{path.name}", directives=True,
+                                          known_hosts=set(host_ids()))
+                source_body = source_text.split("---\n", 2)[2]
                 built_body = skill.read_text(encoding="utf-8").split("---\n", 2)[2]
                 # The skill is the command's text plus one closing note saying where sibling
                 # skills are, so an assistant never searches the disk for them. A host that

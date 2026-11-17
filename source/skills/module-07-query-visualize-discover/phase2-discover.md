@@ -109,7 +109,7 @@ unloaded file ([what `skipped` means](../module-04-data-collection/SKILL.md#mapp
    When that scenario also promised households or related parties (the condition in
    `phase2b-discover.md` step 4d's INV-239 paragraph, stated once there, INV-300) and this fallback
    skips the relationship network, say that what is missing is a defect in that generated data (INV-239),
-   not anything about the Bootcamper's data, and suggest `/bootcamp-feedback`. Adapt the
+   not anything about the Bootcamper's data, and suggest `{{host.invoke_bootcamp_feedback}}`. Adapt the
    demonstrations as above.
 
 **Checkpoint:** write step 4a to `config/bootcamp_progress.json` under

@@ -90,7 +90,7 @@ lower = prompt.lower()
 # positive: it prepends an instruction to open a feedback entry, present a banner and
 # gather structured feedback on top of a turn where the bootcamper wants their traceback
 # explained. A missed capture is far cheaper than a spurious one (INV-054's reasoning by
-# analogy), because the workflow is still reachable by `/bootcamp-feedback` and by
+# analogy), because the workflow is still reachable by `{{host.invoke_bootcamp_feedback}}` and by
 # feedback.md, while a derailed debugging turn is not recoverable.
 #
 # So:
@@ -147,7 +147,7 @@ FEEDBACK = re.compile(
 #
 # A spurious capture here is expensive in exactly the way a spurious feedback capture is:
 # it prepends a banner and a recital to a turn where the bootcamper wanted a traceback
-# explained. A missed capture is cheap - the flow stays reachable by `/bootcamp-note` and
+# explained. A missed capture is cheap - the flow stays reachable by `{{host.invoke_bootcamp_note}}` and
 # by notes.md. Same trade as FEEDBACK above, same reasoning, and the reasoning is the
 # part that will not be rediscovered.
 #: The nouns, always at a word boundary. Without the trailing \b, "note" matches inside
