@@ -36,6 +36,107 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## the-feedback-hook-and-the-packager-report-the-bootcamp-version-as-unknown-on-non-claude-packages
+
+- **Implemented:** 2026-11-17 (issue #31)
+- **Files changed:** `source/scripts/feedback-capture.py`, `source/scripts/package_bootcamp.py`,
+  `source/skills/bootcamp-onboarding/onboarding-flow.md`,
+  `tests/test_scripts_report_the_built_version.py` (new),
+  `specs/IMPLEMENTED.md` (this entry)
+- **MCP re-check:** n/a (no Senzing fact). Re-confirmed on 2026-11-17 against the change itself:
+  it changes which file two bundled scripts read the bootcamp's own version from and what one
+  sentence says about the steps that resolve it, and asserts nothing about Senzing. No absence
+  claim about the Senzing MCP server is made, so INV-213's `owner-checked:` clause is not owed.
+- **Summary:** The feedback hook and the packager now report the version of the package they
+  ship in, in every assistant's package. This is finding 4 of `dry-run-2026-11-17` and
+  finding 22 of `production-readiness-audit-2026-11-17`. Before the change each script read
+  only a manifest path. The hook's path exists only in the Claude package, so in the Copilot,
+  ChatGPT, Gemini and Kiro packages it told the guide "the plugin version, which is Unknown --
+  already resolved". The packager's two paths find no manifest in the ChatGPT and Kiro
+  packages, so those archives recorded `"plugin_version": "unknown"`.
+  - **The order, in both scripts.** `plugin_version()` reads `bootcamp_version` from the
+    `bootcamp_host.json` beside the script first. The build writes that file beside both
+    scripts in every package, with the version in `source/bootcamp.json`. Then comes the
+    manifest lookup the script already had, then the unresolved value.
+  - **When the file gives no version.** It is missing, cannot be read, is not valid JSON, is
+    JSON that is not an object, or holds no non-empty string under `bootcamp_version`. None
+    of these raises, and the script goes on to its manifest lookup.
+  - **Unchanged, as the issue decides.** The hook's manifest lookup is still
+    `<script dir>/../.claude-plugin/plugin.json`, and the packager's is still
+    `<script dir>/../plugin.json`, then `<script dir>/../.claude-plugin/plugin.json`. The hook
+    still reports "Unknown" and the packager "unknown". The `plugin_version` key of
+    `PACKAGE_MANIFEST.json` keeps its name. Neither script searches for either file: every
+    path is fixed from the script's own location (INV-252).
+  - **Decided here, because the issue does not say.** A string that is only whitespace counts
+    as no version, and a version is reported without the whitespace around it. The hook
+    already treated the manifest's version that way.
+  - **The sentence.** `onboarding-flow.md` said every other step resolves the version the same
+    way as the WELCOME banner, "so all four report one version". It now says that the recap
+    header and the recap's provenance block resolve the manifest the same way as the banner,
+    and that the feedback entry reads `bootcamp_version` from `bootcamp_host.json` first and
+    resolves the manifest only if that file cannot be read. That is what `feedback.md` already
+    told the guide. `feedback.md`, `module-completion.md` and `graduation/SKILL.md` are not
+    changed, so no other step changes how it resolves the version.
+  - **What a bootcamper sees.** In the Copilot, ChatGPT, Gemini and Kiro packages the hook's
+    injected text carries the built version where it said "Unknown". In the ChatGPT and Kiro
+    packages `PACKAGE_MANIFEST.json` and the last line of `OPEN_ME_FIRST.md` carry it where
+    they said "unknown". Nothing changes in the Claude package. Measured on this branch on
+    2026-11-17, by running both scripts from each freshly built package: all ten report the
+    version in `source/bootcamp.json`.
+  - **Found and not fixed.** A manifest that is valid JSON and not an object makes either
+    script exit 1 with an `AttributeError` traceback, because each calls `.get` on what it
+    loaded. Reproduced on 2026-11-17 with `[]` as the manifest, on this branch and at
+    `257ac1e`. The issue leaves the manifest lookups as they are, so this is not changed. The
+    lookup is now reached only when `bootcamp_host.json` gives no version. An issue is drafted
+    in the run's handoff and is **not filed**.
+  - **Tests.** The new module holds 24 tests. It builds every assistant's package from
+    `source/`, taking the assistants from the build's own list (INV-246), and runs both
+    scripts from each as their own processes in a scratch project. The hook's injected text,
+    and the packager's `PACKAGE_MANIFEST.json`, `OPEN_ME_FIRST.md` and `--dry-run` output, must
+    carry the version in `source/bootcamp.json`. The fallback cases run scratch copies of the
+    two scripts: fifteen kinds of `bootcamp_host.json` that give no version, each with a
+    manifest above the script and without one; the host file against both manifests; each
+    script's own manifest lookup; and a `bootcamp_host.json` in six other places and a
+    manifest in three, none of which may be read. Those cases hold for every package because
+    the code of `plugin_version()` in each built copy is compared with the source's. The text
+    checks read the reworded sentence and the three files it names, with whitespace collapsed
+    (INV-346).
+    Negative controls, each run in a throwaway clone: against `257ac1e` with only the new
+    test file, 12 of the 24 tests fail (`FAILED (failures=19)`); with one line of the fix
+    changed at a time, each of 18 mutations fails at least one test.
+  - **Not observed.** No real assistant ran the hook or the packager. The hook is started
+    directly in the tests, and not through an assistant or through the hook adapter that four
+    of the packages use, so the tests show what each script writes and not what a guide then
+    records. Verified on Linux only, with Python 3.12.3. No run on macOS or on Windows
+    happened, so no record is added to any `hosts/<assistant>/checks.json`. The change is
+    standard library only and adds no branch on the platform (INV-001).
+- **Invariants.** The register is not edited here (INV-365). INV-105 and INV-252 are not
+  changed, as the issue decides. The change ships one hard-rule line, in the new test module's
+  docstring. `since` does not report it, because `tests/` is not a rule home. The block below
+  covers it (INV-309).
+
+- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** A bundled script that reports the bootcamp's version reads it from the `bootcamp_host.json` beside it first. The rule already shipping, quoted:
+    - ⛔ **A bundled script that reports the bootcamp's version reads `bootcamp_version` from the `bootcamp_host.json` beside it before any manifest.** — in `tests/test_scripts_report_the_built_version.py`
+
+  Enforced by `tests/test_scripts_report_the_built_version.py`.
+
+  **Why it is not an existing invariant:** INV-252 says a read of a bundled file resolves
+  inside the plugin serving the run and is never found by a search, and gives the order for
+  the manifest: the plugin root variable, the skill-relative fallback, then "Unknown". It does
+  not name `bootcamp_host.json`, and it does not say which file a script takes the version
+  from. INV-105 says the version is shown at the start and recorded in the recap, read from
+  the manifest. It says nothing about the feedback hook or the packager. INV-185 is about
+  running a bundled script. None of them says that a script reports the built version in every
+  assistant's package, and a manifest path alone cannot: the assistants keep their manifests
+  in different places.
+
+  Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
+  invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
+
+  **INV-NNN** — A bundled script that reports the bootcamp's version MUST read it first from `bootcamp_version` in the `bootcamp_host.json` the build writes beside that script, so that it reports the built version in every assistant's package. Two scripts report it: `feedback-capture.py`, in the text it injects when the bootcamper asks to give feedback, and `package_bootcamp.py`, as `plugin_version` in `PACKAGE_MANIFEST.json` and on the last line of `OPEN_ME_FIRST.md`. When that file gives no version (it is missing, cannot be read, is not valid JSON, or holds no string under `bootcamp_version` that is more than whitespace) the script MUST NOT raise and MUST go on to its own manifest lookup, at paths fixed from the script's location, and then report its unresolved value ("Unknown" from the hook, "unknown" from the packager), never a guess. A script MUST NOT search the filesystem for either file (INV-252). Observed (`dry-run-2026-11-17`, finding 4; `production-readiness-audit-2026-11-17`, finding 22): reading a manifest path alone, the hook told the guide the version was "Unknown" in the Copilot, ChatGPT, Gemini and Kiro packages, and the packager recorded "unknown" in the ChatGPT and Kiro packages. Enforced by `tests/test_scripts_report_the_built_version.py`, which runs both scripts from every built package and the fallback cases on scratch copies; it **cannot** establish that a live assistant runs the hook or what a guide then records, and it was run on Linux only. (Source: `the-feedback-hook-and-the-packager-report-the-bootcamp-version-as-unknown-on-non-claude-packages`, GitHub issue #31, 2026-11-17.)
+
+- **Commit:** uncommitted
+
 ## after-graduation-three-hooks-still-treat-the-bootcamp-as-in-progress
 
 - **Implemented:** 2026-11-17 (issue #32)
