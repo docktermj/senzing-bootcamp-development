@@ -60,7 +60,8 @@ when it is absent and supplies the `@requires_fpdf2` guard; see `docs/developmen
   `test_working_depth_by_stage.py` (one effort level per stage, one instruction per level, the
   same bytes in every package), `test_bootcamp_build_guidance_parity.py` (no frontmatter, agents
   directory, hook configuration or settings file sets either) and
-  `test_model_docs_name_no_switch.py` (the maintainer notes and every assistant's site tips).
+  `test_model_docs_name_no_switch.py` (the maintainer notes, every assistant's site tips, and
+  each install page: a model it names is the welcome's, and it names no effort, issue #13).
 - `test_brand_sync.py` — asserts the inlined fallback palettes in
   `senzing_viz_server.py` and `generate_recap_pdf.py` stay equal to
   `brand_tokens.py`, so the hand-maintained copies cannot drift silently.
