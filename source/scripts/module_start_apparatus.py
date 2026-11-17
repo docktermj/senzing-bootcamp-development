@@ -195,9 +195,11 @@ TRUTHY = ("1", "true", "yes", "on")
 
 def _preferences_flag():
     """True when ``config/bootcamp_preferences.yaml`` has a top-level
-    ``bootcamp_complete: true``. Read line by line, with no YAML dependency. Never raises."""
+    ``bootcamp_complete: true``. Read line by line, with no YAML dependency. Never raises.
+    A file that is not valid UTF-8 is read with replacement characters, so its ASCII keys
+    are still read, as ``stop-nudge.py`` reads its opt-out from the same file (#25)."""
     try:
-        with open(PREFERENCES, encoding="utf-8") as fh:
+        with open(PREFERENCES, encoding="utf-8", errors="replace") as fh:
             for line in fh:
                 name, sep, value = line.partition(":")
                 if sep and name == "bootcamp_complete":

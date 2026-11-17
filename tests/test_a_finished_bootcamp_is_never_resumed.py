@@ -460,8 +460,10 @@ class NegativeControls(unittest.TestCase):
 
     def test_a_session_start_without_the_finished_check_is_caught(self):
         scripts = Scripts(self, {SESSION_START: (
-            "if module_start_apparatus.bootcamp_complete():\n    print(FINISHED)",
-            "if False:\n    print(FINISHED)")})
+            "if module_start_apparatus.bootcamp_complete():\n"
+            "    recap_checkpoint.write_utf8(sys.stdout, FINISHED",
+            "if False:\n"
+            "    recap_checkpoint.write_utf8(sys.stdout, FINISHED")})
         out = scripts.run(self, SESSION_START, project(self, LEFT_ON_LAST_MODULE, FLAG))
         self.assertIn("a finished bootcamp was offered a resume",
                       session_start_problems(out, True))

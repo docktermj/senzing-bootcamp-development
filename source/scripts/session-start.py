@@ -25,6 +25,10 @@ holds even when the progress file is missing or malformed, because a finished pr
 never read as a fresh bootcamp and run onboarding again. The message is ASCII-only, like the
 reminder, so a Windows console code page cannot break it.
 
+Every message is written to stdout as UTF-8 bytes (``recap_checkpoint.write_utf8``), so the
+resume message, which is not ASCII-only, is the same bytes whatever encoding the console
+gives Python (#25).
+
 Cross-platform: invoked as a ``type: command`` hook whose ``command`` names the
 interpreter and this script, quoted (``python3 "<path>"``), per INV-052. Python is already a hard bootcamp dependency (the graduation recap PDF always
 runs under python3; the Truth Set visualization server also does when the chosen language is
@@ -74,7 +78,7 @@ FINISHED = ("This Senzing bootcamp is complete: bootcamp_complete is set, so gra
 
 # A finished bootcamp first: either file's flag ends it, whatever the progress file records.
 if module_start_apparatus.bootcamp_complete():
-    print(FINISHED)
+    recap_checkpoint.write_utf8(sys.stdout, FINISHED + "\n")
     sys.exit(0)
 
 if recap_checkpoint.bootcamp_active():
@@ -102,6 +106,6 @@ if recap_checkpoint.bootcamp_active():
     apparatus = module_start_apparatus.resume_reminder()
     if apparatus:
         message += " " + apparatus
-    print(message)
+    recap_checkpoint.write_utf8(sys.stdout, message + "\n")
 
 sys.exit(0)

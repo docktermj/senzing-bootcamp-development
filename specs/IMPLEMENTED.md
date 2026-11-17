@@ -36,6 +36,108 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## hooks-and-the-hook-adapter-give-the-same-result-under-a-legacy-code-page
+
+- **Implemented:** 2026-11-17 (issue #25)
+- **Files changed:** `source/scripts/write-gate.py`, `source/scripts/stop-nudge.py`,
+  `source/scripts/feedback-capture.py`, `source/scripts/session-start.py`,
+  `source/scripts/precompact-recap.py`, `source/scripts/recap_checkpoint.py`,
+  `source/scripts/module_start_apparatus.py`, `hosts/_shared/hook_adapter.py`,
+  `tests/test_hooks_under_a_legacy_code_page.py` (new),
+  `tests/test_a_finished_bootcamp_is_never_resumed.py` and
+  `tests/test_module_start_reminder.py` (one mutation anchor each),
+  `specs/IMPLEMENTED.md` (this entry)
+- **MCP re-check:** n/a (no Senzing fact). Re-confirmed on 2026-11-17 against the change itself:
+  it changes how the hook scripts and the hook adapter read and write bytes, and asserts
+  nothing about Senzing. No absence claim about the Senzing MCP server is made, so INV-213's
+  `owner-checked:` clause is not owed.
+- **Summary:** The ten hook scripts and the hook adapter now give the same exit code and the
+  same bytes on stdout and stderr whatever encoding Python's standard streams have. Before,
+  under a legacy code page, a payload holding a curly quote made the write gate exit 1 where
+  it had to block, and the write was then allowed through all four packages that run the
+  adapter.
+  - **Verified by simulation only.** Every result below comes from running the scripts with
+    `PYTHONIOENCODING=cp1252` and again with `PYTHONIOENCODING=utf-8`, on Linux with Python
+    3.12.3. No run on Windows happened, and no run on a real assistant happened. No run is
+    added to any `hosts/<assistant>/checks.json`. `PYTHONIOENCODING` changes the three
+    standard streams only: the encoding `open()` and `subprocess` take from the locale is not
+    simulated.
+  - **Reading a payload.** `write-gate.py`, `stop-nudge.py` and `feedback-capture.py` read
+    stdin as bytes and decode it as UTF-8 with replacement characters. A payload that is not
+    valid UTF-8 is then judged as usual, so the write gate still blocks a temp path and a
+    secret-shaped write in it. The four hooks that already gave `json.loads` the bytes are
+    unchanged.
+  - **Writing.** `stop-nudge.py` writes its decision as ASCII-escaped JSON. `session-start.py`
+    and `precompact-recap.py` write their plain text, the write gate writes its block message,
+    and `recap_checkpoint.py` writes its stderr report, as UTF-8 bytes. The two that share
+    `recap_checkpoint.py` use its new `write_utf8`. No message is reworded: the em dashes in
+    the resume message and in the container summary stay, and are now bytes `e2 80 94` under
+    cp1252 where they were byte `97`. `docker_lifecycle.py` needed no change, because it
+    returns the summary and `session-start.py` writes it.
+  - **The adapter.** `run_script` gives each script ASCII JSON as bytes, reads its output as
+    bytes and decodes it as UTF-8 with replacement characters, so the exit code is always
+    used. `write_result` writes ASCII-escaped JSON, and writes the `text` dialect's context
+    and every denial reason as UTF-8 bytes through a new `write_text`.
+  - **Files that are not valid UTF-8.** A transcript is unreadable to `stop-nudge.py`, as a
+    missing one is, so the hook stays silent. The preferences file is read with replacement
+    characters, so `disable_stop_nudge: true` still holds. An `event-data` transcript is
+    unreadable to the adapter's `final_message`, as it already was to `canonical_transcript`.
+  - **Decided here, because the issue names the rule and not these three places.** Each
+    follows from "JSON is ASCII-escaped" or from "its ASCII keys are still read", and each has
+    its own test and negative control. (1) The payload the adapter hands a script is ASCII
+    JSON. (2) So is the adapter's canonical copy of an `event-data` transcript. A lone
+    surrogate, which is valid JSON and cannot be encoded as UTF-8, failed both writes and
+    ended the event quietly: measured before the change, a temp-path write was allowed through
+    the Copilot package when the transcript held one. (3) `module_start_apparatus.py` reads
+    `bootcamp_complete` from the preferences file with replacement characters, as the stop
+    nudge reads its opt-out from the same file, so a finished bootcamp is not nudged.
+  - **Compatibility.** Exit codes and the parsed content of every result are unchanged under
+    UTF-8. The bytes of JSON results change, because non-ASCII characters are now escaped. No
+    existing test compared those bytes. Two tests that mutate `session-start.py` to prove a
+    guard fails now name the `write_utf8` call where they named `print`; the mutations are the
+    same.
+  - **Unchanged.** Hook commands, payload shapes and `bootcamp_host.json`. The hooks and the
+    adapter are standard-library Python, invoked as before (INV-052), and the change adds no
+    branch on the platform (INV-001).
+  - **Found and not fixed.** `docker_lifecycle.py`'s `_run` decodes a container CLI's output in
+    the locale's encoding and catches no decode error, so `session-start.py` exits 1 with a
+    traceback when that output cannot be decoded. Reproduced on 2026-11-17 with a stand-in
+    `docker` on `PATH`. The simulation cannot see it and the issue does not name it. An issue
+    is drafted in the run's handoff and is **not filed**.
+  - **Tests.** The new module holds 24 tests. Each starts a hook script from `source/scripts/`,
+    or the adapter of a freshly built Copilot, ChatGPT, Gemini or Kiro package, as its own
+    process under both encodings and compares exit code, stdout bytes and stderr bytes. The
+    denied writes use the tool name each package's `tool_categories` maps, and each denial and
+    each context is read in that package's own result dialect. Negative controls, each run in
+    a throwaway clone: against the scripts at `1f7c4d9`, 19 of the 24 tests fail
+    (`FAILED (failures=47, errors=2)`); with one earlier line restored at a time in the fixed
+    scripts, each of 17 mutations fails at least one test. Two changes have no failing
+    control, because the text they write is ASCII today: the write gate's block message and
+    the pre-compact reminder.
+- **Invariants.** The register is not edited here (INV-365). The change ships one hard-rule
+  line, in the new test module's docstring. `since` does not report it, because `tests/` is
+  not a rule home. The block below covers it.
+
+- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** A hook script and the hook adapter give the same result whatever Python's I/O encoding is. The rule already shipping, quoted:
+    - ⛔ **A hook script and the hook adapter give the same exit code and the same bytes on stdout and stderr whatever Python's I/O encoding is.** — in `tests/test_hooks_under_a_legacy_code_page.py`
+
+  Enforced by `tests/test_hooks_under_a_legacy_code_page.py`.
+
+  **Why it is not an existing invariant:** INV-001 names the three platforms and says nothing
+  about how a hook reads or writes text. INV-052 says how a hook is invoked: a Python 3
+  script, named in a quoted `command`. INV-055 says the stop nudge has an opt-out, and not
+  that the opt-out survives a preferences file saved in another encoding. INV-200 and INV-109
+  say what the write gate blocks, and not that the block survives a payload the console's
+  encoding cannot decode. None of them says that a hook's result is independent of the
+  encoding of Python's standard streams.
+
+  Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
+  invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
+
+  **INV-NNN** — Every hook script `source/bootcamp.json` names, and the hook adapter `hosts/_shared/hook_adapter.py`, MUST give the same exit code and the same bytes on stdout and stderr whatever encoding Python's standard streams have. A hook payload MUST be read as bytes and decoded as UTF-8. JSON a hook or the adapter writes MUST be ASCII-escaped, and plain text and stderr MUST be written as UTF-8 bytes. Text that is not valid UTF-8 MUST NOT produce a traceback and MUST NOT lose a block: a payload and a script's output are decoded with replacement characters, a transcript is treated as unreadable, and the ASCII keys of `config/bootcamp_preferences.yaml` are still read. The adapter MUST use a script's exit code whatever that script wrote. Enforced by `tests/test_hooks_under_a_legacy_code_page.py`, which runs the scripts and each built package's adapter with `PYTHONIOENCODING=cp1252` and with `PYTHONIOENCODING=utf-8`, and **cannot** establish behavior on Windows, behavior on a real assistant, or anything about the encoding `open()` and `subprocess` take from the locale. (Source: `hooks-and-the-hook-adapter-give-the-same-result-under-a-legacy-code-page`, GitHub issue #25, 2026-11-17.)
+
+- **Commit:** uncommitted
+
 ## the-cited-or-deferred-gate-checks-outside-the-corpus-lines-against-truncated-text
 
 - **Implemented:** 2026-11-17 (issue #49)

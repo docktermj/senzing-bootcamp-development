@@ -16,7 +16,9 @@ anywhere in the bootcamp. Emits nothing otherwise, so the plugin
 never alters unrelated sessions.
 
 Cross-platform: invoked as a ``type: command`` hook whose ``command`` names the
-interpreter and this script, quoted (``python3 "<path>"``), per INV-052.
+interpreter and this script, quoted (``python3 "<path>"``), per INV-052. The payload is
+read as bytes and decoded as UTF-8, and the JSON on stdout is ASCII-escaped, so no console
+code page can break either (#25).
 """
 import json
 import os
@@ -49,7 +51,9 @@ def plugin_version():
     return version.strip() if isinstance(version, str) and version.strip() else "Unknown"
 
 
-raw = sys.stdin.read()
+# Bytes, decoded as UTF-8: a text-mode read takes the console code page on Windows, where
+# a curly quote in the prompt failed the decode (#25).
+raw = sys.stdin.buffer.read().decode("utf-8", errors="replace")
 
 # Gate: outside a bootcamp, do nothing at all.
 if not os.path.isfile(os.path.join("config", "bootcamp_progress.json")):

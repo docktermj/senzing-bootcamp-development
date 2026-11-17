@@ -37,6 +37,10 @@ secrets too (hooks/README.md, Gate column).
 Cross-platform: invoked as a ``type: command`` hook whose ``command`` names the
 interpreter and this script, quoted (``python3 "<path>"``), per INV-052.
 Native JSON parsing replaces the previous grep/sed field extraction.
+
+The payload is read as bytes and decoded as UTF-8, and the block message is written as
+UTF-8 bytes, so the result is the same whatever encoding the console gives Python (#25).
+A payload that is not valid UTF-8 is read with replacement characters and judged as usual.
 """
 import json
 import os
@@ -44,7 +48,10 @@ import re
 import shlex
 import sys
 
-data = sys.stdin.read()
+# Bytes, decoded as UTF-8: a text-mode read takes the console code page on Windows, where
+# a curly quote in the payload failed the decode and the gate exited 1, allowing the write
+# (#25). Replacement characters keep a payload that is not valid UTF-8 judged, not crashed.
+data = sys.stdin.buffer.read().decode("utf-8", errors="replace")
 
 # Gate: only enforce when a bootcamp is active, so the plugin never blocks writes in
 # unrelated sessions.
@@ -74,7 +81,10 @@ TEMP_SUBSTRINGS = ("/downloads/", "/appdata/local/temp/", "/windows/temp/")
 
 
 def block(message):
-    sys.stderr.write(message + "\n")
+    # UTF-8 bytes, whatever encoding the console gave stderr (#25).
+    sys.stderr.flush()
+    sys.stderr.buffer.write((message + "\n").encode("utf-8"))
+    sys.stderr.buffer.flush()
     sys.exit(2)
 
 
