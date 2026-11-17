@@ -36,6 +36,123 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## powershell-writes-to-a-temp-directory-pass-the-write-gate-on-copilot
+
+- **Implemented:** 2026-11-17 (issue #33)
+- **Files changed:** `hosts/_shared/hook_adapter.py`, `hosts/copilot/host.json`,
+  `source/hooks/README.md`, `source/scripts/write-gate.py`,
+  `tests/test_write_gate_powershell.py`, `specs/IMPLEMENTED.md` (this entry)
+- **MCP re-check:** n/a (no Senzing fact). Re-confirmed on 2026-11-17 against the change itself:
+  it changes how the write gate reads a shell command and which tool an assistant's profile
+  declares as PowerShell, and asserts nothing about Senzing. The URL in the new tests,
+  `https://mcp.senzing.com/examples/x.py`, is the sample string `tests/test_write_gate_bash.py`
+  already uses as a command argument; nothing is fetched and nothing is claimed about what the
+  server serves there. No absence claim about the Senzing MCP server is made, so INV-213's
+  `owner-checked:` clause is not owed.
+- **Summary:** A command sent through a shell tool that an assistant's profile declares as
+  PowerShell is now read by PowerShell's rules, and the write gate blocks its top-level output
+  targets in system temp or Downloads outside the project, as it already did for a POSIX
+  command. This is finding 9 of `dry-run-2026-11-17`. Before the change, the two reported
+  commands, `python src\load\load.py > $env:TEMP\o.txt` and `echo hi > C:\Windows\Temp\o.txt`,
+  were allowed through the Copilot adapter's `powershell` tool.
+  - **The dialect travels with the call.** `hosts/copilot/host.json` gains
+    `options.adapter.shell_dialects`, which maps the tool name `powershell` to the dialect
+    `powershell`. The build already copies `options.adapter` whole into `bootcamp_host.json`,
+    so no build tool changed. `hosts/_shared/hook_adapter.py` looks the tool up there, exactly
+    and then lower-cased, and adds a top-level `"shell_dialect": "powershell"` to the canonical
+    payload of a shell call from that tool. `tool_name` stays `Bash` and `tool_input` is
+    unchanged. A tool the profile does not name gets no field, and no other assistant's
+    profile declares one.
+  - **One pipeline, two readers.** The second half of `bash_targets()` (the loop over
+    redirects and simple commands) is now `token_targets()`, with its body unchanged. A POSIX
+    command reaches it through `shlex` as before. A PowerShell command reaches it through the
+    new `powershell_tokens()`, which produces the same tokens by PowerShell's rules: a
+    backslash is a literal character, the backtick is the escape, a single-quoted string is
+    literal, and a double-quoted string is one word whose variables still count. A stream in
+    front of a redirect belongs to the operator, `2>&1` and `*>&1` name no file, and a
+    here-string's body and a comment are dropped.
+  - **The writers.** `POWERSHELL_WRITERS` is the Bash table plus the cmdlets and aliases of
+    the issue's table: `Out-File`; `Set-Content` and `Add-Content` (`sc`, `ac`);
+    `Tee-Object` (`tee`); `Copy-Item` and `Move-Item` (`cp`, `copy`, `cpi`, `mv`, `move`,
+    `mi`); `Invoke-WebRequest` (`iwr`, `curl`, `wget`). Command and parameter names match in
+    any case, and `-Name:value` is read. `tee`, `curl` and `wget` are read both as the cmdlet
+    alias and as the program, so `curl.exe -o` and `wget -O` are read as on Bash. `cp` and
+    `mv` are read as the cmdlet aliases only under PowerShell, because the getopt reading
+    takes the last positional and would deny `cp -Destination src\a.txt -Path $env:TEMP\a.txt`.
+    A POSIX command never sees the new names.
+  - **The locations.** System temp is also `$env:TEMP`, `$env:TMP` and `$env:TMPDIR`, in any
+    case, with or without braces. Downloads is reached through `$HOME`, `$env:USERPROFILE`,
+    `$env:HOME` or `~`. The directories `location()` lists are unchanged, and `location()`
+    itself is untouched, so a target inside the project is still allowed before any temp list
+    is consulted. `$null` resolves to no temp location and is allowed.
+  - **What is still allowed.** A command with an unbalanced quote, as on Bash: the gate does
+    not fail closed on a command it cannot split. A quoted payload such as
+    `powershell -Command '…'`, a temp path that is a source, and a target outside the project
+    that is not temp or Downloads. A variable other than those named, an expression and an
+    abbreviated parameter name are not evaluated. The secret check does not run on a shell
+    command, as before.
+  - **Where the change goes beyond the issue.** The issue lists `;`, a newline, `|`, `&&` and
+    `||` as ending a PowerShell command. The gate also ends one at `&`, `(`, `)`, `{` and
+    `}`, so a write inside `if (…) { … }` is read and the words of a source expression in
+    parentheses are not counted as positionals. To do that the shared `COMMAND_ENDS` set
+    gains `{` and `}`. The POSIX reader never produces either as an operator, so the Bash
+    reading is unchanged: every case in `tests/test_write_gate_bash.py` passes with the file
+    untouched.
+  - **The gate says what it checks.** The gate's docstring and the write-gate row of
+    `source/hooks/README.md` name the PowerShell forms. `source/hooks/fallbacks/write-gate.md`
+    is not changed: the issue does not list it, and it states the rule for an assistant with
+    no hook, with the Bash forms as examples.
+  - **Approach.** Two implementations were raced and judged before this run applied one. The
+    winner, B, normalizes a PowerShell command into the gate's existing token pipeline; the
+    other, A, added a separate PowerShell reader beside the POSIX path. B's patch was made
+    against `e90d05a` and applied to `8490ad2` with no conflict. #25 and #47 changed other
+    lines of `write-gate.py`, and `powershell_command()` reads the same decoded payload
+    `bash_command()` does.
+  - **Tests.** The new module holds 40 tests. Each command goes through the Copilot package
+    as the build writes it (its `hook_adapter.py`, its `bootcamp_host.json`, its
+    `write-gate.py`), in the `preToolUse` payload captured from Copilot CLI 1.0.111 for its
+    `bash` tool, with the tool name changed to `powershell`. A denial is compared with the
+    whole of `LOC_MSG`, read from the gate's source. The tests send both reported commands;
+    each redirect, spaced and attached; 59 generated forms of the cmdlets and aliases into
+    temp and into Downloads, and the same 59 inside the project as the negative control; 24
+    temp and Downloads spellings, each unquoted and in two double-quoted forms; the in-project
+    writes, with a project that lives under the temp directory; and each allowed case with a
+    denied control beside it. The Bash test's blocked forms are replayed through Copilot's
+    `bash` tool, and a canonical payload with no dialect, a null one and an unknown one is
+    read as POSIX. Negative control, run in a throwaway clone of `8490ad2` holding only the
+    new test file: `FAILED (failures=297, errors=4)`, in 33 of the 40 tests. The seven that
+    pass there pin unchanged behavior.
+  - **Not observed.** No payload from Copilot on Windows has been seen. The tool name
+    `powershell` comes from `hosts/copilot/host.json`, and the payload shape is the Linux
+    `bash` capture with the name changed. No PowerShell ran: the tests show what the gate
+    decides for a command string, not what a live PowerShell writes. Verified on Linux only,
+    with Python 3.12.3. No run on macOS, on Windows or on a real assistant happened, so no
+    record is added to `hosts/copilot/checks.json`. The change is standard library only, runs
+    no shell and adds no branch on the platform (INV-001).
+- **Invariants.** Establishes no new invariant (INV-309), and proposes a change to one in
+  force. The register is not edited here (INV-365). The change adds no hard-rule line:
+  `conformance.py since --since-last-audit` reports none for the range. INV-200's 2026-11-06
+  note lists what the gate reads on a Bash command, and the block below proposes the dated
+  note that would bind the PowerShell reading. Until the maintainer applies it, only the test
+  holds it.
+
+- **PROPOSED AMENDMENT to INV-200 — awaiting the maintainer's sign-off; NOT applied.**
+    - ⛔ **A command sent by a shell tool declared as PowerShell is read by PowerShell's rules and held to the same rule** — in `source/hooks/README.md`
+
+  INV-200's dated note of 2026-11-06 says what the gate blocks and allows on a Bash command,
+  and names only POSIX forms. The gate now also reads a PowerShell command, by other rules and
+  with other writers. Without the note below, the register does not say which commands get
+  that reading, what is blocked on one, or that a payload naming no dialect is read as POSIX
+  shell, so a later edit can drop a PowerShell form or read every command both ways and
+  contradict no registered rule. Enforced by `tests/test_write_gate_powershell.py`.
+
+  Drafted wording follows, under the registered id. A new rule's id would be
+  written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
+
+  **INV-200** — (⚠️ **Dated note, 2026-11-17 (#33): a command from a shell tool declared as PowerShell is read by PowerShell's rules; the Bash reading and the Write/Edit boundary above are unchanged.** An assistant's profile names which of its shell tools is PowerShell (`options.adapter.shell_dialects` in `hosts/<assistant>/host.json`), and the hook adapter passes that on as `shell_dialect` in the canonical payload; `tool_name` stays `Bash`, and a payload that names no dialect MUST be read as POSIX shell. On a PowerShell command the gate MUST block, with the same temp/Downloads message, a top-level output target that resolves to system temp or Downloads outside the project, in each command the line holds: a `>` or `>>` redirect, alone or with a stream in front (`2>`, `2>>`, `*>`, `*>>`); `Out-File`; `Set-Content` and `Add-Content` (`sc`, `ac`); `Tee-Object` (`tee`); the destination of `Copy-Item` and `Move-Item` (`cp`, `copy`, `cpi`, `mv`, `move`, `mi`); and `Invoke-WebRequest -OutFile` (`iwr`, `curl`, `wget`), with `curl.exe -o` and `wget -O` read as on Bash. Command and parameter names match in any case. System temp is also `$env:TEMP`, `$env:TMP` and `$env:TMPDIR`, in any case, with or without braces; Downloads is reached through `$HOME`, `$env:USERPROFILE`, `$env:HOME` or `~`. It MUST allow a target inside the project first, as above, and MUST allow `$null`, a stream merge such as `2>&1`, a temp path that is a source, a non-temp target outside the project, a quoted payload such as `powershell -Command '…'`, a here-string's body, and a command it cannot split. A variable other than those named, an expression and an abbreviated parameter name are not evaluated, and the secret check (INV-109) does not run. Enforced by `tests/test_write_gate_powershell.py`, which sends each command through the built Copilot adapter and **cannot** establish what a live PowerShell writes or what payload Copilot sends on Windows: that payload has not been observed, and no run in `hosts/copilot/checks.json` is on Windows.)
+
+- **Commit:** uncommitted
+
 ## three-generator-and-write-gate-messages-mislead
 
 - **Implemented:** 2026-11-17 (issue #47)

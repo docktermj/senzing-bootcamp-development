@@ -235,6 +235,16 @@ def canonical_calls(name, arguments, categories):
     return [(CANONICAL_TOOL[category], tool_input)]
 
 
+def shell_dialect(name, dialects):
+    """The shell one of the assistant's shell tools runs, when its profile declares one.
+
+    ``shell_dialects`` in the profile maps a tool name to a dialect (``"powershell"``). A tool
+    it does not name declares none, and the hook scripts read its commands as POSIX shell.
+    """
+    dialect = dialects.get(name) or dialects.get(name.lower())
+    return dialect if isinstance(dialect, str) else None
+
+
 def canonical_response(raw):
     """A tool result in the canonical shape: ``{"stdout", "stderr", "is_error"}``.
 
@@ -376,6 +386,9 @@ def canonical_payloads(event, hook, payload, config, environ, project):
             if tool_name not in wanted:
                 continue
             call = dict(base, tool_name=tool_name, tool_input=tool_input)
+            dialect = shell_dialect(name, config.get("shell_dialects") or {})
+            if tool_name == CANONICAL_TOOL["shell"] and dialect:
+                call["shell_dialect"] = dialect  # the tool stays the canonical shell tool
             response = canonical_response(next((payload[key] for key in RESPONSE_KEYS if key in payload), None))
             if response is not None:
                 call["tool_response"] = response

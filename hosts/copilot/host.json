@@ -66,6 +66,9 @@
         "apply_patch": "patch",
         "bash": "shell",
         "powershell": "shell"
+      },
+      "shell_dialects": {
+        "powershell": "powershell"
       }
     }
   },
