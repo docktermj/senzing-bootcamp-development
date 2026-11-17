@@ -27,6 +27,26 @@ Downloads (``/opt/senzing``, ``~/.cargo``) is allowed: installers write there. A
 ``shlex`` cannot split (an unbalanced quote) is allowed, as a Write/Edit payload whose target
 cannot be extracted is.
 
+On a **PowerShell** command the rule is the same and only the reading differs. The hook
+adapter adds ``"shell_dialect": "powershell"`` to the Bash payload when the assistant's
+profile declares the shell tool that sent the command a PowerShell one; a payload that names
+no dialect is read as POSIX shell, exactly as above. ``powershell_tokens()`` reads the
+command by PowerShell's rules and hands the same pipeline the same tokens: a backslash is a
+literal character and the backtick is the escape, a single-quoted string is literal, a
+double-quoted string is one word in which the variables below still count, and ``;``, a
+newline, ``|``, ``&&`` and ``||`` end a command. Checked are a ``>`` or ``>>`` redirect, alone
+or with a stream in front (``2>``, ``2>>``, ``*>``, ``*>>``), and the PowerShell writers:
+``Out-File``, ``Set-Content`` and ``Add-Content`` (``sc``, ``ac``), ``Tee-Object`` (``tee``),
+the destination of ``Copy-Item`` and ``Move-Item`` (``cp``, ``copy``, ``cpi``, ``mv``,
+``move``, ``mi``) and ``Invoke-WebRequest -OutFile`` (``iwr``, ``curl``, ``wget``). Command
+and parameter names match in any case, and ``curl.exe -o`` and ``wget -O`` are still read as
+above. System temp is also ``$env:TEMP``, ``$env:TMP`` and ``$env:TMPDIR``, with or without
+braces, and the home directory is ``$HOME``, ``$env:USERPROFILE``, ``$env:HOME`` or ``~``.
+``$null`` names no file, nor does ``2>&1``, which joins two streams, and a here-string's
+body is data. Any other variable, an expression and an abbreviated parameter name
+(``-Dest``) are not evaluated. The payload a PowerShell tool sends on Windows has not been
+observed: the tests simulate it.
+
 Gate: the hook enforces nothing unless ``config/bootcamp_progress.json`` EXISTS, and it tests
 existence on purpose, not ``recap_checkpoint.bootcamp_active()``: existence answers "is this
 a bootcamp project", not "is a bootcamp in progress" (INV-227). The onboarding preface
@@ -187,6 +207,7 @@ BASH_PUNCT = "();<>|&\n"
 BASH_OPS = re.compile(
     r"&>>|;;&|&>|>>|>\||>&|<<<|<<|<>|<&|&&|\|\||\|&|;;|;&|[;&|()<>\n]")
 COMMAND_ENDS = {";", "&&", "||", "|", "|&", "&", "\n", ";;", ";&", ";;&", "(", ")"}
+COMMAND_ENDS |= {"{", "}"}            # PowerShell's script block; shlex never returns either
 WRITE_REDIRECTS = {">", ">>", ">|", "&>", "&>>", "<>", ">&"}
 READ_REDIRECTS = {"<", "<<", "<<<", "<&"}
 # A here-document's body is data, not commands: it is cut out before splitting.
@@ -195,6 +216,9 @@ ASSIGNMENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
 # `$TMPDIR`/`$TEMP`/`$TMP` in a target is temp, as `%TEMP%`/`%TMP%` is on the Write path.
 TEMP_VAR = re.compile(r"\$\{?(?:TMPDIR|TEMP|TMP)(?![A-Za-z0-9_])")
 HOME_VAR = re.compile(r"^\$\{?HOME\}?(?=/|$)")
+# PowerShell's spellings, in any case. `` `$ `` is how powershell_tokens() keeps a literal dollar.
+PS_TEMP_VAR = re.compile(r"(?<!`)\$\{?env:(?:TMPDIR|TEMP|TMP)(?![A-Za-z0-9_])", re.I)
+PS_HOME_VAR = re.compile(r"^(?:~|\$\{?(?:env:(?:USERPROFILE|HOME)|HOME)\}?)(?=[\\/]|$)", re.I)
 
 # Words that run the command after them, each with its short options that take a value.
 WRAPPERS = {"sudo": "CDghprtUu", "env": "CSu", "exec": "a", "nice": "n",
@@ -273,9 +297,88 @@ def cp_mv_targets(args):
 WRITERS = {"curl": curl_targets, "wget": wget_targets, "tee": tee_targets,
            "cp": cp_mv_targets, "mv": cp_mv_targets}
 
+# PowerShell switch parameters: one takes no value, so the word after it is a positional.
+PS_SWITCHES = frozenset(
+    "append asbytestream confirm container debug force noclobber nonewline passthru recurse "
+    "usetransaction verbose whatif".split())
 
-def command_targets(words):
-    """The output targets one simple command's arguments name, by the WRITERS table."""
+
+def powershell_args(args):
+    """Split a cmdlet's ``args`` into ``({parameter: value}, positionals)``.
+
+    A parameter name is matched lower-cased and whole: an abbreviated name is another
+    parameter. ``-Name:value`` carries its value, a switch takes none, and any other
+    parameter takes the next argument. Words joined by a comma are one argument
+    (``a.txt, b.txt``), so a list of sources is never read as a source and a destination.
+    """
+    joined = []
+    for arg in args:
+        if joined and (joined[-1].endswith(",") or arg.startswith(",")):
+            joined[-1] += arg
+        else:
+            joined.append(arg)
+    named, positionals = {}, []
+    i = 0
+    while i < len(joined):
+        arg = joined[i]
+        if re.match(r"-[A-Za-z]", arg):
+            name, colon, value = arg[1:].partition(":")
+            name = name.lower()
+            if not colon and name not in PS_SWITCHES and i + 1 < len(joined):
+                i += 1
+                value = joined[i]
+            named[name] = value
+        else:
+            positionals.append(arg)
+        i += 1
+    return named, positionals
+
+
+def powershell_file_targets(*parameters):
+    """A writer whose target is one of ``parameters`` or, with none named, its first positional."""
+    def targets(args):
+        named, positionals = powershell_args(args)
+        return [named[p] for p in parameters if p in named] or positionals[:1]
+    return targets
+
+
+def powershell_copy_targets(args):
+    named, positionals = powershell_args(args)
+    if "destination" in named:
+        return [named["destination"]]
+    first = 0 if "path" in named or "literalpath" in named else 1
+    return positionals[first:first + 1]
+
+
+def powershell_web_targets(args):
+    named, _ = powershell_args(args)
+    return [named["outfile"]] if "outfile" in named else []
+
+
+def both(*writers):
+    """A writer for a name both shells have: the targets either reading finds."""
+    return lambda args: [target for writer in writers for target in writer(args)]
+
+
+# WRITERS as a PowerShell tool's command is read: the same table, with PowerShell's writers
+# added. A name both shells have is read both ways, except `cp` and `mv`, which are the
+# `Copy-Item` and `Move-Item` aliases only: read as getopt, `-Destination src -Path <temp>`
+# would give the source for the destination.
+POWERSHELL_WRITERS = dict(WRITERS)
+for _names, _writer in (
+        ("out-file", powershell_file_targets("filepath", "literalpath")),
+        ("set-content add-content sc ac", powershell_file_targets("path", "literalpath")),
+        ("tee-object", powershell_file_targets("filepath", "literalpath")),
+        ("tee", both(powershell_file_targets("filepath", "literalpath"), tee_targets)),
+        ("copy-item move-item cp copy cpi mv move mi", powershell_copy_targets),
+        ("invoke-webrequest iwr", powershell_web_targets),
+        ("curl", both(powershell_web_targets, curl_targets)),
+        ("wget", both(powershell_web_targets, wget_targets))):
+    POWERSHELL_WRITERS.update(dict.fromkeys(_names.split(), _writer))
+
+
+def command_targets(words, writers=WRITERS):
+    """The output targets one simple command's arguments name, by the ``writers`` table."""
     while words:
         first = words[0]
         if ASSIGNMENT.match(first) or first in KEYWORDS:
@@ -297,7 +400,7 @@ def command_targets(words):
     name = os.path.basename(words[0].replace("\\", "/")).lower()
     if name.endswith(".exe"):
         name = name[:-4]
-    writer = WRITERS.get(name)
+    writer = writers.get(name)
     return writer(words[1:]) if writer else []
 
 
@@ -326,11 +429,120 @@ def strip_heredocs(command):
     return "".join(out)
 
 
-def bash_targets(command):
-    """Every top-level output target in a Bash command line.
+PS_REDIRECT = re.compile(r"[1-6*]?(>>?)(?:&([1-6]))?")
+PS_COMMAND_END = re.compile(r"&&|\|\||[;|&(){}\n]")
+PS_HERE_STRING = re.compile(r"@(['\"])[ \t]*\r?\n")
+PS_CONTINUATION = re.compile(r"`\r?\n")
 
-    Raises ``ValueError`` when ``shlex`` cannot split it.
+
+def powershell_tokens(command):
+    """``command`` read by PowerShell's rules, as the ``(is_operator, text)`` tokens
+    ``bash_targets()`` makes of a POSIX command, so one pipeline reads both shells.
+
+    A backslash is a literal character and the backtick is the escape. A single-quoted
+    string is literal: its ``$`` is kept as PowerShell spells a literal one, `` `$ ``, so no
+    variable is read from it. A double-quoted string is one word whose variables still
+    count. A stream in front of a redirect belongs to the operator (``2>``, ``*>>``), and
+    ``2>&1``, which joins two streams, becomes the ``>&`` descriptor copy. A here-string's
+    body and a comment are dropped. Raises ``ValueError`` when a quote never closes.
     """
+    tokens, word, i = [], None, 0
+
+    def end_word():
+        nonlocal word
+        if word is not None:
+            tokens.append((False, word))
+            word = None
+
+    def literal(char):
+        return "`$" if char == "$" else char
+
+    while i < len(command):
+        char = command[i]
+        if word is None and command.startswith("<#", i):        # a block comment
+            close = command.find("#>", i)
+            i = len(command) if close < 0 else close + 2
+            continue
+        if word is None and char == "#":                        # a comment, to the line's end
+            close = command.find("\n", i)
+            i = len(command) if close < 0 else close
+            continue
+        redirect = PS_REDIRECT.match(command, i) if word is None or char == ">" else None
+        ends = PS_COMMAND_END.match(command, i)
+        here = PS_HERE_STRING.match(command, i)
+        continuation = PS_CONTINUATION.match(command, i)
+        if redirect:
+            end_word()
+            if redirect.group(2):       # `2>&1` joins two streams and names no file
+                tokens += [(True, ">&"), (False, redirect.group(2))]
+            else:
+                tokens.append((True, redirect.group(1)))
+            i = redirect.end()
+        elif ends:
+            end_word()
+            tokens.append((True, ends.group()))
+            i = ends.end()
+        elif char in " \t\r":
+            end_word()
+            i += 1
+        elif continuation:              # a backtick at the end of a line joins the next one
+            i = continuation.end()
+        elif here:                      # the body is data, as a here-document's is
+            close = command.find("\n" + here.group(1) + "@", here.end() - 1)
+            i = len(command) if close < 0 else close + 3
+            word = word or ""
+        elif char == "`":
+            word = (word or "") + literal(command[i + 1:i + 2])
+            i += 2
+        elif char == "'":
+            word = word or ""
+            while True:
+                close = command.find("'", i + 1)
+                if close < 0:
+                    raise ValueError("No closing quotation")
+                word += command[i + 1:close].replace("$", "`$")
+                i = close + 1
+                if command[i:i + 1] != "'":
+                    break
+                word += "'"             # a doubled quote is one literal quote
+        elif char == '"':
+            word = word or ""
+            i += 1
+            while True:
+                if i >= len(command):
+                    raise ValueError("No closing quotation")
+                char = command[i]
+                if char == "`":
+                    word += literal(command[i + 1:i + 2])
+                    i += 2
+                elif char != '"':
+                    word += char
+                    i += 1
+                elif command[i + 1:i + 2] == '"':
+                    word += '"'         # a doubled quote is one literal quote
+                    i += 2
+                else:
+                    i += 1
+                    break
+        elif command.startswith("${", i):                       # a braced variable name
+            close = command.find("}", i)
+            close = len(command) if close < 0 else close + 1
+            word = (word or "") + command[i:close]
+            i = close
+        else:
+            word = (word or "") + char
+            i += 1
+    end_word()
+    return tokens
+
+
+def bash_targets(command, powershell=False):
+    """Every top-level output target in a Bash command line, or in a PowerShell one.
+
+    Raises ``ValueError`` when the command cannot be split.
+    """
+    if powershell:
+        return token_targets(command, powershell_tokens(command), POWERSHELL_WRITERS)
     command = strip_heredocs(command).replace("\\\n", "")
     lexer = shlex.shlex(command, posix=True, punctuation_chars=BASH_PUNCT)
     lexer.whitespace_split = True
@@ -342,7 +554,11 @@ def bash_targets(command):
             tokens.extend((True, op) for op in BASH_OPS.findall(token))
         else:
             tokens.append((False, token))
+    return token_targets(command, tokens, WRITERS)
 
+
+def token_targets(command, tokens, writers):
+    """The output targets among ``tokens``: each redirect's, and each simple command's."""
     targets, words = [], []
     in_comment = last_was_word = False
     i = 0
@@ -352,7 +568,7 @@ def bash_targets(command):
         if in_comment:
             in_comment = not (is_op and token == "\n")
             if not in_comment:
-                targets += command_targets(words)
+                targets += command_targets(words, writers)
                 words = []
         elif not is_op:
             if token.startswith("#"):
@@ -361,7 +577,7 @@ def bash_targets(command):
                 words.append(token)
                 word = True
         elif token in COMMAND_ENDS:
-            targets += command_targets(words)
+            targets += command_targets(words, writers)
             words = []
         elif token in WRITE_REDIRECTS or token in READ_REDIRECTS:
             # `2>`: shlex splits the descriptor from the operator, so a bare number written
@@ -377,15 +593,16 @@ def bash_targets(command):
                     targets.append(operand)
         last_was_word = word
         i += 1
-    targets += command_targets(words)
+    targets += command_targets(words, writers)
     return targets
 
 
-def bash_target_is_temp(target):
+def bash_target_is_temp(target, powershell=False):
     """True when a Bash output target is system temp or Downloads outside the project."""
-    if TEMP_VAR.search(target):
+    if (PS_TEMP_VAR if powershell else TEMP_VAR).search(target):
         return True
-    target = HOME_VAR.sub(lambda _m: os.path.expanduser("~"), target)
+    home = PS_HOME_VAR if powershell else HOME_VAR
+    target = home.sub(lambda _m: os.path.expanduser("~"), target)
     # A destination may be a directory (`cp x /tmp`, `wget -P /tmp`), and `/tmp` itself
     # matches no `/tmp/` prefix, so a file inside it is classified too.
     inside = target.rstrip("/\\") + "/_"
@@ -405,13 +622,25 @@ def bash_command(payload):
     return command if isinstance(command, str) else ""
 
 
+def powershell_command(payload):
+    """True when the hook adapter says a PowerShell tool sent this command.
+
+    A payload that names no dialect, or one this gate does not read, is POSIX shell.
+    """
+    try:
+        return json.loads(payload).get("shell_dialect") == "powershell"
+    except (ValueError, AttributeError):
+        return False
+
+
 bash = bash_command(data)
 if bash is not None:
+    powershell = powershell_command(data)
     try:
-        bash_out = bash_targets(bash)
+        bash_out = bash_targets(bash, powershell)
     except ValueError:
-        sys.exit(0)                   # shlex could not split it -> allow
-    if any(bash_target_is_temp(t) for t in bash_out):
+        sys.exit(0)                   # it could not be split -> allow
+    if any(bash_target_is_temp(t, powershell) for t in bash_out):
         block(LOC_MSG)
     sys.exit(0)                       # Bash: no general boundary, no secret check
 
