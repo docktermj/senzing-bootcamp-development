@@ -403,8 +403,10 @@ copy (INV-300).
   keepsake never shows a silent filing (INV-012). Module completion reads it, in
   `module-completion.md` Step 0b, to show a steer that was due and never shown and to file a
   reversal that was never filed.
-  A trigger 1 failure the guide repairs without recording it is caught by a hook, `failed-run-net.py`,
-  which reminds the guide when it happens and names it again at the module's transition.
+  A trigger 1 failure the guide repairs without recording it is caught when it happens and again
+  at the module's transition, whether or not a hook backs it on this assistant (`host-rules.md`
+  says which safeguards you carry out yourself). Where a hook runs it, `failed-run-net.py` is
+  what catches it.
 - **Two lines, after the fix.** The steer is shown once the fix has run (from Data processing on,
   its first line comes before the fix: see below), in this shape:
 
@@ -856,7 +858,8 @@ The caller says which entity to pick. Everything below is the same for all three
   `~/Downloads`. Override MCP-suggested paths (e.g. `/tmp/`, `ExampleEnvironment`) to
   project-relative ones — this binds tool **arguments** too, not just writes: where a tool requires
   a writable directory (`workspace_dir` on `mapping_workflow` and `analyze_record`), pass a
-  project-relative path. The `PreToolUse` write-gate enforces the write half and will block you.
+  project-relative path. The write half is yours to keep whether or not a hook backs it on this
+  assistant: where it runs, the write-gate blocks a write that breaks it.
   **Never modify global shell config** — `~/.zshrc`, `~/.bashrc`, `~/.profile`, PowerShell
   `$PROFILE` or equivalent are off-limits, and so is any other file outside the project (INV-199).
   Write a project-local environment script instead. MCP install guidance legitimately tells a
@@ -881,9 +884,10 @@ The caller says which entity to pick. Everything below is the same for all three
   `requirements.txt`, `pom.xml`, `*.csproj`, `Cargo.toml`, `package.json`, and C#'s
   `nuget.config` (SDK setup's project-local package source). Never put `.py`,
   `.md` (except README), `.jsonl`, `.csv`, or non-config `.json` in the root.
-- The plugin's PreToolUse write-gate blocks every write outside the project, as the first bullet
-  of this section states (INV-200); it also blocks a file write that holds an obvious hardcoded
-  secret. File-type placement inside the project is your responsibility.
+- Whether or not a hook backs it on this assistant, no write leaves the project, as the first
+  bullet of this section states (INV-200): where it runs, the write-gate blocks every write
+  outside the project, and it also blocks a file write that holds an obvious hardcoded secret.
+  File-type placement inside the project is your responsibility.
 - ⛔ **On Java, a prescribed `snake_case` filename collides with the class name — declare the class
   package-private rather than renaming either (INV-237).** Every `.[ext]` filename in this bootcamp
   is written in a `snake_case` idiom that is correct for Python and has no class/file coupling.
@@ -1292,16 +1296,17 @@ it is spelled correctly wherever the module is named.
   `docs/progress/recap_checkpoint.md`, refreshed at each step boundary with the module's
   accumulating Information Shared / Questions & Responses / Actions Taken / End-of-Module Summary-so-far, wrapped
   in `<!-- RECAP-CHECKPOINT:START -->` … `<!-- RECAP-CHECKPOINT:END -->` markers. This is what
-  survives a quit, compaction, or new session mid-module: the plugin's `PreCompact`, `SessionEnd`,
-  and `SessionStart` hooks fold it into `docs/bootcamp_recap.md` (append-only, idempotent). It is a
-  single small file updated at step boundaries (INV-012), not per sub-step, and it is finalized and
-  cleared on module completion (see `module-completion.md`).
-  **The plugin creates the file; you write what is in it.** `checkpoint-tick.py`
-  (`UserPromptSubmit`) lays down an empty scaffold within a turn of the bootcamp starting, so the
-  path always exists and you never have to create it — but a scaffold holds no narrative, and the
-  fold hooks skip it and say so on stderr. An unfilled checkpoint is therefore the same loss as a
-  missing one: on a mid-module interruption the recovery path finds nothing. Writing the narrative
-  is the half no hook can do for you.
+  survives a quit, compaction, or new session mid-module: whether or not a hook backs it on this
+  assistant (`host-rules.md` says which safeguards you carry out yourself), `precompact-recap.py`,
+  `session-end.py` and `session-start.py` fold it into `docs/bootcamp_recap.md` (append-only,
+  idempotent). It is a single small file updated at step boundaries (INV-012), not per sub-step,
+  and it is finalized and cleared on module completion (see `module-completion.md`).
+  **The plugin creates the file; you write what is in it.** `checkpoint-tick.py` lays down an
+  empty scaffold, so you never have to write one: where a hook runs it, within a turn of the
+  bootcamp starting; where none does, when you run it as `host-rules.md` says. But a scaffold
+  holds no narrative, and the fold skips it and says so on stderr. An unfilled checkpoint is
+  therefore the same loss as a missing one: on a mid-module interruption the recovery path finds
+  nothing. Writing the narrative is the half no hook can do for you.
 
 ## Reversed decisions: file them when they happen (silent)
 
@@ -1378,16 +1383,17 @@ the 👉 protocol above).
   visually distinct from the bootcamp. Then return them to exactly where they left off. Feedback
   is saved locally, in that file on this machine. The only upstream path is `feedback.md` →
   "Step 3c: Offer to forward an MCP-server issue upstream", offered only for an `mcp-server`/`both`
-  verdict (INV-249). (The plugin's `UserPromptSubmit` hook surfaces this automatically during a
-  bootcamp.)
+  verdict (INV-249). (Whether or not a hook backs it on this assistant, catching the request is
+  yours; where a hook runs it, `feedback-capture.py` surfaces the request during a bootcamp.)
 - **Make a note:** whenever the bootcamper says "make a note", "note to self", "jot this down",
   "remind me", "don't let me forget", "add a to-do", "for my notes", or invokes
   `/bootcamp-note`, run the note workflow in `notes.md` and append the entry to
   `docs/bootcamp_notes.md`. The workflow opens with a pinned 📌 **BOOTCAMP NOTE** entry banner
   and closes with a pinned 📌 **NOTE SAVED — BACK TO THE BOOTCAMP** exit banner (a statement)
   before the pending 👉 question resumes (INV-254, INV-255). Notes are folded into the recap at
-  graduation and appear in `docs/bootcamp_recap.pdf`. (The plugin's `UserPromptSubmit` hook
-  surfaces this automatically during a bootcamp.)
+  graduation and appear in `docs/bootcamp_recap.pdf`. (Whether or not a hook backs it on this
+  assistant, catching the request is yours; where a hook runs it, `feedback-capture.py` surfaces
+  the request during a bootcamp.)
   - ⛔ **A note is the bootcamper's own thought, not a report about the plugin.** It is never
     routed, never triaged, and never sent anywhere — there is no upstream offer, and
     `submit_feedback` is unreachable from it. When a message is *both* ("make a note that the
@@ -1536,8 +1542,10 @@ the 👉 protocol above).
 
 ## Closing questions
 
-- YOU own the closing 👉 question at the end of each yielding turn. The plugin's `Stop` hook is
-  a safety net that fires only if you forget - do not rely on it.
+- YOU own the closing 👉 question at the end of each yielding turn, whether or not a hook backs
+  it on this assistant (`host-rules.md` says which safeguards you carry out yourself). Where a
+  hook runs it, `stop-nudge.py` is at most a safety net for a turn you forgot to close - do not
+  rely on it.
 - **Turning that safety net off.** Where the hook that re-opens a turn to ask for a missing
   closing question runs, the bootcamper can turn it off with either of two switches (INV-055).
   One is the `SENZING_BOOTCAMP_DISABLE_STOP_NUDGE` environment variable, set to `1`, `true`, `yes`

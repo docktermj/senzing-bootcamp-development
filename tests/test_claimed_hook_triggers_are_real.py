@@ -19,6 +19,13 @@ was never built.
 Nothing was broken by it: the command works, so the feature is reachable. What is wrong is a
 claim about machinery that does not exist — the class that survives review by reading as prose.
 
+⚠️ **Issue #29 (2026-11-17) changed the wording of the claim, not the rule.** Shared text names
+no hook event and states no hook action without a condition, so `notes.md` now reads
+*"Triggered by `feedback-capture.py` where a hook runs it on this assistant, by the
+`/bootcamp-note` command, or whenever…"*. The claim names the dispatcher this file reads, and
+``CLAIMS_HOOK`` matches that form. The wiring checks below still read the Claude package, where
+the event is `UserPromptSubmit`.
+
 Per **INV-246** the site set is derived by scanning shipped any-time flows for the
 trigger-sentence shape, never by naming the two known files: a third any-time flow inherits the
 same trap, and the template it would copy is the one that caused this.
@@ -50,8 +57,9 @@ DISPATCHER = PLUGIN / "scripts" / "feedback-capture.py"
 #: by keying on the defect.
 ANY_TIME_TITLE = re.compile(r"(?im)^#\s+.*\(available at any time\)")
 
-#: A claim that the UserPromptSubmit hook routes prompts into this flow.
-CLAIMS_HOOK = re.compile(r"(?i)Triggered by the plugin's `UserPromptSubmit` hook")
+#: A claim that a hook routes prompts into this flow, through the dispatcher (#29: the claim
+#: names the script and carries its condition; it named the Claude event before).
+CLAIMS_HOOK = re.compile(r"(?i)Triggered by `feedback-capture\.py` where a hook runs it")
 
 #: An explicit statement that no hook routes this flow.
 DISCLAIMS_HOOK = re.compile(r"(?i)There is no hook for this flow")

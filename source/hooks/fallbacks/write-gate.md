@@ -1,6 +1,12 @@
 ## Keep files in the project, and secrets out of them
 
-Nothing checks a write before it happens, so check it yourself, every time:
+<!-- host:only chatgpt, claude, copilot, gemini, kiro -->
+When it runs, a hook checks a write before it happens, but it may not run here.
+<!-- host:end -->
+<!-- host:except chatgpt, claude, copilot, gemini, kiro -->
+Nothing checks a write before it happens.
+<!-- host:end -->
+So check every write yourself, every time:
 
 - Every file the bootcamp creates or edits is written inside the bootcamper's project directory.
   Never write to the system temporary directory, to Downloads, to the home directory or above

@@ -12,10 +12,10 @@ It is the bootcamper's, it stays on their machine, and it ends up in their keeps
 rather than in anyone's inbox. Saved to `docs/bootcamp_notes.md` and folded into
 `docs/bootcamp_recap.pdf` at graduation.
 
-Triggered by the plugin's `UserPromptSubmit` hook, by the `/bootcamp-note` command, or
-whenever the bootcamper says something like "make a note", "remind me", "jot this down",
-"don't let me forget" or "note to self". Follow `ground-rules.md`: one 👉 question per
-yielding turn (INV-251), and the turn ends on it.
+Triggered by `feedback-capture.py` where a hook runs it on this assistant, by the
+`/bootcamp-note` command, or whenever the bootcamper says something like "make a note",
+"remind me", "jot this down", "don't let me forget" or "note to self". Follow
+`ground-rules.md`: one 👉 question per yielding turn (INV-251), and the turn ends on it.
 
 ⚠️ **When a message is both a note and a feedback report, it is feedback.** "Make a note
 that the bootcamp is broken" names the bootcamp as the thing at fault, so it is an

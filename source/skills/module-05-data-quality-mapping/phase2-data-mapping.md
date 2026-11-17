@@ -176,8 +176,9 @@ ground-rules file-placement contract:
   warning rather than inventing a destination. If the plugin write-gate blocks a write, leave
   the file in the workspace and report it: do not retry against a different location.
 
-The plugin's PreToolUse write-gate blocks every write outside the project (INV-200); the rule is
-stated once, in `../bootcamp-onboarding/ground-rules.md` → "File placement" (INV-300). File-type
+Whether or not a hook backs it on this assistant, no write leaves the project (INV-200): where it
+runs, the write-gate blocks every write outside the project. The rule is stated once, in
+`../bootcamp-onboarding/ground-rules.md` → "File placement" (INV-300). File-type
 placement inside the project is your responsibility. (No script organizes them: place files directly, per the contract above.)
 
 ## Calling `mapping_workflow` correctly (⛔ read before step 8)

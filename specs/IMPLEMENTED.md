@@ -36,6 +36,184 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## the-fallback-rules-and-the-ground-rules-state-opposite-facts-about-the-same-hooks
+
+- **Implemented:** 2026-11-17 (issue #29)
+- **Files changed:** `source/hooks/fallbacks/write-gate.md`,
+  `source/hooks/fallbacks/stop-nudge.md`, `source/hooks/fallbacks/precompact-recap.md`,
+  `source/hooks/fallbacks/session-end.md`, `source/skills/bootcamp-onboarding/ground-rules.md`,
+  `source/skills/bootcamp-onboarding/notes.md`, `source/skills/bootcamp-onboarding/feedback.md`,
+  `source/skills/bootcamp-onboarding/packaging.md`,
+  `source/skills/bootcamp-onboarding/module-completion.md`, `source/skills/graduation/SKILL.md`,
+  `source/skills/module-02-sdk-setup/SKILL.md`,
+  `source/skills/module-05-data-quality-mapping/phase2-data-mapping.md`,
+  `tests/test_hook_statements_hold_on_every_assistant.py` (new),
+  `tests/test_claimed_hook_triggers_are_real.py`, `specs/IMPLEMENTED.md` (this entry)
+- **MCP re-check:** n/a (no Senzing fact). Re-confirmed on 2026-11-17 against the change itself:
+  it rewords what the bootcamp's own guide text says about the bootcamp's own hooks, and adds
+  tests that read that text and each assistant's hook mapping. It asserts nothing about Senzing.
+  No absence claim about the Senzing MCP server is made, so INV-213's `owner-checked:` clause
+  is not owed.
+- **Summary:** What a package says about a hook now holds on the assistant that reads it. This
+  is finding 4 of `production-readiness-audit-2026-11-17`. Before the change, the Copilot,
+  Kiro, ChatGPT and Gemini packages said in `host-rules.md` that nothing checks a write,
+  nothing re-opens a turn that ends without its question, and nothing runs when the
+  conversation is compacted or a session ends. The ground rules in the same packages said
+  without condition that a hook enforces the write gate, folds the recap and stops
+  containers. The shared text also named Claude's hook events in every package.
+  - **The approach.** Two implementations were raced from `e90d05a` and judged against a rubric
+    written first. The one applied here chooses each fallback's wording with the `host:only`
+    and `host:except` markers the source already has, and adds a test that compares the
+    wording with each assistant's mapping. The other had the build choose the wording, and
+    changed `tools/bootcamp_build/emit.py` to do it. No file under `tools/` changes here.
+  - **The four fallbacks.** `write-gate.md`, `stop-nudge.md`, `precompact-recap.md` and
+    `session-end.md` each hold two statements and one instruction. A `host:only` block holds
+    "When it runs, a hook …, but it may not run here." A `host:except` block naming the same
+    assistants holds "Nothing …". One "So …" instruction follows both, outside the markers.
+    The lists name the assistants whose mapping has an event for the hook that is not
+    advisory. What each package now carries:
+
+    | Fallback | GitHub Copilot | Kiro | ChatGPT | Gemini |
+    |---|---|---|---|---|
+    | `write-gate.md` | may not run | may not run | may not run | may not run |
+    | `stop-nudge.md` | may not run | nothing does this | may not run | may not run |
+    | `precompact-recap.md` | may not run | nothing does this | may not run | nothing does this |
+    | `session-end.md` | may not run | nothing does this | may not run | nothing does this |
+
+    The other six fallbacks say nothing about whether a hook runs and keep their text. The
+    Claude package's `host-rules.md` is unchanged: its hooks are guaranteed, so it carries no
+    fallback. `claude` is still named in each list, because the lists follow the mapping alone.
+  - **The shared text.** Sixteen passages in eight files under `source/skills/` are reworded so
+    that each holds whether or not a hook backs the rule: seven in `ground-rules.md` (worked
+    steers, the working directory, file placement, the recap checkpoint, feedback, notes and
+    closing questions), the trigger sentences of `notes.md` and `feedback.md`, the "no hook for
+    this flow" sentence of `packaging.md`, Step 2d of `module-completion.md`, the terminal step
+    of `graduation/SKILL.md`, three container passages in `module-02-sdk-setup/SKILL.md` and
+    the write-gate sentence of `phase2-data-mapping.md`. The form is the one
+    `phase3-test-load.md` already used: "whether or not a hook backs it on this assistant",
+    with "where a hook runs it" or "where it runs" on the sentence that names what the hook
+    does.
+  - **Event names.** No Markdown file under `source/skills/` or `source/hooks/fallbacks/` holds
+    a hook event name any more. A hook is named by what it does ("the write-gate", "the
+    closing-question nudge") or by its script (`stop-nudge.py`, `feedback-capture.py`,
+    `session-end.py`). `source/hooks/README.md` is not touched: it ships to the Claude package
+    only and keeps Claude's event names.
+  - **Built on #26, which merged first.** The issue says the `hooks/README.md` pointers are left
+    as they are. #26 had already removed them when this change was applied, so three hunks of
+    the raced patch did not apply to `ground-rules.md` and were redone by reading: the worked
+    steers sentence and the file-placement bullet carry no pointer, the file-placement bullet
+    keeps #26's "it also blocks a file write that holds an obvious hardcoded secret", and the
+    bullet above #26's off-switch item no longer says "the plugin's `Stop` hook". The
+    off-switch item itself is unchanged.
+  - **Left as it is.** `bootcamp-onboarding/SKILL.md`, the resume step, still says which hooks
+    stay silent before a module is recorded. It is not in the issue's list and the new scan
+    does not report it. No `hosts/*/host.json`, no hook script and no build tool changes.
+  - **Tests.** `tests/test_hook_statements_hold_on_every_assistant.py` is new and holds 30
+    tests.
+    - `FallbackWordingFollowsTheMapping` builds each package and compares what each section of
+      its `host-rules.md` says with that assistant's `hooks` mapping. It requires each of the
+      four fallbacks to make exactly one statement in each package that carries them, and no
+      marker line to reach a package.
+    - `TheMarkersNameTheMappedAssistants` reads the marker lists in the source: one
+      `host:only` and one `host:except` block per fallback, both naming exactly the assistants
+      the mappings give, for every assistant under `hosts/` including one whose package
+      carries no fallback today. It also requires the two renderings to differ in the
+      statement only.
+    - `TheWordingRule` holds the rule on made-up mappings: no event, an advisory event, an
+      event, and a hook on two events.
+    - `NoRetiredSentenceIsBack` pins 21 sentences the issue retired, by file and passage, with
+      whitespace collapsed (INV-346).
+    - `NoUnconditionalHookStatement` scans every Markdown file under `source/skills/`
+      (INV-246) for a sentence that says a hook acts and carries no condition.
+    - `SharedTextNamesNoHookEvent` takes every event name from every mapping and searches
+      `source/skills/` and `source/hooks/fallbacks/` for it. `APackageNamesOnlyItsOwnEvents`
+      searches the Markdown of each built package for a name that is in another mapping and
+      not in its own. `Stop` counts only in backticks or directly before "hook".
+    - Negative controls that run on every pass: a mapping that loses an event, a mapping that
+      gains one, a wording swapped, both wordings at once, a statement removed, each retired
+      sentence put back, thirteen unconditional sentence shapes, every event name, `Stop` as a
+      word against `Stop` as an event, and one package's Markdown read with another's mapping.
+    - Negative control run once, in a throwaway clone of `ffe20a4` holding only the new test
+      file: 11 of the 30 tests fail (`FAILED (failures=52, errors=1)`).
+  - **One existing test changed.** `tests/test_claimed_hook_triggers_are_real.py` held the
+    pattern "Triggered by the plugin's `UserPromptSubmit` hook", a sentence this issue retires.
+    `CLAIMS_HOOK` now matches "Triggered by `feedback-capture.py` where a hook runs it", the
+    script that test reads. Every assertion that used the pattern is kept, and its docstring
+    says what changed. Two other tests were kept green by wording, not by editing them:
+    `test_coherence_sweep_523.py` needs "write-gate blocks every write outside the project" on
+    one line of `phase2-data-mapping.md`, and `test_recap_checkpoint_writer.py` needs "plugin
+    creates the file" in `ground-rules.md`.
+  - **Known limits.** The built-package event-name check reads Markdown only. The hook scripts
+    and the hook adapter carry the canonical event names as protocol values in every package,
+    and each hook configuration file carries its own assistant's names by design. The
+    unconditional-statement scan knows a closed list of sentence shapes, taken from the
+    sentences the audit found. A script named as the one that acts ("`session-end.py` stops
+    recorded containers at close-out") is not counted, because it is true whether a hook or
+    the guide runs the script. The mapping does not choose the wording by itself: when a
+    mapping changes, the suite fails until the assistant's id is moved in or out of the two
+    marker lines of the affected fallback.
+  - **Not observed.** No real assistant read the reworded text or ran a hook. What is true for
+    an assistant is taken from its mapping. Verified on Linux only, with Python 3.12.3. No run
+    on macOS, on Windows or on a real assistant happened, so no record is added to any
+    `hosts/<assistant>/checks.json`. The change is text and standard-library tests that read
+    files as UTF-8 through `pathlib`, with no branch on the platform (INV-001).
+- **Invariants.** The register is not edited here (INV-365). The change ships three hard-rule
+  lines, in the new test module's docstring. `since` does not report them, because `tests/` is
+  not a rule home. The three blocks below cover them, one rule each (INV-309). No
+  `PROPOSED AMENDMENT` is written: INV-054, INV-101 and INV-420 name Claude's hook events in
+  the register's own prose, which no package carries, and none of them requires shipped text
+  to use an event name. INV-003 is the invariant the finding was filed under; its wording is
+  not touched.
+
+- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** A fallback's statement about its hook follows the assistant's hook mapping. The rule already shipping, quoted:
+    - ⛔ **A fallback says that nothing does a hook's job only where the assistant's mapping has no event for the hook or lists it as advisory, and says that the hook may not run where the mapping has one.** — in `tests/test_hook_statements_hold_on_every_assistant.py`
+
+  Enforced by `tests/test_hook_statements_hold_on_every_assistant.py`.
+
+  **Why it is not an existing invariant:** INV-003 says the bootcamp is consistent, coherent
+  and complete, and does not say what a fallback states about its hook. INV-430 says which
+  source files may ship to some assistants and not others, and nothing about what a shipped
+  fallback says. INV-052 says how a hook is invoked. None of them ties the text of a fallback
+  to `hooks.events` and `hooks.advisory`.
+
+  Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
+  invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
+
+  **INV-NNN** — A fallback under `source/hooks/fallbacks/` that says whether a hook does its job MUST say that nothing does it only in the package of an assistant whose `hooks.events` mapping in `hosts/<assistant>/host.json` has no event for that hook or lists the event in `hooks.advisory`. In the package of every other assistant that carries the fallback it MUST say that a hook does the job when it runs and that it may not run. A hook declared on more than one event has no event only when every one of them is null or advisory. Both wordings MUST be followed by the same instruction to the guide, and no package may carry both wordings for one hook. Observed 2026-11-17 (`production-readiness-audit-2026-11-17`, finding 4): four packages said "Nothing checks a write before it happens" although each of those assistants has an event for the write gate. Enforced by `tests/test_hook_statements_hold_on_every_assistant.py`, which builds each package and compares each fallback's statement in `host-rules.md`, and each `host:only` and `host:except` list in the source, with every assistant's mapping. It recognizes the two wordings by their shape and **cannot** establish that a hook runs on a real assistant. (Source: `the-fallback-rules-and-the-ground-rules-state-opposite-facts-about-the-same-hooks`, GitHub issue #29, 2026-11-17.)
+
+- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** Shared skill text states what a hook does only with a condition. The rule already shipping, quoted:
+    - ⛔ **No file under `source/skills/` says without a condition that a hook does something.** — in `tests/test_hook_statements_hold_on_every_assistant.py`
+
+  Enforced by `tests/test_hook_statements_hold_on_every_assistant.py`.
+
+  **Why it is not an existing invariant:** INV-003 does not say how a rule that a hook backs
+  on some assistants is to be worded. INV-200, INV-101 and INV-054 each say what one hook
+  does, in the register's own prose, and none says how shipped text may speak of a hook on an
+  assistant where it does not run.
+
+  Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
+  invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
+
+  **INV-NNN** — A Markdown file under `source/skills/` that says what a hook does MUST say it in a form that holds whether or not a hook backs the rule on the assistant reading it. The rule is stated as the guide's to keep, and the sentence that names the hook's action MUST carry its condition, for example "whether or not a hook backs it on this assistant", "where a hook runs it" or "where it runs". A script MAY be named as the one that acts, because that is true whether a hook or the guide runs it. Observed 2026-11-17 (`production-readiness-audit-2026-11-17`, finding 4): the ground rules said without condition that a hook enforces the write gate, folds the recap and stops containers, in four packages whose `host-rules.md` said that nothing does. Enforced by `tests/test_hook_statements_hold_on_every_assistant.py`, which pins each sentence #29 retired and scans every Markdown file under `source/skills/` for a sentence that says a hook acts and carries no condition. The scan knows a closed list of sentence shapes, so it **cannot** find an unconditional statement worded another way, and it cannot establish that a conditional sentence is true on a real assistant. (Source: `the-fallback-rules-and-the-ground-rules-state-opposite-facts-about-the-same-hooks`, GitHub issue #29, 2026-11-17.)
+
+- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** Shared text names no hook event, and a package's Markdown names only its own assistant's events. The rule already shipping, quoted:
+    - ⛔ **Shared text names no hook event, and the Markdown of a built package names a hook event only when the event is in that assistant's own mapping.** — in `tests/test_hook_statements_hold_on_every_assistant.py`
+
+  Enforced by `tests/test_hook_statements_hold_on_every_assistant.py`.
+
+  **Why it is not an existing invariant:** INV-003 does not name hook events. INV-430 is about
+  which files a package carries, and not about a name inside a file every package carries.
+  INV-052 fixes how a hook is invoked, and not what shipped text may call its event. No
+  registered invariant says that text every package carries may not use one assistant's event
+  names.
+
+  Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
+  invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
+
+  **INV-NNN** — A Markdown file under `source/skills/` or `source/hooks/fallbacks/` MUST NOT hold a hook event name from any assistant's `hooks.events` mapping: shared text names a hook by what it does or by its script. A Markdown file in an assistant's built package MUST NOT hold an event name that is in another assistant's mapping and not in its own. The name `Stop` is also an ordinary word, and counts as an event name only in backticks or directly before "hook". `source/hooks/README.md` ships to the Claude package only and keeps Claude's event names. Observed 2026-11-17 (`production-readiness-audit-2026-11-17`, finding 4): shared text named `UserPromptSubmit`, `PreToolUse`, `PreCompact`, `SessionEnd`, `SessionStart` and `Stop` in every package, although the Copilot and Gemini mappings spell some of those events differently and the Kiro and Gemini mappings have no event for others. Enforced by `tests/test_hook_statements_hold_on_every_assistant.py`, which takes the names from the mappings on every run. It reads Markdown only, so it **cannot** see an event name in a hook script, the hook adapter or a hook configuration file, where the canonical names are protocol values or the assistant's own by design. (Source: `the-fallback-rules-and-the-ground-rules-state-opposite-facts-about-the-same-hooks`, GitHub issue #29, 2026-11-17.)
+
+- **Commit:** uncommitted
+
 ## four-packages-point-at-hooks-readme-md-which-they-do-not-carry
 
 - **Implemented:** 2026-11-17 (issue #26)

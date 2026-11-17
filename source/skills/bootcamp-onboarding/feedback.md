@@ -5,10 +5,10 @@ module, or graduation. Feedback is saved locally to
 `docs/feedback/SENZING_BOOTCAMP_FEEDBACK.md` and is never sent anywhere
 unless the bootcamper explicitly asks.
 
-This workflow is triggered by the plugin's `UserPromptSubmit` hook ("to capture
-bootcamp feedback") or by the `/bootcamp-feedback` command, or whenever the
-bootcamper says something like "bootcamp feedback", "I have feedback", or "report
-an issue". Follow `ground-rules.md`: one 👉 question per turn (INV-251), end the turn on it.
+This workflow is triggered by `feedback-capture.py` where a hook runs it on this
+assistant ("to capture bootcamp feedback"), by the `/bootcamp-feedback` command, or
+whenever the bootcamper says something like "bootcamp feedback", "I have feedback", or
+"report an issue". Follow `ground-rules.md`: one 👉 question per turn (INV-251), end the turn on it.
 
 ## Step 0: Capture context silently
 

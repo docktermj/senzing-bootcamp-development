@@ -1,7 +1,12 @@
 ## Close out when the bootcamper stops
 
-Nothing runs when a session ends, so close out when the bootcamper says they are stopping, and
-before any long pause. Run:
+<!-- host:only chatgpt, claude, copilot -->
+When it runs, a hook closes out as a session ends, but it may not run here.
+<!-- host:end -->
+<!-- host:except chatgpt, claude, copilot -->
+Nothing runs when a session ends.
+<!-- host:end -->
+So close out when the bootcamper says they are stopping, and before any long pause. Run:
 
 ```bash
 python3 "{{host.scripts_dir}}/session-end.py" < /dev/null
