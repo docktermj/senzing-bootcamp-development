@@ -25,7 +25,8 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SKILLS_DIR = REPO_ROOT / "source" / "skills"
-MODEL_SELECTION = REPO_ROOT / "source" / "docs" / "model-selection.md"
+# The maintainer page: in this repository under docs/, in no package (#12).
+MODEL_SELECTION = REPO_ROOT / "docs" / "model-selection.md"
 
 #: A per-skill row leads with the skill's directory name in backticks.
 SKILL_ROW = re.compile(r"^\|\s*`([a-z0-9][a-z0-9-]*)`\s*\|", re.M)

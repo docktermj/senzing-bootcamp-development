@@ -43,7 +43,8 @@ INSTALL = os.path.join(HOSTS, "claude", "fragments", "site-install.html")
 INSTALL_TEMPLATE = os.path.join(REPO_ROOT, "site", "_install.html")
 GROUND_RULES = os.path.join(PLUGIN, "skills", "bootcamp-onboarding", "ground-rules.md")
 GRADUATION = os.path.join(PLUGIN, "skills", "graduation", "SKILL.md")
-MODEL_SELECTION = os.path.join(PLUGIN, "docs", "model-selection.md")
+# The maintainer page: in this repository under docs/, in no package (#12).
+MODEL_SELECTION = os.path.join(REPO_ROOT, "docs", "model-selection.md")
 
 # The canonical name of each interface the plugin can run in.
 DESKTOP = "Claude Desktop"
@@ -173,7 +174,8 @@ class TheGroundRulesNameEveryInterface(unittest.TestCase):
 
         The module-start question told the bootcamper where to set the model and the effort,
         in wording adapted to each interface. The bootcamp asks for neither now, so no shipped
-        file names a control for them, in any interface.
+        file names a control for them, in any interface, and neither does the maintainer page
+        (`docs/model-selection.md`, which no package carries since #12).
         """
         for path in (GROUND_RULES, GRADUATION, MODEL_SELECTION):
             with self.subTest(path=os.path.basename(path)):

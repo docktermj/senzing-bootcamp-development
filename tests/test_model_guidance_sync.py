@@ -25,6 +25,12 @@ level the guide works to by instruction, with no model column. Both invariants' 
 wording still describes the old table; the parts checked here are the parts that survive.
 `tests/test_working_depth_by_stage.py` checks the table against every assistant's package.
 
+⚠️ **Dated note, 2026-11-16 (#12): `docs/model-selection.md` is read from this repository, not
+from the Claude package.** It is a maintainer page, moved from `source/docs/` to `docs/`, and
+no package carries it. The superseded-name scan used to reach it by walking the package; it
+is now named in `shipped_markdown()`, and `test_the_maintainer_page_is_in_the_scan` fails if
+it drops out. Every other check reads the same page at its new path. No case was retired.
+
 Run:  python3 -m unittest discover -s tests
 """
 import os
@@ -35,7 +41,8 @@ from _built import built  # the Claude package, built from source/
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PLUGIN = os.path.join(str(built("claude")))
 GROUND_RULES = os.path.join(PLUGIN, "skills", "bootcamp-onboarding", "ground-rules.md")
-MODEL_SELECTION = os.path.join(PLUGIN, "docs", "model-selection.md")
+# The maintainer page: in this repository under docs/, in no package (#12).
+MODEL_SELECTION = os.path.join(REPO_ROOT, "docs", "model-selection.md")
 
 # Model names/IDs that have been superseded. A hit means the bootcamp would name a
 # model one generation back — the defect this guards. Add a row whenever a model is superseded; the last element of each pair
@@ -72,7 +79,7 @@ def superseded_pattern(stale):
 # supersession. Only that blockquote is exempt, never the rest of the file: a
 # whole-file exemption is how that file's tier table kept naming Fable 5, Opus 5
 # and Sonnet 5 after they were superseded.
-STALENESS_NOTE_FILE = os.path.join(PLUGIN, "docs", "model-selection.md")
+STALENESS_NOTE_FILE = MODEL_SELECTION
 STALENESS_NOTE_MARKER = "> **Point-in-time data"
 
 
@@ -133,7 +140,8 @@ REPO_DOCS = [
 
 
 def shipped_markdown():
-    """Every Markdown file under the shipped plugin, plus repo-level user docs."""
+    """Every Markdown file under the shipped plugin, plus repo-level user docs and the
+    maintainer page (which no package carries, so the walk does not reach it; #12)."""
     for dirpath, dirnames, filenames in os.walk(PLUGIN):
         dirnames[:] = [d for d in dirnames if d != "__pycache__"]
         for name in filenames:
@@ -141,6 +149,7 @@ def shipped_markdown():
                 yield os.path.join(dirpath, name)
     for path in REPO_DOCS:
         yield path
+    yield MODEL_SELECTION
 
 
 def stage_table(path):
@@ -184,6 +193,14 @@ class NoSupersededModelReferences(unittest.TestCase):
         self.assertEqual(
             offenders, [], "superseded model references found:\n  " + "\n  ".join(offenders)
         )
+
+    def test_the_maintainer_page_is_in_the_scan(self):
+        """#12: the page left the package, so the scan must name it or it goes unread."""
+        scanned = list(shipped_markdown())
+        self.assertEqual(1, scanned.count(STALENESS_NOTE_FILE))
+        self.assertTrue(os.path.isfile(STALENESS_NOTE_FILE))
+        self.assertFalse(STALENESS_NOTE_FILE.startswith(PLUGIN + os.sep),
+                         "the maintainer page is being read from a package again")
 
     def test_every_repo_doc_exists_and_one_names_a_model(self):
         """INV-265: the repo-level half of the scan reads real files that carry its subject."""

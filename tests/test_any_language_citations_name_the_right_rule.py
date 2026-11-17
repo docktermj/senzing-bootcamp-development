@@ -29,6 +29,12 @@ for "tab ids and deep-linking", which is precisely its subject. A guard that ban
 any language word would delete a correct citation, so the assertion is narrowed to the
 any-language *claim*.
 
+⚠️ **Dated note, 2026-11-16 (#12): that page is a maintainer page and no package carries it.**
+It moved from `source/docs/` to `docs/` in this repository. The scans that read it before still
+do: `scanned_markdown()` is the shipped text plus that one page, so the citation that must
+survive is still checked where it is written. The two floors on *shipped* text read shipped
+text only, as before, so the page cannot hold either of them up.
+
 Stdlib only; nothing under ``source/`` is imported (INV-108).
 
 Run:  python3 -m unittest discover -s tests
@@ -40,6 +46,8 @@ import unittest
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PLUGIN = os.path.join(REPO_ROOT, "source")
+#: The maintainer page that carries the correct INV-124 citation. It is in no package (#12).
+MAINTAINER_PAGE = os.path.join(REPO_ROOT, "docs", "model-selection.md")
 
 #: The claim: prose asserting a rule reaches implementations beyond the reference one.
 ANY_LANGUAGE_CLAIM = re.compile(
@@ -61,6 +69,11 @@ def markdown_under(root):
             if name.endswith(".md"):
                 out.append(os.path.join(base, name))
     return sorted(out)
+
+
+def scanned_markdown():
+    """The shipped Markdown, plus the maintainer page these scans read before it moved (#12)."""
+    return markdown_under(PLUGIN) + [MAINTAINER_PAGE]
 
 
 def read(path):
@@ -97,7 +110,7 @@ def mis_cited_claims(paths):
 
 class NoShippedAnyLanguageClaimCitesInv124(unittest.TestCase):
     def test_shipped_text_does_not_cite_inv_124_for_an_any_language_claim(self):
-        bad = mis_cited_claims(markdown_under(PLUGIN))
+        bad = mis_cited_claims(scanned_markdown())
         self.assertEqual(
             [], bad,
             "An 'this binds every language' claim cites INV-124, which governs the recap "
@@ -162,9 +175,15 @@ class TheCorrectInv124CitationSurvives(unittest.TestCase):
             "any-language citations must not have removed the correct one in "
             "docs/model-selection.md.",
         )
+        self.assertIn(
+            "INV-124", read(MAINTAINER_PAGE),
+            "docs/model-selection.md no longer cites INV-124 for the tab ids and deep-linking "
+            "its Truth Set visualization row names. That citation is the correct one this "
+            "guard exists to keep.",
+        )
 
     def test_the_surviving_citations_are_about_tab_hooks(self):
-        for path in markdown_under(PLUGIN):
+        for path in scanned_markdown():
             text = read(path)
             for m in re.finditer(r"INV-124", text):
                 window = text[max(0, m.start() - 400):m.end() + 400]

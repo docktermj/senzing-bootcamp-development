@@ -13,7 +13,7 @@ and how carefully the guide works at each stage is set by instruction alone.
 
 - **One statement, in the welcome.** The overview names one suitable model for the
   whole bootcamp, Opus 5.5 on Claude, and says the bootcamp never asks for a change of
-  model or settings along the way (`../skills/bootcamp-onboarding/onboarding-flow.md`,
+  model or settings along the way (`../source/skills/bootcamp-onboarding/onboarding-flow.md`,
   step 3). It is a statement among the welcome points: no 👉, no pause, said once.
 - **Nothing after that.** No module start and no graduation start says anything about
   a model or a reasoning effort. There is no question, no confirmation gate and no
@@ -27,7 +27,7 @@ preferences file is ignored, not honored (INV-137).
 
 ## What the guide does
 
-`../skills/bootcamp-onboarding/ground-rules.md` → "Working depth by stage" gives every
+`../source/skills/bootcamp-onboarding/ground-rules.md` → "Working depth by stage" gives every
 stage one effort level, and gives each level one instruction to the guide. The guide
 applies the instruction silently and changes no setting.
 
@@ -104,8 +104,8 @@ None of these fits, so none is used:
   issue #4 retired that on every assistant.
 
 An instruction is the one mechanism every assistant has. It touches no setting and
-leaves an automatic mode free to decide for itself. The development repository's
-`docs/effort-mechanisms.md` records the research behind this.
+leaves an automatic mode free to decide for itself. `effort-mechanisms.md`, beside this
+file, records the research behind this.
 
 ## Model tiers
 
@@ -132,7 +132,7 @@ the numbers — see the staleness note below):
 > lists the price recorded for Fable 5. Re-verify names, IDs, and pricing against current Claude
 > documentation rather than trusting this table. The welcome names Opus 5.5 from the same
 > snapshot, so it goes stale with it. This note is the only place in
-> the shipped plugin that may name a superseded model, and only to explain the
+> this file or the shipped plugin that may name a superseded model, and only to explain the
 > supersession; `tests/test_model_guidance_sync.py` exempts this block and nothing
 > else in the file.
 

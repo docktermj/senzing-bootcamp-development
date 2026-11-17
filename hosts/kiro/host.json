@@ -26,8 +26,7 @@
     "scripts": "skills/bootcamp-onboarding/scripts",
     "docs": "skills/bootcamp-onboarding/docs",
     "hooks/README.md": null,
-    "hooks/fallbacks": null,
-    "docs/model-selection.md": null
+    "hooks/fallbacks": null
   },
   "hooks": {
     "command": "\"<ABSOLUTE_PYTHON>\" \"<ABSOLUTE_SCRIPTS_DIR>/{script}\" {event}",

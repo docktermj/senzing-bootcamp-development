@@ -1,7 +1,8 @@
 """The model notes and every assistant's site tips name no mid-bootcamp switch (#4).
 
 Two places outside the skills told a reader that the bootcamp would ask for a model or
-effort change along the way: the maintainer notes in `source/docs/model-selection.md`, and
+effort change along the way: the maintainer notes in `docs/model-selection.md` (a page in this
+repository that no package carries, #12), and
 the "Model and effort" tip on each assistant's install page
 (`hosts/<assistant>/fragments/site-tips.html`). Issue #4 removed the request, so both now
 say what the welcome says: one model is fine for the whole bootcamp, and the bootcamp never
@@ -30,11 +31,11 @@ import html
 import re
 import unittest
 
-from _built import REPO_ROOT, built
+from _built import REPO_ROOT
 from _model_effort import HOSTS, capable_model, depth_block, depth_instructions, depth_rows, flat, skill_text
 
 HOSTS_DIR = REPO_ROOT / "hosts"
-MODEL_SELECTION = built("claude") / "docs" / "model-selection.md"
+MODEL_SELECTION = REPO_ROOT / "docs" / "model-selection.md"
 
 RULE = "One model is fine for the whole bootcamp."
 NEVER = "The bootcamp never asks you to switch models or change settings along the way."
