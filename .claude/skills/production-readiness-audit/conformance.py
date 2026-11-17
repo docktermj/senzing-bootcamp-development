@@ -13,7 +13,7 @@ the audit; it has run a grep.
     size           Goldilocks measurements for the concision pass
     all            every scan
 
-⛔ **A directory the build takes package text from is read by the audit and review tools.**
+⛔ **(INV-431) A directory the build takes package text from is read by the audit and review tools.**
 Today that is `source`, `hosts` and `tools/bootcamp_build/`, named in `SCAN_ROOTS` and
 `UNCOUNTED_RULE_HOMES` below. One added later joins those constants, and the roots of
 `pending_invariants.py sites` and of `coverage_reports.py`, in the change that adds it. The

@@ -443,7 +443,7 @@ line and holds no copy of it, so changing the line changes the range.
   block below covers it. One existing hard-rule comment in `conformance.py` was reworded and
   cites INV-308 at the line.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** The audit and review tools read every directory the build takes package text from. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-431, registered by the maintainer 2026-11-16).** The audit and review tools read every directory the build takes package text from. The rule already shipping, quoted:
     - ⛔ **A directory the build takes package text from is read by the audit and review tools.** — in `.claude/skills/production-readiness-audit/conformance.py`
 
   The other two tools state their roots as constants and carry no rule line:
