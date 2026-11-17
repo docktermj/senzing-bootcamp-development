@@ -7,8 +7,7 @@ recap_checkpoint.bootcamp_active(): existence answers "is this a bootcamp projec
 "is a bootcamp in progress" (INV-227). The onboarding preface creates the file empty and
 nothing records a module until Bootcamp preparation's final write, yet feedback, notes
 and verbosity changes are taken at any time from onboarding on — feedback (INV-010),
-notes (INV-254) and verbosity (INV-011) — so the hook must run in that window too
-(hooks/README.md, Gate column).
+notes (INV-254) and verbosity (INV-011) — so the hook must run in that window too.
 
 If the bootcamper's message asks to give feedback, to jot a note down, or to change
 verbosity, inject guidance so those "at any time" requests are handled the same way

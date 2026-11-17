@@ -52,7 +52,7 @@ existence on purpose, not ``recap_checkpoint.bootcamp_active()``: existence answ
 a bootcamp project", not "is a bootcamp in progress" (INV-227). The onboarding preface
 creates the file empty and nothing records a module until Bootcamp preparation's final
 write, yet both write project files, and those writes must stay in the project and free of
-secrets too (hooks/README.md, Gate column).
+secrets too.
 
 Cross-platform: invoked as a ``type: command`` hook whose ``command`` names the
 interpreter and this script, quoted (``python3 "<path>"``), per INV-052.
