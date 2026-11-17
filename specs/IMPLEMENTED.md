@@ -36,6 +36,176 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## production-readiness-audit-2026-11-17
+
+**Not a spec** — a dated record of an audit run, **unattended**: the maintainer started it and
+was away. It follows the six issues merged on 2026-11-16 (#9 to #14) and the invariant review
+that registered INV-428 to INV-432.
+
+- **Implemented:** 2026-11-17 (**33 findings recorded below; none fixed; none filed — each needs
+  the maintainer to file it**)
+- **Files changed:** this record only.
+- **MCP re-check:** n/a (no Senzing fact). Every finding is internal consistency, and no
+  Senzing MCP tool was called. No absence claim is made about the Senzing MCP server, so
+  INV-213's `owner-checked:` clause is not owed. Findings that would rest on what an
+  assistant other than Claude does are listed as not checked, not asserted.
+- **Baseline.** Branch `1-docktermj-5` at `419de72`, tree clean.
+  - **Suite green:** `Ran 9601 tests`, `OK (skipped=13)`.
+  - `citations.py verify` clean at 430 invariants; `bootcamp_build check` OK;
+    `coverage_reports.py shipped` lists nothing; `pending_invariants.py list` shows
+    `pending: 0`, three held.
+  - `since --since-last-audit` resolved `dc79183` from `production-readiness-audit-2026-11-16`,
+    for the first time: 2 hard-rule lines added in the corpus, both cited at the line
+    (INV-427, INV-308), and 6 outside it, each cited (INV-431, INV-432, INV-308, INV-252).
+    `reverse-check` says `NOT CLEAN` for one reason: one of the two lines is on the maintainer
+    surface, which `per-rule` does not read.
+  - Reachable here: `fpdf2`, `pdftoppm`, `docker`, Google Chrome. Not found: `chromium`.
+- **Scope, chosen deliberately.** Not a full forward sweep. Three read-only sweeps, each
+  re-verified, and the lead read the most serious findings against the files again:
+  1. forward, over the invariants the six merges touched (INV-114, 247, 252, 426 to 432), in
+     all five built packages and the site pages;
+  2. the five packages side by side: file lists, rendered differences, cross-references,
+     install pages, hooks, and the layout documents;
+  3. what the previous audit skipped: the per-module outcome blocks (INV-028 to INV-050), 38 of
+     the 95 enumerating invariants, duplicated passages and the heaviest files.
+- **Verdict by property.**
+  - **Consistent:** no. Shared text states one assistant's facts in all five packages (A2-02,
+    A2-03, A2-04, A2-05, F2, F4).
+  - **Coherent:** mostly. Two wrong or stale citations (F5) and several drifted restatements
+    (A3-5, A3-6, A3-7).
+  - **Complete:** no. Four packages point at a file they do not carry (A2-01), and one step
+    assumes a choice no step makes (A3-2).
+  - **Concise:** not a verdict. One duplicated deliverable found (A3-10); file sizes are
+    unchanged in kind from the previous audit.
+- **Verified correct.**
+  - INV-028 to INV-049: every outcome is produced where the invariant, as amended, says; the
+    banners, journey map, stage table and module list are byte-identical across packages.
+  - INV-247: no non-Claude package names a Claude control or "Don't show again", apart from
+    F6; both rules read as complete sentences in all five.
+  - INV-428, INV-429, INV-426, INV-430, INV-432 and the INV-114 and INV-252 notes hold at
+    every site found. `options.skill_location_sources` matches `hosts/kiro/checks.json`.
+  - 38 enumerating invariants match what ships: INV-001, 016, 029, 047, 048, 057, 065, 074,
+    094, 099, 103, 107, 133, 137, 140, 141, 155, 157, 195, 248, 249, 255, 260, 281, 340, 342,
+    354, 367, 368, 375, 413, 419, 426, 431, and INV-050 except A3-3.
+  - Every other relative path, anchor and `file.md → "Heading"` reference resolves in all five
+    packages; each install page's verification note matches its `checks.json`.
+- **Findings, most serious first. All open, none filed.** Ids are the sweep's own: A2 is the
+  cross-package sweep, A3 the outcome and enumeration sweep, F the forward sweep.
+  1. **A2-01. Four packages send the guide to `hooks/README.md`, which they do not carry.**
+     `hosts/{copilot,kiro,chatgpt,gemini}/host.json:28` maps it to null, and
+     `source/skills/bootcamp-onboarding/SKILL.md:77` and `ground-rules.md:408`, `:886` and
+     `:1271` name it in every package. It is also the only place the stop-nudge off switch is
+     documented. The recorded reason for the drop does not cover the references.
+  2. **A2-02. Every package states one assistant's shell as the guide's shell.**
+     `ground-rules.md:1134-1135` says a guide-run block runs "with its Bash tool" in "the
+     guide's POSIX shell, which on Windows is Git Bash", and 55 stamps repeat it. The hosts'
+     own profiles name the shell tool `bash`, `execute_bash` and `run_command`, and Copilot's
+     lists a PowerShell tool. INV-163 registers the sentence with no assistant scope. What
+     shell each assistant uses on Windows was not checked.
+  3. **A2-03 and A3-1, found twice. Slash commands are named to bootcampers on four assistants
+     that ship no command.** 28 mentions per non-Claude package, among them the line
+     `graduation/SKILL.md:1943` pins verbatim ("Run `/package-bootcamp` anytime…"), which
+     INV-057's 2026-11-10 note pins in that form. Every `host.json` declares `command_prefix`
+     (`$` on ChatGPT) and nothing uses it. Whether typing the command works on those
+     assistants was not checked.
+  4. **A2-04. The fallback rules and the ground rules state opposite facts about the same
+     hooks**, in the four non-Claude packages. `source/hooks/fallbacks/*.md:3` says "Nothing
+     checks a write before it happens"; `ground-rules.md:860`, `:885`, `:1296-1302`, `:1540`
+     and `module-02-sdk-setup/SKILL.md:831` say a hook does. The fallback exists, so no
+     safeguard is missing. `module-05…/phase3-test-load.md:389` already uses a neutral form.
+  5. **F1. INV-427 is written for every file the guide is told to read, and ships at one
+     site.** The instruction is at `bootcamp-onboarding/SKILL.md:23` only. Each package has 17
+     other Markdown files over the 30,000 characters Kiro's read was cut at. If INV-427 means
+     the first-turn ground rules only, its first clause is wider than the rule.
+  6. **A3-2. Windows with Python has two install routes and no step chooses.**
+     `module-02-sdk-setup/SKILL.md:688-694` describes a container and WSL2; `:628` says
+     "Detect first, do not ask"; `:2711-2712` says "Do NOT offer alternatives".
+  7. **A2-05. The MCP failure message names `.mcp.json` in every package**
+     (`onboarding-flow.md:82`). Copilot and Kiro ship `mcp.json`; Gemini ships
+     `mcp_config.json`.
+  8. **F2. The Kiro package says both that Kiro gives no skill path and that "the harness
+     supplies that directory"** (`onboarding-flow.md:39-41`, shared text, against the note
+     appended to every Kiro skill).
+  9. **A3-3. INV-050 says `config/license.json` is "written in Module 4"** and that "Module 2
+     only reads the detected limit" (`specs/INVARIANTS.md:177`, `:239-243`). Module 2 Step 5a
+     saves it first (`module-02-sdk-setup/SKILL.md:1816`), as INV-244 and INV-295 require. The
+     invariant's text is what is stale; a dated note on INV-050 is owed and is not drafted as
+     a block here, because the wording is the maintainer's.
+  10. **A2-06. The Kiro install page's Python requirement contradicts the Kiro package**
+      (`hosts/kiro/fragments/site-before.html:2`: "Python 3.10 or later… `python3`, `python`
+      or `py`"; the package and the other four pages require `python3` on `PATH`).
+  11. **F3. The Kiro location note gives two instructions for one condition.** With
+      `KIRO_HOME` set and the bootcamp absent, one sentence sends the guide to `.kiro` in the
+      home directory and the next says "look only inside `powers/` in the Kiro home".
+  12. **F4. A Claude model ID is the example in all five packages**
+      (`feedback.md:191`: `"claude-opus-5-5[1m] / high"`). The build's foreign-term match is
+      case-sensitive, so lowercase `claude-` passes.
+  13. **A2-07. Two packages name an interface their install page does not cover**: VS Code on
+      Copilot (`hosts/copilot/fragments/interface-naming.md:9`) and the Codex CLI on ChatGPT
+      (`hosts/chatgpt/fragments/interface-naming.md:3,8`).
+  14. **A3-4. `selected_modules` is kept in two files and the text disagrees on which is
+      read** (`bootcamp-preparation/SKILL.md:440-442` against `ground-rules.md:1437-1438`).
+  15. **F5. Two citations name the wrong invariant.** `ground-rules.md:1486-1487` cites
+      INV-140 for "one level per row", which is INV-141; `:1518-1520` lists INV-141 among the
+      retired nudge rules, and it is in force.
+  16. **A2-08. The Kiro package calls itself "plugin" on 127 lines and "Power" on 3**;
+      `package_noun` is read by the certificate only.
+  17. **A2-09. The ChatGPT and Kiro hook matchers exclude tools their own adapter maps**
+      (`hosts/chatgpt/host.json:46-50` against `:77-83`). The assistants' real tool names were
+      not checked.
+  18. **A2-10. Kiro's hook-install disclosure describes three of the five hooks it installs**
+      (`hosts/kiro/files/skills/bootcamp-hooks-setup/SKILL.md:18-26`).
+  19. **F6. `visualization-api-reference.md:1627-1628` names a "background-task" mechanism** in
+      four packages whose control list is empty. It is a technical note, not a question.
+  20. **A3-5. The module-completion citation has drifted across module closes**: Modules 1 and
+      2 omit Step 0, and Module 5 puts the summary before the recap, against the fixed order
+      in `module-completion.md:4-11`.
+  21. **A3-6. Module 4 offers synthesized data beside free raw data at Step 2 and calls it a
+      last resort 900 lines later** (`module-04-data-collection/SKILL.md:868-876`, `:1786`).
+  22. **A3-7. "all four report one version"** (`onboarding-flow.md:52-54`) no longer describes
+      the feedback entry, which reads `bootcamp_host.json` first. The values agree.
+  23. **A3-8. Three stale lists or pointers in shipped text**: the readers of
+      `bootcamp_complete()`, the readers of the generated-scenario marker, and
+      `hooks/fallbacks/checkpoint-tick.md:4-5` naming the wrong file as the rule's owner.
+  24. **A2-11. One layout sentence is false in the Kiro package**
+      (`graduation/SKILL.md:786-787`).
+  25. **A2-12. Update and uninstall steps are uneven across the five install pages.**
+  26. **A2-13. The ChatGPT catalog and manifest give different categories**
+      (`tools/bootcamp_build/emit.py:602`, `hosts/chatgpt/host.json:61`).
+  27. **A2-14. The Copilot package breaks its own interface-naming rule** ("the Copilot app").
+  28. **A3-9. `source/scripts/package_bootcamp.py:150` names the wrong test file** for a pin
+      that `tests/test_quoted_sizes_say_what_they_missed.py` holds.
+  29. **A3-10. Module 5 step 18 writes two overlapping per-source documents**
+      (`phase2-data-mapping.md:1935`, `:1944-1946`).
+  30. **A2-15. Layout documents state things the build no longer does**: `tests/README.md`
+      names `propagate.sh`; `README.md` and `.claude/CLAUDE.md` list three markers where
+      `host:except` is a fourth; `README.md:31` says text outside a marker is copied
+      unchanged; `README.md:49` overstates what `check` fails on.
+  31. **A3-11. Maintainer skills cite guards that are not in this repository**:
+      `tests/test_specs_are_frozen.py`, `specs/FROZEN-MANIFEST.txt` and `propagate.sh`. The
+      absent tests are accepted in `NOT_CARRIED`; the invariant text that names them is not
+      queued for a note.
+  32. **F7. Maintainer text lags the tools.** `production-readiness-audit/SKILL.md:167-168`
+      and `:180-181` and `since --help` describe the range start without the fallback;
+      `duplication` and `size` print no roots line, which INV-431 asks of every view; and
+      `docs/model-selection.md:145-146` says every shipped skill has a row where it has 12.
+  33. **Carried from the previous run, still open and not filed:** the cited-or-deferred gate
+      checks outside-the-corpus lines against 110-character display text, on a path that does
+      not run on today's range.
+- **Invariants.** This record establishes no invariant and queues no block. Findings 9 and 31
+  each call for a dated note on a registered invariant, and finding 5 for a decision about
+  INV-427's scope; the wording of each is the maintainer's, so none is drafted here.
+- **Coverage limits.** ⛔ The conversational invariants (INV-005, INV-006, INV-008, INV-009,
+  INV-014, INV-251 and every gate ordering rule) were not tested; reading cannot establish
+  them and they need `dry-run` phase 3. No assistant was run. About 55 enumerating invariants
+  were not checked. `module-02-sdk-setup/SKILL.md`, `phase2-data-mapping.md`,
+  `phase1-query-visualize.md` and the Module 6 phases were searched, not read in full. What a
+  non-Claude assistant's tools, events, shell and commands really are was not checked.
+- **Mistakes in this run.** The sweeps were done by three agents and the lead re-read only
+  the first twelve findings against the files; the rest stand on the agents' own second
+  check. One sweep first reported two recorded items as new and withdrew them.
+- **Commit:** uncommitted
+
 ## invariant-review-2026-11-16-loop
 
 **Not a spec** — the record of a third `/review-invariants` session on 2026-11-16, attended by
