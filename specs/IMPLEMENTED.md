@@ -520,7 +520,7 @@ line and holds no copy of it, so changing the line changes the range.
   note on INV-252 that would bind the new wording and the record. Until the maintainer applies
   it, only the test holds them.
 
-- **PROPOSED AMENDMENT to INV-252 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-252 — applied 2026-11-16 by the maintainer.**
     - ⛔ **(INV-252) Read the files from there. If `KIRO_HOME` is set and the bootcamp is not under it, look under `.kiro` in the user's home directory next.** — in `hosts/kiro/host.json`
 
   INV-252, as amended on 2026-11-16, requires a package to state where a skill's files are when
