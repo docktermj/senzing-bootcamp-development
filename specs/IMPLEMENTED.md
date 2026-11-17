@@ -36,6 +36,99 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## the-never-ask-list-names-one-assistants-controls-in-every-package
+
+- **Implemented:** 2026-11-16 (issue #14)
+- **Files changed:** `source/skills/bootcamp-onboarding/ground-rules.md`,
+  `hosts/chatgpt/host.json`, `hosts/claude/host.json`, `hosts/copilot/host.json`,
+  `hosts/gemini/host.json`, `hosts/kiro/host.json`,
+  `tests/test_no_host_control_is_offered_as_a_question.py`, `specs/IMPLEMENTED.md` (this entry)
+- **MCP re-check:** n/a (no Senzing fact). Re-confirmed on 2026-11-16 against the change itself:
+  it decides which controls of an assistant's own interface the ground rules name as examples,
+  and asserts nothing about Senzing. No absence claim about the Senzing MCP server is made, so
+  INV-213's `owner-checked:` clause is not owed.
+- **Summary:** Both ground rules that keep a session control out of the bootcamp's questions now
+  state the control by kind on every assistant, and name examples only from that assistant's
+  own host values. Audit finding 7 of `production-readiness-audit-2026-11-16`.
+  - **The two rules.** The rule that every 👉 question traces to a skill file, and the any-time
+    entry "A host control the bootcamper raises", each name three kinds: a mode, a permission
+    setting, a conversation command. The second keeps "any other setting belonging to their
+    session". The list of eight controls is gone from `source/`.
+  - **The host values.** Every `hosts/<assistant>/host.json` declares two values under `vars`.
+    `session_control_examples` holds the assistant's example controls and
+    `dismissal_control_example` holds the dismissal control its rule names. Claude's first
+    value names nine: the eight the rule named, and `bypass permissions`, which only the guard
+    listed before. Claude's second names "Don't show again". GitHub Copilot, Kiro, ChatGPT and
+    Gemini declare both empty: their controls are not verified.
+  - **How a value reaches the rule.** The source puts the value's `{{host.<name>}}` token
+    straight after the kinds, and the build places the value as written. A filled value is a
+    piece of the sentence: one space, then the controls in parentheses. An empty one leaves
+    a complete sentence. The build tool is unchanged, and filling a value later changes no
+    file under `source/`.
+  - **What each package says.** The Claude package names all nine controls in both rules and
+    still says: not "Don't show again", not any other. The other four name no control and do
+    not contain "Don't show again". The rule against naming a dismissal control is in all five.
+    The rule's meaning is unchanged on every assistant.
+  - **Two values, where the issue's scope says one.** One value holds the example controls, as
+    the scope says. The second exists because "Don't show again" sits in the middle of a
+    sentence and a `host:only` block works on whole lines. With it, another assistant can name
+    its own dismissal control later with no change to `source/`.
+  - **The guard.** `HOST_CONTROL` in `tests/test_no_host_control_is_offered_as_a_question.py`
+    holds no list. It is built from every assistant's `session_control_examples`, and matches
+    each control by its first two words joined by a hyphen, a space or nothing, in any letter
+    case. It matches everything the old list matched; 21 probes in three letter cases assert
+    that. It is slightly wider: the old pattern allowed the joined form only for the two `auto`
+    controls, so `planmode` now matches too. The dated snapshot marker and both disclosed
+    limits stay. Limit 2 now also says that every control of an assistant whose value is empty
+    passes.
+  - **Chosen by a race.** Two implementations were built and judged against a rubric written
+    first; issue #14's Approach comment has the table. The other added a block marker to the
+    build tool that keeps its lines only where a value is not empty.
+  - **Tests.** The module grew from 25 tests to 42, in three new classes. They build all five
+    packages and assert: the three kinds in both rules, a complete sentence around each
+    assistant's own value with no empty clause, no control in a package whose own value does
+    not list it, "Don't show again" only where the dismissal value names it, and both values
+    declared in every `host.json` in the shape the rules need. One class renders the source for
+    every assistant with both values emptied and then with invented ones, so the check holds
+    whichever values are filled today. Negative controls are in the module: an empty clause in
+    seven forms, an invented control, a lookalike that must not match, and an empty word list.
+    A further control was run and then reverted: against the ground rules as they were on
+    `main`, the module reports 64 failures, in 10 of its tests.
+  - **Also corrected.** The guard's docstring said a search for the control names matched only
+    the rule text and the guard. It now names the five files the search matches.
+  - **No real run was made.** No `hosts/<assistant>/checks.json` is changed.
+  - **Known limits.** A filled value carries its own punctuation, and a value in another shape
+    stops the guard module at load, with a message naming the file and the shape. The scan of
+    pinned questions still reads the Claude package alone, so a question kept only for another
+    assistant is not scanned for that assistant's controls once its value is filled. The Claude
+    package has two long lines where the list is placed, since the build does not re-wrap.
+- **Establishes no new invariant** (INV-309), and proposes a change to one in force. The
+  register is not edited here (INV-365). No hard-rule line is added: the five lines edited in
+  `ground-rules.md` sit inside two rules that cite INV-247, and `conformance.py since` reports
+  nothing from this change. The block below proposes the dated note on INV-247 that would
+  bind the rule by kind and name the list as one assistant's examples. Until the maintainer
+  applies it, only the test holds them.
+
+- **PROPOSED AMENDMENT to INV-247 — awaiting the maintainer's sign-off; NOT applied.**
+    - ⛔ **Every 👉 question traces to a step in a shipped skill file — never originate one (INV-247).** — in `source/skills/bootcamp-onboarding/ground-rules.md`
+    - ⛔ **never present a session- or host-level control as a bootcamp question** — in `source/skills/bootcamp-onboarding/ground-rules.md`
+    - ⛔ **Do not name a dismissal affordance either** — in `source/skills/bootcamp-onboarding/ground-rules.md`
+
+  INV-247's registered text lists eight controls (auto mode, auto-accept edits, permission
+  mode, plan mode, fast mode, background tasks, `/compact`, `/loop`) as if they were the class,
+  and names "Don't show again" as the dismissal affordance. They are one assistant's controls.
+  Until issue #14 they shipped in all five packages, so four assistants were told to avoid
+  controls they do not have and told nothing about their own. Without the note below the
+  register reads as binding Claude's list on every assistant, and the next editor writes the
+  list back into `source/`. Enforced by `tests/test_no_host_control_is_offered_as_a_question.py`.
+
+  Drafted wording follows, under the registered id. A new rule's id would be
+  written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
+
+  **INV-247** — (⚠️ **Amended 2026-11-16 (issue #14): the class of control binds on every assistant; the list is Claude's dated examples.** The MUST condition is unchanged. On every assistant the guide MUST NOT present a session- or host-level control as a bootcamp question, and the class is stated by kind: a mode, a permission setting, a conversation command, or any other setting belonging to the Bootcamper's assistant session. The eight controls listed above, with `bypass permissions`, are examples naming the Claude Code CLI's affordances as of 2026-08-15. They are not the class and not a closed set. A package names example controls only where they have been verified for its assistant, taken from that assistant's own `session_control_examples` value in `hosts/<assistant>/host.json`; an assistant with no verified examples declares the value empty, and its package states the rule by kind alone. "Don't show again" is likewise Claude's example of a dismissal affordance, held in `dismissal_control_example`; the rule against naming any dismissal affordance binds on every assistant. Enforced by `tests/test_no_host_control_is_offered_as_a_question.py`, which builds its word list from those values, builds all five packages, and **cannot** establish which controls an assistant other than Claude has: only a check against that assistant can, and on 2026-11-16 none has been made.)
+
+- **Commit:** uncommitted
+
 ## audit-and-review-tools-do-not-scan-rule-text-under-hosts
 
 - **Implemented:** 2026-11-16 (issue #9)

@@ -16,7 +16,9 @@
     "scripts_relative": "../../scripts",
     "docs_relative": "../../docs",
     "model_capable": "a high-capability model",
-    "skills_dir": ".."
+    "skills_dir": "..",
+    "session_control_examples": "",
+    "dismissal_control_example": ""
   },
   "layout": {
     "skills": "skills",

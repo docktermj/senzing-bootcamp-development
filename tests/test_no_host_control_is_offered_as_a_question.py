@@ -18,8 +18,11 @@ The rule is still worth having, and nothing on the books forbade the improvised 
 protocol governed a question's count (INV-251 since 2026-08-15; INV-005 at the time), shape (INV-008/INV-009/INV-051), placement
 (INV-211/INV-224) and, for pinned gates, verbatim wording (INV-056) -- never its provenance. A
 repo-wide search for `auto-mode`, `auto mode`, `auto-accept`, `permission mode`, `plan mode`,
-`fast mode` and `bypass permissions` across `source/`, `.claude/` and `tests/` still returns
-matches only in the rule text and this guard.
+`fast mode` and `bypass permissions` across `source/`, `hosts/`, `.claude/` and `tests/` matches
+five files on 2026-11-16, and no match is a question the bootcamp asks: the rule text; the
+Claude host value that text takes its examples from since issue #14; the Claude-only `host` row
+of the feedback routing table, which quotes the observed prompt; `.claude/CLAUDE.md`, which
+names the auto mode classifier; and this guard.
 
 One thing also made such a question look native. Until issue #4 the bootcamp asked the
 bootcamper to operate `/model` and `/effort` at module start, and INV-247 named that switch
@@ -28,6 +31,16 @@ bootcamper to operate no interface control at all,** so this guard has no sancti
 command left to allow, and the test that required the exception to survive now requires it
 to stay gone. INV-247's registered wording still names the exception; it is superseded
 separately, and `specs/INVARIANTS.md` is not read here.
+
+Issue #14 (2026-11-16) moved the list of controls out of the rule's source text and out of this
+file. Both rules now name the control by kind (a mode, a permission setting, a conversation
+command) on every assistant, and name examples only from that assistant's own host values in
+`hosts/<assistant>/host.json`: ``session_control_examples`` for the controls and
+``dismissal_control_example`` for the dismissal affordance. Claude's are filled. An assistant
+whose controls have not been verified declares both empty, and its rules still read as complete
+sentences. Filling a value later changes no file under `source/`; the last two test classes here
+check that on every assistant's built package, and on the source rendered with the values
+emptied and with them filled.
 
 Enforces **INV-247** — every 👉 question traces to a step in a shipped skill file, and no
 session- or host-level control is presented as a bootcamp question.
@@ -40,11 +53,12 @@ THEM**, and a guard whose caveat looks complete is the pattern
    exists in **no file**; this test reads files. A clean run is not evidence the bootcamp can
    no longer ask about auto mode — that half is unreachable from a static check and belongs to
    `dry-run` phase 3.
-2. **Its vocabulary check is a closed, dated list.** ``HOST_CONTROL`` matches eight literals
-   naming the Claude Code CLI's affordances **as of 2026-08-15**. A control phrased in words
-   absent from that list passes it. The CLI ships independently of this plugin and an offline
-   suite (INV-108) cannot notice a new one, so the list is a snapshot to extend, never a
-   guarantee.
+2. **Its vocabulary check is a closed, dated list.** ``HOST_CONTROL`` is built from every
+   assistant's ``session_control_examples`` host value (issue #14), and only Claude's is filled:
+   nine literals naming the Claude Code CLI's affordances **as of 2026-08-15**. A control
+   phrased in words absent from that list passes it, and so does every control of an assistant
+   whose value is empty. The CLI ships independently of this plugin and an offline suite
+   (INV-108) cannot notice a new one, so the list is a snapshot to extend, never a guarantee.
 
 ``test_no_pinned_question_offers_an_unsanctioned_slash_command`` exists because of limit 2 and
 does not share it: it matches slash commands **structurally** and allows none, so a future
@@ -61,16 +75,33 @@ Source spec: `specs/a-question-with-no-origin-in-a-skill-file-reached-the-bootca
 
 Run:  python3 -m unittest discover -s tests
 """
+import dataclasses
+import json
 import re
 import unittest
 from pathlib import Path
 
 from _wrapped_text import blocks, match_lines
-from _built import built  # the Claude package, built from source/
+from _built import SOURCE_DIR, built, host_ids, load_host  # a package per assistant, from source/
+from tools.bootcamp_build.render import render_text
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PLUGIN = built("claude")
-GROUND_RULES = PLUGIN / "skills" / "bootcamp-onboarding" / "ground-rules.md"
+GROUND_RULES_FILE = Path("skills") / "bootcamp-onboarding" / "ground-rules.md"
+GROUND_RULES = PLUGIN / GROUND_RULES_FILE
+
+#: Every assistant the bootcamp is built for, from `hosts/`.
+HOSTS = tuple(host_ids())
+
+#: The two host values issue #14 added to `vars` in every `hosts/<assistant>/host.json`: the
+#: assistant's example controls, and the dismissal affordance its rule names. Each is text the
+#: build places into the ground rules as written, so each is either empty or begins with the
+#: space that separates it from the sentence it joins.
+CONTROLS_VALUE = "session_control_examples"
+DISMISSAL_VALUE = "dismissal_control_example"
+
+#: A filled CONTROLS_VALUE: one space, then the controls in parentheses, separated by ", ".
+CONTROLS_SHAPE = re.compile(r" \(([^()]+)\)")
 
 # A pinned 👉 question: the pointer immediately followed by the bold question text. Prose that
 # *talks about* 👉 questions (including the rule below) does not match, because there the
@@ -86,25 +117,89 @@ SLASH_COMMAND = re.compile(r"(?<![\w/])/([a-z][a-z0-9-]{1,20})\b")
 #: `model` and `effort` until issue #4 removed the module-start switch.
 SANCTIONED_SLASH = frozenset()
 
-# Session- or host-level controls: the bootcamper's Claude interface, not the bootcamp's to
-# offer. `/model` and `/effort` are not listed because SLASH_COMMAND catches both
+
+def named_controls(host_id):
+    """The controls ``host_id``'s host value names, as written there; none when it is empty."""
+    value = load_host(host_id).vars[CONTROLS_VALUE]
+    if not value:
+        return ()
+    shape = CONTROLS_SHAPE.fullmatch(value)
+    assert shape, ("hosts/%s/host.json: %s must be empty, or one space and then the controls in "
+                   "parentheses separated by ', '; it is %r" % (host_id, CONTROLS_VALUE, value))
+    return tuple(shape.group(1).split(", "))
+
+
+def control_pattern(control):
+    """The regex source that catches one control, from the way a host value writes it.
+
+    A conversation command (a leading slash, in backticks or not) is matched whole. Any other
+    control is matched by its first two words, joined by a hyphen, a space or nothing, without
+    a plural's final "s" and with nothing required after them: `auto-accept edits` is caught as
+    "auto accept" and `background tasks` as "background-task". That is every form the list
+    this replaced matched, and no narrower.
+    """
+    control = control.strip("`")
+    if control.startswith("/"):
+        return re.escape(control) + r"\b"
+    head = re.split(r"[-\s]+", control)[:2]
+    if len(head[-1]) > 3:
+        head[-1] = re.sub(r"(?<=[^s])s$", "", head[-1])
+    return r"[-\s]?".join(re.escape(word) for word in head)
+
+
+def host_control(controls):
+    """One pattern, in any letter case, for ``controls``. An empty list would match everything."""
+    sources = list(dict.fromkeys(control_pattern(control) for control in controls))
+    assert sources, "no assistant's %s names a control, so the pattern would be empty" % CONTROLS_VALUE
+    return re.compile("(?i)" + "|".join(sources))
+
+
+# Session- or host-level controls: the bootcamper's assistant interface, not the bootcamp's to
+# offer. The list is not held here (issue #14): it is built from every assistant's
+# `session_control_examples` host value, so each assistant's list has one home, and today only
+# Claude's is filled. `/model` and `/effort` are not listed because SLASH_COMMAND catches both
 # structurally, and `test_no_question_offers_the_model_or_the_effort` names them.
 #
 # ⚠️ SNAPSHOT, NOT A CLOSED SET — dated 2026-08-15, the Claude Code CLI's affordances at that
 # date. The CLI ships independently of this plugin, so this list expires silently and an
-# offline suite cannot notice. EXTEND it when a new control appears, and do not read a pass
-# here as "no host control is offered" — SLASH_COMMAND above is the check that generalizes.
-HOST_CONTROL = re.compile(
-    r"(?i)auto[-\s]?mode"
-    r"|auto[-\s]?accept"
-    r"|permission[-\s]mode"
-    r"|plan[-\s]mode"
-    r"|fast[-\s]mode"
-    r"|bypass[-\s]permission"
-    r"|background[-\s]task"
-    r"|/compact\b"
-    r"|/loop\b"
+# offline suite cannot notice. EXTEND it in `hosts/claude/host.json` when a new control appears,
+# and do not read a pass here as "no host control is offered" — SLASH_COMMAND above is the
+# check that generalizes.
+HOST_CONTROL = host_control(control for host in HOSTS for control in named_controls(host))
+
+#: What HOST_CONTROL matched while it held its own list, kept as probes and not as the list
+#: (issue #14): each control written with a space, with a hyphen, and in the shorter forms the
+#: old pattern accepted. `bypass permissions` was in the guard only; the rule now names it too.
+MATCHED_BEFORE_THE_LIST_MOVED = (
+    "auto mode", "auto-mode", "automode",
+    "auto-accept edits", "auto accept edits", "auto-accept", "autoaccept",
+    "permission mode", "permission-mode",
+    "plan mode", "plan-mode",
+    "fast mode", "fast-mode",
+    "bypass permissions", "bypass-permissions", "bypass permission",
+    "background tasks", "background-tasks", "background task",
+    "/compact", "/loop",
 )
+
+#: Each rule's sentence about the kinds of control, with the place the assistant's own value
+#: goes (issue #14). With an empty value each is still a complete sentence.
+RULE_1_SENTENCE = (
+    "**never present a session- or host-level control as a bootcamp question** — a mode, a "
+    "permission setting or a conversation command<examples>. Those belong to the bootcamper's "
+    "<assistant> session, not to the bootcamp")
+RULE_2_SENTENCE = (
+    "whether they **ask about** a mode, a permission setting, a conversation command<examples> "
+    "or any other setting belonging to their <assistant> session rather than to the bootcamp")
+DISMISSAL_SENTENCE = (
+    "**Do not name a dismissal affordance either**<example> — because directing them to a "
+    "control that silences a host prompt is directing them to operate a <assistant>-interface "
+    "control, and the bootcamp asks them to operate none (INV-247).")
+
+#: What an example clause with nothing in it leaves behind: empty parentheses, a space before
+#: closing punctuation, two dashes with nothing between, or a lead-in with nothing after it.
+EMPTY_CLAUSE = re.compile(
+    r"\(\s*\)|\(\s|\s[.,;:)]|—\s*—"
+    r"|\b(?:such as|for example|for instance|including|e\.g\.|i\.e\.)[\s,]*[.;:)]")
 
 # An affirmative claim that the plugin removes a host control. It cannot: a plugin ships
 # skills, hooks and commands, and none of those reach the host's own affordances. Writing the
@@ -148,6 +243,23 @@ def pinned_questions(text):
     assert len(lines) == len(spans), "match_lines and the block scan disagree"
     raw = text.split("\n")
     return [(n, raw[n - 1] + " " + span) for n, span in zip(lines, spans)]
+
+
+def the_two_rules(text):
+    """(the 👉 provenance rule, the any-time host-control entry), each collapsed to one line."""
+    flat = squash(text)
+    first = re.search(r"⛔ \*\*Every \S+ question traces to a step in a shipped skill file.*?"
+                      r"the settings it never asks about\.", flat)
+    second = re.search(r"\*\*A host control the bootcamper raises — in any form:\*\*.*?"
+                       r"\(INV-247\)\.", flat)
+    assert first and second, "the two INV-247 rules were not found in ground-rules.md"
+    return first.group(0), second.group(0)
+
+
+def sentence(template, assistant, value):
+    """``template`` as one assistant's package words it, with ``value`` as its host value."""
+    return (template.replace("<examples>", value).replace("<example>", value)
+            .replace("<assistant>", assistant))
 
 
 def section(text, heading):
@@ -507,6 +619,243 @@ class TheCorrectedAttributionIsDisclosed(unittest.TestCase):
             "the docstring no longer distinguishes the rule (prophylaxis against a real "
             "hazard) from an observed guide defect (none recorded), which is the "
             "over-claim `coverage-reports-count-known-non-defects-as-hits` exists to stop")
+
+
+class TheWordListComesFromTheHostValues(unittest.TestCase):
+    """``HOST_CONTROL`` holds no list of its own (issue #14) and lost nothing in the move."""
+
+    def test_it_still_matches_everything_its_own_list_matched(self):
+        for phrase in MATCHED_BEFORE_THE_LIST_MOVED:
+            for form in (phrase, phrase.upper(), phrase.title()):
+                with self.subTest(form=form):
+                    question = "\U0001F449 **Shall I switch on %s before we load?**" % form
+                    self.assertRegex(
+                        question, HOST_CONTROL,
+                        "the guard matched this while it held its own list, and no longer "
+                        "does: a control left hosts/claude/host.json, or the pattern built "
+                        "from the host values is narrower than the one it replaced")
+
+    def test_it_is_built_from_every_assistants_value_and_nothing_else(self):
+        named = [control for host in HOSTS for control in named_controls(host)]
+        self.assertEqual(host_control(named).pattern, HOST_CONTROL.pattern)
+        for control in named:
+            with self.subTest(control=control):
+                self.assertRegex(control.strip("`"), HOST_CONTROL)
+
+    def test_a_control_added_to_a_value_is_matched_without_a_change_here(self):
+        """The builder knows no control: two invented ones are caught, a real one is not."""
+        invented = host_control(["turbo mode", "`/zoom`"])
+        for form in ("turbo mode", "Turbo-Mode", "TURBOMODE", "/zoom", "run `/ZOOM` first"):
+            with self.subTest(form=form):
+                self.assertRegex(form, invented)
+        for form in ("auto mode", "/compact", "/zoomed", "turbo"):
+            with self.subTest(form=form):
+                self.assertNotRegex(form, invented)
+
+    def test_a_lookalike_is_not_matched(self):
+        """Must-not-flag (INV-282): a command's longer neighbor, and the words apart."""
+        for text in ("/compaction", "/loops", "a plan for this mode", "permission to use the mode",
+                     "tasks that run in the background", "accept the automatic mapping"):
+            with self.subTest(text=text):
+                self.assertNotRegex(text, HOST_CONTROL)
+
+    def test_an_empty_word_list_is_refused(self):
+        """An alternation of nothing matches every question, and a guard that did would fail
+        every question for the wrong reason."""
+        with self.assertRaises(AssertionError):
+            host_control([])
+
+
+class EachPackageNamesOnlyItsOwnAssistantsControls(unittest.TestCase):
+    """Issue #14, on what each assistant installs: the rule by kind everywhere, examples only
+    from that assistant's own host value."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.text, cls.rules, cls.assistant, cls.values = {}, {}, {}, {}
+        for host in HOSTS:
+            raw = read(built(host) / GROUND_RULES_FILE)
+            cls.text[host] = squash(raw)
+            cls.rules[host] = the_two_rules(raw)
+            variables = load_host(host).vars
+            cls.assistant[host] = variables["assistant"]
+            cls.values[host] = (variables[CONTROLS_VALUE], variables[DISMISSAL_VALUE])
+
+    def test_every_assistant_declares_both_values_in_the_shape_the_rules_need(self):
+        self.assertEqual(5, len(HOSTS))
+        for host in HOSTS:
+            with self.subTest(host=host):
+                path = REPO_ROOT / "hosts" / host / "host.json"
+                variables = json.loads(path.read_text(encoding="utf-8"))["vars"]
+                for name in (CONTROLS_VALUE, DISMISSAL_VALUE):
+                    self.assertIn(name, variables, "%s does not declare %s" % (path, name))
+                    self.assertIsInstance(variables[name], str)
+                controls = named_controls(host)  # refuses a filled value in any other shape
+                self.assertEqual(bool(variables[CONTROLS_VALUE]), bool(controls))
+                for control in controls:
+                    self.assertEqual(control.strip(), control)
+                    self.assertTrue(control.strip("`"), "an empty control in %s" % path)
+                self.assertEqual(len(set(controls)), len(controls), "a control is listed twice")
+                dismissal = variables[DISMISSAL_VALUE]
+                if dismissal:
+                    self.assertRegex(
+                        dismissal, r"\A \S(?:.*\S)?\Z",
+                        "%s must be empty, or begin with the one space that separates it from "
+                        "the sentence it joins and end without one" % DISMISSAL_VALUE)
+
+    def test_both_rules_name_the_three_kinds_of_control_in_every_package(self):
+        for host in HOSTS:
+            with self.subTest(host=host):
+                first, second = self.rules[host]
+                self.assertIn("a mode, a permission setting or a conversation command", first)
+                self.assertIn("a mode, a permission setting, a conversation command", second)
+                self.assertIn("or any other setting belonging to their %s session"
+                              % self.assistant[host], second)
+
+    def test_each_rule_is_a_complete_sentence_around_the_assistants_own_value(self):
+        """Empty or filled, the value sits in a sentence that reads whole on that assistant."""
+        for host in HOSTS:
+            with self.subTest(host=host):
+                first, second = self.rules[host]
+                controls, dismissal = self.values[host]
+                assistant = self.assistant[host]
+                self.assertIn(sentence(RULE_1_SENTENCE, assistant, controls), first)
+                self.assertIn(sentence(RULE_2_SENTENCE, assistant, controls), second)
+                self.assertIn(sentence(DISMISSAL_SENTENCE, assistant, dismissal), second)
+                for rule in (first, second):
+                    self.assertNotRegex(rule, EMPTY_CLAUSE,
+                                        "a rule in the %s package has an empty clause" % host)
+
+    def test_a_package_with_no_examples_states_the_kinds_and_names_nothing(self):
+        """The four assistants whose controls are not verified, today; any empty value, later."""
+        every = [control for host in HOSTS for control in named_controls(host)]
+        for host in HOSTS:
+            if any(self.values[host]):
+                continue
+            with self.subTest(host=host):
+                first, second = self.rules[host]
+                self.assertIn("or a conversation command. Those belong to the bootcamper's", first)
+                self.assertIn("a conversation command or any other setting belonging to", second)
+                self.assertIn("**Do not name a dismissal affordance either** — because", second)
+                for control in every:
+                    self.assertNotRegex(first + " " + second, "(?i)" + control_pattern(control))
+
+    def test_a_package_names_every_control_in_its_own_value_in_both_rules(self):
+        for host in HOSTS:
+            for control in named_controls(host):
+                with self.subTest(host=host, control=control):
+                    first, second = self.rules[host]
+                    self.assertIn(control, first)
+                    self.assertIn(control, second)
+
+    def test_the_claude_package_keeps_its_examples_and_the_dismissal_affordance(self):
+        """True of the Claude rendering alone: its values are the ones that are verified."""
+        controls = named_controls("claude")
+        self.assertTrue(controls, "hosts/claude/host.json names no control")
+        first, second = self.rules["claude"]
+        for control in controls:
+            with self.subTest(control=control):
+                self.assertIn(control, first)
+                self.assertIn(control, second)
+        self.assertIn("**Do not name a dismissal affordance either** — not \"Don't show again\", "
+                      "not any other — because", second)
+
+    def test_a_control_is_named_only_in_a_package_whose_own_value_lists_it(self):
+        """Nothing is inferred from another assistant's list, anywhere in the ground rules."""
+        checked = 0
+        for host in HOSTS:
+            own = {control_pattern(control) for control in named_controls(host)}
+            for other in HOSTS:
+                for control in named_controls(other):
+                    pattern = control_pattern(control)
+                    if pattern in own:
+                        continue
+                    checked += 1
+                    with self.subTest(package=host, control=control, listed_by=other):
+                        self.assertNotRegex(
+                            self.text[host], "(?i)" + pattern,
+                            "the %s package's ground rules name a control only %s's host "
+                            "value lists" % (host, other))
+        self.assertTrue(checked, "no assistant lists a control another does not, so this "
+                                 "compared nothing")
+
+    def test_dont_show_again_ships_only_where_the_dismissal_value_names_it(self):
+        affordance = re.compile(r"(?i)don['\u2019]t show again")
+        for host in HOSTS:
+            with self.subTest(host=host):
+                self.assertEqual(bool(affordance.search(self.values[host][1])),
+                                 bool(affordance.search(self.text[host])))
+        self.assertRegex(self.text["claude"], affordance)
+        without = [host for host in HOSTS if not affordance.search(self.text[host])]
+        self.assertTrue(without, "every package names the affordance, so nothing was excluded")
+
+
+class AValueIsFilledOrEmptiedWithoutTouchingTheSource(unittest.TestCase):
+    """Issue #14's scope: "Filling an assistant's host value later needs no change to `source/`".
+
+    The source is rendered for every assistant with the two values emptied, then with invented
+    ones, so the check holds on all five whichever of them are filled today.
+    """
+
+    SOURCE = SOURCE_DIR / GROUND_RULES_FILE
+
+    def rules_with(self, host_id, controls, dismissal):
+        host = load_host(host_id)
+        host = dataclasses.replace(
+            host, vars={**host.vars, CONTROLS_VALUE: controls, DISMISSAL_VALUE: dismissal})
+        text = render_text(read(self.SOURCE), host, str(self.SOURCE), directives=True,
+                           known_hosts=set(HOSTS))
+        return the_two_rules(text), host.vars["assistant"]
+
+    def test_the_source_places_each_value_and_names_no_control_itself(self):
+        source = read(self.SOURCE)
+        self.assertEqual(2, source.count("{{host.%s}}" % CONTROLS_VALUE))
+        self.assertEqual(1, source.count("{{host.%s}}" % DISMISSAL_VALUE))
+        first, second = the_two_rules(source)
+        self.assertIn("{{host.%s}}" % CONTROLS_VALUE, first)
+        self.assertIn("{{host.%s}}" % CONTROLS_VALUE, second)
+        self.assertIn("{{host.%s}}" % DISMISSAL_VALUE, second)
+        for rule in (first, second):
+            self.assertNotRegex(rule, HOST_CONTROL)
+            self.assertNotRegex(rule, r"(?i)don['\u2019]t show again")
+
+    def test_with_both_values_empty_every_assistants_rules_are_complete_sentences(self):
+        every = [control for host in HOSTS for control in named_controls(host)]
+        for host in HOSTS:
+            with self.subTest(host=host):
+                (first, second), assistant = self.rules_with(host, "", "")
+                self.assertIn(sentence(RULE_1_SENTENCE, assistant, ""), first)
+                self.assertIn(sentence(RULE_2_SENTENCE, assistant, ""), second)
+                self.assertIn(sentence(DISMISSAL_SENTENCE, assistant, ""), second)
+                for rule in (first, second):
+                    self.assertNotRegex(rule, EMPTY_CLAUSE)
+                    self.assertNotRegex(rule, r"(?i)don['\u2019]t show again")
+                    for control in every:
+                        self.assertNotRegex(rule, "(?i)" + control_pattern(control))
+
+    def test_with_both_values_filled_every_assistants_rules_name_them(self):
+        controls = " (turbo mode, `/zoom`)"
+        dismissal = " — not \"Never ask me\", not any other"
+        for host in HOSTS:
+            with self.subTest(host=host):
+                (first, second), assistant = self.rules_with(host, controls, dismissal)
+                self.assertIn(sentence(RULE_1_SENTENCE, assistant, controls), first)
+                self.assertIn(sentence(RULE_2_SENTENCE, assistant, controls), second)
+                self.assertIn(sentence(DISMISSAL_SENTENCE, assistant, dismissal), second)
+                for rule in (first, second):
+                    self.assertNotRegex(rule, EMPTY_CLAUSE)
+
+    def test_an_empty_clause_is_caught(self):
+        """Negative control (INV-265): what each rule would read like with the clause left in."""
+        for broken in ("or a conversation command (). Those belong",
+                       "or a conversation command ( ). Those belong",
+                       "or a conversation command . Those belong",
+                       "a conversation command , or any other setting",
+                       "a conversation command, such as . Those belong",
+                       "a conversation command (for example ) or any other setting",
+                       "a dismissal affordance either** — — because"):
+            with self.subTest(broken=broken):
+                self.assertRegex(broken, EMPTY_CLAUSE)
 
 
 if __name__ == "__main__":
