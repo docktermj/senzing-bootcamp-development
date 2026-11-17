@@ -37,9 +37,9 @@ field) and hold it to display with the WELCOME banner (step 3) and to record in 
 1. `{{host.plugin_root}}/{{host.manifest_path}}`, when `{{host.plugin_root_var}}` is set **and
    non-empty**.
 2. `<this-skill-dir>/../../{{host.manifest_path}}` — this skill's own directory, two levels
-   up. The harness supplies that directory at invocation, so by construction it belongs to the
-   plugin whose files are running. This is the same skill-relative fallback INV-185 documents for
-   bundled scripts.
+   up. That directory is the one this skill's files are read from, so by construction it belongs
+   to the plugin whose files are running. This is the same skill-relative fallback INV-185
+   documents for bundled scripts.
 3. "Unknown" — reported as the version, never replaced by a guess.
 
 ⛔ **Never search the filesystem for a `plugin.json`, and never read one outside the resolved
@@ -80,7 +80,7 @@ code in the chosen language, looks up Senzing facts, and provides working exampl
   Troubleshooting:
   1. Verify internet connectivity.
   2. Confirm the "senzing" MCP server is configured and enabled in {{host.product}}
-     (it ships with this plugin's .mcp.json, pointing at https://mcp.senzing.com/mcp).
+     (it ships with this {{host.package_noun}}'s {{host.mcp_file}}, pointing at https://mcp.senzing.com/mcp).
   3. If behind a corporate proxy, allowlist mcp.senzing.com.
 
   After fixing the connection, say "retry".

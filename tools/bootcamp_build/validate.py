@@ -43,9 +43,14 @@ class Finding:
 
 
 def _term_pattern(terms: tuple[str, ...] | list[str]) -> re.Pattern[str] | None:
+    """One pattern for a host's foreign terms, matched whatever their letter case.
+
+    A model ID, a directory and an environment variable spell an assistant's name in lower or
+    upper case, and each is as much another host's text as the capitalized name is.
+    """
     if not terms:
         return None
-    return re.compile("|".join(f"(?:{term})" for term in terms))
+    return re.compile("|".join(f"(?:{term})" for term in terms), re.IGNORECASE)
 
 
 def residue(build: HostBuild) -> list[Finding]:

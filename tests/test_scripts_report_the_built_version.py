@@ -31,15 +31,18 @@ What this file asserts:
   the version in `source/bootcamp.json`. The assistants come from the build's own list, so a
   sixth is covered the day it is added (INV-246).
 - **The order.** `bootcamp_version` in the `bootcamp_host.json` beside the script, then the
-  manifest lookup the script had before, then the unresolved value: "Unknown" from the hook,
-  "unknown" from the packager. Neither spelling changes.
+  script's manifest lookup, then the unresolved value: "Unknown" from the hook, "unknown" from
+  the packager. Neither spelling changes.
 - **No version in the file.** `bootcamp_host.json` gives no version when it is missing, cannot
   be read, is not valid JSON, or holds no non-empty string under `bootcamp_version`. Each
   case runs with a manifest above the script and without one. The script must exit 0 with no
   traceback, and fall through.
-- **The manifest lookups are the ones each script had.** The hook reads
-  `../.claude-plugin/plugin.json` and still does not read `../plugin.json`. The packager reads
-  `../plugin.json`, then `../.claude-plugin/plugin.json`.
+- **The manifest lookups name each package's own manifest (#30).** #31 left both lookups as
+  they were, and both spelled the Claude package's manifest directory in every package. Since
+  #30 the path is `manifest_path` from the assistant's profile, which the build fills in. The
+  hook reads `../<manifest_path>` and nothing else. The packager reads `../plugin.json`, then
+  `../<manifest_path>`. No copy reads a manifest at another assistant's path. In the Claude
+  package these are the lookups each script had before, and a test pins that.
 - **Nothing is searched for (INV-252).** A `bootcamp_host.json` above the script's directory,
   below it, in the project, or in the project's own `scripts/` is not read.
 - **The sentence in `onboarding-flow.md`.** It names the step that reads `bootcamp_host.json`
@@ -47,10 +50,12 @@ What this file asserts:
   recap header and the recap's provenance block), and no longer says all four resolve it one
   way. The texts of those other steps still name the manifest and not the file.
 
-The fallback cases run scratch copies of the two scripts from `source/scripts/`. They hold for
-every assistant because the code of the `plugin_version` function in each built copy is
-compared with the source's in `TheFunctionIsTheSameInEveryPackage`. The docstring is left out
-of that comparison: the hook's names a host value, which the build fills in per assistant.
+The fallback cases run scratch copies of the two scripts taken from every built package. The
+copy in `source/scripts/` holds the unfilled `{{host.manifest_path}}` and is not what any
+assistant installs. `TheBuildFillsInOnlyTheManifestPath` compares the code of the
+`plugin_version` function in each built copy with the source's: they differ by that one value
+and by nothing else. The docstring is left out of that comparison: the hook's names another host
+value, which the build also fills in per assistant.
 
 **What this cannot establish.** That a live assistant runs the hook and hands the guide its
 text: the hook is started here directly, and not through an assistant or through the hook
@@ -77,7 +82,7 @@ import unittest
 import zipfile
 from pathlib import Path
 
-from _built import SOURCE_DIR, built, host_ids, load_declaration  # a package per assistant
+from _built import SOURCE_DIR, built, host_ids, load_declaration, load_host  # a package per assistant
 
 HOSTS = tuple(host_ids())
 VERSION = load_declaration(SOURCE_DIR)["version"]
@@ -99,7 +104,12 @@ UNRESOLVED = {HOOK: "Unknown", PACKAGER: "unknown"}
 #: one says which file it was read from.
 FROM_HOST_FILE = "31.0.1"
 FROM_ROOT_MANIFEST = "31.0.2"
-FROM_CLAUDE_MANIFEST = "31.0.3"
+FROM_OWN_MANIFEST = "31.0.3"
+
+#: The host value both scripts take their manifest path from (#30), as `source/` writes it.
+MANIFEST_TOKEN = "{{host.manifest_path}}"
+#: The manifest every package format may keep at its root, which the packager reads first.
+ROOT_MANIFEST = "plugin.json"
 
 #: What a `bootcamp_host.json` that gives no version can hold. `None` is no file at all, and
 #: `DIRECTORY` puts a directory where the file would be, so that opening it fails.
@@ -121,6 +131,11 @@ NO_VERSION = {
     "the key is an empty string": b'{"bootcamp_version": ""}',
     "the key is only whitespace": b'{"bootcamp_version": "  \\n"}',
 }
+
+
+def manifest_path(assistant):
+    """Where ``assistant``'s package keeps its manifest: ``vars.manifest_path`` in its profile."""
+    return load_host(assistant).vars["manifest_path"]
 
 
 def only(root, name):
@@ -177,13 +192,13 @@ def packager_version(script, project):
 REPORTED = {HOOK: hook_version, PACKAGER: packager_version}
 
 
-def plugin_version_code(path):
-    """The code of the ``plugin_version`` function in a script, without its docstring."""
-    tree = ast.parse(Path(path).read_text(encoding="utf-8"))
+def plugin_version_code(source, label):
+    """The code of the ``plugin_version`` function in a script's text, without its docstring."""
+    tree = ast.parse(source)
     found = [node for node in ast.walk(tree)
              if isinstance(node, ast.FunctionDef) and node.name == "plugin_version"]
     if len(found) != 1:
-        raise AssertionError("%s: expected one plugin_version(), found %d" % (path, len(found)))
+        raise AssertionError("%s: expected one plugin_version(), found %d" % (label, len(found)))
     function = found[0]
     if ast.get_docstring(function) is not None:
         function.body = function.body[1:]
@@ -202,19 +217,22 @@ def paragraphs(path):
 
 
 class Layout:
-    """A scratch package directory holding a copy of one script, and a scratch project.
+    """A scratch package directory holding one built package's copy of a script, and a project.
 
-    ``host`` is what `bootcamp_host.json` beside the script holds: a version string, raw
-    bytes, ``DIRECTORY``, or ``None`` for no file. ``root_manifest`` and ``claude_manifest``
-    are the versions written to `../plugin.json` and `../.claude-plugin/plugin.json`, or
-    ``None`` for no file.
+    ``assistant`` is whose built package the copy comes from. ``host`` is what
+    `bootcamp_host.json` beside the script holds: a version string, raw bytes, ``DIRECTORY``,
+    or ``None`` for no file. ``root_manifest`` and ``own_manifest`` are the versions written to
+    `../plugin.json` and to `../<manifest_path>`, that assistant's own manifest path, or
+    ``None`` for no file. Where that path is `plugin.json` the two are one file, and
+    ``own_manifest`` is written last.
     """
 
-    def __init__(self, script, host=None, root_manifest=None, claude_manifest=None):
+    def __init__(self, script, assistant, host=None, root_manifest=None, own_manifest=None):
         self.name = script
+        self.assistant = assistant
         self.host = host
         self.root_manifest = root_manifest
-        self.claude_manifest = claude_manifest
+        self.own_manifest = own_manifest
 
     def __enter__(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -223,8 +241,9 @@ class Layout:
         self.scripts = self.package / "scripts"
         self.scripts.mkdir(parents=True)
         self.script = self.scripts / self.name
+        shipped = only(built(self.assistant), self.name).parent
         for name in (self.name,) + SIBLINGS[self.name]:
-            shutil.copyfile(SOURCE_DIR / "scripts" / name, self.scripts / name)
+            shutil.copyfile(shipped / name, self.scripts / name)
         self.project = scratch_project(base / "project")
         if self.host is DIRECTORY:
             (self.scripts / HOST_FILE).mkdir()
@@ -233,10 +252,9 @@ class Layout:
         elif self.host is not None:
             self.write_host_file(self.scripts, self.host)
         if self.root_manifest is not None:
-            self.write_manifest(self.package / "plugin.json", self.root_manifest)
-        if self.claude_manifest is not None:
-            self.write_manifest(self.package / ".claude-plugin" / "plugin.json",
-                                self.claude_manifest)
+            self.write_manifest(self.package / ROOT_MANIFEST, self.root_manifest)
+        if self.own_manifest is not None:
+            self.write_manifest(self.package / manifest_path(self.assistant), self.own_manifest)
         return self
 
     def __exit__(self, *exc):
@@ -257,6 +275,11 @@ class Layout:
         return REPORTED[self.name](self.script, self.project)
 
 
+def copies():
+    """Every (assistant, script) pair: each built package's copy of each of the two scripts."""
+    return [(assistant, name) for assistant in HOSTS for name in (HOOK, PACKAGER)]
+
+
 class EveryPackageCarriesTheVersionBesideBothScripts(unittest.TestCase):
     """What the fix reads has to be there, on every assistant, or it fixes nothing."""
 
@@ -266,7 +289,7 @@ class EveryPackageCarriesTheVersionBesideBothScripts(unittest.TestCase):
 
     def test_the_declared_version_is_a_version(self):
         self.assertRegex(VERSION, r"^\d+\.\d+\.\d+")
-        self.assertNotIn(VERSION, (FROM_HOST_FILE, FROM_ROOT_MANIFEST, FROM_CLAUDE_MANIFEST))
+        self.assertNotIn(VERSION, (FROM_HOST_FILE, FROM_ROOT_MANIFEST, FROM_OWN_MANIFEST))
 
     def test_the_host_file_sits_beside_each_script_and_carries_the_version(self):
         for host in HOSTS:
@@ -327,34 +350,58 @@ class ThePackagerReportsTheBuiltVersionInEveryPackage(unittest.TestCase):
                 self.assertFalse((project / "backups").exists(), "a dry run wrote something")
 
 
-class TheFunctionIsTheSameInEveryPackage(unittest.TestCase):
-    """Why the fallback cases below, run on copies from `source/`, hold on every assistant."""
+class TheBuildFillsInOnlyTheManifestPath(unittest.TestCase):
+    """Why a fallback case run on a built copy speaks for the source every package is built from."""
 
-    def test_each_built_copy_matches_the_source(self):
+    def source(self, name):
+        return (SOURCE_DIR / "scripts" / name).read_text(encoding="utf-8")
+
+    def test_the_source_takes_the_manifest_path_from_the_host_profile(self):
         for name in (HOOK, PACKAGER):
-            expected = plugin_version_code(SOURCE_DIR / "scripts" / name)
-            self.assertIn(HOST_FILE, expected)
-            self.assertIn("bootcamp_version", expected)
-            for host in HOSTS:
-                with self.subTest(host=host, script=name):
-                    self.assertEqual(
-                        expected, plugin_version_code(only(built(host), name)),
-                        "the build changed the code of plugin_version() in %s for %s, so the "
-                        "fallback cases in this file no longer speak for that package"
-                        % (name, host))
+            with self.subTest(script=name):
+                code = plugin_version_code(self.source(name), name)
+                self.assertEqual(1, code.count(MANIFEST_TOKEN), name)
+                self.assertIn(HOST_FILE, code)
+                self.assertIn("bootcamp_version", code)
+
+    def test_each_built_copy_is_the_source_with_its_own_manifest_path(self):
+        for assistant, name in copies():
+            with self.subTest(host=assistant, script=name):
+                shipped = only(built(assistant), name).read_text(encoding="utf-8")
+                self.assertNotIn(MANIFEST_TOKEN, shipped)
+                expected = plugin_version_code(
+                    self.source(name).replace(MANIFEST_TOKEN, manifest_path(assistant)), name)
+                self.assertEqual(
+                    expected, plugin_version_code(shipped, "%s/%s" % (assistant, name)),
+                    "the build changed more of plugin_version() in %s for %s than the manifest "
+                    "path" % (name, assistant))
+
+    def test_every_profile_gives_a_manifest_its_package_carries(self):
+        for assistant in HOSTS:
+            with self.subTest(host=assistant):
+                self.assertTrue((built(assistant) / manifest_path(assistant)).is_file(),
+                                manifest_path(assistant))
+
+    def test_a_copy_that_differs_elsewhere_is_reported(self):
+        """Negative control: the comparison sees a change that is not the manifest path."""
+        source = self.source(HOOK)
+        changed = source.replace('"bootcamp_version"', '"version"')
+        self.assertNotEqual(source, changed)
+        self.assertNotEqual(plugin_version_code(source, HOOK), plugin_version_code(changed, HOOK))
 
 
 class TheHostFileComesFirst(unittest.TestCase):
     def test_it_wins_over_every_manifest(self):
-        for name in (HOOK, PACKAGER):
-            with self.subTest(script=name), Layout(
-                    name, host=FROM_HOST_FILE, root_manifest=FROM_ROOT_MANIFEST,
-                    claude_manifest=FROM_CLAUDE_MANIFEST) as layout:
+        for assistant, name in copies():
+            with self.subTest(host=assistant, script=name), Layout(
+                    name, assistant, host=FROM_HOST_FILE, root_manifest=FROM_ROOT_MANIFEST,
+                    own_manifest=FROM_OWN_MANIFEST) as layout:
                 self.assertEqual(FROM_HOST_FILE, layout.reported())
 
     def test_it_is_enough_with_no_manifest_at_all(self):
-        for name in (HOOK, PACKAGER):
-            with self.subTest(script=name), Layout(name, host=FROM_HOST_FILE) as layout:
+        for assistant, name in copies():
+            with self.subTest(host=assistant, script=name), Layout(
+                    name, assistant, host=FROM_HOST_FILE) as layout:
                 self.assertEqual(FROM_HOST_FILE, layout.reported())
 
 
@@ -362,51 +409,95 @@ class NoVersionInTheHostFileFallsThrough(unittest.TestCase):
     """Each case exits 0 with no traceback: `run` fails the test otherwise."""
 
     def test_to_the_manifest_when_there_is_one(self):
-        for name in (HOOK, PACKAGER):
+        for assistant, name in copies():
             for case, content in NO_VERSION.items():
-                with self.subTest(script=name, case=case), Layout(
-                        name, host=content, claude_manifest=FROM_CLAUDE_MANIFEST) as layout:
-                    self.assertEqual(FROM_CLAUDE_MANIFEST, layout.reported())
+                with self.subTest(host=assistant, script=name, case=case), Layout(
+                        name, assistant, host=content, own_manifest=FROM_OWN_MANIFEST) as layout:
+                    self.assertEqual(FROM_OWN_MANIFEST, layout.reported())
 
     def test_to_the_unresolved_value_when_there_is_none(self):
-        for name in (HOOK, PACKAGER):
+        for assistant, name in copies():
             for case, content in NO_VERSION.items():
-                with self.subTest(script=name, case=case), Layout(name, host=content) as layout:
+                with self.subTest(host=assistant, script=name, case=case), Layout(
+                        name, assistant, host=content) as layout:
                     self.assertEqual(UNRESOLVED[name], layout.reported())
 
     def test_the_two_unresolved_spellings_are_kept(self):
         self.assertEqual({HOOK: "Unknown", PACKAGER: "unknown"}, UNRESOLVED)
-        for name in (HOOK, PACKAGER):
-            with self.subTest(script=name), Layout(name) as layout:
+        for assistant, name in copies():
+            with self.subTest(host=assistant, script=name), Layout(name, assistant) as layout:
                 self.assertEqual(UNRESOLVED[name], layout.reported())
 
 
-class TheManifestLookupsAreTheOnesEachScriptHad(unittest.TestCase):
-    def test_the_hook_reads_the_claude_path_only(self):
-        with Layout(HOOK, claude_manifest=FROM_CLAUDE_MANIFEST) as layout:
-            self.assertEqual(FROM_CLAUDE_MANIFEST, layout.reported())
-        with Layout(HOOK, root_manifest=FROM_ROOT_MANIFEST,
-                    claude_manifest=FROM_CLAUDE_MANIFEST) as layout:
-            self.assertEqual(FROM_CLAUDE_MANIFEST, layout.reported())
-        with Layout(HOOK, root_manifest=FROM_ROOT_MANIFEST) as layout:
-            self.assertEqual(
-                "Unknown", layout.reported(),
-                "the hook read ../plugin.json, a manifest path #31 leaves out of its lookup")
+class TheManifestLookupsNameThePackagesOwnManifest(unittest.TestCase):
+    """#30: each copy reads the manifest path of the assistant it was built for, and no other."""
 
-    def test_the_packager_reads_the_root_manifest_then_the_claude_path(self):
-        with Layout(PACKAGER, root_manifest=FROM_ROOT_MANIFEST,
-                    claude_manifest=FROM_CLAUDE_MANIFEST) as layout:
-            self.assertEqual(FROM_ROOT_MANIFEST, layout.reported())
-        with Layout(PACKAGER, root_manifest=FROM_ROOT_MANIFEST) as layout:
-            self.assertEqual(FROM_ROOT_MANIFEST, layout.reported())
-        with Layout(PACKAGER, claude_manifest=FROM_CLAUDE_MANIFEST) as layout:
-            self.assertEqual(FROM_CLAUDE_MANIFEST, layout.reported())
+    def test_the_profiles_give_more_than_one_manifest_path(self):
+        """Or "its own path" and "another assistant's path" below would be the same thing."""
+        paths = {manifest_path(assistant) for assistant in HOSTS}
+        self.assertGreater(len(paths), 1, paths)
+        self.assertIn(ROOT_MANIFEST, paths)
+
+    def test_the_hook_reads_its_own_manifest_path_only(self):
+        for assistant in HOSTS:
+            with self.subTest(host=assistant):
+                with Layout(HOOK, assistant, own_manifest=FROM_OWN_MANIFEST) as layout:
+                    self.assertEqual(FROM_OWN_MANIFEST, layout.reported())
+                if manifest_path(assistant) == ROOT_MANIFEST:
+                    continue  # this package's own manifest is the root one
+                with Layout(HOOK, assistant, root_manifest=FROM_ROOT_MANIFEST,
+                            own_manifest=FROM_OWN_MANIFEST) as layout:
+                    self.assertEqual(FROM_OWN_MANIFEST, layout.reported())
+                with Layout(HOOK, assistant, root_manifest=FROM_ROOT_MANIFEST) as layout:
+                    self.assertEqual(
+                        "Unknown", layout.reported(),
+                        "the hook read ../plugin.json, which is not %s's manifest" % assistant)
+
+    def test_the_packager_reads_the_root_manifest_then_its_own(self):
+        for assistant in HOSTS:
+            with self.subTest(host=assistant):
+                with Layout(PACKAGER, assistant, root_manifest=FROM_ROOT_MANIFEST) as layout:
+                    self.assertEqual(FROM_ROOT_MANIFEST, layout.reported())
+                with Layout(PACKAGER, assistant, own_manifest=FROM_OWN_MANIFEST) as layout:
+                    self.assertEqual(FROM_OWN_MANIFEST, layout.reported())
+                if manifest_path(assistant) == ROOT_MANIFEST:
+                    continue  # one file: there is no order to observe
+                with Layout(PACKAGER, assistant, root_manifest=FROM_ROOT_MANIFEST,
+                            own_manifest=FROM_OWN_MANIFEST) as layout:
+                    self.assertEqual(FROM_ROOT_MANIFEST, layout.reported())
+
+    def test_no_copy_reads_a_manifest_at_another_assistants_path(self):
+        """The defect #30 names: every package looked in the Claude package's directory."""
+        for assistant, name in copies():
+            read = {manifest_path(assistant)} | ({ROOT_MANIFEST} if name == PACKAGER else set())
+            others = sorted({manifest_path(other) for other in HOSTS} - read)
+            for other in others:
+                with self.subTest(host=assistant, script=name, path=other), Layout(
+                        name, assistant) as layout:
+                    Layout.write_manifest(layout.package / other, FROM_ROOT_MANIFEST)
+                    self.assertEqual(
+                        UNRESOLVED[name], layout.reported(),
+                        "%s's %s read a manifest at %s" % (assistant, name, other))
+
+    def test_the_claude_package_keeps_the_lookups_it_had(self):
+        """What #30 must not change: the paths are written out here, not taken from the profile."""
+        with Layout(HOOK, "claude") as layout:
+            Layout.write_manifest(layout.package / ".claude-plugin" / "plugin.json", "31.0.4")
+            self.assertEqual("31.0.4", layout.reported())
+        with Layout(HOOK, "claude") as layout:
+            Layout.write_manifest(layout.package / "plugin.json", "31.0.5")
+            self.assertEqual("Unknown", layout.reported())
+        with Layout(PACKAGER, "claude") as layout:
+            Layout.write_manifest(layout.package / ".claude-plugin" / "plugin.json", "31.0.4")
+            self.assertEqual("31.0.4", layout.reported())
+            Layout.write_manifest(layout.package / "plugin.json", "31.0.5")
+            self.assertEqual("31.0.5", layout.reported())
 
     def test_a_manifest_that_holds_no_version_gives_the_unresolved_value(self):
-        for name in (HOOK, PACKAGER):
-            with self.subTest(script=name), Layout(name) as layout:
-                manifest = layout.package / ".claude-plugin" / "plugin.json"
-                manifest.parent.mkdir()
+        for assistant, name in copies():
+            with self.subTest(host=assistant, script=name), Layout(name, assistant) as layout:
+                manifest = layout.package / manifest_path(assistant)
+                manifest.parent.mkdir(parents=True, exist_ok=True)
                 manifest.write_text(json.dumps({"name": "scratch"}), encoding="utf-8")
                 self.assertEqual(UNRESOLVED[name], layout.reported())
 
@@ -425,24 +516,24 @@ class NothingIsSearchedFor(unittest.TestCase):
         }
 
     def test_a_host_file_elsewhere_is_not_read(self):
-        for name in (HOOK, PACKAGER):
-            with Layout(name) as probe:
+        for assistant, name in copies():
+            with Layout(name, assistant) as probe:
                 places = sorted(self.elsewhere(probe))
             self.assertGreaterEqual(len(places), 6)
             for place in places:
-                with self.subTest(script=name, place=place), Layout(name) as layout:
+                with self.subTest(host=assistant, script=name, place=place), Layout(
+                        name, assistant) as layout:
                     Layout.write_host_file(self.elsewhere(layout)[place], FROM_HOST_FILE)
                     self.assertEqual(
                         UNRESOLVED[name], layout.reported(),
                         "%s read a %s %s: it is looking for one" % (name, HOST_FILE, place))
 
     def test_a_manifest_elsewhere_is_not_read_either(self):
-        for name in (HOOK, PACKAGER):
-            with self.subTest(script=name), Layout(name) as layout:
-                Layout.write_manifest(layout.project / "plugin.json", FROM_ROOT_MANIFEST)
-                Layout.write_manifest(layout.project / ".claude-plugin" / "plugin.json",
-                                      FROM_CLAUDE_MANIFEST)
-                Layout.write_manifest(layout.package.parent / "plugin.json", FROM_ROOT_MANIFEST)
+        for assistant, name in copies():
+            with self.subTest(host=assistant, script=name), Layout(name, assistant) as layout:
+                for place in (layout.project, layout.package.parent):
+                    Layout.write_manifest(place / ROOT_MANIFEST, FROM_ROOT_MANIFEST)
+                    Layout.write_manifest(place / manifest_path(assistant), FROM_OWN_MANIFEST)
                 self.assertEqual(UNRESOLVED[name], layout.reported())
 
 

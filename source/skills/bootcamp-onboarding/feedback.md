@@ -193,7 +193,7 @@ verdict gets `not applicable`.
 - **Plugin version:** [the version captured above, or "Unknown"]
 - **AI assistant:** [`name` and `product` from `bootcamp_host.json`, then the interface and the assistant's version when known; e.g. "{{host.assistant}} ({{host.product}})", or "Unknown"]
 - **Workstation:** [OS name and version, and architecture; e.g. "Linux 6.17.0-35-generic (x86_64)", or "Unknown"]
-- **Model / effort:** [model ID and reasoning-effort level; e.g. "claude-opus-5-5[1m] / high", or "Unknown"]
+- **Model / effort:** [model ID and reasoning-effort level; e.g. "<model ID> / high", or "Unknown"]
 - **Context size:** [approximate tokens and/or % of context window in use; e.g. "~85k tokens (~42% of window)", or "Unknown"]
 - **Module / step:** [`current_module` / `current_step` from `config/bootcamp_progress.json`, or "Unknown"]
 - **Recent questions:** [the last few 👉 questions asked]

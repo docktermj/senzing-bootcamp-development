@@ -268,7 +268,8 @@ CONFIRMATION_PARTS = (
     ("several, none or no tool keeps the pid and never blocks",
      r"(?i)several listeners, none, or no lookup tool.{0,160}keep the captured pid.{0,60}"
      r"never block the launch"),
-    ("the host background-task handle", r"(?i)background-task mechanism is not a pid"),
+    # #30: the warning names no assistant's feature, so it reads the same in every package.
+    ("a handle that names a task", r"(?i)names a task rather than a process is not a pid"),
 )
 
 
@@ -311,7 +312,7 @@ class TheLaunchConfirmationIsStatedOnce(unittest.TestCase):
         mutants = {
             "the PowerShell form": section.replace("-State Listen", ""),
             "the Linux ss form": section.replace("ss -ltnp", "ss"),
-            "the host background-task handle": section.replace("is not a pid", "is a pid"),
+            "a handle that names a task": section.replace("is not a pid", "is a pid"),
         }
         for name, mutant in mutants.items():
             with self.subTest(part=name):

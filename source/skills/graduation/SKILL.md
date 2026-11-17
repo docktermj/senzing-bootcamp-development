@@ -784,7 +784,7 @@ there ([guide-run blocks](../bootcamp-onboarding/ground-rules.md#guide-run-block
 
 If `{{host.plugin_root}}` is not set in the current context, resolve the script
 relative to this skill's directory instead (this skill lives at
-`skills/graduation/`, so the generator is two levels up under `scripts/`):
+`skills/graduation/`, so the generator is in `{{host.scripts_relative}}/`, counted from there):
 
 ```bash
 python3 {{host.scripts_fallback}}/generate_recap_pdf.py

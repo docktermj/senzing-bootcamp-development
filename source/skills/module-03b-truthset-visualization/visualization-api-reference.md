@@ -1624,11 +1624,11 @@ A listener that is not this server at all, a stranger's, is caught by "Confirmin
 answers is yours" (INV-260), which stops before the URL is handed over; this confirmation does not
 change that. It is internal bookkeeping and adds no message for the Bootcamper.
 
-⚠️ **A handle from the host's own background-task mechanism is not a pid.** When the server is
-started through the guide's own background-task feature rather than with `&` in a shell, the id
-that feature returns names a task, not a process: record no pid from it, and take the pid from the
-launch confirmation's port lookup. Where that lookup names no single listener, the checkpoint keeps
-no pid and teardown's missing-pid fallback applies.
+⚠️ **A handle that names a task rather than a process is not a pid.** When the server is started
+by something other than the shell forms in the table above, the id it returns names a task, not a
+process: record no pid from it, and take the pid from the launch confirmation's port lookup. Where
+that lookup names no single listener, the checkpoint keeps no pid and teardown's missing-pid
+fallback applies.
 
 ⛔ **(INV-223) Never identify the server by matching its command line — `pkill -f <script name>`,
 `pgrep -f <script name>`, `ps | grep <script name>` and their equivalents are unsafe here.** The pattern you

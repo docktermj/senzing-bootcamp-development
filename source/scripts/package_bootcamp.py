@@ -389,7 +389,9 @@ def plugin_version():
     built = host.get("bootcamp_version") if isinstance(host, dict) else None
     if isinstance(built, str) and built.strip():
         return built.strip()
-    for candidate in (here.parent / "plugin.json", here.parent / ".claude-plugin" / "plugin.json"):
+    # The second path is the package's own manifest, which the build fills in. Both are fixed
+    # from this file and never searched for: `onboarding-flow.md` states the rule (INV-252).
+    for candidate in (here.parent / "plugin.json", here.parent / "{{host.manifest_path}}"):
         try:
             with open(candidate, encoding="utf-8") as fh:
                 data = json.load(fh)

@@ -1,15 +1,19 @@
 """Building a host's package: where files go, and what stops a host being left behind."""
 
+import contextlib
+import io
 import json
 import os
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 
+from tools.bootcamp_build import __main__ as cli  # noqa: E402
 from tools.bootcamp_build import model  # noqa: E402
 from tools.bootcamp_build.emit import build_host, claude_style_hooks, unmapped_hooks  # noqa: E402
 from tools.bootcamp_build.model import BuildError, load_declaration, load_host  # noqa: E402
@@ -188,6 +192,121 @@ class OtherHostsStayOut(Workspace):
     def test_neutral_source_passes(self):
         hosts = [load_host("alpha", self.hosts), load_host("beta", self.hosts)]
         self.assertEqual(lint_source(self.source, hosts), [])
+
+
+class LetterCaseDoesNotHideAName(Workspace):
+    """Issue #30: a model ID, a directory and a variable spell an assistant's name in lower or
+    upper case. Each is reported, in a built package and in the source, as the name itself is.
+
+    ⛔ **The build's check for another assistant's name matches it in any letter case, in `source/` and in every built package.**
+
+    That line is queued as a `DEFERRED INVARIANT` block in issue #30's entry of
+    `specs/IMPLEMENTED.md`, awaiting the maintainer's sign-off. Until then only this file and
+    `tests/test_shared_text_holds_in_every_package.py`, which holds the real tree to the
+    recorded ceilings, hold it.
+    """
+
+    SPELLINGS = ("beta-large-5 / high", "the .beta-plugin directory", "BETA_PROJECT_DIR", "bEtA")
+
+    def hosts_loaded(self):
+        return [load_host("alpha", self.hosts), load_host("beta", self.hosts)]
+
+    def test_any_spelling_in_a_built_package_is_reported(self):
+        for spelling in self.SPELLINGS:
+            with self.subTest(spelling=spelling):
+                self.write("source/skills/start/SKILL.md", f"Neutral.\nSee {spelling}.\n")
+                _, build = self.build("alpha")
+                findings = residue(build)
+                self.assertEqual([(f.path, f.line, f.term.lower()) for f in findings],
+                                 [("skills/start/SKILL.md", 2, "beta")])
+
+    def test_any_spelling_in_a_script_is_reported_like_any_other_text(self):
+        """A path or a comment in a script gets no exemption."""
+        self.write("source/scripts/one.py", "# see .beta/skills\nROOT = '.beta-plugin'\n")
+        _, build = self.build("alpha")
+        self.assertEqual([(f.path, f.line) for f in residue(build)],
+                         [("scripts/one.py", 1), ("scripts/one.py", 2)])
+        self.assertEqual([(f.path, f.line) for f in lint_source(self.source, self.hosts_loaded())],
+                         [("source/scripts/one.py", 1), ("source/scripts/one.py", 2)])
+
+    def test_any_spelling_in_the_source_outside_its_block_is_reported(self):
+        for spelling in self.SPELLINGS:
+            with self.subTest(spelling=spelling):
+                self.write(
+                    "source/skills/start/SKILL.md",
+                    f"<!-- host:only beta -->\nOnly {spelling}.\n<!-- host:end -->\nAll: {spelling}.\n",
+                )
+                findings = lint_source(self.source, self.hosts_loaded())
+                self.assertEqual([(f.line, f.term.lower()) for f in findings], [(4, "beta")])
+
+    def test_a_hosts_own_name_stays_allowed_in_its_own_package(self):
+        self.write("source/skills/start/SKILL.md",
+                   "<!-- host:only beta -->\nUse beta-large-5.\n<!-- host:end -->\n")
+        _, build = self.build("beta")
+        self.assertIn("Use beta-large-5.", (build.root / "skills/start/SKILL.md").read_text())
+        self.assertEqual(residue(build), [])
+        self.assertEqual(lint_source(self.source, self.hosts_loaded()), [])
+
+    def test_a_word_that_only_contains_other_letters_is_not_reported(self):
+        self.write("source/skills/start/SKILL.md", "Read the alphabet, then bet on a result.\n")
+        _, build = self.build("beta")
+        self.assertEqual([f.term for f in residue(build)], ["alpha"])
+        self.write("source/skills/start/SKILL.md", "Bet on a better result.\n")
+        _, build = self.build("alpha")
+        self.assertEqual(residue(build), [])
+
+
+class TheCheckCommandReportsIt(Workspace):
+    """`python3 -m tools.bootcamp_build check`, run on the miniature repository."""
+
+    FRONTMATTER = "---\nname: start\ndescription: Start the work.\n---\n"
+
+    def setUp(self):
+        super().setUp()
+        self.skill("Run {{host.product}}.\n")
+
+    def skill(self, body):
+        """The one skill, with the frontmatter the check also reads; its body starts on line 5."""
+        self.write("source/skills/start/SKILL.md", self.FRONTMATTER + body)
+
+    def check(self):
+        ids = ["alpha", "beta"]
+        out = io.StringIO()
+        with mock.patch.object(cli, "SOURCE_DIR", self.source), \
+                mock.patch.object(cli, "host_ids", lambda: ids), \
+                mock.patch.object(cli, "load_hosts",
+                                  lambda selected=None: [load_host(i, self.hosts) for i in selected or ids]), \
+                mock.patch.object(cli, "NEUTRALITY", self.root / "neutrality.json"), \
+                contextlib.redirect_stdout(out):
+            code = cli.main(["check"])
+        return code, out.getvalue()
+
+    def test_a_neutral_tree_passes(self):
+        code, out = self.check()
+        self.assertEqual(code, 0, out)
+        self.assertTrue(out.endswith("\nOK\n"), out)
+
+    def test_a_lowercase_name_in_another_assistants_package_fails_the_check(self):
+        # The name reaches the package from a profile value, so the source itself stays neutral
+        # and only the package check can report it.
+        for host_id, product, other in (("alpha", "Alpha Code", "Beta"), ("beta", "Beta Chat", "Alpha")):
+            self.profile(host_id, product, foreign_terms=[other],
+                         vars={"product": product, "plugin_root": "${ROOT}", "model": "beta-large-5"})
+        self.skill("Use {{host.model}}.\n")
+        code, out = self.check()
+        self.assertEqual(code, 1, out)
+        self.assertIn("skills/start/SKILL.md:5: 'beta': Use beta-large-5.", out)
+        self.assertIn("source: 0 host-specific terms outside a host block", out)
+        self.assertIn("alpha: 1 is above the recorded ceiling of 0", out)
+        self.assertTrue(out.endswith("\nFAILED: 1 problems\n"), out)
+
+    def test_a_lowercase_name_in_the_source_outside_a_host_block_fails_the_check(self):
+        self.write("source/scripts/one.py", "ROOT = '.beta-plugin'\n")
+        code, out = self.check()
+        self.assertEqual(code, 1, out)
+        self.assertIn("source/scripts/one.py:1: 'beta': ROOT = '.beta-plugin'", out)
+        self.assertIn("source: 1 is above the recorded ceiling of 0", out)
+        self.assertRegex(out, r"\nFAILED: \d+ problems\n\Z")
 
 
 if __name__ == "__main__":

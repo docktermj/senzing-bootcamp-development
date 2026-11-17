@@ -53,11 +53,9 @@ def plugin_version():
     built = host.get("bootcamp_version") if isinstance(host, dict) else None
     if isinstance(built, str) and built.strip():
         return built.strip()
-    manifest = os.path.join(
-        os.path.dirname(here),
-        ".claude-plugin",
-        "plugin.json",
-    )
+    # The package's own manifest, at a path fixed from this file, which the build fills in.
+    # It is never searched for: `onboarding-flow.md` states the rule (INV-252).
+    manifest = os.path.join(os.path.dirname(here), "{{host.manifest_path}}")
     try:
         with open(manifest, encoding="utf-8") as handle:
             version = json.load(handle).get("version")

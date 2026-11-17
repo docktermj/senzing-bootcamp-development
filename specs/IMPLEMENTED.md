@@ -36,6 +36,189 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## shared-text-names-one-assistants-files-ids-and-mechanisms-in-other-packages
+
+- **Implemented:** 2026-11-17 (issue #30)
+- **Files changed:** `hosts/claude/host.json`, `hosts/copilot/host.json`,
+  `hosts/kiro/host.json`, `hosts/chatgpt/host.json`, `hosts/gemini/host.json`,
+  `source/skills/bootcamp-onboarding/onboarding-flow.md`,
+  `source/skills/bootcamp-onboarding/feedback.md`, `source/skills/graduation/SKILL.md`,
+  `source/skills/module-03b-truthset-visualization/visualization-api-reference.md`,
+  `source/scripts/failed_run.py`, `source/scripts/feedback-capture.py`,
+  `source/scripts/package_bootcamp.py`, `tools/bootcamp_build/validate.py`,
+  `tools/bootcamp_build/emit.py`, `README.md`,
+  `tests/test_shared_text_holds_in_every_package.py` (new),
+  `tests/test_bootcamp_build_emit.py`, `tests/test_scripts_report_the_built_version.py`,
+  `tests/test_viz_server_process_handle.py`, `specs/IMPLEMENTED.md` (this entry)
+- **MCP re-check:** n/a (no Senzing fact). Re-confirmed on 2026-11-17 against the change itself:
+  it changes which of the package's own files a message names, the wording of four passages
+  about the package and the guide, one host value, and the letter case the build's check
+  matches. The MCP failure message keeps the address `https://mcp.senzing.com/mcp` as it was,
+  and a test now compares it with the address the package's own MCP file registers, which is
+  a fact about the package and not about what the server serves. No absence claim about the
+  Senzing MCP server is made, so INV-213's `owner-checked:` clause is not owed.
+- **Summary:** Six passages that were true in one assistant's package and shipped in all five
+  now hold in each, and `tools.bootcamp_build check` reports another assistant's name in any
+  letter case. These are findings 7, 8, 12, 16, 19 and 24 of
+  `production-readiness-audit-2026-11-17`. #26, #27, #28, #29 and #31 merged first and touched
+  nearby text. Each of the six was read at `2442646` before it was changed, and **none was
+  already corrected**: all six still read as the issue quotes them.
+  - **1. The MCP file.** The MCP failure message in `onboarding-flow.md` said the server
+    "ships with this plugin's .mcp.json" in every package. The Copilot and Kiro packages ship
+    `mcp.json` and the Gemini package `mcp_config.json`. Every `hosts/*/host.json` now carries
+    `mcp_file`, and the message takes the name from it. The build still writes each file under
+    the name its emitter holds; a test reads each built package and holds the two together.
+  - **2 and 4. The package noun.** The same line takes its noun from the existing
+    `package_noun` value: "this Power's" in the Kiro package, "this plugin's" in the other
+    four. The build adds one sentence to `host-rules.md` for an assistant whose noun is not
+    "plugin", which today is Kiro alone: `In the bootcamp's files, "plugin" means this Power.`
+    It is written by `host_rules()` in `tools/bootcamp_build/emit.py` from the noun, so it
+    follows the profile and no host is named in the code. A sweep found the message was the
+    only text shown word for word that said "plugin": on 2026-11-17 the Kiro package holds 44
+    `text` display blocks and 132 pinned 👉 questions, and none says it now.
+  - **3. The skill's directory.** `onboarding-flow.md` said "The harness supplies that
+    directory at invocation". It now says "That directory is the one this skill's files are
+    read from", which holds whoever supplies it. The rest is kept: the skill's own directory,
+    two levels up, the plugin whose files are running, and INV-185's fallback.
+  - **4. The model example.** The `Model / effort` line of the feedback entry gave
+    `"claude-opus-5-5[1m] / high"`. It now gives `"<model ID> / high"`, the same in all five
+    packages.
+  - **5. The graduation layout.** `graduation/SKILL.md` said the generator is "two levels up
+    under `scripts/`". It now says the generator is in `{{host.scripts_relative}}/`, counted
+    from `skills/graduation/`: `../../scripts/` in four packages and
+    `../bootcamp-onboarding/scripts/` in the Kiro package. The stamps beside it (#27) are not
+    touched.
+  - **6. The handle that is not a pid.** The warning in `visualization-api-reference.md` named
+    "the host's own background-task mechanism" and "the guide's own background-task feature".
+    It now reads "A handle that names a task rather than a process is not a pid", for a server
+    "started by something other than the shell forms in the table above". It still says to
+    record no pid from it and to take the pid from the launch confirmation's port lookup.
+    INV-223's 2026-11-10 note states the old sentence, so the first block below proposes a
+    dated note.
+  - **The check.** `_term_pattern` in `tools/bootcamp_build/validate.py` compiles with
+    `re.IGNORECASE`, which both `lint_source` and `residue` use. `README.md` says so in one
+    sentence. `tools/bootcamp_build/neutrality.json` is unchanged: source 0, each non-Claude
+    package 1, and that one is still `CLAUDE_PROJECT_DIR` in the hook adapter. Measured at
+    `2442646` with the match made case-insensitive and nothing else changed: 4 lines in
+    `source/` and 5 in each non-Claude package, the ones the issue lists.
+  - **Differs from the issue's expectation: #31 did not remove the manifest directory.** The
+    issue says that if #31 merges first and the two script lines no longer spell Claude's
+    manifest directory, only the comment in `failed_run.py` is left. #31 merged first and kept
+    both lookups as they were, by its own decision, so all three lines are fixed here. The
+    comment in `failed_run.py` names the transcript lint without its path. In
+    `feedback-capture.py` and `package_bootcamp.py` the manifest path is now
+    `{{host.manifest_path}}`, which the build fills in from the profile, so no package spells
+    another assistant's directory. Each of the two lines carries a comment that cites
+    `onboarding-flow.md`: INV-252's guard sweeps the Claude package for the manifest's path,
+    which is now written whole there, and wants the rule cited where the path is written.
+  - **What that changes in the two scripts.** Only the lookup that runs when
+    `bootcamp_host.json` gives no version. In the Claude package nothing changes: the hook
+    reads `../.claude-plugin/plugin.json`, and the packager `../plugin.json` and then that
+    path. In the other packages the Claude path is replaced by the package's own: the hook
+    reads `../plugin.json` in the Copilot, Gemini and Kiro packages and
+    `../.codex-plugin/plugin.json` in the ChatGPT package, and the packager reads
+    `../plugin.json` and then the same path. In the Kiro package that lookup still finds
+    nothing, as before, because its scripts sit two directories deeper than its manifest.
+    This supersedes the "Unchanged, as the issue decides" bullet of #31's entry for the
+    non-Claude packages. The copy of each script in `source/` holds the unfilled token and
+    reports its unresolved value when run from there, which it already did: `source/` has no
+    manifest beside it.
+  - **Tests.** `tests/test_shared_text_holds_in_every_package.py` is new and holds 41 tests.
+    It builds every assistant's package, taking the assistants from the build's own list
+    (INV-246), and reads what each ships: the message against the one file at the package's
+    root that registers an MCP server, found by reading the files; the noun; the `host-rules.md`
+    sentence in the Kiro package and in no other; the skill-directory passage, identical in
+    all five, and the manifest two levels up from a skill; the model example; the graduation
+    path against the directory that holds `generate_recap_pdf.py`; the warning; and the real
+    tree against the recorded ceilings. `tests/test_bootcamp_build_emit.py` gains 8 tests that
+    plant a lowercase name in a miniature repository, in a package and in the source, and run
+    `check` itself on it. `tests/test_scripts_report_the_built_version.py` goes from 24 to 30
+    tests: its fallback cases now run copies from every built package and not from `source/`,
+    it compares each built `plugin_version()` with the source's with only the manifest path
+    filled in, and it checks that no copy reads a manifest at another assistant's path.
+    `tests/test_viz_server_process_handle.py` pins the new wording, and its mutation test
+    still fails when "is not a pid" is inverted. Text is read with whitespace collapsed
+    (INV-346).
+    Negative controls, run in a throwaway clone at `2442646` with only the four test files
+    copied in: 17 of the 41 new tests fail (`FAILED (failures=52, errors=5)`), 6 of the 8 new
+    build tests fail (`FAILED (failures=12)`), 5 of the 30 fail in the built-version module
+    (`FAILED (failures=90)`), and the pinned warning fails (`FAILED (failures=1)`).
+  - **Not observed.** No real assistant showed the failure message, read `host-rules.md` or
+    acted on the warning, so no record is added to any `hosts/<assistant>/checks.json`.
+    Whether GitHub Copilot, Kiro, ChatGPT or Gemini has a background-task feature was not
+    looked into, as the issue decides. Verified on Linux only, with Python 3.12.3. The two
+    scripts join the manifest path with `os.path.join` and `pathlib`, with no branch on the
+    platform; on Windows the joined path mixes separators, which Windows accepts, and no run
+    there happened (INV-001).
+  - **Found and not fixed, as out of scope.** The docstrings of both `plugin_version()`
+    functions say the manifest is "above this file's directory", which is not where the Kiro
+    package keeps it. `graduation/SKILL.md` still says the generator "ships with this plugin"
+    in guide-facing prose, which the issue leaves as it is. In
+    `tests/test_plugin_manifest_reads_resolve_inside_the_plugin.py`, three failure messages
+    call `path.relative_to(REPO_ROOT)` on a path inside the built package, so a real finding
+    there surfaces as a `ValueError` and not as the message. It was met while the two script
+    lines had no comment, and is left alone.
+- **Invariants.** The register is not edited here (INV-365). The change adds no hard-rule line
+  under `source/`, `hosts/` or `tools/bootcamp_build/`, and `since` reports none. It rewords
+  one sentence that INV-223's 2026-11-10 note states, and the first block below proposes the
+  dated note. It ships two rules the register does not hold, each stated in one line of a
+  test's docstring, which the second and third blocks cover (INV-309). No registered
+  invariant quotes the skill-directory passage, the model example, the graduation passage or
+  the MCP failure message: INV-252 and INV-185 give the resolution order and do not say who
+  supplies a skill's directory.
+
+- **PROPOSED AMENDMENT to INV-223 — awaiting the maintainer's sign-off; NOT applied.**
+    - ⛔ **A handle that names a task rather than a process is not a pid.** — in `source/skills/module-03b-truthset-visualization/visualization-api-reference.md`
+
+  INV-223's 2026-11-10 note says "A handle from the host's own background-task mechanism is
+  not a pid." A background-task mechanism is a feature of one assistant, and the contract that
+  carries the sentence ships to five. Since #30 the contract names no feature, and
+  `tests/test_viz_server_process_handle.py`, the enforcer the note names, pins the new
+  wording. Without the note below the register still states the old sentence, so the registry
+  and its enforcer disagree, and the next editor writes one assistant's feature back into
+  shared text.
+
+  Drafted wording follows, under the registered id. A new rule's id would be
+  written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
+
+  **INV-223** — (⚠️ **Dated note, 2026-11-17 (#30): the handle warning names no assistant's feature; the rule above and the rest of the 2026-11-10 note are unchanged.** Where the 2026-11-10 note says "A handle from the host's own background-task mechanism is not a pid", read: a handle that names a task rather than a process is not a pid. When the server is started by something other than the shell forms the contract's handle table gives, the id it returns names a task, not a process: the guide MUST record no pid from it and MUST take the pid from the launch confirmation's port lookup, and where that lookup names no single listener the checkpoint keeps no pid and teardown's missing-pid fallback applies. The warning MUST be the same text in every assistant's package and MUST name no assistant and no assistant's feature, because a background-task mechanism is a feature of one assistant and the contract ships to all of them. Enforced by `tests/test_viz_server_process_handle.py`, and in every built package by `tests/test_shared_text_holds_in_every_package.py`. Whether any assistant other than Claude has such a feature was not looked into when this note was drafted.)
+
+- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** The build's check for another assistant's name ignores letter case. The rule already shipping, quoted:
+    - ⛔ **The build's check for another assistant's name matches it in any letter case, in `source/` and in every built package.** — in `tests/test_bootcamp_build_emit.py`
+
+  Enforced by `tests/test_bootcamp_build_emit.py`.
+
+  **Why it is not an existing invariant:** No registered invariant states the check at all.
+  INV-430 says which source files may ship to some assistants and not others. INV-431 says
+  which directories the maintainer tools read for rule text. INV-158 and INV-114 are about
+  what the bootcamp tells the Bootcamper to do in an interface and which models it names.
+  None of them says that shared text names no assistant, or in which letter case a name
+  counts. The model ID in the feedback entry sat in all five packages because the match was
+  case-sensitive.
+
+  Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
+  invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
+
+  **INV-NNN** — `python3 -m tools.bootcamp_build check` MUST report every term an assistant's profile lists in `foreign_terms` whatever its letter case, both in `source/` outside a host block for the assistants that term belongs to and in each built package. A model ID, a directory name, an environment variable and a comment are text like any other: a script gets no exemption, and the fix for a reported line is to remove the name or take it from a host value, never to split the string. The ceilings in `tools/bootcamp_build/neutrality.json` MUST only come down; when this rule was drafted they were 0 for `source/` and for the Claude package and 1 for each other package, the one being `CLAUDE_PROJECT_DIR` in the hook adapter. Observed (`production-readiness-audit-2026-11-17`, finding 12): the feedback entry's `Model / effort` example gave a Claude model ID in all five packages, and two bundled scripts and one comment spelled the Claude package's directories, and the check passed because it matched the capitalized name only. Enforced by `tests/test_bootcamp_build_emit.py`, which plants a lowercase name in a miniature repository and runs the check on it, and by `tests/test_shared_text_holds_in_every_package.py`, which holds the real tree to the recorded ceilings; neither can find a name put together at run time. (Source: `shared-text-names-one-assistants-files-ids-and-mechanisms-in-other-packages`, GitHub issue #30, 2026-11-17.)
+
+- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** Text shown to the bootcamper word for word names the package by the assistant's own noun. The rule already shipping, quoted:
+    - ⛔ **Text a package shows the bootcamper word for word names the package by its assistant's own noun.** — in `tests/test_shared_text_holds_in_every_package.py`
+
+  Enforced by `tests/test_shared_text_holds_in_every_package.py`.
+
+  **Why it is not an existing invariant:** INV-158 is about directing the Bootcamper to act in
+  their interface. INV-252 and INV-185 are about where a bundled file is read from. INV-247 is
+  about which questions the guide may ask. None of them says what a package calls itself to
+  the bootcamper. `package_noun` was read by the certificate alone, so the Kiro package told
+  its bootcamper about "this plugin's" file while Kiro calls the package a Power.
+
+  Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
+  invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
+
+  **INV-NNN** — Text a skill file tells the guide to show the Bootcamper word for word, a fenced `text` display block or a pinned 👉 question, MUST name the package by the assistant's own noun, taken from `package_noun` in `hosts/<assistant>/host.json`: "Power" in the Kiro package and "plugin" in the others when this rule was drafted. Where an assistant's noun is not "plugin", its `host-rules.md`, which the guide reads at the start of every session, MUST say once that "plugin" in the bootcamp's files means that noun, and no other package carries the sentence. This binds displayed text only: guide-facing prose, the identifiers `PLUGIN_ROOT` and `plugin.json`, the `plugin` routing value in a feedback entry and the `**Plugin version:**` label keep the word. Observed (`production-readiness-audit-2026-11-17`, finding 16): the MCP failure message said "this plugin's" in the Kiro package. Enforced by `tests/test_shared_text_holds_in_every_package.py`, which reads every `text` display block and every pinned 👉 question of each built package whose noun is not "plugin"; it **cannot** establish what a guide on a real assistant shows, and it does not read text a script prints. (Source: `shared-text-names-one-assistants-files-ids-and-mechanisms-in-other-packages`, GitHub issue #30, 2026-11-17.)
+
+- **Commit:** uncommitted
+
 ## slash-commands-are-named-to-bootcampers-on-four-assistants-that-ship-no-command
 
 - **Implemented:** 2026-11-17 (issue #28)
