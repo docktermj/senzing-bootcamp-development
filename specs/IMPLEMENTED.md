@@ -41,8 +41,8 @@ line and holds no copy of it, so changing the line changes the range.
 **Not a spec** — a dated record of an `/auto-test` run, **unattended**: the maintainer started
 it and was away. The MCP probe only; no walk was asked for, so none ran.
 
-- **Implemented:** 2026-11-17 (**0 BREAKING, 10 WATCH, 14 INFO; nothing fixed; nothing filed —
-  each needs the maintainer to triage it**)
+- **Implemented:** 2026-11-17 (**0 BREAKING, 10 WATCH, 14 INFO; nothing fixed; filed on
+  2026-11-17 as #50**)
 - **Files changed:** this record only. The baseline `mcp-snapshot.json` was not refreshed:
   accepting a server change is the maintainer's decision.
 - **MCP re-check:** Senzing MCP server 1.46.1, 2026-11-17, by `mcp_probe.py` through
@@ -63,16 +63,18 @@ it and was away. The MCP probe only; no walk was asked for, so none ran.
     limit of 90. Re-verify and bump it.
   - The full report is `~/senzing-autotest/reports/20261117-091143-terse.json`, outside this
     repository.
+- **Filed 2026-11-17** as #50, after the maintainer's yes (INV-314): re-read the changed
+  prose, re-verify the contract and refresh the baseline.
 - **Invariants.** This record establishes no invariant and queues no block.
-- **Commit:** uncommitted
+- **Commit:** 34911be
 
 ## dry-run-2026-11-17
 
 **Not a spec** — a dated record of a dry run, phases 1 and 2, **unattended**: the maintainer
 started it and was away. Phase 3 was not run.
 
-- **Implemented:** 2026-11-17 (**18 findings recorded below; none fixed; none filed — each needs
-  the maintainer to file it; four upstream messages drafted, none sent**)
+- **Implemented:** 2026-11-17 (**18 findings recorded below; none fixed; 16 filed on 2026-11-17 as the
+  issues named under "Filed"; four upstream messages drafted, none sent**)
 - **Files changed:** this record only.
 - **MCP re-check:** Senzing MCP server `sz-mcp-coworker` 1.46.1, 2026-11-17, docs index built
   2026-11-14. Tools called, read-only: `get_capabilities`, `search_docs`, `get_sdk_reference`,
@@ -105,7 +107,7 @@ started it and was away. Phase 3 was not run.
   back with a warning. The video, screenshot, discoveries and packaging scripts ran. With
   `LD_LIBRARY_PATH` set, the real engine loaded four records into a scratch SQLite database and
   the visualization server answered every endpoint on 127.0.0.1.
-- **Findings, most serious first. All open, none filed.** P1 is phase 1, P2 is phase 2.
+- **Findings, most serious first. All open; see "Filed" below.** P1 is phase 1, P2 is phase 2.
   1. **P2-F1. Three hooks and the adapter fail under a Windows legacy code page.** Simulated
      with `PYTHONIOENCODING=cp1252`; not run on Windows. `write-gate.py:47`,
      `stop-nudge.py:233` and `feedback-capture.py:52` read stdin as text, so a payload holding
@@ -206,6 +208,11 @@ started it and was away. Phase 3 was not run.
     reference served by search_docs shows artifactId `sz-sdk` and
     `${SENZING_PATH}/er/sdk/java/sz-sdk.jar`, and the sdk_guide install gotchas for macos_arm
     and windows also use `sz-sdk.jar`. One of the two is wrong."
+- **Filed 2026-11-17**, after the maintainer's yes to the whole list shown in one message
+  (INV-314). By finding number: 1 and 13 are #25; 2 and 3 are #35; 4 is #31; 5 is #37; 6 and 7
+  are #36; 8 is #32; 9 is #33; 10, 15 and 16 are #47; 11, 14 and the stale wording are #38; 12
+  is #46. Findings 17 and 18 are the server's alone and have no issue: each is an upstream
+  draft above, not yet sent. The drafts for findings 5 and 7 are named in #37 and #36.
 - **Invariants.** This record establishes no invariant and queues no block.
 - **Coverage limits.** ⛔ Phase 3 was not run, so the conversational layer is untested.
   Phase 1 did not reach `reporting_guide` content (Modules 6 and 7), `mapping_workflow` steps 4
@@ -217,7 +224,7 @@ started it and was away. Phase 3 was not run.
   afterwards, and nothing was re-run by the lead. Phase 1's re-asks were looser than the
   markers in three ways its report lists. Phase 2's scratch loader was written from memory,
   not from the server.
-- **Commit:** uncommitted
+- **Commit:** bdd9d19
 
 ## production-readiness-audit-2026-11-17
 
@@ -225,8 +232,8 @@ started it and was away. Phase 3 was not run.
 was away. It follows the six issues merged on 2026-11-16 (#9 to #14) and the invariant review
 that registered INV-428 to INV-432.
 
-- **Implemented:** 2026-11-17 (**33 findings recorded below; none fixed; none filed — each needs
-  the maintainer to file it**)
+- **Implemented:** 2026-11-17 (**33 findings recorded below; none fixed; all filed on 2026-11-17 as the
+  issues named under "Filed"**)
 - **Files changed:** this record only.
 - **MCP re-check:** n/a (no Senzing fact). Every finding is internal consistency, and no
   Senzing MCP tool was called. No absence claim is made about the Senzing MCP server, so
@@ -272,7 +279,7 @@ that registered INV-428 to INV-432.
     354, 367, 368, 375, 413, 419, 426, 431, and INV-050 except A3-3.
   - Every other relative path, anchor and `file.md → "Heading"` reference resolves in all five
     packages; each install page's verification note matches its `checks.json`.
-- **Findings, most serious first. All open, none filed.** Ids are the sweep's own: A2 is the
+- **Findings, most serious first. All open; each is filed, see "Filed" below.** Ids are the sweep's own: A2 is the
   cross-package sweep, A3 the outcome and enumeration sweep, F the forward sweep.
   1. **A2-01. Four packages send the guide to `hooks/README.md`, which they do not carry.**
      `hosts/{copilot,kiro,chatgpt,gemini}/host.json:28` maps it to null, and
@@ -375,6 +382,12 @@ that registered INV-428 to INV-432.
   33. **Carried from the previous run, still open and not filed:** the cited-or-deferred gate
       checks outside-the-corpus lines against 110-character display text, on a path that does
       not run on today's range.
+- **Filed 2026-11-17**, after the maintainer's yes to the whole list shown in one message
+  (INV-314). By finding number: 1 is #26; 2 is #27; 3 is #28; 4 is #29; 5 is #39; 6 is #40;
+  7, 8, 12, 16, 19 and 24 are #30; 9 is #41; 10 and 11 are #42; 13, 25 and 27 are #43; 14 is
+  #44; 15, 20, 21, 28 and 29 are #45; 17, 18 and 26 are #34; 22 is #31; 23 is #32 for the
+  readers of `bootcamp_complete()` and #45 for its other two lists; 30, 31 and 32 are #48; 33
+  is #49. No issue carries the `unattended-ok` label.
 - **Invariants.** This record establishes no invariant and queues no block. Findings 9 and 31
   each call for a dated note on a registered invariant, and finding 5 for a decision about
   INV-427's scope; the wording of each is the maintainer's, so none is drafted here.
@@ -387,7 +400,7 @@ that registered INV-428 to INV-432.
 - **Mistakes in this run.** The sweeps were done by three agents and the lead re-read only
   the first twelve findings against the files; the rest stand on the agents' own second
   check. One sweep first reported two recorded items as new and withdrew them.
-- **Commit:** uncommitted
+- **Commit:** ffc5f4e
 
 ## invariant-review-2026-11-16-loop
 
@@ -431,7 +444,7 @@ the maintainer. It decided the eight blocks the unattended run of that day queue
   - **Verification.** After each decision: `citations.py verify` clean, `pending_invariants.py
     check` with no mismatch and no unresolved quote, and the full suite, last read as
     `Ran 9601 tests`, `OK (skipped=13)`.
-- **Commit:** uncommitted
+- **Commit:** 419de72
 
 ## the-install-page-and-the-welcome-name-different-models-on-chatgpt
 
