@@ -36,6 +36,168 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## the-senzing-mcp-server-returns-the-bootcamps-own-repositories-as-senzing-examples
+
+- **Implemented:** 2026-11-18 (issue #37)
+- **Files changed:** `source/skills/bootcamp-onboarding/ground-rules.md`,
+  `source/skills/module-06-data-processing/phaseC-multi-source.md`,
+  `tests/test_prescribed_search_queries.py`,
+  `tests/test_bootcamp_repository_results_are_not_senzing_sources.py` (new),
+  `specs/IMPLEMENTED.md` (this entry)
+- **MCP re-check:** server 1.46.1, docs index built 2026-11-14 17:44 UTC, 2026-11-18 — still
+  reproduces, as the issue recorded on 2026-11-17, with one detail different (the first item of
+  "Differs from the issue" below). Tools: `get_capabilities`, `find_examples`,
+  `generate_scaffold`, `search_docs`, read-only, each at its default result count.
+  `submit_feedback` and `download_resource` were not called. Every call was made before any
+  file was changed.
+  - `get_capabilities()` gives `"server_version":"1.46.1"`. The index build is in the
+    `search_docs` reply: `"index_built":"2026-11-14 17:44 UTC"`, `"documents_indexed":13404`.
+  - `find_examples(query='multi-source')` returns two examples, `"repo":"senzing/senzing-bootcamp-claude-plugin"`
+    and `"repo":"senzing/senzing-bootcamp-kiro-power"`, each `"file_path":"CHANGELOG.md"` and
+    each `"provenance":"official"`. With `language='java'` it returns `"examples":[]` and
+    `"hint":"No examples found for \"multi-source\". …"`.
+  - `find_examples(query='orchestrator load multiple data sources')` returns one example per
+    repository, led by `senzing/code-snippets-v4` `java/snippets/configuration/RegisterDataSources.java`,
+    with `"remainder":"Returned 34 of 46 examples. …"`. Among them:
+    `senzing/senzing-bootcamp-claude-plugin` `CHANGELOG.md`,
+    `senzing/senzing-bootcamp-chatgpt-plugin` `plugins/senzing-bootcamp/scripts/generate_recap_video.py`,
+    `senzing/senzing-bootcamp-kiro-power` `senzing-bootcamp/skills/bootcamp-enforcement-setup/scripts/install_hooks.py`,
+    and `senzing/recipes` `recipes/clair-data-ingestion-starter.md`, whose snippet reads "PPP
+    relief loans and Department of Labor violations, with a third folded in later". With
+    `language='python'` the bootcamp scripts come back again and the recipe does not; with
+    `language='java'` neither does.
+  - `generate_scaffold(language='python', workflow='orchestration')` is rejected: "Unknown
+    workflow 'orchestration'. Available workflows: initialize, configure, add_records, delete,
+    query, redo, stewardship, information, error_handling, full_pipeline. …".
+  - `generate_scaffold(language='python', workflow='full_pipeline')` and the same call with
+    `language='java'` list `python/loading/add_truthset_loop.py` and
+    `java/snippets/loading/LoadTruthSetWithInfoViaLoop.java`. Each file was fetched from its
+    hosted `url` and its SHA-256 equals the reply's `hash` (`2d50ac81…` and `c8a00643…`). The
+    Python loader reads three files from `INPUT_FILES` in one loop and has
+    `except (SzUnrecoverableError, SzError) as err: raise err`; the Java loader has the same
+    three files and `throw e; // rethrow since exception is critical`.
+  - `search_docs(query='NEED_REEVALUATION how entity final state')` ranks first a hit with
+    `"title":"senzing/senzing-bootcamp-chatgpt-plugin: plugins/senzing-bootcamp/scripts/bootcamp_state.py"`
+    and `"source_url":"https://github.com/senzing/senzing-bootcamp-chatgpt-plugin/blob/main/…"`.
+  Two statements this change ships are absence claims, so (INV-213):
+  owner-checked: `search_docs` is the route that returns the hit, and the hit object is all
+  it says about one — it returned `title`, `section`, `excerpt`, `source_url`, `category`,
+  `version` and `relevance_score`, and no `repo`.
+  owner-checked: `find_examples` is the route for indexed example code and `generate_scaffold`
+  the route for SDK templates — the first returned no code that loads several sources with
+  per-source error isolation, and the second has no orchestration workflow and its nearest
+  code rethrows a critical error and ends the run.
+- **Summary:** The server's example and documentation corpus indexes the bootcamp's own
+  repositories, and no shipped text said such a hit is not Senzing evidence
+  (`dry-run-2026-11-17`, finding 5).
+  - **The rule.** `ground-rules.md`, in "MCP-first invariant (absolute precedence)", gains one
+    bullet after "Tool routing": "A result from a bootcamp repository is not a Senzing source
+    (INV-080)." It says an MCP result that names its repository is disregarded when the
+    repository's name contains `bootcamp`, compared without regard to case; where the name is
+    read (the `repo` field of a `find_examples` hit; the `title` and `source_url` of a
+    `search_docs` hit, which has no `repo` field); that a `search_docs` hit whose `source_url`
+    is not a repository's address is not touched; that it is a property of the name, so a
+    repository added or renamed later is covered; that the rest of the hits are used as before
+    when some are disregarded; and that when every hit is, the call counts as having returned
+    no Senzing example, the step continues on its existing fallback and nothing is said to the
+    bootcamper. It names `find_examples` and `search_docs` as the observed cases, dated server
+    1.46.1, docs indexed 2026-11-14 17:44 UTC, 2026-11-18. It is stated there once and pointed
+    at from the marker below; no other file restates it (INV-300).
+  - **A marker for the rule.** "which has no `repo` field" is a dated statement of what a reply
+    lacks, and `tests/test_coverage_reports.py` failed on it until a marker sat beside it. The
+    marker, under the rule, names `search_docs(query='NEED_REEVALUATION how entity final state')`
+    and is stamped server 1.46.1, 2026-11-18.
+  - **The orchestrator marker.** In `phaseC-multi-source.md`, Step 17, the claim is unchanged
+    and still holds. The rationale is restated from the calls above: 'multi-source' surfaces
+    changelogs of bootcamp repositories, which are not Senzing sources, with a pointer to the
+    ground rules' MCP-first section, and no Senzing example code; with `language='java'` it
+    returns no example; the orchestrator query surfaces kinds of hits, among them scripts from
+    bootcamp repositories, and the `senzing/recipes` recipe as the nearest. The owner clause
+    says `find_examples` "returned no such code" where it said "returned none". The stamp is
+    server 1.46.1, 2026-11-18. It names no repository whose name holds an assistant's name.
+    `coverage_reports.py negatives` parses it and reports no census-shaped or enumerated
+    rationale, and `tests/test_mcp_negative_rationale_shape.py` passes.
+  - **The evidence slots.** The `("find_examples", "multi-source", None)` and
+    `("find_examples", "orchestrator load multiple data sources", None)` records in
+    `tests/test_prescribed_search_queries.py` are re-measured with the marker and carry its
+    stamp: server 1.46.1, docs index 2026-11-14 17:44 UTC, measured 2026-11-18. They name the
+    bootcamp repositories, which `source/` does not.
+  - **Every assistant.** The rule and both markers sit outside every host marker and name no
+    assistant. `python3 -m tools.bootcamp_build check` passes, and
+    `tools/bootcamp_build/neutrality.json` is unchanged.
+  - **Tests.** `tests/test_bootcamp_repository_results_are_not_senzing_sources.py`, 9 tests.
+    One function, `problems()`, reads every text file under `source/` and reports: the rule's
+    label in no file, in a file other than `ground-rules.md`, twice, or outside the MCP-first
+    section; each of 14 clauses the rule's bullet must state (the property, the case rule,
+    disregarding, any result that names its repository, the `find_examples` field, the
+    `search_docs` fields, the missing `repo` field, property not list, added or renamed later,
+    the rest used as before, no Senzing example, the existing fallback, nothing said to the
+    bootcamper, the dated observation); any of the three repository names, in any letter case,
+    in any shipped file; and an orchestrator marker that is missing, does not point at the
+    MCP-first section, or carries a stamp other than the two evidence slots'. Negative
+    controls run on in-memory copies, one per check, with each clause removed in turn. It reads
+    prose collapsed and the marker as one line, with its INV-346 verdict, and imports nothing
+    from `source/` (INV-108).
+  - **Differs from the issue.**
+    - The issue says one of the two `multi-source` hits carries provenance "official". On
+      2026-11-18 both do. The rule does not depend on provenance, so nothing else changes.
+    - A second marker is added, under the rule, because the rule states what a `search_docs`
+      hit lacks; the issue names one marker.
+    - The rule cites INV-080 at its line, and a DEFERRED INVARIANT block below drafts the rule
+      itself, since INV-080 does not say a bootcamp repository's hit is not a source.
+    - The rule says a `search_docs` hit whose `source_url` is not a repository's address is not
+      touched. The issue does not say this; without it a Senzing documentation page with
+      "bootcamp" in its title could be read as covered.
+  - **Not observed.** No run on a real assistant was made, so no record is added to any
+    `hosts/<assistant>/checks.json`. Nothing here shows that a live guide disregards such a
+    hit. The test reads Markdown and calls no server. Verified on Linux only, with Python
+    3.12.3. The change is Markdown text and a standard-library test with no branch on the
+    platform (INV-001), and it names no programming language's own mechanism (INV-002).
+  - **Not changed.** The `visualization-api-reference.md` marker and the
+    `("search_docs", "NEED_REEVALUATION how entity final state", None)` slot, whose rationale
+    names the top hits of the same query and no longer reproduces now that a bootcamp script
+    ranks first: that is #38's scope. The `dry-run-2026-11-17` entry, including its upstream
+    draft.
+- **Upstream, drafted and not sent.** Upstream: not yet sent — needs maintainer approval.
+  - The "Indexed bootcamp repositories (finding 5)" draft in `dry-run-2026-11-17` still
+    reproduces on 2026-11-18 and is not sent by this run. One detail in it is now out of date:
+    it says one of the two `multi-source` results has provenance 'official', and on
+    2026-11-18 both do. The corrected text, **not sent — needs maintainer approval**:
+    "The example and docs corpus includes Senzing bootcamp plugin repositories (server 1.46.1,
+    docs index 2026-11-14). `find_examples(query='multi-source')` returns only two results,
+    both CHANGELOG.md files from those repositories, both with provenance 'official'.
+    `find_examples(query='orchestrator load multiple data sources')` returns bootcamp helper
+    scripts among its results, and `search_docs(query='NEED_REEVALUATION how entity final
+    state')` ranks a bootcamp helper script first. These are teaching-plugin housekeeping
+    files, not Senzing SDK examples, and a client that treats this server as its source of
+    Senzing facts can be handed its own text. Suggest excluding these repositories, or at
+    least their changelogs and non-SDK scripts."
+- **Follow-up, drafted and not filed.** None. The adjacent stale rationale above is #38's.
+- **Invariants.** The register is not edited here (INV-365). The rule this change ships is a
+  hard rule with a ⛔; it cites INV-080 at its line, and the block below drafts it, because
+  INV-080 makes the MCP tools the source of Senzing facts and does not say which of their
+  results is not one. INV-209, INV-213, INV-219, INV-300 and INV-346 are applied and not
+  changed. Beyond the one block the change establishes no new invariant.
+
+- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** An MCP result from a bootcamp repository is not a Senzing source. The rule already shipping, quoted:
+    - ⛔ **A result from a bootcamp repository is not a Senzing source (INV-080).** — in `source/skills/bootcamp-onboarding/ground-rules.md`
+
+  Enforced by `tests/test_bootcamp_repository_results_are_not_senzing_sources.py`
+  (`TheShippedTextIsClean`, `EachCheckReportsItsCase`).
+
+  **Why it is not an existing invariant:** INV-080 says every Senzing fact comes from the
+  Senzing MCP tools and never from training data. It treats whatever those tools return as
+  the source, and says nothing about a result that is the bootcamp's own text served back by
+  the server. INV-300 governs where the rule is stated, not what it says. INV-213 governs how
+  an absence claim names its owner, not which hits count.
+
+  Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
+  invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
+
+  **INV-NNN** — An MCP result that names its repository MUST NOT be used as a Senzing source when that repository's name contains `bootcamp`, compared without regard to case. The guide reads the repository from the `repo` field of a `find_examples` hit, and from the `title` and `source_url` of a `search_docs` hit, which has no `repo` field; a `search_docs` hit whose `source_url` is not a repository's address is not covered. The rule is a property of the name and MUST NOT be stated as a list of repositories or of tools, so a bootcamp repository added or renamed later is covered with no edit. When some hits are disregarded the rest are used as before. When every hit is, the call counts as having returned no Senzing example, the step continues on its existing fallback, and the guide MUST NOT tell the bootcamper about the disregarded hits. The rule is stated once, in `skills/bootcamp-onboarding/ground-rules.md` → "MCP-first invariant (absolute precedence)", and no shipped file names a bootcamp repository whose name holds an assistant's name. Observed on MCP server 1.46.1 (docs index 2026-11-14 17:44 UTC), 2026-11-17 and 2026-11-18: `find_examples(query='multi-source')` returned only two bootcamp repositories' changelogs, and `search_docs(query='NEED_REEVALUATION how entity final state')` ranked a bootcamp script first (`dry-run-2026-11-17`, finding 5). Enforced by `tests/test_bootcamp_repository_results_are_not_senzing_sources.py`, which reads Markdown and calls no server; it **cannot** establish that a live guide disregards such a hit, or which repositories the server indexes. (Source: `the-senzing-mcp-server-returns-the-bootcamps-own-repositories-as-senzing-examples`, GitHub issue #37, 2026-11-18.)
+
+- **Commit:** uncommitted
+
 ## the-flags-reference-reply-changed-shape-and-now-points-at-a-topic-the-bootcamp-never-names
 
 - **Implemented:** 2026-11-18 (issue #36)

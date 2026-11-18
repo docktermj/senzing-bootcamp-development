@@ -519,6 +519,23 @@ copy (INV-300).
   error codes -> `explain_error_code`; docs and facts -> `search_docs`; working examples ->
   `find_examples`; sample data -> `get_sample_data`; reporting / counts -> `reporting_guide`;
   tool discovery -> `get_capabilities`.
+- ⛔ **A result from a bootcamp repository is not a Senzing source (INV-080).** The server's
+  example and documentation corpus also indexes the bootcamp's own repositories, so a search can
+  hand you this bootcamp's own text as if it were Senzing evidence. Any MCP result that names its
+  repository is disregarded when that repository's name contains `bootcamp`, compared without
+  regard to case, as GitHub compares repository names. Read the repository where the result
+  names it: the `repo` field of a `find_examples` hit, and the `title` and `source_url` of a
+  `search_docs` hit, which has no `repo` field (for a repository's file, the `title` begins with
+  `owner/name:` and the `source_url` is the file's GitHub address). A `search_docs` hit whose
+  `source_url` is not a repository's address names no repository, and this rule does not touch
+  it. The rule is a property of the name, not a list of repositories, so it covers a bootcamp
+  repository added or renamed later with no edit here. A disregarded result is not quoted, cited
+  or used as a Senzing fact, and it does not count as an example. When some hits are
+  disregarded, use the rest as before. When every hit is, the call counts as having returned no
+  Senzing example: the step continues on its existing fallback, and nothing is said to the
+  bootcamper about the disregarded hits. Observed in `find_examples` and `search_docs` results
+  on MCP server 1.46.1, docs indexed 2026-11-14 17:44 UTC, 2026-11-18.
+  <!-- MCP-NEGATIVE: search_docs(query='NEED_REEVALUATION how entity final state') — a hit from a bootcamp repository's file carries no repo field, and names its repository only in its title, which begins with owner/name:, and in its source_url — owner: search_docs IS the route that returns the hit, and the hit object is all the server says about it, so a field missing there is missing from the route rather than from a sibling tool (absence negative) — server 1.46.1, 2026-11-18 -->
 - ⛔ **Always pass `language` to `reporting_guide` — every call, whatever the topic** (INV-192).
   Most topics withhold their content until it is supplied, answering instead with a **`needs_input`**
   object naming the parameter they want, and that same reply carries **no content**: the content

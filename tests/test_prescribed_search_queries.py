@@ -976,18 +976,23 @@ VERIFIED_QUERIES = {
         "server": "1.38.2", "docs_index": "2026-10-14 20:27 UTC", "measured": "2026-10-14",
     },
     # The two below are the evidence slots of Module 6 Phase C's orchestrator MCP-NEGATIVE marker.
-    # Re-measured 2026-10-15 on server 1.39.0 (docs index 2026-10-15 10:47 UTC) at the default for
-    # #653, with the marker, which carries the same stamp: 'multi-source' reproduces; the second
-    # query's result changed, but no hit is code with per-source error isolation.
+    # Re-measured 2026-11-18 on server 1.46.1 (docs index 2026-11-14 17:44 UTC) at the default for
+    # #37, with the marker, which carries the same stamp. The claim reproduces. 'multi-source'
+    # surfaces bootcamp repositories' changelogs, which the ground rules now disregard, and the
+    # orchestrator query adds bootcamp repositories' scripts; no hit is code with per-source error
+    # isolation. These records name the repositories; source/ does not, as each name holds an
+    # assistant's name.
     ("find_examples", "multi-source", None): {
         "band": "EMPTY OF A MULTI-SOURCE ORCHESTRATOR",
         "sections": (),
         "returned":
-            "EMPTY OF A MULTI-SOURCE ORCHESTRATOR: without a language it returns two examples, the "
-            "CHANGELOG.md files of senzing/senzing-bootcamp-claude-plugin and senzing/"
-            "senzing-bootcamp-kiro-power; with language='java' it returns examples: [] and a hint "
-            "to try single SDK method names, generate_scaffold or search_docs",
-        "server": "1.39.0", "docs_index": "2026-10-15 10:47 UTC", "measured": "2026-10-15",
+            "EMPTY OF A MULTI-SOURCE ORCHESTRATOR: without a language it returns the CHANGELOG.md "
+            "files of senzing/senzing-bootcamp-claude-plugin and senzing/"
+            "senzing-bootcamp-kiro-power, both with provenance 'official' and both bootcamp "
+            "repositories the ground rules disregard, and no Senzing example code; with "
+            "language='java' it returns examples: [] and a hint to try single SDK method names, "
+            "generate_scaffold or search_docs",
+        "server": "1.46.1", "docs_index": "2026-11-14 17:44 UTC", "measured": "2026-11-18",
     },
     ("find_examples", "orchestrator load multiple data sources", None): {
         "band": "EMPTY OF A MULTI-SOURCE ORCHESTRATOR",
@@ -995,15 +1000,21 @@ VERIFIED_QUERIES = {
         "returned":
             "EMPTY OF A MULTI-SOURCE ORCHESTRATOR: one example per repository, led by "
             "code-snippets-v4 java/snippets/configuration/RegisterDataSources.java: single-source "
-            "loaders (code-snippets-v3 Add10KQueue.py), CHANGELOGs, copies of the bootcamp "
-            "plugins' capture_screenshots.py, performance-guidance repositories, elasticsearch-v4, "
-            "queue consumers and redoers, sz_spark's Databricks tutorial, config-tool data-source "
-            "code, and the senzing/recipes recipe recipes/clair-data-ingestion-starter.md, which "
-            "loads two sources and folds in a third as prompts for an AI assistant, not code. With "
-            "language='python' or 'java', registration snippets, single-source loaders, queue "
-            "consumers and test code between them, and no recipe. No hit is code that loads several "
-            "sources in order with per-source error isolation and reconciliation",
-        "server": "1.39.0", "docs_index": "2026-10-15 10:47 UTC", "measured": "2026-10-15",
+            "loaders (code-snippets-v3 Add50KWithInfoFutures.py), CHANGELOGs, performance-guidance "
+            "repositories, elasticsearch-v4, queue consumers and redoers, sz_spark's Databricks "
+            "tutorial, config-tool data-source code, tooling scripts from other Senzing "
+            "repositories, files from the bootcamp repositories the ground rules disregard "
+            "(senzing-bootcamp-claude-plugin's CHANGELOG.md, senzing-bootcamp-chatgpt-plugin's "
+            "generate_recap_video.py, senzing-bootcamp-kiro-power's install_hooks.py), and the "
+            "senzing/recipes recipe recipes/clair-data-ingestion-starter.md, which loads two "
+            "sources and folds in a third as prompts for an AI assistant, not code. With "
+            "language='python', registration snippets, single-source loaders, queue consumers, "
+            "test code and scripts from the bootcamp repositories; with language='java', "
+            "registration snippets, "
+            "Elasticsearch and Spark code and SDK doc examples; neither returns the recipe. No hit "
+            "is code that loads several sources in order with per-source error isolation and "
+            "reconciliation",
+        "server": "1.46.1", "docs_index": "2026-11-14 17:44 UTC", "measured": "2026-11-18",
     },
     # The evidence slot of Module 2's container-route toolchain MCP-NEGATIVE marker (#595),
     # measured at the default.
