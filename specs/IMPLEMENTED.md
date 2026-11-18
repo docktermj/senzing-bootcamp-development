@@ -476,7 +476,7 @@ line and holds no copy of it, so changing the line changes the range.
   and the archived spec files are absent here. The enforcer named above,
   `tests/test_specs_are_frozen.py`, is not carried into this repository.)
 
-- **PROPOSED AMENDMENT to INV-350 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-350 — applied 2026-11-18 by the maintainer.**
     - ⛔ **Promotion writes exactly those paths and nothing else, and it stops at the working tree: no commit, no branch, no push.** — in `tools/bootcamp_build/promote.py`
 
   INV-350 governs the files `propagate.sh` publishes and its rewrite pass, and names
