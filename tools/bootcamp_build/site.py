@@ -95,7 +95,11 @@ def verification_note(host: Host, version: str, indent: str) -> str:
 
 
 def _expand_markers(text: str, hosts: list[Host], current: Host | None, version: str = "") -> str:
-    """Replace the site's own markers, each alone on its line, keeping the line's indentation."""
+    """Replace the site's own markers, each alone on its line, keeping the line's indentation.
+
+    The `site-before.html` fragment each host gives here states `python3` on the `PATH`
+    (INV-433).
+    """
     count = COUNT_WORDS.get(len(hosts), str(len(hosts)))
     text = text.replace("{{site.assistant_count}}", count)
     text = text.replace("{{site.assistant_list}}", html.escape(_assistant_list(hosts)))

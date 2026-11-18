@@ -966,7 +966,9 @@ NAMED_TEST = re.compile(r"tests/(test_[a-z0-9_]+\.py)")
 #: test_each_package_names_an_operation_in_its_own_form.py, which cites INV-057 back.
 #: Re-derived by running the extractor, which found 361, the new pair present by name and
 #: none removed.
-EXPECTED_PAIRS = 361
+#: Same review: INV-433 registered (issue #42), enforced by one test that cites it back.
+#: Re-derived by running the extractor, which found 362, the new pair present by name.
+EXPECTED_PAIRS = 362
 
 
 #: Adapted (one-repository migration, 2026-11-14): enforcers the register names that were not
