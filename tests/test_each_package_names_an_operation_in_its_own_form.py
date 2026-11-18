@@ -21,8 +21,8 @@ What holds now, and what this file checks:
    straight ones; the words are compared and the style of the quotation marks is not.
    `command_prefix`, which nothing read, is in no profile.
 3. **The closing line of graduation is pinned in both forms**, and the finished-bootcamp reply
-   uses the same sentence (INV-057; the amendment that says so is drafted for
-   `/review-invariants`, and `specs/INVARIANTS.md` is not read here).
+   uses the same sentence (INV-057, whose dated note of 2026-11-17 (#28) says so; the
+   maintainer applied it on 2026-11-18. `specs/INVARIANTS.md` is not read here).
 4. **The message `session-start.py` prints for a finished bootcamp stays ASCII-only** on every
    assistant. It is printed from a double-quoted string in the script, so the request is
    written there in straight single quotes, from a host value of its own.
