@@ -414,9 +414,9 @@ missing, write its entry by Step 11's **Registry write**, and only then continue
 bootcamper-described case has no such check.
 
 Run the standard **Module Completion** process in
-`../bootcamp-onboarding/module-completion.md` (update progress, append the Module 1 recap
-section to `docs/bootcamp_recap.md`, and present the end-of-module summary), then ask the single
-transition question.
+`../bootcamp-onboarding/module-completion.md` (its Step 0 checks, update progress, append the
+Module 1 recap section to `docs/bootcamp_recap.md`, and present the end-of-module summary), then
+ask the single transition question.
 
 After the business problem is defined, the next module in your selected sequence continues the
 bootcamp:

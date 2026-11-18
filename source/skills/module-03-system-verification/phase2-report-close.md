@@ -197,7 +197,7 @@ visualization module, which stops its own at its close).
 Complete **System Verification** using the standard **Module Completion** process in
 `../bootcamp-onboarding/module-completion.md`. This module records only itself; the Truth Set
 visualization is a separate, standalone module that records itself at its own close
-(INV-085/INV-086/INV-087):
+(INV-085/INV-086/INV-087). Run Module Completion's Step 0 checks first, then:
 
 1. **Update progress state.** Add `system_verification` to `modules_completed` (a module name token,
    not a number). Set `current_module` to the next module in `selected_modules` (read from

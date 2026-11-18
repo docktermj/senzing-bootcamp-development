@@ -1734,7 +1734,7 @@ names dropped characters, repeat them in the warning rather than only in the PDF
 writes it on every run that accepts the Business Case Offer, which is the common Core path — the
 emoji cannot be set in the PDF's Latin-1 core fonts and is dropped from that line. **That loss is
 expected and harmless.** The marker is a machine-readable flag for the plugin's own branches
-(Module 4 Step 2, Module 6 Phase C step 15, Module 6 Phase D step 25a), every one of which reads it from
+(Module 4, Module 6 Phase C and Module 6 Phase D), every one of which reads it from
 the **Markdown**; nothing reads it from the PDF. So do not substitute a name, do not add an ASCII
 description, and above all do not edit the marker out of the Markdown to quiet the renderer —
 several shipped files and the recap renderer match that exact string, and changing it breaks them

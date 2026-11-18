@@ -147,7 +147,7 @@ NOT_PRESENT = "not present in this project"
 #: The revisit bundle, which holds the database backup. ⚠️ Spelled again here rather than referenced
 #: out of `TRANSFER_EXTRA`: `tests/test_handed_over_paths_can_travel.py` reads that tuple with
 #: `ast.literal_eval`, and a name inside it would make every packaging rule unreadable to the guard
-#: that checks them. `tests/test_package_bootcamp.py` pins the two together.
+#: that checks them. `tests/test_quoted_sizes_say_what_they_missed.py` pins the two together.
 #: ⚠️ It is the one absent candidate root a Bootcamper is about to CREATE rather than simply not
 #: have: `{{host.invoke_package_bootcamp}}` writes it, after this measurement, for whoever answers "everything to
 #: continue elsewhere". So a `transfer` size measured without it is a size measured without the

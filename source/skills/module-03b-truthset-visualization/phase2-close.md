@@ -238,7 +238,8 @@ never blocks this module — it keeps the close from reporting a cleanup that di
 Complete this module using the standard **Module Completion** process in
 `../bootcamp-onboarding/module-completion.md`. Record it as a first-class module in the order the
 bootcamper experienced it (immediately after System verification), so it does not depend on
-graduation's reconcile backfill (INV-085/INV-086/INV-087):
+graduation's reconcile backfill (INV-085/INV-086/INV-087). Run Module Completion's Step 0 checks
+first, then:
 
 1. **Update progress state.** Add `truthset_visualization` to `modules_completed` (a module name
    token, not a number), placed after `system_verification`. Set `current_module` to the next module
