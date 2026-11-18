@@ -10,6 +10,7 @@
     "docs_dir": "${PLUGIN_ROOT}/docs",
     "scripts_fallback": "<this-skill-dir>/../../scripts",
     "manifest_path": "plugin.json",
+    "mcp_file": "mcp.json",
     "package_noun": "plugin",
     "invoke_start_bootcamp": "\"Start the bootcamp\"",
     "invoke_bootcamp_feedback": "\"Bootcamp feedback\"",

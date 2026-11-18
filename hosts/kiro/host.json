@@ -10,6 +10,7 @@
     "docs_dir": "${PLUGIN_ROOT}/skills/bootcamp-onboarding/docs",
     "scripts_fallback": "<this-skill-dir>/../bootcamp-onboarding/scripts",
     "manifest_path": "plugin.json",
+    "mcp_file": "mcp.json",
     "package_noun": "Power",
     "invoke_start_bootcamp": "\"Start the bootcamp\"",
     "invoke_bootcamp_feedback": "\"Bootcamp feedback\"",

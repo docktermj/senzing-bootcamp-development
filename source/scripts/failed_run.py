@@ -8,8 +8,8 @@ not the env script's ``src/scripts/``, and whose result is an error or a non-zer
 
 - ``failed-run-net.py``, the ``PostToolUse``/``PostToolUseFailure`` hook that notices the
   failure while the module is still running;
-- ``.claude/skills/auto-test/transcript_lint.py``'s ``check_worked_steers``, which grades a
-  finished walk.
+- ``check_worked_steers`` in the development repository's ``transcript_lint.py``, which grades
+  a finished walk.
 
 This is NOT a hook. Python puts each hook script's own directory on ``sys.path``, so
 ``import failed_run`` resolves here on Linux, macOS and Windows alike. Standard library

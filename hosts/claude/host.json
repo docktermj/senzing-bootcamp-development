@@ -10,6 +10,7 @@
     "docs_dir": "${CLAUDE_PLUGIN_ROOT}/docs",
     "scripts_fallback": "<this-skill-dir>/../../scripts",
     "manifest_path": ".claude-plugin/plugin.json",
+    "mcp_file": ".mcp.json",
     "package_noun": "plugin",
     "invoke_start_bootcamp": "/start-bootcamp",
     "invoke_bootcamp_feedback": "/bootcamp-feedback",

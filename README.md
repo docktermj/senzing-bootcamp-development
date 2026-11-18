@@ -51,6 +51,9 @@ python3 -m tools.bootcamp_build promote --to ~/github.com/senzing/bootcamp
 - a source file is not placed, or dropped on purpose, by every assistant
 - two builds of the same source differ
 
+An assistant's name counts in any letter case, so a model ID, a directory or a variable that
+spells one is reported too.
+
 `promote` prints what would change in a clone of the public repository and writes nothing.
 With `--apply` it writes that clone's working tree and stops there: it never commits or pushes.
 
