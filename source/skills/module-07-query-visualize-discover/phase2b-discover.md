@@ -36,6 +36,12 @@ connections between entities using `find_network` and `find_path`.
    - `get_sdk_reference(topic='flags', filter='find_path')` and
      `get_sdk_reference(topic='response_schemas', filter='find_path')` for path finding.
 
+   Read each `flags` reply as
+   `../bootcamp-onboarding/ground-rules.md` → "Reading a flags reply"
+   says. On MCP server 1.46.1 (2026-11-18) both of these filters returned the row form, with
+   `applies_to` on every flag, while `filter='find_network_by_entity_id'` and
+   `filter='find_path_by_entity_id'` returned the compact list, which has no such field.
+
    ⛔ **Look up the response structure before writing any code that parses the response — never
    infer field names from an example snippet** (INV-115).
 
@@ -53,7 +59,8 @@ connections between entities using `find_network` and `find_path`.
    within-response trap below, which this sentence would otherwise talk you out of noticing.
    `find_network` returning `ENTITY_PATHS[]` is the sharpest edge of it — seeing "PATH" in a
    network response is not evidence that `ENTITY_PATH_LINKS[]` is there.
-   **The matching-info flags are paired, not shared:** `SZ_FIND_PATH_INCLUDE_MATCHING_INFO`
+   **The matching-info flags are paired, not shared:** in the row form (re-read on MCP server
+   1.46.1, 2026-11-18), `SZ_FIND_PATH_INCLUDE_MATCHING_INFO`
    has `applies_to` of the two `find_path_*` methods, `SZ_FIND_NETWORK_INCLUDE_MATCHING_INFO`
    of the two `find_network_*` methods, and each default composite carries its own. So
    **neither the flags nor the parser can be carried from one of these calls to the other** —
@@ -332,7 +339,10 @@ supported systems.
    - `get_sdk_reference(topic='flags', filter='export_json_entity_report')` and
      `get_sdk_reference(topic='response_schemas', filter='export_json_entity_report')`: the export's
      flags and its row shape. The method's signature for the Bootcamper's binding comes back with
-     them; read that binding's, not another language's.
+     them; read that binding's, not another language's. That `flags` reply is the compact list
+     (MCP server 1.46.1, 2026-11-18): choose from it, and read a flag's fields or its full
+     description from the row form
+     (`../bootcamp-onboarding/ground-rules.md` → "Reading a flags reply").
 
    ⛔ **(INV-356) Edges are Senzing relationships, each carrying its match type and match key; never write an edge per shared feature.**
    That is the `graph` topic's own anti-pattern (server 1.37.27, 2026-10-11): feature-level edges
@@ -352,7 +362,8 @@ supported systems.
    flags chosen in item 6, fetches one row, prints its top-level keys, and prints whether one of its
    records carries that record's source JSON (`JSON_DATA`). Show the Bootcamper the keys. Then:
    - **`RELATED_ENTITIES` is absent:** the flags did not ask for relationships. Find the
-     relationship flags in item 6's `flags` response, add them, and dump again. If it is still
+     relationship flags in item 6's `flags` response, where they are named inside a composite's
+     `=` line, add them, and dump again. If it is still
      absent there are no relationships to export; continue, and item 9 reports the zero-edge
      failure with this result.
    - **Business attributes need a per-record `get_record` pass.** The fields asked for in item 5

@@ -315,14 +315,30 @@ response.
 `get_entity_by_record_id`, `search_by_attributes`, `how_entity`, `why_entities`, `why_records`,
 `why_record_in_entity`, `find_network`, `find_path`), look up available flags via
 `get_sdk_reference(topic='flags', filter='<method>')` and select the flags matching the
-bootcamper's query intent. Explain the choice in one sentence: "I'm using [flag] so we can see
+bootcamper's query intent. Which reply that call returns, and which call to make before reading
+a field or a full description, is in
+`../bootcamp-onboarding/ground-rules.md` → "Reading a flags reply".
+Explain the choice in one sentence: "I'm using [flag] so we can see
 [what it provides]." For visualization-bound queries, include `SZ_INCLUDE_FEATURE_SCORES`
 and/or `SZ_INCLUDE_MATCH_KEY_DETAILS`. ⚠️ **`SZ_INCLUDE_MATCH_KEY_DETAILS` is dependent on a
 relations flag, so pass it only alongside one** — `SZ_ENTITY_INCLUDE_ALL_RELATIONS` or one of its four
-members; that flag's own row documents the relations dependency in its description.
+members. Look the dependency up in that flag's own row,
+`get_sdk_reference(topic='flags', filter='SZ_INCLUDE_MATCH_KEY_DETAILS')`: the row's
+`description` states the dependency and names those flags (MCP server 1.46.1, 2026-11-18).
 Passed on its own it is accepted and adds nothing, which reads as "no relationships in this data"
 rather than as a missing flag (INV-179). It is **not** how a why response explains its match: see
 step 3a.
+
+⚠️ **Dated note (MCP server 1.46.1, 2026-11-18): in the compact list, `=` also marks "depends
+on" and "member of".** A method's compact list prints a composite as `NAME = A|B|C`, and it
+prints two other things the same way. `filter='get_entity_by_record_id'` returned both:
+`SZ_INCLUDE_MATCH_KEY_DETAILS = SZ_ENTITY_INCLUDE_ALL_RELATIONS`, a flag and one of the relations
+flags it depends on, and `SZ_ENTITY_INCLUDE_RECORD_JSON_DATA = SZ_RECORD_DEFAULT_FLAGS`, a flag
+and the composite it is a member of (that flag's own row describes it as "Member of
+SZ_RECORD_DEFAULT_FLAGS."). So a line `A = B` is not proof that `A` is a composite: neither of
+those two flags' rows carries `composite_members`. Read `A`'s own row before treating it as
+one, as the lookup above does for `SZ_INCLUDE_MATCH_KEY_DETAILS`.
+<!-- MCP-NEGATIVE: get_sdk_reference(topic='flags', filter='get_entity_by_record_id') — the compact list has no notation of its own for "depends on" or "member of": it prints SZ_INCLUDE_MATCH_KEY_DETAILS and SZ_ENTITY_INCLUDE_RECORD_JSON_DATA with the same = as a composite — owner: get_sdk_reference(topic='flags', filter='SZ_INCLUDE_MATCH_KEY_DETAILS') and the same call with filter='SZ_ENTITY_INCLUDE_RECORD_JSON_DATA' ARE the routes that carry what each flag is, and neither flag's row carries composite_members while each description states the relations dependency or the membership, so the distinction is answered there rather than absent (routing negative) — server 1.46.1, 2026-11-18 -->
 
 ⛔ **(INV-169) Do NOT restrict this flag to "methods that return related entities" — the server does not, and
 that restriction excludes the one method whose own schema documents the field (INV-169).** Four
@@ -357,7 +373,8 @@ first recorded on server **1.33.0**, 2026-08-26.)
 ⚠️ **The server cautions that DEFAULT composites are not for production code — relay this when you
 teach them.** Returned verbatim as the top-level `caution` field of
 `get_sdk_reference(topic='flags', filter='find_network_by_entity_id', language='python')`, **MCP
-server 1.32.9, 2026-08-12**:
+server 1.32.9, 2026-08-12**; re-confirmed word for word on 1.46.1, 2026-11-18, where that call
+returns the compact list and still carries the field:
 
 > **PRODUCTION GUIDANCE:** `*_DEFAULT_FLAGS` composites are intended for getting started and
 > exploration, not for production code. Their membership may change between Senzing versions, so
@@ -617,8 +634,9 @@ duplicates, that's a valid finding, document it. On this branch step 3a asks no 
 When presenting results from `how_entity` or the `why_*` methods (`why_entities`,
 `why_records`, `why_record_in_entity`), ensure the query was called with
 `SZ_INCLUDE_FEATURE_SCORES` — the flag that carries the per-feature scoring detail these
-presentations are built from (it applies to all four methods; `get_sdk_reference(topic='flags',
-filter='why_records')`, server 1.32.9, 2026-08-14). If the query used default flags, note what
+presentations are built from (it applies to all four methods, by the `applies_to` of its own row;
+`get_sdk_reference(topic='flags', filter='SZ_INCLUDE_FEATURE_SCORES')`, server 1.46.1,
+2026-11-18). If the query used default flags, note what
 additional detail feature scores would add. ⛔ **For a why response the match-key breakdown is
 read from `WHY_RESULTS[].MATCH_INFO.WHY_KEY_DETAILS`, never from a `MATCH_KEY_DETAILS` field** —
 that field name is the one this module already corrected, and it is still wrong here.

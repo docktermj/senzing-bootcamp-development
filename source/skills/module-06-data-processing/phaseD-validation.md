@@ -491,8 +491,12 @@ which is exactly the gap the UAT percentages below leave open.
    of copying it from cross-language documentation, and ask MCP first.
    `get_sdk_reference(topic='flags', filter='<method>', language='<chosen_language>')` lists the
    flags documented for the method, but it does not narrow that list by binding: with
-   `language='python'` it still returns `SZ_EXPORT_ALL_FLAGS`, and only its `source_file`
-   (`fallback:java-sdk-SzFlag-enum`) shows the Java origin (MCP server 1.37.16, 2026-09-30). For
+   `filter='export_json_entity_report', language='python'` it still returns
+   `SZ_EXPORT_ALL_FLAGS`. That reply is the compact list, and the only place it shows the Java
+   origin is the group header above that flag's line, `# fallback:java-sdk-SzFlag-enum`. The
+   flag's own row, `get_sdk_reference(topic='flags', filter='SZ_EXPORT_ALL_FLAGS')`, carries
+   the same value as its `source_file` (MCP server 1.46.1, 2026-11-18; the two replies are
+   told apart in `../bootcamp-onboarding/ground-rules.md` → "Reading a flags reply"). For
    availability, search the binding's own flag reference, naming its flag class:
    `search_docs(query='<binding flag class> <flag name>')`. For Python,
    `search_docs(query='senzing.szengineflags SzEngineFlags SZ_EXPORT_DEFAULT_FLAGS')` returns the
@@ -501,7 +505,7 @@ which is exactly the gap the UAT percentages below leave open.
    binding's flags, re-query with your binding's class or module name rather than reading their
    list as yours. Only where neither route answers, fall back to introspecting the installed
    binding (`dir(SzEngineFlags)`) (INV-132).
-   <!-- MCP-NEGATIVE: get_sdk_reference(topic='flags', filter='export_json_entity_report', language='python') — the flag list is not narrowed by binding: SZ_EXPORT_ALL_FLAGS is still listed, its entry identical without the language argument, and only its source_file (fallback:java-sdk-SzFlag-enum) shows the Java origin; language narrows method_signatures only — owner: search_docs(query='senzing.szengineflags SzEngineFlags SZ_EXPORT_DEFAULT_FLAGS') IS the route that carries a binding's own flag reference, and returns the Python SzEngineFlags member list, so availability is answered there rather than absent (routing negative) — server 1.37.16, 2026-09-30 -->
+   <!-- MCP-NEGATIVE: get_sdk_reference(topic='flags', filter='export_json_entity_report', language='python') — the flag list is not narrowed by binding: SZ_EXPORT_ALL_FLAGS is still listed, the list is identical without the language argument, and the reply shows the Java origin only in the group header above that flag's line (# fallback:java-sdk-SzFlag-enum); language narrows method_signatures only — owner: search_docs(query='senzing.szengineflags SzEngineFlags SZ_EXPORT_DEFAULT_FLAGS') IS the route that carries a binding's own flag reference, and returns the Python SzEngineFlags member list, so availability is answered there rather than absent (routing negative) — server 1.46.1, 2026-11-18 -->
    <!-- MCP-NEGATIVE: search_docs(query='senzing.szengineflags SzEngineFlags SZ_EXPORT_DEFAULT_FLAGS') — the Python SzEngineFlags member list has no SZ_EXPORT_ALL_FLAGS: the alphabetical list runs from SZ_ENTITY_INCLUDE_REPRESENTATIVE_FEATURES directly to SZ_EXPORT_DEFAULT_FLAGS — owner: search_docs IS the corpus route that serves the Python SDK reference (garage.senzing.com/sz-sdk-python/senzing.html, section szengineflags), so its member list is the answer rather than a miss (absence negative) — server 1.37.16, 2026-09-30 -->
 
    A worked expression for a detail-carrying export in Python — start here rather than assembling

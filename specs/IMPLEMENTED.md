@@ -36,6 +36,268 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## the-flags-reference-reply-changed-shape-and-now-points-at-a-topic-the-bootcamp-never-names
+
+- **Implemented:** 2026-11-18 (issue #36)
+- **Files changed:** `source/skills/bootcamp-onboarding/ground-rules.md`,
+  `source/skills/module-06-data-processing/phaseD-validation.md`,
+  `source/skills/module-07-query-visualize-discover/phase1-query-visualize.md`,
+  `source/skills/module-07-query-visualize-discover/phase2-discover.md`,
+  `source/skills/module-07-query-visualize-discover/phase2b-discover.md`,
+  `tests/test_flags_lookup_reads_the_reply_that_holds_the_field.py` (new),
+  `specs/IMPLEMENTED.md` (this entry)
+- **MCP re-check:** server 1.46.1, docs index built 2026-11-14 17:44 UTC, 2026-11-18 — server
+  now contradicts the plugin, as the issue recorded on 2026-11-17, and in one respect
+  differently from what the issue expected (the third item of "Differs from the issue" below).
+  Tools: `get_capabilities`, `get_sdk_reference`, `search_docs`, read-only; `search_docs` at the
+  default result count. `submit_feedback` and `download_resource` were not called. Every call
+  was made before any file was changed, except the two marked "after" below, which were made
+  to write a citation as the exact call and changed no decision.
+  - `get_capabilities()` gives `"server_version":"1.46.1"`. The index build is not in that
+    reply. It is in the `search_docs` reply: `"index_built":"2026-11-14 17:44 UTC"`,
+    `"documents_indexed":13404`.
+  - **The compact list.** `get_sdk_reference(topic='flags', filter='export_json_entity_report')`
+    returns `"method":"export_json_entity_report"`, `"default_flags":"SZ_EXPORT_DEFAULT_FLAGS"`,
+    `"detail":"Full definitions and response paths: get_sdk_reference(topic='flag_details',
+    filter='export_json_entity_report'), or filter by one flag name."`, and a `data` array of
+    strings: group headers such as `# export`, and one line per flag. Among them:
+    `SZ_EXPORT_INCLUDE_MULTI_RECORD_ENTITIES (default) — Include only resolved entities that
+    contain…`, the same cut-short text for `SZ_EXPORT_INCLUDE_SINGLE_RECORD_ENTITIES`,
+    `# fallback:java-sdk-SzFlag-enum` followed by `SZ_EXPORT_ALL_FLAGS — All export flags
+    combined — includes all…`, and `SZ_INCLUDE_MATCH_KEY_DETAILS =
+    SZ_ENTITY_INCLUDE_ALL_RELATIONS`. `SZ_ENTITY_INCLUDE_RECORD_SUMMARY` appears only inside
+    the `SZ_ENTITY_DEFAULT_FLAGS = …` line. The same call with `language='python'` returns the
+    same `data` array, and `method_signatures` holding the Python signatures only. The
+    top-level `caution` and `method_signatures` are in both replies.
+  - **The same shape for other single methods.** `filter='why_records'`,
+    `filter='get_entity_by_record_id'`, `filter='how_entity_by_entity_id'`,
+    and, with `language='python'`, `filter='find_network_by_entity_id'`,
+    `filter='find_path_by_entity_id'`, `filter='how_entity'` and `filter='search_by_attributes'`
+    each return the compact list with a `detail` field. The `get_entity_by_record_id` reply
+    holds both `SZ_INCLUDE_MATCH_KEY_DETAILS = SZ_ENTITY_INCLUDE_ALL_RELATIONS` and
+    `SZ_ENTITY_INCLUDE_RECORD_JSON_DATA = SZ_RECORD_DEFAULT_FLAGS`. The `why_records` reply
+    holds `SZ_WHY_RECORDS_DEFAULT_FLAGS = SZ_INCLUDE_FEATURE_SCORES`. The
+    `find_network_by_entity_id` reply's `caution` is, word for word, the text
+    `phase1-query-visualize.md` quotes.
+  - **The row form from `flag_details`.**
+    `get_sdk_reference(topic='flag_details', filter='export_json_entity_report')`, asked with
+    `language='python'` and without (after), returns each flag as an object, for example
+    `"name":"SZ_EXPORT_INCLUDE_MULTI_RECORD_ENTITIES","description":"Include only resolved
+    entities that contain more than one record. …","applies_to":["export_json_entity_report",
+    "export_csv_entity_report"],"source_file":"docs-flags-4-flags_export.md"`, and
+    `SZ_EXPORT_ALL_FLAGS` with `"source_file":"fallback:java-sdk-SzFlag-enum"`. It holds no row
+    for `SZ_ENTITY_INCLUDE_RECORD_SUMMARY`; that name is in `SZ_ENTITY_DEFAULT_FLAGS`'s
+    `composite_members`.
+  - **The row form from a flag name.** `filter='SZ_EXPORT_ALL_FLAGS'` returns that row with the
+    same `source_file`. `filter='SZ_INCLUDE_MATCH_KEY_DETAILS'` returns a row with `name`,
+    `description`, `applies_to`, `source_file` and `response_paths`, whose description opens
+    "The SZ_INCLUDE_MATCH_KEY_DETAILS flag is dependent on using one of the following flags:
+    SZ_ENTITY_INCLUDE_ALL_RELATIONS , SZ_ENTITY_INCLUDE_POSSIBLY_SAME_RELATIONS , …".
+    `filter='SZ_ENTITY_INCLUDE_RECORD_JSON_DATA'` returns a row whose description is "Member of
+    SZ_RECORD_DEFAULT_FLAGS." `filter='SZ_WHY_RECORDS_DEFAULT_FLAGS'` returns "The default
+    recommended flags for why_records. Equivalent to: SZ_INCLUDE_FEATURE_SCORES." with
+    `"composite_members":["SZ_INCLUDE_FEATURE_SCORES"]`. `filter='SZ_INCLUDE_FEATURE_SCORES'`
+    returns `applies_to` naming `search_by_attributes`, `how_entity_by_entity_id`,
+    `why_entities`, `why_records`, `why_record_in_entity` and `why_search`.
+    `filter='SZ_ENTITY_INCLUDE_RECORD_SUMMARY'` (after) returns "Include the record summary of
+    the entity." `filter='SZ_FIND_PATH_INCLUDE_MATCHING_INFO'` and
+    `filter='SZ_FIND_NETWORK_INCLUDE_MATCHING_INFO'` return `applies_to` of the two
+    `find_path_*` and the two `find_network_*` methods, and each default composite's
+    `composite_members` holds its own matching-info flag.
+  - **Three filters return the row form directly.** `filter='find_network'` and
+    `filter='find_path'`, and `filter='get_entity'` with `language='python'`, return objects
+    with `applies_to`, and no `method`, `default_flags` or `detail` key. The issue expected the
+    compact list for the first two. What decides the shape was not established: the three
+    names each cover a by-entity-ID and a by-record-ID method, and that is an observation about
+    three filters, not a rule the server states.
+  - **The binding's own flag reference.**
+    `search_docs(query='senzing.szengineflags SzEngineFlags SZ_EXPORT_DEFAULT_FLAGS')` returns
+    as hit 1 the Python `szengineflags` section, whose excerpt runs from
+    `SZ_ENTITY_INCLUDE_REPRESENTATIVE_FEATURES` directly to `SZ_EXPORT_DEFAULT_FLAGS`. The
+    owner clause of the corrected marker rests on this call. The second marker in that
+    paragraph, stamped 1.37.16, is #38's and is not re-dated here.
+
+  Three statements above are absence claims, so (INV-213):
+  owner-checked: `get_sdk_reference(topic='flag_details', filter='export_json_entity_report')`
+  is the route the compact list's own `detail` field names for the fields the list lacks — it
+  returned every flag of the method as an object with `applies_to` and `source_file`, and
+  `composite_members` and `response_paths` on the composites.
+  owner-checked: `get_sdk_reference(topic='flags', filter='SZ_INCLUDE_MATCH_KEY_DETAILS')` is
+  the route that carries that flag's fields — it returned no `depends_on` and no
+  `composite_members`, and its description states the dependency. The field does exist on
+  other rows: `filter='SZ_ENTITY_INCLUDE_RELATED_ENTITY_NAME'` returns a row with
+  `"depends_on"` naming the relations flags.
+  owner-checked: `get_sdk_reference(topic='flags', filter='SZ_ENTITY_INCLUDE_RECORD_JSON_DATA')`
+  is the route that carries that flag's fields — it returned no `composite_members`, and
+  `SZ_RECORD_DEFAULT_FLAGS`, in the same reply, carries
+  `"composite_members":["SZ_ENTITY_INCLUDE_RECORD_JSON_DATA"]`.
+- **Summary:** A method's flags lookup no longer returns flag entries with fields, and shipped
+  steps still read fields from it (`dry-run-2026-11-17`, findings 6 and 7). Each step now makes
+  a call whose reply holds what it reads, and shipped text names `flag_details`.
+  - **The rule.** `ground-rules.md`, under the "Flags" bullet, gains the passage "Reading a
+    flags reply". It describes the two shapes and how to tell them apart, then says: "Choose
+    flags from the compact list. Before reading a field or a full description, call the row
+    form: by flag name for one flag, or by `topic='flag_details'` for a method." The fallback
+    is the next sentence: when the compact list carries no `detail` pointer, or
+    `topic='flag_details'` fails, the flag-name row, saying which route produced what is
+    presented (INV-125). The passage is in that one file. The four other files point at it
+    with `ground-rules.md` → "Reading a flags reply", and none holds a copy.
+  - **The sites.** The scope is every method-filter `topic='flags'` call in `source/`. A scan
+    that reads across line wraps finds 15, in five files: the 12 the issue counted and three it
+    missed (first item of "Differs from the issue").
+    - `phaseD-validation.md`: the sentence that said "only its `source_file` … shows the Java
+      origin" now says the reply is the compact list, that the Java origin shows only in the
+      group header above the flag's line, `# fallback:java-sdk-SzFlag-enum`, and that the
+      flag's own row carries the same value as its `source_file`. Its marker is corrected to
+      say the same and stamped server 1.46.1, 2026-11-18. "does not narrow that list by
+      binding" still holds and is kept.
+    - `ground-rules.md`, the entity-as-text "Rank" step: the export's flags are named by the
+      compact list, and the step reads the full descriptions from `topic='flag_details'` and
+      each entity flag from its own row before choosing. The dated note on `method_signatures`
+      in "Parameter shapes" is re-confirmed on 1.46.1.
+    - `phase1-query-visualize.md`: the flags paragraph points at the rule; the dependency
+      lookup names `get_sdk_reference(topic='flags', filter='SZ_INCLUDE_MATCH_KEY_DETAILS')`
+      and its `description`; the `caution` quotation is kept and re-confirmed word for word;
+      the `applies_to` of `SZ_INCLUDE_FEATURE_SCORES` is cited to that flag's own row.
+    - `phase2-discover.md`: the `get_entity_by_record_id` and `why_records` lookups point at
+      the rule; the equivalence of `SZ_WHY_RECORDS_DEFAULT_FLAGS` is cited to that composite's
+      own row; the `how_entity_by_entity_id` lookup confirms the two flag names from the
+      compact list and the relations dependency from the flag's row.
+    - `phase2b-discover.md`: the `find_network` and `find_path` lookups say which shape each
+      filter returned; the sentence that reads `applies_to` says it reads the row form; the
+      export lookup says its reply is the compact list; and the step that finds the
+      relationship flags says they are named inside a composite's line.
+  - **The dated note.** Beside the dependency lookup, `phase1-query-visualize.md` says, dated
+    server 1.46.1, 2026-11-18, that in the compact list `=` also marks "depends on" and
+    "member of", gives the two lines above as returned, and says "a line `A = B` is not proof
+    that `A` is a composite".
+  - **Three markers.** The corrected one in `phaseD-validation.md`, and two new ones, because
+    the rule and the note are dated statements of what a reply lacks: one under the rule and
+    one under the note. `coverage_reports.py negatives` parses all three and reports no
+    census-shaped or enumerated rationale; `unmarked` reports none.
+  - **Every assistant.** The changed passages sit outside every host marker and name no
+    assistant. `python3 -m tools.bootcamp_build check` passes, and a build of all five
+    packages was read: each holds the rule once, the pointer in four files, and the note.
+  - **Differs from the issue.**
+    - The issue counts 12 calls. Three more are corrected: the `why_records` call in
+      `phase1-query-visualize.md` that read `applies_to`, the `how_entity_by_entity_id` call in
+      `phase2-discover.md`, and the dated `find_network_by_entity_id` note in `ground-rules.md`.
+      The first two are split across a line break, and the third is not written as a full
+      call.
+    - The criterion asks for a DEFERRED INVARIANT block for INV-132. INV-132 is in force, so
+      the block below is a PROPOSED AMENDMENT, the shape `review-invariants` → "Writing one"
+      gives for a change to an invariant in force.
+    - The issue says a method filter returns the compact list. Three filters return the row
+      form (above). The rule therefore tells the guide to see which shape came back, and does
+      not say a method filter always returns the compact list.
+    - `flag_details` for the export method has no row for a member entity flag, so the "Rank"
+      step names the flag's own row for it as well.
+    - Two markers are added beyond the one the issue names.
+  - **Tests.** `tests/test_flags_lookup_reads_the_reply_that_holds_the_field.py`, 19 tests. One
+    function, `problems()`, reads every Markdown file under `source/` and reports: the rule
+    held by no file or by more than one; a rule that does not say to choose from the compact
+    list, does not send the reader to the row form by flag name or by `flag_details`, or
+    states no fallback with INV-125; a file that makes a method-filter call and does not point
+    at the rule; a list item or paragraph that makes such a call, names one of the five fields
+    and names no row-form route; a missing or undated `=` note, or one with no dependency
+    lookup beside it; and a Module 6 marker whose version, date or origin token differs from
+    its paragraph's. The sites are found by scanning (INV-246). The shipped files give none.
+    - Negative controls run on every pass, on in-memory copies: a second copy of the rule,
+      the rule without `flag_details`, without its INV-125 citation or without its first
+      sentence, a site with no pointer, the Module 6 sentence as it shipped until this issue,
+      a note without "member of" or without its date, a dependency lookup that names no row,
+      and a marker re-dated or naming another origin are each reported; the retired sentence
+      with its row named is not.
+    - Run once against the five files as they stand on `b077397`: seven problems, among them
+      `phaseD-validation.md:487 reads ['source_file'] beside a method-filter topic='flags'
+      call and names no row-form route`.
+    - It asserts properties and no server wording (INV-219), reads prose through
+      `_wrapped_text` (INV-346) and imports nothing from `source/` (INV-108).
+    - Two existing guards shaped the wording and are unchanged:
+      `tests/test_how_call_requests_the_breakdown_it_promises.py` fails a sentence that names
+      `SZ_INCLUDE_MATCH_KEY_DETAILS` and `depends_on` together, so the lookup names the
+      description and not the missing field; `tests/test_module07_why_flags.py` wants every
+      mention of that flag to carry its relations dependency, so the note says "relations
+      flags".
+  - **Not observed.** No run on a real assistant was made, so no record is added to any
+    `hosts/<assistant>/checks.json`. Nothing here shows what a live guide does with either
+    reply. The test reads Markdown and calls no server: it cannot show which shape a filter
+    returns on a later server, or that `flag_details` still exists. A failing
+    `topic='flag_details'` call was not produced, so the fallback is stated and not exercised.
+    Verified on Linux only, with Python 3.12.3. The change is Markdown text and a
+    standard-library test with no branch on the platform (INV-001), and it names no
+    programming language's own mechanism (INV-002).
+  - **Not changed.** Sites that filter `topic='flags'` by a flag name, and the dated
+    statements about `topic='flags'` that name no filter (the INV-179 paragraph in
+    `ground-rules.md`, the composite-membership section and the `find_network` coverage note
+    in `phase1-query-visualize.md`, the binding-type note in `phase2-discover.md`): their
+    replies are the row form, which did not change, and re-dating them is #38. The second
+    marker in the `phaseD-validation.md` paragraph (#38). The `/auto-test` probe baseline
+    (#50).
+  - **Waited for #50.** `tests/test_auto_test_harness.py` checks every literal MCP call in
+    `source/` against `.claude/skills/auto-test/baseline/mcp-snapshot.json`. Captured from
+    server 1.40.10, that baseline had no `flag_details` in `get_sdk_reference`'s topic set, so
+    the two `topic='flag_details'` calls this change ships were reported as BREAKING and the
+    full suite was red. #50 refreshed the baseline from 1.46.1 (merged as `f0dd599`), and this
+    change was rebased onto it unchanged: the test passes, with neither the baseline nor the
+    guard edited here.
+- **Upstream, drafted and not sent.** Upstream: not yet sent — needs maintainer approval.
+  - The message about the `=` rendering is the "Flags list (finding 7)" draft in
+    `dry-run-2026-11-17`. It still reproduces on 2026-11-18 and is not sent by this run.
+  - A second message, drafted here, **not sent — needs maintainer approval**:
+    "`get_sdk_reference(topic='flags', filter=<method>)` returns two different shapes
+    depending on the filter (server 1.46.1). `find_network_by_entity_id`,
+    `find_path_by_entity_id` and `get_entity_by_record_id` return the compact list with a
+    `detail` field; `find_network`, `find_path` and `get_entity` return full flag objects
+    and no `detail` field. The tool description says a method filter returns one line per
+    flag. Also, in the compact list for `why_records`, `default_flags` is
+    `SZ_WHY_ENTITIES_DEFAULT_FLAGS` and that line carries `(default)`, while
+    `SZ_WHY_RECORDS_DEFAULT_FLAGS` does not; and for `get_entity_by_record_id`,
+    `default_flags` is `SZ_ENTITY_BRIEF_DEFAULT_FLAGS` while the Python signature in the same
+    reply defaults to `SZ_ENTITY_DEFAULT_FLAGS`. A caller cannot tell which default to trust."
+- **Follow-up, drafted and not filed.** One issue, **not filed**: "The compact flags list
+  marks a default that the binding's signature does not use." For `why_records` and
+  `get_entity_by_record_id` the compact list's `default_flags` and `(default)` marks name a
+  different composite from the one the Python signature in the same reply defaults to (the
+  second upstream draft above). Shipped text tells the guide to corroborate a default with
+  `method_signatures` only inside Module 7's composite-membership section; the new "Reading a
+  flags reply" passage does not mention `(default)`. Proposed: one sentence there saying the
+  binding's default is read from `method_signatures`. Left out of this change because the
+  issue's scope is the routing of field reads.
+- **Invariants.** The register is not edited here (INV-365). The lines this change adds or
+  edits under `source/` carry no ⛔ and no bold MUST or NEVER, and
+  `conformance.py since --since-last-audit` reports none from this change. INV-132 says that
+  under a method filter "flag entries additionally carry `composite_members`, `depends_on` and
+  `response_paths`", which the server no longer returns for most method names, and the block
+  below proposes the dated correction. INV-080, INV-125, INV-169, INV-209, INV-213 and INV-219
+  are applied and not changed. INV-300 is not engaged: no site says the rule is stated once,
+  and the pointers name their file and section. Beyond the one block the change establishes
+  no new invariant.
+
+- **PROPOSED AMENDMENT to INV-132 — awaiting the maintainer's sign-off; NOT applied.**
+    - ⛔ **Choose flags from the compact list. Before reading a field or a full description, call the row form: by flag name for one flag, or by `topic='flag_details'` for a method.** — in `source/skills/bootcamp-onboarding/ground-rules.md`
+    - ⛔ **When the compact list carries no `detail` pointer, or `topic='flag_details'` fails, fall back to the flag-name row, `get_sdk_reference(topic='flags', filter='<flag name>')`, and say which route produced what you present** — in `source/skills/bootcamp-onboarding/ground-rules.md`
+    - ⛔ **a line `A = B` is not proof that `A` is a composite** — in `source/skills/module-07-query-visualize-discover/phase1-query-visualize.md`
+
+  INV-132, as corrected on 2026-07-30, says a `flags` result already in hand answers the
+  parameter shape and that "flag entries additionally carry `composite_members`,
+  `depends_on` and `response_paths`, which is what a flag family selects". The first half
+  still holds: `method_signatures` comes back with both shapes. The second half is false for
+  the compact list, which is what most method filters now return. Left as it is, the
+  registered wording tells a guide, and the next editor, that those fields are in a reply
+  that does not hold them, which is the failure the 2026-07-30 correction itself names
+  (telling the guide that data is where it is not). The shipped text and
+  `tests/test_flags_lookup_reads_the_reply_that_holds_the_field.py` already say otherwise, so
+  without the note below the register and its shipped rule disagree.
+  Enforced by `tests/test_flags_lookup_reads_the_reply_that_holds_the_field.py`.
+
+  Drafted wording follows, under the registered id. A new rule's id would be
+  written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
+
+  **INV-132** — (⚠️ **Dated note, 2026-11-18 (#36): under a method filter, `topic='flags'` may return a compact list that carries no flag fields; the parameter-shape rule above is unchanged.** On MCP server 1.46.1 (docs index 2026-11-14 17:44 UTC), `get_sdk_reference(topic='flags', filter='<method>')` returned, for `export_json_entity_report`, `why_records`, `get_entity_by_record_id`, `how_entity_by_entity_id`, `search_by_attributes`, `find_network_by_entity_id` and `find_path_by_entity_id`, a **compact list**: lines of text under group headers, with a `detail` field naming `topic='flag_details'`, and no `composite_members`, `depends_on`, `response_paths`, `applies_to` or `source_file`. Those fields are in the **row form**, which a flag-name filter returns for one flag and `get_sdk_reference(topic='flag_details', filter='<method>')` returns for every flag of a method; `filter='find_network'`, `'find_path'` and `'get_entity'` returned the row form directly. So the clause above, "flag entries additionally carry `composite_members`, `depends_on` and `response_paths`", holds for the row form only. The `method_signatures` block came back with both shapes, so a `flags` result in hand still answers the parameter shape. The guide MUST see which shape a flags reply has before reading it, MUST choose flags from the compact list, and MUST call the row form before reading a flag's field or its full description. Where the compact list carries no `detail` pointer, or `topic='flag_details'` fails, it MUST fall back to the flag-name row and say which route produced what it presents (INV-125). In the compact list `=` also marks "depends on" and "member of", so a line `A = B` MUST NOT be read as proof that `A` is a composite. The rule is stated in `skills/bootcamp-onboarding/ground-rules.md` → "Reading a flags reply", and every shipped file that makes a method-filter `topic='flags'` call MUST hold it or point at it. Which filters return which shape is an observation on that server, recorded with its date, and not a rule (INV-169). Enforced by `tests/test_flags_lookup_reads_the_reply_that_holds_the_field.py`, which reads Markdown and calls no server. Source: `the-flags-reference-reply-changed-shape-and-now-points-at-a-topic-the-bootcamp-never-names`, 2026-11-18.)
+
+- **Commit:** uncommitted
+
 ## re-read-the-mcp-servers-changed-prose-and-refresh-the-probe-baseline
 
 - **Implemented:** 2026-11-18 (issue #50)
