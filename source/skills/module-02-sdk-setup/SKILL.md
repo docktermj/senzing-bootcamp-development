@@ -686,6 +686,24 @@ then checkpoint step 2 and continue to Step 3.
    language='python')` returns *"use Docker or WSL2 to run Python inside a Linux container"*
    (server **1.33.0, 2026-08-21**). ⚠️ On macOS only the container route exists — the same server
    sentence appears under `platform='macos_arm'` and its WSL2 half is wrong there.
+
+   **Which route, on Windows.** The guide settles it here, detection first as at the top of this
+   step, in this order:
+   - **Already recorded:** when step 2 in `config/bootcamp_progress.json` records a `route` of
+     `container` or `wsl2`, take that route. Probe nothing and ask nothing (INV-006).
+   - **Otherwise, check what is present.** A container is present when `docker version` or
+     `podman version` answers, the same probe Step 7 makes before its PostgreSQL question. WSL2 is
+     present when `wsl --list --verbose` lists at least one distribution whose VERSION is 2; a WSL 1
+     distribution does not count.
+   - **Exactly one present:** take that route and say so in one line with the reason, e.g. "WSL2
+     is installed and no container runtime is, so the SDK goes inside WSL2; say so if that's
+     wrong." Ask nothing.
+   - **Both present, or neither:** say in one line what was found, then ask the route question
+     below ("Which Linux environment"), once.
+
+   A guide already running inside WSL2 detects Linux at the top of this step, so rule 5 applies
+   and this choice never arises. On macOS nothing is chosen: the container route, with no probe
+   and no question.
 2. macOS Intel → **`platform='docker'`**. There is no native Intel-Mac install: the Homebrew
    tap is Apple Silicon (ARM64) only.
 3. macOS Apple Silicon (non-Python) → **`platform='macos_arm'`**. If the chosen language runs
@@ -720,11 +738,33 @@ When a learner lands on Docker because of these rules, briefly explain why (e.g.
 Python SDK is Linux-only, so on macOS we'll run it in a container") so the redirect doesn't
 feel arbitrary.
 
+**The route question (rule 1, Windows with Python only).** Asked only when rule 1 finds both
+Linux environments present, or neither. Pin it verbatim (neutral lead + numbered list,
+INV-051/INV-056):
+
+👉 **Which Linux environment would you like to run the Senzing SDK in? Reply with a number:**
+
+1. A container
+2. WSL2
+
+*(Internal: end the turn on this question and wait — INV-251.)*
+
+**Handling each answer (INV-284).** Record the answer as step 2's `route`, then checkpoint step 2
+and continue to Step 3.
+
+- **1, "A container":** `platform='docker'`; record `route` as `container`.
+- **2, "WSL2":** `platform='linux_apt'`, rule 1's WSL2 branch; record `route` as `wsl2`.
+
+When neither was present, the answer still decides the route, and Step 3 proceeds on that
+platform as it does today.
+
 Use `sdk_guide` with `topic='install'`, the resolved `platform`, and the bootcamper's chosen
 language as the `language` parameter to get current installation commands. The MCP server
 always has the latest instructions.
 
-**Checkpoint:** write step 2 to `config/bootcamp_progress.json`.
+**Checkpoint:** write step 2 to `config/bootcamp_progress.json`. On Windows with Python, record
+rule 1's `route` (`container` or `wsl2`) under step 2 as well, the way Step 1b records its outcome
+under step 1, so a resumed session takes it from there.
 
 ## Step 3: Install Senzing SDK
 
@@ -2697,8 +2737,9 @@ call succeeds** (not merely a version query).
 - Always check for an existing installation first: if the SDK is present and V4.0+, do NOT
   reinstall. Skip only the installation and continue on Step 1's existing-install path: Step 3's
   Phase 3 and its environment script still run before verification (INV-339).
-- Do NOT offer alternatives: install the SDK natively (or via Docker where the routing rules
-  require it).
+- Install the SDK on the route Step 2's routing rules resolve: natively, in a container, or in
+  WSL2 where rule 1 chooses it. Offer no route those rules do not resolve; the one choice they
+  leave to the Bootcamper is rule 1's route question, on Windows with Python.
 - Use the `sdk_guide` MCP tool for current platform-specific instructions.
 - Check the install anti-patterns before recommending approaches: the `search_docs` route, which
   returns *Senzing Anti-Patterns: Installing in Sandboxed or Restricted-Egress Environments*
