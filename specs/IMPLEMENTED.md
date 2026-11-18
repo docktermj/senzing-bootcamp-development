@@ -36,6 +36,222 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## the-packager-omits-symlinked-directories-unnamed-skips-utf-16-text-and-shares-the-feedback-file
+
+- **Implemented:** 2026-11-18 (issue #46)
+- **Files changed:** `source/scripts/package_bootcamp.py`,
+  `source/skills/bootcamp-onboarding/packaging.md`, `source/commands/package-bootcamp.md`,
+  `tests/test_package_bootcamp.py`, `tests/test_open_me_first_matches_the_manifest.py`,
+  `tests/test_packaging_consent_gate_ships.py`, `specs/IMPLEMENTED.md` (this entry)
+- **MCP re-check:** n/a (no Senzing fact). Re-confirmed on 2026-11-18 against the change itself:
+  it changes which of the bootcamper's own files the packager walks, scans and carries, and
+  what the bootcamp's own text says about that. The three secret classes, the Senzing license
+  payload among them, are read from `secret_patterns.py`, which does not change. That Windows
+  PowerShell 5.1 writes UTF-16 from a `>` redirect is a statement about PowerShell, taken
+  from the issue, and was not checked on a Windows machine here. Nothing says anything about
+  Senzing or about what the Senzing MCP server serves. No absence claim about the server is
+  made, so INV-213's `owner-checked:` clause is not owed.
+- **Summary:** Four gaps between what `package_bootcamp.py` does and what its manifest and the
+  consent question say are closed (`dry-run-2026-11-17`, finding 12, and a fourth gap found
+  when the issue was refined). The file was read on `main` at `4486c25`, after #25, #28, #30,
+  #31 and #45 changed it, and the new tests fail on that commit (see **Tests**).
+  - **Symlinked directories.** `collect()` does not enter a symlinked directory, wherever it
+    points, and lists it in `excluded` as `<path>/` with the reason "a symlinked directory;
+    not followed, so nothing under it is packaged". Before, a link inside a walked tree was in
+    neither the archive nor `excluded`, and a candidate root that was itself a link was walked,
+    because `os.walk` follows the directory it starts on. A candidate root is now checked
+    before the walk, and so is each directory above it inside the project: with `data` a link,
+    `data/exports` is not entered and `data/` is named. A rule that matches the link's own
+    path is reported first, as `excluded by rule: <rule>`, as before. The reason does not name
+    the link's target. A root that is a link is not reported on the dry run's `absent:` line,
+    which lists only roots that are not in the project.
+  - **Windows directory junctions.** A junction is treated as a symlinked directory. It is
+    read from the reparse tag `os.lstat` reports (`IO_REPARSE_TAG_MOUNT_POINT`), because
+    `os.path.islink` does not report one and `os.path.isjunction` needs Python 3.12. No
+    junction was created and nothing ran on Windows: one test gives the check a stand-in
+    `lstat` result.
+  - **Symlinked files.** A link that resolves inside the project is also checked against the
+    exclusion rules by its resolved project-relative path. A match excludes it with the reason
+    `excluded by rule: <rule> (the rule matches the path this link resolves to)`. So
+    `docs/x.csv -> ../data/raw/customers.csv` is left out on both profiles, and a link named
+    `notes.txt` that resolves to a `.db` file is left out of `share`. A link to a path no rule
+    matches is packaged under the link's path, and a link that resolves outside the project
+    keeps the reason `resolves outside the project root; not packaged`, both as before.
+  - **UTF-16 text.** `_scan()` decodes each block as UTF-8, UTF-16 little-endian and UTF-16
+    big-endian (`SCAN_ENCODINGS`) and applies the same patterns to each, so a secret is found
+    in either byte order, with or without a byte-order mark. The decoders are incremental and
+    each encoding carries its own tail, so a secret that straddles a scan-block boundary is
+    found. The reason is unchanged: `excluded: content matched a secret pattern (<class>)`.
+    No other encoding is read. `secret_patterns.py` and `write-gate.py` do not change, as the
+    issue decides, so the write gate still reads UTF-8 only.
+    The scan costs more, because each block is now decoded and searched three times.
+    Measured once on the machine that did this work, on a 100 MiB file: 1.24 s before and
+    2.09 s after for random bytes, and 0.33 s before and 0.59 s after for JSON lines.
+  - **The feedback file and the in-progress recap.** `docs/feedback` and `docs/progress` are
+    new `share`-only rules, so they match at any depth and appear in
+    `exclusion_rules_applied.share_only`. `transfer` carries both directories.
+  - **`OPEN_ME_FIRST.md`.** On `share`, the "What is NOT here, and why" list gains a bullet
+    naming `docs/feedback/` and `docs/progress/`. On `transfer`, a sentence of its own after
+    the profile paragraph names `docs/feedback/SENZING_BOOTCAMP_FEEDBACK.md` and
+    `docs/progress/recap_checkpoint.md`, each only when the manifest's `included` list carries
+    it. The profile paragraph and the "To resume" paragraph are byte for byte what they were,
+    and a package with neither file reads as before.
+  - **The consent question.** Option 2 reads as the issue gives it: "the above plus your
+    database backup, saved bootcamp feedback, in-progress recap, config and mappings, …". The
+    two new items sit on its first lines. Its last two physical lines are unchanged, and so
+    is `tests/test_quoted_sizes_say_what_they_missed.py`, whose controls anchor on them.
+    Options 1 and 3 are unchanged.
+  - **Step 4 and the command.** The guarantee list in `packaging.md` Step 4 names the two
+    paths as dropped by `share` and carried by `transfer`, and says that a symlinked directory
+    is never followed and is named, that a symlinked file is checked by the path it resolves
+    to, and that the content scan reads UTF-16 text. The profile summary in
+    `source/commands/package-bootcamp.md` names the two paths as dropped by `share` and
+    carried by `transfer`. No line carrying a ⛔ was edited.
+  - **Compatibility.** No command-line option changes. `PACKAGE_MANIFEST.json` keeps
+    `"schema": 1` and its keys.
+  - **Not changed.** Other content under `docs/` that `share` carries. `SECRET_PATTERN` and
+    the write gate's secret check. Step 5 of `packaging.md`. The `absent:` report.
+  - **Every assistant.** Every changed passage sits outside every host marker and names no
+    assistant, so all five packages get the same text. `python3 -m tools.bootcamp_build check`
+    passes.
+  - **Tests.** 51 new tests in three existing files.
+    - `tests/test_package_bootcamp.py` gains four classes, 32 tests. Eleven read symlinked
+      directories: a link that resolves inside the project and one that resolves outside it,
+      on both profiles; a candidate root that is a link, inside and outside; a root below a
+      linked directory; a rule matching the link's own path; the written archive and its
+      manifest; the reason's wording and that the manifest names no target; the control
+      below; a real directory and a linked file, which are not linked directories; and the
+      junction stand-in. Seven read symlinked files, the first of them from the members of a
+      written `share` archive. Seven read UTF-16: four forms of each of the three secret
+      classes, a secret straddling a block boundary in each form, an odd block length, the
+      written archive, and clean UTF-16 text that still travels. Six read the two new rules,
+      on written `share` and `transfer` archives, and one more reads the consent question
+      against the rules.
+    - `tests/test_open_me_first_matches_the_manifest.py` gains three classes, 10 tests: both
+      files named, one, the other and neither; a partial package; a file on disk that the
+      secret scan excludes and that is therefore not named; and the `share` list.
+    - `tests/test_packaging_consent_gate_ships.py` gains three classes, 9 tests: option 2
+      word for word, its last two physical lines, options 1 and 3, the Step 4 list and the
+      command's summary.
+    - A test that needs a symlink skips, with its reason, where the platform cannot create
+      one. None skipped on the machine that ran them.
+    - Every secret-shaped string the new cases use is put together when the test runs, from a
+      pattern's fixed prefix and characters drawn from a seeded generator. None is written
+      in a file whole.
+    - Negative controls that run on every pass (INV-265): with the link check switched off,
+      a link inside a walked tree is in neither list and a linked root is walked; with the
+      scan reading UTF-8 only, all twelve UTF-16 fixtures are packaged; a link's own path
+      matches no rule; and the text a complete package carries fails each `OPEN_ME_FIRST.md`
+      case.
+    - Negative control run once, in a throwaway clone of `4486c25` holding only the three
+      test files: `tests/test_package_bootcamp.py` gives `FAILED (failures=42, errors=13)`,
+      `tests/test_open_me_first_matches_the_manifest.py` gives
+      `FAILED (failures=6, errors=1)` and `tests/test_packaging_consent_gate_ships.py` gives
+      `FAILED (failures=8, errors=1)`. That run was made before the odd-block-length test
+      was added.
+    - Thirteen small changes to the script were each tried once in that clone, with the
+      whole change applied, and each turns at least one of the three files red: a walked link not named, a linked root
+      followed, no resolved-path check, UTF-8 only, no big-endian read, no carried tail,
+      either rule dropped, the `transfer` sentence dropped, the `share` bullet dropped, the
+      sentence built from something other than `included`, the junction tag ignored, and a
+      decoder that is not incremental.
+    - Prose is matched with whitespace collapsed (INV-346).
+  - **Not observed.** No run on a real assistant was made, so no record is added to any
+    `hosts/<assistant>/checks.json`. Nothing here shows what a live guide asks or says.
+    Verified on Linux only, with Python 3.12.3: no run on macOS or on Windows happened, no
+    Windows junction was created, and no file written by Windows PowerShell 5.1 was read. The
+    script uses the standard library only and has no branch on the platform (INV-001), and
+    nothing in the change is specific to a programming language (INV-002).
+  - **Drafted, not filed.** One finding outside this issue's scope, for the maintainer to
+    file or drop. It was seen on `4486c25` and is unchanged by this work.
+    - *Title:* The packager stops with a traceback on a symlink loop.
+    - *Body:* `collect()` in `source/scripts/package_bootcamp.py` calls `Path.resolve()` on
+      each member and catches `OSError`. On Python 3.12.3, a link that loops (`docs/a -> b`,
+      `docs/b -> a`) makes `resolve()` raise `RuntimeError: Symlink loop from …`, which is not
+      caught, so `--dry-run` and the write both end in a traceback and no archive is written.
+      Expected: the link is listed in `excluded` with a reason and the run goes on, as it does
+      for an unreadable member. Seen by running the script on a scratch directory holding one
+      file and the two links.
+- **Invariants.** The register is not edited here (INV-365). INV-109, INV-135 and INV-410 are
+  not changed. The change ships three hard-rule lines, all in the docstring of
+  `tests/test_package_bootcamp.py`. `since` does not report them, because `tests/` is not a
+  rule home. The lines this change adds or edits under `source/` carry no ⛔ and no bold MUST
+  or NEVER. The three blocks below cover the three rules (INV-309). Beyond them the change
+  establishes no new invariant.
+
+- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** The packager never follows a link into a path it would leave out, and names what it did not enter. The rule already shipping, quoted:
+    - ⛔ **The packager never enters a symlinked directory and always names it, and it checks a symlinked file by the path it resolves to.** — in `tests/test_package_bootcamp.py`
+    - `source/scripts/package_bootcamp.py` — ⛔ `collect()` checks each candidate root and each directory the walk lists, names a linked one in `excluded`, and checks a member's resolved path against the exclusion rules
+    - `source/skills/bootcamp-onboarding/packaging.md` — ⛔ Step 4's "Symlinks resolved, then compared" bullet says a symlinked directory is never followed and is named, and a symlinked file is checked by the path it resolves to
+
+  Enforced by `tests/test_package_bootcamp.py` (`ASymlinkedDirectoryIsNeverEnteredAndIsNamed`,
+  `ASymlinkedFileIsCheckedByThePathItResolvesTo`).
+
+  **Why it is not an existing invariant:** INV-410 says that `share` carries none of the
+  loader inputs wherever they sit, that an exclusion rule matches its segments at any depth,
+  and that each excluded path is named with its rule. It reads a path's own segments, and a
+  link's own path matches no rule, so it did not stop `docs/x.csv` from carrying a file under
+  `data/raw/`. It also binds the loader inputs on `share`, not every rule on both profiles,
+  and says nothing about a directory the walk does not enter. INV-200 governs where the
+  bootcamp writes; the packager's check for a link that leaves the project borrows its
+  resolve-then-compare and is not stated by it. The packaging feature's own invariant, Draft
+  1 of `the-bootcamp-cannot-leave-the-machine-it-was-built-on`, names symlink resolution and
+  has been held since 2026-08-27. The maintainer may fold this wording into Draft 1 when
+  registering it; that is a different act and is not drafted here.
+
+  Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
+  invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
+
+  **INV-NNN** — `package_bootcamp.py` MUST NOT enter a symlinked directory, whether it resolves inside or outside the project, and whether it is found during the walk, is a candidate root itself or is a directory above a candidate root inside the project. A Windows directory junction counts as a symlinked directory. Each one MUST be listed in `PACKAGE_MANIFEST.json`'s `excluded` list as `<path>/`: with the rule, when an exclusion rule matches the link's own path, and otherwise with a reason saying it is a symlinked directory that was not followed. That reason MUST NOT name the link's target, because the manifest travels with the archive and a target can hold a user name or a path outside the project. A symlinked file that resolves inside the project MUST be checked against the profile's exclusion rules by its resolved project-relative path as well as by its own path; a match on either MUST exclude it, and the reason MUST name the rule. A link that resolves to a path no rule matches is packaged under the link's path, and a link that resolves outside the project is excluded and named as resolving outside the project root. Observed (`dry-run-2026-11-17`, finding 12, and the refinement of issue #46): a symlinked directory was in neither the archive nor `excluded`, and on `share` a link under `docs/` to a file under `data/raw/` was packaged under the link's name. Enforced by `tests/test_package_bootcamp.py`, which builds the links in fixture projects and skips, with its reason, where the platform cannot create one; it was run on Linux only, creates no junction (the junction case is a stand-in `lstat` result), and **cannot** establish what a live packaging run on a Bootcamper's project excludes. (Source: `the-packager-omits-symlinked-directories-unnamed-skips-utf-16-text-and-shares-the-feedback-file`, GitHub issue #46, 2026-11-18.)
+
+- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** The packager's secret scan reads UTF-16 text as well as UTF-8. The rule already shipping, quoted:
+    - ⛔ **The packager's secret scan reads every member as UTF-16 text as well as UTF-8.** — in `tests/test_package_bootcamp.py`
+    - `source/scripts/package_bootcamp.py` — ⛔ `_scan()` decodes each block in every encoding in `SCAN_ENCODINGS` and applies the secret patterns to each
+    - `source/skills/bootcamp-onboarding/packaging.md` — ⛔ Step 4's "Content-scanned" bullet says the scan reads each member as UTF-8 and as UTF-16 text, in either byte order, with or without a byte-order mark
+
+  Enforced by `tests/test_package_bootcamp.py` (`Utf16TextIsScannedForSecrets`).
+
+  **Why it is not an existing invariant:** INV-109 names the three secret classes the write
+  gate must detect. It binds `write-gate.py`, and it says nothing about the packager or about
+  the encoding a file is read in. `tests/test_secret_patterns_are_shared.py` holds the two
+  pattern strings equal and says itself that equal patterns do not establish equal
+  application. Draft 1 of `the-bootcamp-cannot-leave-the-machine-it-was-built-on`, held since
+  2026-08-27, covers a byte-level scan with no file-type allowlist and names no encoding. So
+  the scan could go back to reading UTF-8 only and contradict no registered wording. The
+  maintainer may fold this into Draft 1 instead.
+
+  Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
+  invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
+
+  **INV-NNN** — `package_bootcamp.py`'s content scan MUST apply the secret patterns to every member read as UTF-8 text and as UTF-16 text, little-endian and big-endian, with or without a byte-order mark, and MUST find a pattern that straddles a scan-block boundary in each of them. A member that matches in any of those readings MUST be excluded and named in `PACKAGE_MANIFEST.json` with the secret's class, and the manifest MUST NOT echo the matched text. No other encoding is read. This binds the packager only: the write gate's secret check (INV-109) is not changed by it. Observed (`dry-run-2026-11-17`, finding 12): a UTF-16 file holding a synthetic secret-shaped id was packaged, because the scan decoded it as UTF-8; Windows PowerShell 5.1 writes UTF-16 from a `>` redirect. Enforced by `tests/test_package_bootcamp.py`, which writes each of the three secret classes in the four UTF-16 forms from strings put together at run time; it was run on Linux only, reads no file that PowerShell wrote, and **cannot** establish that a secret in some other encoding is found. (Source: `the-packager-omits-symlinked-directories-unnamed-skips-utf-16-text-and-shares-the-feedback-file`, GitHub issue #46, 2026-11-18.)
+
+- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** The saved bootcamp feedback and the in-progress recap travel on `transfer` only, and each profile's text says so. The rule already shipping, quoted:
+    - ⛔ **The saved bootcamp feedback and the in-progress recap travel on `transfer` only, and each profile's text says so.** — in `tests/test_package_bootcamp.py`
+    - `source/scripts/package_bootcamp.py` — ⛔ `SHARE_EXCLUDE` holds `docs/feedback` and `docs/progress`, and `open_me_first()` names the two files on `transfer` from the manifest's `included` list and lists both directories on `share` among what is not there
+    - `source/skills/bootcamp-onboarding/packaging.md` — ⛔ option 2 of the pinned question names the saved bootcamp feedback and the in-progress recap and option 1 does not, and Step 4's "Never packaged on `share`" bullet names both paths and says `transfer` carries them
+    - `source/commands/package-bootcamp.md` — ⛔ the profile summary says both paths are dropped by `share` and carried by `transfer`
+
+  Enforced by `tests/test_package_bootcamp.py` (`TheWorkingNotesTravelOnTransferOnly`),
+  `tests/test_open_me_first_matches_the_manifest.py` and
+  `tests/test_packaging_consent_gate_ships.py`.
+
+  **Why it is not an existing invariant:** INV-410 binds the loader inputs on `share` and how
+  a rule matches, not the feedback file or the recap checkpoint. INV-015 says where feedback
+  is captured, and nothing about whether it travels in a package. INV-388 binds the size an
+  option quotes, and INV-051 and INV-056 the form and pinning of the question, not which
+  files an option names. The deferred rule that `OPEN_ME_FIRST.md` says only what the
+  manifest includes (issue #321, held 2026-10-02) covers how the `transfer` sentence is
+  built, and does not say which profile carries these two files. So `share` could carry the
+  bootcamper's own feedback text again, or option 2 could stop naming it, and contradict no
+  registered wording.
+
+  Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
+  invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
+
+  **INV-NNN** — The packaged `share` profile MUST carry nothing under `docs/feedback/` or `docs/progress/`, wherever in the project tree they sit: the saved bootcamp feedback and the in-progress recap are the Bootcamper's working notes, in their own words, and not results. Each MUST be an exclusion rule of that profile, named in `PACKAGE_MANIFEST.json`'s `excluded` list where it applied and listed in `exclusion_rules_applied.share_only`, and `OPEN_ME_FIRST.md` on `share` MUST list both among what is not there. The `transfer` profile MUST carry both, and its `OPEN_ME_FIRST.md` MUST name `docs/feedback/SENZING_BOOTCAMP_FEEDBACK.md` and `docs/progress/recap_checkpoint.md` each only when the manifest's `included` list carries it. The pinned consent question in `packaging.md` MUST name the saved bootcamp feedback and the in-progress recap in the option that produces `transfer` and MUST NOT name them in the option that produces `share`, and `packaging.md` Step 4 and `source/commands/package-bootcamp.md` MUST say which profile carries them. A project with neither file packages without error. Observed (`dry-run-2026-11-17`, finding 12): `share` carried `docs/feedback/SENZING_BOOTCAMP_FEEDBACK.md` and `docs/progress/recap_checkpoint.md`, and neither the consent question nor `OPEN_ME_FIRST.md` named them. Enforced by `tests/test_package_bootcamp.py`, `tests/test_open_me_first_matches_the_manifest.py` and `tests/test_packaging_consent_gate_ships.py`, which read archives built from fixtures and the shipped wording; they **cannot** establish what a live guide asks, and they say nothing about other content under `docs/` that `share` carries. (Source: `the-packager-omits-symlinked-directories-unnamed-skips-utf-16-text-and-shares-the-feedback-file`, GitHub issue #46, 2026-11-18.)
+
+- **Commit:** uncommitted
+
 ## restated-rules-and-lists-in-shipped-text-have-drifted-from-their-source
 
 - **Implemented:** 2026-11-17 (issue #45)

@@ -16,6 +16,12 @@ Every case is negative-controlled: its predicate is also run against a STATIC st
 real function fed a complete package's `included` list, which is exactly what the text said
 before #321 -- and must report a problem there.
 
+Issue #46 added the last three classes. `share` drops the saved bootcamp feedback and the
+in-progress recap and lists both under "What is NOT here, and why"; `transfer` names each in
+a sentence of its own after the profile paragraph, only when `included` carries it. The
+rule is stated, and queued as a `DEFERRED INVARIANT` block, in
+`tests/test_package_bootcamp.py`.
+
 Source issue: #321. Stdlib only (INV-108); the script is loaded the way
 `tests/test_package_bootcamp.py` loads it.
 
@@ -458,6 +464,134 @@ class PartsAreMatchedOnManifestPathsOnly(unittest.TestCase):
         self.assertFalse(parts["production"])
         only_nested = PKG.included_parts({"included": [{"path": "docs/sub/other.pdf"}]})
         self.assertFalse(only_nested["keepsakes"])
+
+
+FEEDBACK = "docs/feedback/SENZING_BOOTCAMP_FEEDBACK.md"
+CHECKPOINT = "docs/progress/recap_checkpoint.md"
+NAMES_FEEDBACK = "your saved bootcamp feedback (`%s`)" % FEEDBACK
+NAMES_CHECKPOINT = "your in-progress recap (`%s`)" % CHECKPOINT
+ALSO = "It also carries"
+#: The two paragraphs of FULL_TRANSFER, which #46 leaves as they are.
+PROFILE_PARAGRAPH, RESUME_PARAGRAPH = FULL_TRANSFER.split("\n\n")
+
+
+def not_here_section(text):
+    return text.split("## What is NOT here")[1].split("## Integrity")[0]
+
+
+class TransferNamesTheWorkingNotesItCarries(CaseTest):
+    """#46 — on `transfer`, the feedback file and the in-progress recap are named when included."""
+
+    extra = ((FEEDBACK, "feedback"), (CHECKPOINT, "checkpoint"))
+
+    def problems(self, text):
+        out, f = [], flat(contents_sections(text))
+        if "%s %s and %s." % (ALSO, NAMES_FEEDBACK, NAMES_CHECKPOINT) not in f:
+            out.append("does not name the feedback file and the in-progress recap")
+        return out
+
+    def test_both_are_named_in_a_sentence_of_their_own(self):
+        self.check()
+
+    def test_negative_control(self):
+        self.check_static_fails()
+
+    def test_the_fixture_really_carries_both(self):
+        self.assertTrue({FEEDBACK, CHECKPOINT} <= self.case.included)
+
+    def test_the_sentence_follows_the_profile_paragraph_and_changes_neither_paragraph(self):
+        text = self.case.text
+        self.assertIn(FULL_START, text)
+        self.assertIn(PROFILE_PARAGRAPH, text)
+        self.assertIn(RESUME_PARAGRAPH, text)
+        after_profile = text.index(PROFILE_PARAGRAPH) + len(PROFILE_PARAGRAPH)
+        sentence = text.index(ALSO)
+        self.assertEqual("\n\n", text[after_profile:sentence],
+                         "the sentence is not the paragraph right after the profile paragraph")
+        self.assertLess(sentence, text.index(RESUME_PARAGRAPH))
+
+    def test_the_not_here_list_does_not_say_they_were_left_out(self):
+        self.assertNotIn("docs/feedback", not_here_section(self.case.text))
+        self.assertNotIn("docs/progress", not_here_section(self.case.text))
+
+
+class TransferNamesEachWorkingNoteOnlyWhenIncluded(unittest.TestCase):
+    """Built from the manifest's `included` list: one, the other, or neither."""
+
+    def named(self, text):
+        f = flat(contents_sections(text))
+        return (NAMES_FEEDBACK in f, NAMES_CHECKPOINT in f, ALSO in f)
+
+    def test_each_combination(self):
+        for extra, expected in (
+                (((FEEDBACK, "feedback"),), (True, False, True)),
+                (((CHECKPOINT, "checkpoint"),), (False, True, True)),
+                ((), (False, False, False))):
+            with self.subTest(files=[rel for rel, _ in extra]):
+                case = Case("transfer", FULL, extra)
+                try:
+                    self.assertEqual(expected, self.named(case.text), case.text)
+                    self.assertEqual([], named_but_not_included(case.text, case.manifest))
+                    self.assertIn(FULL_TRANSFER.split("\n\n")[0], case.text)
+                finally:
+                    case.close()
+
+    def test_with_neither_the_complete_wording_is_byte_for_byte_what_it_was(self):
+        case = Case("transfer", FULL)
+        try:
+            self.assertIn(FULL_TRANSFER, case.text)
+        finally:
+            case.close()
+
+    def test_a_partial_package_names_them_after_its_own_profile_paragraph(self):
+        case = Case("transfer", ("config",), ((FEEDBACK, "feedback"), (CHECKPOINT, "checkpoint")))
+        try:
+            f = flat(contents_sections(case.text))
+            self.assertIn("This package is partial: it carries `config/`.", f)
+            self.assertIn("%s %s and %s." % (ALSO, NAMES_FEEDBACK, NAMES_CHECKPOINT), f)
+            self.assertLess(f.index("This package is partial"), f.index(ALSO))
+            self.assertEqual([], named_but_not_included(case.text, case.manifest))
+        finally:
+            case.close()
+
+    def test_a_note_on_disk_but_excluded_is_not_named(self):
+        """⛔ Included means listed in `included`: both files exist, and the scan excludes both."""
+        def poison(root):
+            for rel in (FEEDBACK, CHECKPOINT):
+                (root / rel).write_text(PEM, encoding="utf-8")
+
+        case = Case("transfer", FULL, ((FEEDBACK, "x"), (CHECKPOINT, "x")), prepare=poison)
+        try:
+            excluded = {entry["path"] for entry in case.manifest["excluded"]}
+            for rel in (FEEDBACK, CHECKPOINT):
+                with self.subTest(path=rel):
+                    self.assertTrue((case.root / rel).exists())
+                    self.assertIn(rel, excluded)
+                    self.assertNotIn(rel, case.included)
+            self.assertEqual((False, False, False), self.named(case.text), case.text)
+        finally:
+            case.close()
+
+
+class ShareListsTheWorkingNotesAmongWhatIsNotThere(unittest.TestCase):
+    """#46 — `share` drops both, and says so under "What is NOT here, and why"."""
+
+    def test_the_list_names_both_whether_or_not_they_exist(self):
+        for extra in (((FEEDBACK, "feedback"), (CHECKPOINT, "checkpoint")), ()):
+            with self.subTest(on_disk=bool(extra)):
+                case = Case("share", FULL, extra)
+                try:
+                    section = flat(not_here_section(case.text))
+                    self.assertIn("`docs/feedback/`", section)
+                    self.assertIn("`docs/progress/`", section)
+                    self.assertIn("never packaged by this profile", section)
+                    self.assertIn("The `transfer` profile carries them", section)
+                    self.assertNotIn("docs/feedback", contents_sections(case.text))
+                    self.assertNotIn("docs/progress", contents_sections(case.text))
+                    self.assertFalse({FEEDBACK, CHECKPOINT} & case.included)
+                    self.assertIn(FULL_SHARE, case.text)
+                finally:
+                    case.close()
 
 
 if __name__ == "__main__":

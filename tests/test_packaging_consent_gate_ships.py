@@ -22,6 +22,12 @@ asserted here is that the rules **ship**, in the flow and in the command, and th
 depend on genuinely supports measuring without writing (which *is* testable, and is tested in
 `tests/test_package_bootcamp.py`).
 
+Issue #46 added the last three classes: option 2 of the pinned question names the saved
+bootcamp feedback and the in-progress recap, which only `transfer` carries, and Step 4 and the
+command say which profile carries them and state the packager's link and UTF-16 behavior.
+They read the shipped wording; what the script does is tested in
+`tests/test_package_bootcamp.py`, where the rule is stated.
+
 Stdlib only; shipped markdown read as text (INV-108).
 
 Source spec: `specs/the-packaging-consent-gate-is-an-unregistered-guarantee.md`.
@@ -137,6 +143,102 @@ class TheCommandDoesNotLetAnArgumentStandInForConsent(Base):
         self.has(text, r"(?i)still run the dry run and still ask the question",
                  "the command lets a profile argument skip the gate; the size and the "
                  "exclusions are what the bootcamper is consenting to")
+
+
+def between(text, start, end):
+    """`text` from `start` up to `end`; a missing anchor is a failure, never an empty read."""
+    begin = text.index(start)
+    return text[begin:text.index(end, begin + len(start))]
+
+
+class OptionTwoNamesWhatOnlyTransferCarries(Base):
+    """#46 — option 2 names the saved feedback and the in-progress recap; nothing else moved."""
+
+    OPTION_1 = (
+        "1. **Results to share** — your recap PDF, keepsake documents, visualizations, the "
+        "exports written for the systems you named (`data/exports/`) and your `production/` "
+        "project (~<n> MB). No database, no source data, no credentials.")
+    OPTION_2 = (
+        "2. **Everything to continue elsewhere** — the above plus your database backup, saved "
+        "bootcamp feedback, in-progress recap, config and mappings, so you can pick the bootcamp "
+        "back up on another machine (~<n> MB{, which excludes your database backup — choosing "
+        "this creates it, and it is the largest part}).")
+    #: Option 2's last two physical lines. `tests/test_quoted_sizes_say_what_they_missed.py`
+    #: anchors three controls on them, so they stay byte for byte.
+    LAST_TWO_LINES = (
+        "\n   and mappings, so you can pick the bootcamp back up on another machine (~<n> MB{, "
+        "which\n   excludes your database backup — choosing this creates it, and it is the "
+        "largest part}).\n3. **Cancel.**\n")
+
+    def setUp(self):
+        self.raw = FLOW.read_text(encoding="utf-8")
+        self.text = flat(FLOW)
+
+    def test_option_2_reads_as_the_issue_gives_it(self):
+        self.assertEqual(self.OPTION_2,
+                         between(self.text, "2. **Everything to continue", " 3. **Cancel.**"))
+
+    def test_the_two_new_items_come_before_config(self):
+        option = between(self.text, "2. **Everything to continue", " 3. **Cancel.**")
+        self.assertLess(option.index("saved bootcamp feedback"), option.index("in-progress recap"))
+        self.assertLess(option.index("in-progress recap"), option.index("config"))
+
+    def test_its_last_two_physical_lines_are_unchanged(self):
+        self.assertEqual(1, self.raw.count(self.LAST_TWO_LINES))
+
+    def test_options_1_and_3_are_unchanged(self):
+        self.assertEqual(self.OPTION_1,
+                         between(self.text, "1. **Results to share**", " 2. **Everything"))
+        self.assertIn(" 3. **Cancel.** ", self.text)
+
+
+class TheGuaranteeListStatesWhatTheScriptNowDoes(Base):
+    """#46 — Step 4 says which profile carries the two paths, and states the link and UTF-16
+    behavior. What the script does is tested in `tests/test_package_bootcamp.py`."""
+
+    def setUp(self):
+        self.step = between(flat(FLOW), "## Step 4: Write it", "## Step 5:")
+
+    def test_the_two_paths_are_dropped_by_share_and_carried_by_transfer(self):
+        bullet = between(self.step, "**Never packaged on `share`, on top of that:**",
+                         "- **Content-scanned")
+        for path in ("`docs/feedback/`", "`docs/progress/`"):
+            with self.subTest(path=path):
+                self.assertIn(path, bullet)
+        self.has(bullet, r"`transfer` carries those last two",
+                 "Step 4 does not say that `transfer` carries the two paths `share` drops")
+
+    def test_a_symlinked_directory_is_never_followed_and_is_named(self):
+        bullet = between(self.step, "- **Symlinks resolved, then compared:**",
+                         "- **Verified before it is announced:**")
+        self.has(bullet, r"A symlinked directory is never followed",
+                 "Step 4 does not say a symlinked directory is never followed")
+        self.has(bullet, r"the manifest names it as a symlinked directory that was not followed",
+                 "Step 4 does not say the manifest names a symlinked directory")
+
+    def test_a_symlinked_file_is_checked_by_its_resolved_path(self):
+        bullet = between(self.step, "- **Symlinks resolved, then compared:**",
+                         "- **Verified before it is announced:**")
+        self.has(bullet, r"A symlinked file .* is also checked against the exclusion rules by "
+                         r"the path it resolves to",
+                 "Step 4 does not say a symlinked file is checked by its resolved path")
+
+    def test_the_content_scan_reads_utf16_text(self):
+        bullet = between(self.step, "- **Content-scanned, every member",
+                         "- **Symlinks resolved, then compared:**")
+        self.has(bullet, r"as UTF-16 text, little-endian and big-endian, with or without a "
+                         r"byte-order mark",
+                 "Step 4 does not say the content scan reads UTF-16 text")
+
+
+class TheCommandSaysWhichProfileCarriesTheWorkingNotes(Base):
+    def test_the_profile_summary_names_both_paths(self):
+        text = flat(COMMAND)
+        summary = between(text, "Two profiles:", "If this command was invoked")
+        self.has(summary, r"`docs/feedback/`\) and the in-progress recap \(`docs/progress/`\) are "
+                          r"dropped by `share` and carried by `transfer`",
+                 "the command's profile summary does not say which profile carries the saved "
+                 "feedback and the in-progress recap")
 
 
 if __name__ == "__main__":

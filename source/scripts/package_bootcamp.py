@@ -22,7 +22,9 @@ Two profiles, because the two audiences need different contents:
                   sit *inside* the generated tree this profile carries.
 - ``transfer`` -- for the bootcamper resuming elsewhere. Everything in ``share`` plus the INV-094
                   revisit bundle (state snapshot **and** database backup), ``config/``,
-                  ``docs/mapping/`` and ``src/``.
+                  ``docs/mapping/``, ``src/``, and the saved bootcamp feedback and
+                  in-progress recap (``docs/feedback/``, ``docs/progress/``), which
+                  ``share`` drops.
 
 ⛔ **This script writes an archive and stops.** It never uploads, emails, attaches or opens an issue
 with it (INV-135) -- moving the file off the machine is the Bootcamper's action. The output lands
@@ -54,6 +56,7 @@ profile is large. The figure was always honest about having been measured; until
 nothing about what it measured.
 """
 import argparse
+import codecs
 import hashlib
 import json
 import os
@@ -113,7 +116,18 @@ ALWAYS_EXCLUDE = (
 #: disclosed, because the promise is the profile's reason to exist. `transfer` keeps it: the
 #: `src/load/**` copied into `production/` reads its input from exactly that path (INV-084/INV-186),
 #: so a transfer package without it cannot resume the bootcamp, which is what `transfer` is for.
-SHARE_EXCLUDE = ("backups", "docs/mapping", "data/senzing-ready")
+#: ⚠️ (#46) `docs/feedback/` and `docs/progress/` hold the Bootcamper's saved bootcamp feedback
+#: and the in-progress recap checkpoint: working notes in the Bootcamper's own words, kept for
+#: continuing the bootcamp and not for showing its results. The consent question names them
+#: under "everything to continue elsewhere" and not under "results to share", so `share`
+#: drops them and `transfer` carries them, and `OPEN_ME_FIRST.md` says which.
+SHARE_EXCLUDE = (
+    "backups",
+    "docs/mapping",
+    "data/senzing-ready",
+    "docs/feedback",
+    "docs/progress",
+)
 DATABASE_SUFFIXES = (".db", ".sqlite", ".sqlite3")
 
 #: What each profile reaches for. A missing entry is recorded as absent, never an error: the flow
@@ -144,6 +158,23 @@ TRANSFER_EXTRA = (
 #: rather than fail.
 NOT_PRESENT = "not present in this project"
 
+#: The reason recorded for a symlinked directory that no exclusion rule matched. The walk does
+#: not enter one, wherever it points, so without this entry the directory would be in neither
+#: the archive nor `excluded` and a recipient could not tell it had been left out.
+#: ⚠️ The reason does not name the link's target, on purpose: the manifest travels with the
+#: archive, and a target can hold a user name or a path outside the project.
+SYMLINKED_DIRECTORY = "a symlinked directory; not followed, so nothing under it is packaged"
+
+#: `st_reparse_tag` of a Windows directory junction (`IO_REPARSE_TAG_MOUNT_POINT`). A junction
+#: is treated as a symlinked directory, and `os.path.islink` does not report one. Spelled as a
+#: number because the `stat` module defines the name on Windows only.
+JUNCTION_REPARSE_TAG = 0xA0000003
+
+#: The two files `transfer` carries and `share` drops, named in `OPEN_ME_FIRST.md` when the
+#: manifest's `included` list carries them.
+FEEDBACK_FILE = "docs/feedback/SENZING_BOOTCAMP_FEEDBACK.md"
+RECAP_CHECKPOINT = "docs/progress/recap_checkpoint.md"
+
 #: The revisit bundle, which holds the database backup. ⚠️ Spelled again here rather than referenced
 #: out of `TRANSFER_EXTRA`: `tests/test_handed_over_paths_can_travel.py` reads that tuple with
 #: `ast.literal_eval`, and a name inside it would make every packaging rule unreadable to the guard
@@ -163,6 +194,13 @@ SIZE_WARN_BYTES = 2 * 1024 * 1024 * 1024
 #: overlap is orders of magnitude more than required.
 SCAN_BLOCK_BYTES = 1 << 20
 SCAN_OVERLAP_BYTES = 4096
+
+#: Every encoding a member is read in when it is scanned. UTF-16 is here because Windows
+#: PowerShell 5.1 writes it from a `>` redirect, and a UTF-16 file read as UTF-8 has a NUL
+#: between every two characters of a secret, so no pattern matched it (#46). The two UTF-16
+#: byte orders are read separately, and neither needs a byte-order mark: a mark decodes to one
+#: character no pattern contains. No other encoding is read.
+SCAN_ENCODINGS = ("utf-8", "utf-16-le", "utf-16-be")
 
 # ⛔ There is deliberately NO extension allowlist here. There was one until 2026-08-26 --
 # `TEXT_SUFFIXES`, carrying .md/.py/.json/.csv and NOT .pem, .key, .crt or the empty extension --
@@ -229,6 +267,37 @@ def is_excluded(relpath, profile):
     return None
 
 
+def _is_linked_directory(path):
+    """Whether `path` is a directory reached through a link: a symlink to a directory, or a
+    Windows directory junction.
+
+    A junction is read from the reparse tag `os.lstat` reports, which is 0 for anything else
+    and is not reported at all off Windows. No run on Windows has exercised that branch: the
+    tests give it a stand-in `lstat` result.
+    """
+    if os.path.islink(path):
+        return os.path.isdir(path)
+    try:
+        tag = getattr(os.lstat(path), "st_reparse_tag", 0)
+    except OSError:
+        return False
+    return tag == JUNCTION_REPARSE_TAG
+
+
+def _linked_prefix(project_root, top):
+    """The shortest leading part of candidate root `top` that is a linked directory, or None.
+
+    A candidate root is not entered when it is a linked directory itself, nor when a directory
+    above it inside the project is one: either way the walk would be following a link.
+    """
+    parts = top.split("/")
+    for depth in range(1, len(parts) + 1):
+        rel = "/".join(parts[:depth])
+        if _is_linked_directory(project_root.joinpath(*parts[:depth])):
+            return rel
+    return None
+
+
 def candidate_roots(profile):
     return list(SHARE_INCLUDE) + (list(TRANSFER_EXTRA) if profile == "transfer" else [])
 
@@ -248,15 +317,26 @@ def collect(project_root, profile):
         if not base.exists():
             skipped.append({"path": top, "reason": NOT_PRESENT})
             continue
+        # A symlinked directory is not followed, wherever it points, and that includes a
+        # candidate root: `os.walk` does follow the directory it is started on.
+        linked = _linked_prefix(project_root, top)
+        if linked:
+            skipped.append({"path": linked + "/", "reason": SYMLINKED_DIRECTORY})
+            continue
         for dirpath, dirnames, filenames in os.walk(base):
             here = Path(dirpath)
             # Prune excluded directories before descending, so a large excluded tree costs nothing.
+            # A symlinked directory is pruned too, and named: `os.walk` lists one here and does
+            # not enter it, so until #46 it was in neither the archive nor `excluded`. A rule
+            # that matches the link's own path is reported first, as it always was.
             keep = []
             for name in sorted(dirnames):
                 rel = _rel(here / name, project_root)
                 rule = is_excluded(rel, profile)
                 if rule:
                     skipped.append({"path": rel + "/", "reason": "excluded by rule: %s" % rule})
+                elif _is_linked_directory(here / name):
+                    skipped.append({"path": rel + "/", "reason": SYMLINKED_DIRECTORY})
                 else:
                     keep.append(name)
             dirnames[:] = keep
@@ -283,6 +363,19 @@ def collect(project_root, profile):
                         "reason": "resolves outside the project root; not packaged",
                     })
                     continue
+                # A link is checked by where it leads as well as by its own name. Checked by
+                # its own path alone, `docs/x.csv -> ../data/raw/customers.csv` carried the
+                # Bootcamper's raw rows into a `share` archive under the link's name (#46).
+                target = _rel(resolved, project_root)
+                if target != rel:
+                    rule = is_excluded(target, profile)
+                    if rule:
+                        skipped.append({
+                            "path": rel,
+                            "reason": "excluded by rule: %s (the rule matches the path this "
+                                      "link resolves to)" % rule,
+                        })
+                        continue
                 secret = _scan(resolved)
                 if secret == UNEXAMINED:
                     # Fail CLOSED. An unreadable member is not a clean member, and including it
@@ -336,20 +429,28 @@ def _scan(path):
     rather than sniffed for binary-ness, so a key concatenated into an image is still found --
     a credential does not stop being one because of the file it was pasted into. Binary members
     simply do not match, which is the correct outcome rather than a skipped one.
+
+    Each block is read once and decoded in every one of ``SCAN_ENCODINGS``, so UTF-16 text is
+    scanned as well as UTF-8, in either byte order and with or without a byte-order mark. The
+    decoders are incremental, so a character split across two blocks is put back together, and
+    each encoding carries its own tail forward.
     """
     try:
         with open(path, "rb") as handle:
-            carry = ""
+            decoders = [codecs.getincrementaldecoder(name)(errors="replace")
+                        for name in SCAN_ENCODINGS]
+            carries = [""] * len(decoders)
             while True:
                 block = handle.read(SCAN_BLOCK_BYTES)
                 if not block:
                     return None
-                text = carry + block.decode("utf-8", errors="replace")
-                found = find_secret(text)
-                if found:
-                    return found
-                # Carry the tail forward so a pattern straddling the boundary is still seen.
-                carry = text[-SCAN_OVERLAP_BYTES:]
+                for index, decoder in enumerate(decoders):
+                    text = carries[index] + decoder.decode(block)
+                    found = find_secret(text)
+                    if found:
+                        return found
+                    # Carry the tail forward so a pattern straddling the boundary is still seen.
+                    carries[index] = text[-SCAN_OVERLAP_BYTES:]
     except OSError:
         return UNEXAMINED
 
@@ -506,6 +607,8 @@ def included_parts(manifest):
         "keepsakes": bool(keepsakes),
         "visualizations": bool(under("docs/visualizations/")),
         "production": bool(under("production/")),
+        "feedback": FEEDBACK_FILE in paths,
+        "checkpoint": RECAP_CHECKPOINT in paths,
     }
 
 
@@ -541,8 +644,25 @@ def _share_block(parts):
         "safe to hand to someone who should see the results but not the inputs.")
 
 
+def _working_notes(parts):
+    """The paragraph naming the saved bootcamp feedback and the in-progress recap, each only
+    when the manifest's ``included`` list carries it. Empty when it carries neither.
+
+    It is a sentence of its own, placed after the profile paragraph, so that paragraph's
+    wording is the same with and without it.
+    """
+    named = [label % path for key, label, path in (
+        ("feedback", "your saved bootcamp feedback (`%s`)", FEEDBACK_FILE),
+        ("checkpoint", "your in-progress recap (`%s`)", RECAP_CHECKPOINT),
+    ) if parts[key]]
+    if not named:
+        return []
+    return [""] + _para("It also carries %s." % _series(named))
+
+
 def _transfer_block(parts):
     database, state, guide = parts["database"], parts["state"], parts["guide"]
+    notes = _working_notes(parts)
     results = parts["keepsakes"] or parts["visualizations"] or parts["production"]
     resume = _para(
         "**To resume:** open **`docs/REVISIT_BOOTCAMP.md`** — it carries the restore and "
@@ -552,7 +672,7 @@ def _transfer_block(parts):
         return _para(
             "Profile **`transfer`** — everything needed to continue the bootcamp on another "
             "machine: the results, plus the revisit bundle (state snapshot and database backup), "
-            "`config/`, the mappings and `src/`.") + [""] + resume
+            "`config/`, the mappings and `src/`.") + notes + [""] + resume
 
     named = [("the results", "the results", results)]
     if database and state:
@@ -572,7 +692,7 @@ def _transfer_block(parts):
              else "This package is partial.")
     if missing:
         text += " It does not carry %s." % _series(missing, "or")
-    lines = _para(text) + [""]
+    lines = _para(text) + notes + [""]
 
     if guide:
         lines += resume
@@ -608,6 +728,14 @@ SHARE_SOURCE_DATA_BULLET = (
     "  (`data/raw/`) nor the mapped loader inputs (`data/senzing-ready/`), **wherever they sit**,",
     "  including inside the generated `production/` project they are copied into. They are yours,",
     "  they may be sensitive, and the resolved results do not require them.",
+)
+#: The `share` bullet about the saved feedback and the in-progress recap (#46). `transfer`
+#: carries both, so it has no such bullet: it names them where it says what it carries.
+SHARE_WORKING_NOTES_BULLET = (
+    "- **Your saved bootcamp feedback and in-progress recap** (`docs/feedback/`,",
+    "  `docs/progress/`) — never packaged by this profile, wherever they sit. They are your",
+    "  working notes for continuing the bootcamp, not results. The `transfer` profile carries",
+    "  them.",
 )
 TRANSFER_SOURCE_DATA_BULLET = (
     "- **Your own source data** (`data/raw/`) — never packaged. It is yours, it may be",
@@ -652,6 +780,8 @@ def open_me_first(manifest, project_root):
     ]
     lines += list(SHARE_SOURCE_DATA_BULLET if profile == "share"
                   else TRANSFER_SOURCE_DATA_BULLET)
+    if profile == "share":
+        lines += list(SHARE_WORKING_NOTES_BULLET)
     lines += [
         "- **Anything matching a secret pattern** — a PEM private key, an AWS access-key ID or a",
         "  Senzing license payload found in a file's contents excludes that file, and the",

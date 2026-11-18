@@ -55,19 +55,45 @@ exclusion rule matches its segments anywhere in a path) names this file as its e
 They read the members of archives built from fixtures; they do not establish that a live
 `/package-bootcamp` run on a Bootcamper's project excludes them, which only `dry-run` observes.
 
+Issue #46 added three rules, each held here and by the tests it names:
+
+⛔ **The packager never enters a symlinked directory and always names it, and it checks a symlinked file by the path it resolves to.**
+
+⛔ **The packager's secret scan reads every member as UTF-16 text as well as UTF-8.**
+
+⛔ **The saved bootcamp feedback and the in-progress recap travel on `transfer` only, and each profile's text says so.**
+
+Each line is queued as a `DEFERRED INVARIANT` block in that issue's entry of
+`specs/IMPLEMENTED.md`, awaiting the maintainer's sign-off. Until then only the tests hold
+them: `ASymlinkedDirectoryIsNeverEnteredAndIsNamed` and
+`ASymlinkedFileIsCheckedByThePathItResolvesTo` for the first, `Utf16TextIsScannedForSecrets`
+for the second, and `TheWorkingNotesTravelOnTransferOnly` here with
+`tests/test_open_me_first_matches_the_manifest.py` and
+`tests/test_packaging_consent_gate_ships.py` for the third. A case that needs a symlink skips,
+with its reason, where the platform cannot create one. Every secret-shaped string those
+cases use is put together when the test runs. They ran on Linux only: no run on macOS or
+Windows happened, and no test creates a Windows directory junction.
+
 Run:  python3 -m unittest discover -s tests
 """
+import codecs
 import importlib.util
 import json
+import os
+import random
 import shutil
+import stat
+import string
 import struct
 import subprocess
 import sys
 import tempfile
+import types
 import unittest
 import zlib
 import zipfile
 from pathlib import Path
+from unittest import mock
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCRIPTS = REPO_ROOT / "source" / "scripts"
@@ -804,6 +830,467 @@ class TheDryRunNamesWhatItCouldNotMeasure(unittest.TestCase):
             without["total_uncompressed_bytes"], complete["total_uncompressed_bytes"],
             "the transfer figure is the same with and without the revisit bundle, so the "
             "absence the report names changes nothing the Bootcamper was told")
+
+
+def collected(project, profile):
+    """`(included paths, {excluded path: reason}, skipped)` from the collector, in process."""
+    included, skipped = PKG.collect(project.root, profile)
+    return ([rel for _, rel in included],
+            {entry["path"]: entry["reason"] for entry in skipped}, skipped)
+
+
+def symlink_or_skip(test, link, target, directory=False):
+    """Create `link -> target`, or skip the test and say why this platform cannot."""
+    try:
+        os.symlink(str(target), str(link), target_is_directory=directory)
+    except (OSError, NotImplementedError, AttributeError) as exc:
+        test.skipTest("this platform cannot create a symlink here (%s), so the link this case "
+                      "needs cannot be built" % exc.__class__.__name__)
+
+
+def relative_target(link, target):
+    """`target` as a path relative to the directory holding `link`."""
+    return os.path.relpath(str(target), str(Path(link).parent))
+
+
+class ASymlinkedDirectoryIsNeverEnteredAndIsNamed(unittest.TestCase):
+    """#46 — a directory the walk does not enter is named in `excluded`.
+
+    `os.walk` lists a symlinked directory and does not enter it, so until #46 it was in neither
+    the archive nor the manifest's `excluded` list. A candidate root that was itself a symlinked
+    directory was the opposite case: the walk started on it and followed it.
+    """
+
+    LINK = "docs/linked-notes"
+
+    def setUp(self):
+        self.project = Project().__enter__()
+        self.addCleanup(self.project.__exit__)
+        self.outside = tempfile.TemporaryDirectory()
+        self.addCleanup(self.outside.cleanup)
+        self.elsewhere = Path(self.outside.name).resolve()
+        (self.elsewhere / "elsewhere.md").write_text("outside the project\n", encoding="utf-8")
+        self.inside = self.project.root / "notes-real"
+        self.inside.mkdir()
+        (self.inside / "kept.md").write_text("inside the project\n", encoding="utf-8")
+
+    def link(self, rel, target):
+        link = self.project.root / rel
+        symlink_or_skip(self, link, target, directory=True)
+        return link
+
+    def assert_named_and_not_entered(self, rel, profile):
+        included, reasons, _ = collected(self.project, profile)
+        self.assertEqual([], [path for path in included if path.startswith(rel + "/")],
+                         "the walk entered the symlinked directory %s" % rel)
+        self.assertEqual(PKG.SYMLINKED_DIRECTORY, reasons.get(rel + "/"),
+                         "%s is left out of the archive and the manifest does not say so" % rel)
+
+    def test_a_link_that_resolves_inside_the_project(self):
+        self.link(self.LINK, relative_target(self.project.root / self.LINK, self.inside))
+        for profile in ("share", "transfer"):
+            with self.subTest(profile=profile):
+                self.assert_named_and_not_entered(self.LINK, profile)
+
+    def test_a_link_that_resolves_outside_the_project(self):
+        self.link(self.LINK, self.elsewhere)
+        for profile in ("share", "transfer"):
+            with self.subTest(profile=profile):
+                self.assert_named_and_not_entered(self.LINK, profile)
+
+    def test_the_reason_says_what_it_is_and_does_not_name_the_target(self):
+        """The manifest travels with the archive; a target can hold a user name or a path."""
+        self.link(self.LINK, self.elsewhere)
+        self.link("docs/linked-inside",
+                  relative_target(self.project.root / "docs/linked-inside", self.inside))
+        self.assertIn("symlinked directory", PKG.SYMLINKED_DIRECTORY)
+        self.assertIn("not followed", PKG.SYMLINKED_DIRECTORY)
+        _, manifest = self.project.dry_run("share")
+        excluded = json.dumps(manifest["excluded"])
+        for target in (self.elsewhere.name, str(self.elsewhere), self.inside.name):
+            with self.subTest(target=target):
+                self.assertNotIn(target, excluded)
+
+    def test_a_candidate_root_that_is_a_link_inside_the_project(self):
+        real = self.project.root / "production-real"
+        shutil.move(str(self.project.root / "production"), str(real))
+        self.link("production", relative_target(self.project.root / "production", real))
+        for profile in ("share", "transfer"):
+            with self.subTest(profile=profile):
+                self.assert_named_and_not_entered("production", profile)
+                _, _, skipped = collected(self.project, profile)
+                self.assertNotIn("production", PKG.absent_roots(skipped),
+                                 "a linked root is reported as absent, which it is not")
+
+    def test_a_candidate_root_that_is_a_link_outside_the_project(self):
+        real = self.elsewhere / "production"
+        shutil.move(str(self.project.root / "production"), str(real))
+        self.link("production", real)
+        for profile in ("share", "transfer"):
+            with self.subTest(profile=profile):
+                self.assert_named_and_not_entered("production", profile)
+
+    def test_a_candidate_root_below_a_linked_directory(self):
+        """`data/exports` is not entered when `data` is the link: that is following it too."""
+        real = self.project.root / "data-real"
+        shutil.move(str(self.project.root / "data"), str(real))
+        self.link("data", relative_target(self.project.root / "data", real))
+        included, reasons, _ = collected(self.project, "share")
+        self.assertEqual([], [path for path in included if path.startswith("data/")])
+        self.assertEqual(PKG.SYMLINKED_DIRECTORY, reasons.get("data/"))
+
+    def test_a_rule_that_matches_the_links_own_path_is_reported_as_before(self):
+        self.link("docs/logs", relative_target(self.project.root / "docs/logs", self.inside))
+        _, reasons, _ = collected(self.project, "share")
+        self.assertEqual("excluded by rule: logs", reasons.get("docs/logs/"))
+
+    def test_the_written_archive_and_its_manifest_agree(self):
+        """End to end: read from the zip `run()` writes, not from the collector."""
+        self.link(self.LINK, self.elsewhere)
+        result, path = self.project.write_archive("share")
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertEqual([], [name for name in members(path) if "linked-notes" in name])
+        reasons = {entry["path"]: entry["reason"] for entry in manifest_of(path)["excluded"]}
+        self.assertEqual(PKG.SYMLINKED_DIRECTORY, reasons.get(self.LINK + "/"))
+
+    def test_without_the_check_the_fixture_shows_both_gaps(self):
+        """⛔ (INV-265) The control: the same fixtures, with the link test switched off.
+
+        A link inside a walked tree is then in neither list, and a linked candidate root is
+        walked. If either stops being true, the cases above have stopped testing the change.
+        """
+        self.link(self.LINK, relative_target(self.project.root / self.LINK, self.inside))
+        real = self.project.root / "production-real"
+        shutil.move(str(self.project.root / "production"), str(real))
+        self.link("production", relative_target(self.project.root / "production", real))
+        with mock.patch.object(PKG, "_is_linked_directory", lambda path: False):
+            included, reasons, _ = collected(self.project, "transfer")
+        self.assertNotIn(self.LINK + "/", reasons)
+        self.assertEqual([], [path for path in included if path.startswith(self.LINK + "/")])
+        self.assertTrue([path for path in included if path.startswith("production/")],
+                        "a linked candidate root is not walked even without the check, so the "
+                        "root cases above do not test it")
+
+    def test_a_real_directory_and_a_linked_file_are_not_linked_directories(self):
+        self.assertFalse(PKG._is_linked_directory(self.project.root / "docs"))
+        self.assertFalse(PKG._is_linked_directory(self.inside / "kept.md"))
+        self.assertFalse(PKG._is_linked_directory(self.project.root / "no-such-path"))
+        link = self.project.root / "docs" / "kept-link.md"
+        symlink_or_skip(self, link, self.inside / "kept.md")
+        self.assertFalse(PKG._is_linked_directory(link))
+
+    def test_a_directory_junction_is_read_from_its_reparse_tag(self):
+        """A stand-in `lstat` result, not a junction: no test creates one, and none ran on
+        Windows. It shows only that the tag `os.lstat` reports for a junction is the one read."""
+        def lstat_reporting(tag):
+            return mock.patch.object(PKG.os, "lstat", return_value=types.SimpleNamespace(
+                st_mode=stat.S_IFDIR | 0o755, st_reparse_tag=tag))
+
+        target = self.project.root / "docs"
+        with lstat_reporting(PKG.JUNCTION_REPARSE_TAG):
+            self.assertTrue(PKG._is_linked_directory(target))
+        for other in (0, 0x9000001A):  # no reparse point, and a reparse point of another kind
+            with self.subTest(tag=other), lstat_reporting(other):
+                self.assertFalse(PKG._is_linked_directory(target))
+
+
+class ASymlinkedFileIsCheckedByThePathItResolvesTo(unittest.TestCase):
+    """#46 — a link cannot carry an excluded path into the archive under another name."""
+
+    LINK = "docs/x.csv"
+    RAW = "data/raw/customers.csv"
+
+    def setUp(self):
+        self.project = Project().__enter__()
+        self.addCleanup(self.project.__exit__)
+
+    def link(self, rel, target_rel):
+        link = self.project.root / rel
+        symlink_or_skip(self, link, relative_target(link, self.project.root / target_rel))
+
+    def test_the_links_own_path_matches_no_rule(self):
+        """The control: checked by its own path alone, the link is packaged."""
+        for profile in ("share", "transfer"):
+            with self.subTest(profile=profile):
+                self.assertIsNone(PKG.is_excluded(self.LINK, profile))
+                self.assertIsNotNone(PKG.is_excluded(self.RAW, profile))
+
+    def test_a_link_under_docs_to_raw_data_is_absent_from_a_share_archive(self):
+        """⛔ The regression, read from the members of the written archive."""
+        self.link(self.LINK, self.RAW)
+        self.assertTrue((self.project.root / self.LINK).exists())
+        result, path = self.project.write_archive("share")
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertEqual([], [name for name in members(path) if name.endswith(self.LINK)],
+                         "a share archive carries the Bootcamper's raw rows under a link's name")
+        reasons = {entry["path"]: entry["reason"] for entry in manifest_of(path)["excluded"]}
+        self.assertIn(self.LINK, reasons)
+        self.assertTrue(reasons[self.LINK].startswith("excluded by rule: data/raw"),
+                        reasons[self.LINK])
+
+    def test_the_same_link_is_excluded_from_transfer(self):
+        self.link(self.LINK, self.RAW)
+        included, reasons, _ = collected(self.project, "transfer")
+        self.assertNotIn(self.LINK, included)
+        self.assertTrue(reasons[self.LINK].startswith("excluded by rule: data/raw"))
+
+    def test_a_link_to_a_database_file_follows_the_profiles_suffix_rule(self):
+        self.link("docs/notes.txt", "database/G2C.db")
+        included, reasons, _ = collected(self.project, "share")
+        self.assertNotIn("docs/notes.txt", included)
+        self.assertTrue(reasons["docs/notes.txt"].startswith("excluded by rule: *.db"),
+                        reasons["docs/notes.txt"])
+        included, reasons, _ = collected(self.project, "transfer")
+        self.assertIn("docs/notes.txt", included,
+                      "no transfer rule matches a database file, so the link is packaged")
+
+    def test_a_link_to_a_mapped_input_follows_the_share_only_rule(self):
+        mapped = "production/data/senzing-ready/people.jsonl"
+        self.link("docs/people.jsonl", mapped)
+        included, reasons, _ = collected(self.project, "share")
+        self.assertNotIn("docs/people.jsonl", included)
+        self.assertTrue(
+            reasons["docs/people.jsonl"].startswith("excluded by rule: data/senzing-ready"))
+        included, _, _ = collected(self.project, "transfer")
+        self.assertIn("docs/people.jsonl", included)
+
+    def test_a_link_to_a_path_no_rule_matches_is_packaged_under_the_links_path(self):
+        self.link("docs/notes-copy.md", "docs/bootcamp_notes.md")
+        for profile in ("share", "transfer"):
+            with self.subTest(profile=profile):
+                included, reasons, _ = collected(self.project, profile)
+                self.assertIn("docs/notes-copy.md", included)
+                self.assertNotIn("docs/notes-copy.md", reasons)
+
+    def test_a_link_that_resolves_outside_the_project_keeps_its_reason(self):
+        if not self.project.symlinks:
+            self.skipTest("this platform cannot create a symlink, so the fixture has no link "
+                          "that resolves outside the project")
+        for profile in ("share", "transfer"):
+            with self.subTest(profile=profile):
+                _, reasons, _ = collected(self.project, profile)
+                self.assertEqual("resolves outside the project root; not packaged",
+                                 reasons.get("docs/escape.md"))
+
+
+def synthetic_secrets():
+    """`{secret class: secret-shaped text}`, put together when the test runs.
+
+    None of these is a credential, and none is written in this file whole: each is a pattern's
+    fixed prefix joined to characters drawn from a seeded generator, so a run is repeatable.
+    """
+    rng = random.Random(46)
+    upper = string.ascii_uppercase + string.digits
+    alnum = string.ascii_letters + string.digits
+    dashes = "-" * 5
+
+    def draw(alphabet, count):
+        return "".join(rng.choice(alphabet) for _ in range(count))
+
+    return {
+        "PEM private key": dashes + "BEGIN " + "PRIVATE" + " KEY" + dashes + "\n" + draw(alnum, 24),
+        "AWS access-key ID": "AK" + "IA" + draw(upper, 16),
+        "Senzing license payload": "AQ" + "AAAD" + draw(alnum, 24),
+    }
+
+
+#: The four forms #46 names: each byte order, with and without a byte-order mark.
+UTF16_FORMS = (
+    ("le-bom", codecs.BOM_UTF16_LE, "utf-16-le"),
+    ("le-plain", b"", "utf-16-le"),
+    ("be-bom", codecs.BOM_UTF16_BE, "utf-16-be"),
+    ("be-plain", b"", "utf-16-be"),
+)
+
+
+class Utf16TextIsScannedForSecrets(unittest.TestCase):
+    """#46 — a secret in a UTF-16 file excludes the file, as it does in a UTF-8 one.
+
+    Windows PowerShell 5.1 writes UTF-16 from a `>` redirect. Read as UTF-8, such a file has a
+    NUL between every two characters of the secret, so no pattern matched and it was packaged.
+    """
+
+    def setUp(self):
+        self.project = Project().__enter__()
+        self.addCleanup(self.project.__exit__)
+        self.secrets = synthetic_secrets()
+        self.files = {}
+        folder = self.project.root / "src" / "utf16"
+        folder.mkdir(parents=True)
+        for form, mark, encoding in UTF16_FORMS:
+            for index, (name, secret) in enumerate(sorted(self.secrets.items())):
+                rel = "src/utf16/%s-%d.txt" % (form, index)
+                raw = mark + ("setting = %s\r\n" % secret).encode(encoding)
+                (self.project.root / rel).write_bytes(raw)
+                self.files[rel] = (name, secret, raw)
+
+    def test_the_fixtures_are_secret_shaped_and_unreadable_as_utf8(self):
+        """Anti-vacuity: each string is one a pattern matches, and a UTF-8 read sees none."""
+        self.assertEqual(12, len(self.files))
+        for rel, (name, secret, raw) in self.files.items():
+            with self.subTest(path=rel):
+                self.assertEqual(name, PKG.find_secret(secret))
+                self.assertIsNone(PKG.find_secret(raw.decode("utf-8", errors="replace")))
+
+    def test_each_form_is_excluded_and_named_with_its_class(self):
+        included, reasons, _ = collected(self.project, "transfer")
+        for rel, (name, _secret, _raw) in self.files.items():
+            with self.subTest(path=rel):
+                self.assertNotIn(rel, included, "a UTF-16 file holding a secret was packaged")
+                self.assertEqual("excluded: content matched a secret pattern (%s)" % name,
+                                 reasons.get(rel))
+
+    def test_a_utf8_only_scan_packages_every_one_of_them(self):
+        """⛔ (INV-265) The control: the scan as it was before #46 sees none of these."""
+        with mock.patch.object(PKG, "SCAN_ENCODINGS", ("utf-8",)):
+            included, reasons, _ = collected(self.project, "transfer")
+        for rel in self.files:
+            with self.subTest(path=rel):
+                self.assertIn(rel, included)
+                self.assertNotIn(rel, reasons)
+
+    def test_the_written_archive_carries_none_of_them_and_echoes_nothing(self):
+        result, path = self.project.write_archive("transfer")
+        self.assertEqual(0, result.returncode, result.stderr)
+        names = members(path)
+        manifest = json.dumps(manifest_of(path))
+        for rel, (_name, secret, _raw) in self.files.items():
+            with self.subTest(path=rel):
+                self.assertEqual([], [name for name in names if name.endswith(rel)])
+                self.assertIn(rel, manifest)
+                self.assertNotIn(secret, manifest)
+
+    def test_a_secret_straddling_a_scan_block_boundary_is_caught_in_every_form(self):
+        """The boundary falls inside the secret, and neither side of it holds the whole of it."""
+        block = PKG.SCAN_BLOCK_BYTES
+        secret = self.secrets["AWS access-key ID"]
+        for form, mark, encoding in UTF16_FORMS:
+            encoded = secret.encode(encoding)
+            before = block - len(mark) - (len(encoded) // 4) * 2
+            raw = mark + ("A" * (before // 2)).encode(encoding) + encoded + "\r\n".encode(encoding)
+            rel = "src/utf16/straddle-%s.txt" % form
+            (self.project.root / rel).write_bytes(raw)
+            with self.subTest(form=form):
+                self.assertIn(encoded, raw)
+                self.assertNotIn(encoded, raw[:block])
+                self.assertNotIn(encoded, raw[block:])
+                self.assertEqual("AWS access-key ID", PKG._scan(self.project.root / rel),
+                                 "a UTF-16 secret split across a scan-block boundary was missed")
+
+    def test_a_block_that_ends_inside_a_character_does_not_hide_what_follows(self):
+        """With an odd block length every other block starts half way through a character.
+        The decoders keep the odd byte, so the text after it is still read in step."""
+        secret = self.secrets["AWS access-key ID"]
+        for form, mark, encoding in UTF16_FORMS:
+            raw = mark + ("A" * 1500 + secret + "\r\n").encode(encoding)
+            rel = "src/utf16/odd-%s.txt" % form
+            (self.project.root / rel).write_bytes(raw)
+            with self.subTest(form=form), mock.patch.object(PKG, "SCAN_BLOCK_BYTES", 1001):
+                self.assertEqual("AWS access-key ID", PKG._scan(self.project.root / rel))
+
+    def test_clean_utf16_text_still_travels(self):
+        """Reading UTF-16 must not mean excluding it."""
+        for form, mark, encoding in UTF16_FORMS:
+            rel = "src/utf16/clean-%s.txt" % form
+            (self.project.root / rel).write_bytes(
+                mark + "ordinary bootcamp notes\r\n".encode(encoding))
+        included, reasons, _ = collected(self.project, "transfer")
+        for form, _mark, _encoding in UTF16_FORMS:
+            with self.subTest(form=form):
+                self.assertIn("src/utf16/clean-%s.txt" % form, included)
+                self.assertNotIn("src/utf16/clean-%s.txt" % form, reasons)
+
+
+FEEDBACK = "docs/feedback/SENZING_BOOTCAMP_FEEDBACK.md"
+CHECKPOINT = "docs/progress/recap_checkpoint.md"
+WORKING_NOTES = (FEEDBACK, CHECKPOINT)
+FLOW = REPO_ROOT / "source" / "skills" / "bootcamp-onboarding" / "packaging.md"
+
+
+def with_working_notes(project):
+    """Put the saved feedback file and the recap checkpoint in the fixture. Synthetic text."""
+    for rel in WORKING_NOTES:
+        path = project.root / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("# Placeholder\n\nplaceholder working note\n", encoding="utf-8")
+    return project
+
+
+class TheWorkingNotesTravelOnTransferOnly(unittest.TestCase):
+    """#46 — `share` drops the saved feedback and the in-progress recap; `transfer` keeps both."""
+
+    def setUp(self):
+        self.project = with_working_notes(Project().__enter__())
+        self.addCleanup(self.project.__exit__)
+
+    def test_the_fixture_holds_both_files_and_the_script_names_the_same_paths(self):
+        for rel in WORKING_NOTES:
+            with self.subTest(path=rel):
+                self.assertTrue((self.project.root / rel).exists())
+        self.assertEqual(WORKING_NOTES, (PKG.FEEDBACK_FILE, PKG.RECAP_CHECKPOINT))
+
+    def test_a_share_archive_carries_nothing_under_either_directory(self):
+        result, path = self.project.write_archive("share")
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertEqual([], [name for name in members(path)
+                              if "docs/feedback/" in name or "docs/progress/" in name])
+        manifest = manifest_of(path)
+        reasons = {entry["path"]: entry["reason"] for entry in manifest["excluded"]}
+        for rule in ("docs/feedback", "docs/progress"):
+            with self.subTest(rule=rule):
+                self.assertEqual("excluded by rule: %s" % rule, reasons.get(rule + "/"))
+                self.assertIn(rule, manifest["exclusion_rules_applied"]["share_only"])
+
+    def test_a_transfer_archive_carries_both(self):
+        result, path = self.project.write_archive("transfer")
+        self.assertEqual(0, result.returncode, result.stderr)
+        names = members(path)
+        manifest = manifest_of(path)
+        for rel in WORKING_NOTES:
+            with self.subTest(path=rel):
+                self.assertTrue([name for name in names if name.endswith(rel)],
+                                "the transfer archive dropped %s" % rel)
+        self.assertEqual([], manifest["exclusion_rules_applied"]["share_only"])
+        self.assertEqual([], [entry["path"] for entry in manifest["excluded"]
+                              if entry["path"].startswith(("docs/feedback", "docs/progress"))])
+
+    def test_the_two_rules_match_at_any_depth_and_on_share_only(self):
+        for rel, rule in (("production/docs/feedback/note.md", "docs/feedback"),
+                          ("production/docs/progress/recap_checkpoint.md", "docs/progress")):
+            with self.subTest(path=rel):
+                self.assertEqual(rule, PKG.is_excluded(rel, "share"))
+                self.assertIsNone(PKG.is_excluded(rel, "transfer"))
+
+    def test_a_similarly_named_path_is_not_excluded(self):
+        for rel in ("docs/feedback.md", "docs/progress_report.md", "docs/feedbacks/note.md",
+                    "production/feedback/note.md"):
+            with self.subTest(path=rel):
+                self.assertIsNone(PKG.is_excluded(rel, "share"))
+
+    def test_a_project_with_neither_file_packages_as_before(self):
+        """Neither absence is an error, and nothing is reported about a path that is not there."""
+        with Project() as bare:
+            for profile in ("share", "transfer"):
+                with self.subTest(profile=profile):
+                    result, manifest = bare.dry_run(profile)
+                    self.assertEqual(0, result.returncode, result.stderr)
+                    self.assertEqual([], [entry["path"] for entry in manifest["excluded"]
+                                          if "feedback" in entry["path"]
+                                          or "progress" in entry["path"]])
+
+    def test_each_consent_option_names_them_exactly_when_its_profile_carries_them(self):
+        """The question and the rules are read together, so neither can move alone."""
+        flat = " ".join(FLOW.read_text(encoding="utf-8").split())
+        one = flat[flat.index("1. **Results to share**"):flat.index("2. **Everything to continue")]
+        two = flat[flat.index("2. **Everything to continue"):flat.index("3. **Cancel.**")]
+        for phrase in ("saved bootcamp feedback", "in-progress recap"):
+            with self.subTest(phrase=phrase):
+                self.assertNotIn(phrase, one)
+                self.assertIn(phrase, two)
+        for rel in WORKING_NOTES:
+            with self.subTest(path=rel):
+                self.assertIsNotNone(PKG.is_excluded(rel, "share"))
+                self.assertIsNone(PKG.is_excluded(rel, "transfer"))
 
 
 if __name__ == "__main__":
