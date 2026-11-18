@@ -32,6 +32,11 @@ ADAPTER = HOSTS_DIR / "_shared" / "hook_adapter.py"
 HOST_FILE = "bootcamp_host.json"
 FALLBACK_DIR = "hooks/fallbacks"
 HOST_RULES = "bootcamp-onboarding/host-rules.md"
+#: What the adapter map (``options.adapter.tool_categories``) calls a tool that sends a patch.
+#: No hook is limited to patches: the hook adapter turns a patch into write and edit calls,
+#: so a patch tool belongs in the matcher of every hook that covers either.
+PATCH_CATEGORY = "patch"
+PATCH_COVERS = ("write", "edit")
 FRONTMATTER_OPEN = "---\n"
 FRONTMATTER_RE = re.compile(r"\A---\r?\n(.*?)\r?\n---\r?\n", re.S)
 #: Appended to a command rendered as a skill. A command names another skill's file by the skill's
@@ -183,9 +188,32 @@ def _hook_command(host: Host, **values: str) -> str:
     return command
 
 
+def adapter_tool_names(host: Host, tools: list[str]) -> list[str]:
+    """The names in the host's adapter map that a hook covering ``tools`` has to match.
+
+    Every name the map gives one of the hook's categories, in the map's order, so the matcher
+    names exactly the tools the adapter would act on. The installer a host carries in place
+    of a hook file derives its matchers the same way, from the copy of the map in
+    ``bootcamp_host.json``.
+    """
+    categories = host.options["adapter"].get("tool_categories", {})
+    for tool in tools:
+        if tool not in categories.values():
+            raise BuildError(
+                f"{host.id}: options.adapter.tool_categories in the host profile names no tool "
+                f"for {tool!r}, which a hook covers"
+            )
+    wanted = set(tools)
+    if wanted & set(PATCH_COVERS):
+        wanted.add(PATCH_CATEGORY)
+    return [name for name, category in categories.items() if category in wanted]
+
+
 def _matcher(host: Host, tools: list[str]) -> str | None:
     if not tools or not host.hooks.get("matchers", True):
         return None
+    if uses_adapter(host):
+        return "|".join(adapter_tool_names(host, tools))
     names: list[str] = []
     for tool in tools:
         for name in host.hooks["tools"][tool].split("|"):
@@ -330,6 +358,10 @@ def _emit_host_file(build: HostBuild, declaration: dict) -> None:
         value["hooks"] = hooks
         value["host_events"] = dict(host.hooks["events"])
         value["host_tools"] = dict(host.hooks["tools"])
+        # A host that carries an installer in place of a hook file has its matchers built from
+        # this copy of the adapter map, when the hooks are installed. Nothing can stop a build
+        # then, so a category the map cannot name stops this one.
+        hook_entries(declaration, host)
         _write(build, Path(scripts) / ADAPTER.name, ADAPTER.read_bytes(), 0o644)
     _json(build, f"{scripts}/{HOST_FILE}", value)
 
@@ -624,6 +656,17 @@ def build_host(
     return build
 
 
+def _catalog_category(host: Host) -> str:
+    """The category a catalog entry gives the package: the one the host's manifest gives."""
+    category = host.options.get("manifest", {}).get("interface", {}).get("category")
+    if not isinstance(category, str) or not category:
+        raise BuildError(
+            f"{host.id}: options.manifest.interface.category is missing from the host profile, "
+            "and the catalog entry takes its category from there"
+        )
+    return category
+
+
 def write_catalogs(declaration: dict, hosts: list[Host], out_dir: Path) -> list[str]:
     """The catalog files at the root of the published repository, one per host that has one.
 
@@ -664,7 +707,7 @@ def write_catalogs(declaration: dict, hosts: list[Host], out_dir: Path) -> list[
                     "name": declaration["name"],
                     "source": {"source": "local", "path": source},
                     "policy": {"installation": "AVAILABLE", "authentication": "ON_INSTALL"},
-                    "category": "Productivity",
+                    "category": _catalog_category(host),
                 }],
             }
         else:

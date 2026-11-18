@@ -36,6 +36,174 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## hook-matchers-the-kiro-hooks-disclosure-and-a-catalog-category-each-take-one-source
+
+- **Implemented:** 2026-11-17 (issue #34)
+- **Files changed:** `tools/bootcamp_build/emit.py`,
+  `hosts/kiro/files/skills/bootcamp-onboarding/scripts/install_hooks.py`,
+  `hosts/kiro/files/skills/bootcamp-hooks-setup/SKILL.md`,
+  `tests/test_bootcamp_build_emit.py`, `tests/test_bootcamp_build_hosts.py`,
+  `specs/IMPLEMENTED.md` (this entry)
+- **MCP re-check:** n/a (no Senzing fact). Re-confirmed on 2026-11-17 against the change itself:
+  it changes which of an assistant's tool names a hook is limited to, what one skill tells the
+  bootcamper about five hook files, and where a catalog entry takes its category. None of
+  that says anything about Senzing or about what the Senzing MCP server serves. No absence
+  claim about the server is made, so INV-213's `owner-checked:` clause is not owed.
+- **Summary:** Three things in host configuration had two sources each, and the two disagreed.
+  Each now has one. These are findings 17, 18 and 26 of
+  `production-readiness-audit-2026-11-17`.
+  - **Matchers.** On an assistant whose hooks go through the hook adapter and are limited to
+    named tools, a matcher now holds every name `options.adapter.tool_categories` maps to a
+    category the hook covers, in the map's order. Two places build one and both changed.
+    `adapter_tool_names()` in `tools/bootcamp_build/emit.py` builds it for a package that
+    carries a hook file (ChatGPT). `matcher()` in the Kiro installer builds it when the hooks
+    are installed, from the copy of the map the build already writes into
+    `bootcamp_host.json`. Neither reads `hooks.tools` any more.
+  - **A patch tool.** A name the map calls `patch` joins the matcher of every hook that covers
+    `write` or `edit`, because the adapter turns a patch into write and edit calls. A hook
+    that covers only `shell` does not get it.
+  - **The four matchers, read from a build of this change.** They are the ones the issue
+    lists.
+
+    - ChatGPT `PreToolUse`: `apply_patch|Write|Edit|Bash|shell`. It was `Write|Edit|Bash`.
+    - ChatGPT `PostToolUse`: `Bash|shell`. It was `Bash`.
+    - Kiro `PreToolUse`: `fs_write|write|str_replace|fs_append|execute_bash|shell`. It was
+      `fs_write|str_replace|fs_append|execute_bash`.
+    - Kiro `PostToolUse`: `execute_bash|shell`. It was `execute_bash`.
+
+    The Kiro matchers are what the built installer prints for `plan` in a scratch workspace.
+  - **What stays as it was.** `hooks.tools` stays in every profile and `host_tools` stays in
+    `bootcamp_host.json`, as the issue decides. An assistant with no adapter (Claude) still
+    builds its matcher from `hooks.tools`. An assistant whose profile sets `"matchers": false`
+    (Copilot, Gemini) still has none. No name was removed from an adapter map.
+  - **A value the profile cannot supply.** When a hook covers a category the adapter map gives
+    no tool, the build stops with a `BuildError` that names the assistant and
+    `options.adapter.tool_categories`. The Kiro package carries no hook file, so its matchers
+    are first built at install time, when nothing can stop a build. `_emit_host_file()`
+    therefore makes the same check while it writes `bootcamp_host.json`. A `codex` catalog
+    whose profile has no category stops the build the same way, naming
+    `options.manifest.interface.category`. Neither case exists today.
+  - **The Kiro disclosure.** "What to tell the bootcamper" in
+    `hosts/kiro/files/skills/bootcamp-hooks-setup/SKILL.md` had two summary bullets that
+    covered three of the five hooks. It now has one bullet for each hook file the installer
+    writes. Each begins with the file name as the installer prints it, then says when the
+    hook runs and what it does. "Say this much, and no more", the bullet on what is written
+    into `.kiro/hooks/` and the bullet that every hook does nothing outside a bootcamp project
+    are unchanged.
+  - **What each bullet was written from.** The scripts each hook runs, as the built
+    `bootcamp_host.json` lists them, and each script's own code. The session-start bullet
+    names both files that hook writes and its container report. The prompt-submit bullet
+    covers all four of its scripts. The post-tool-use bullet names the file it writes,
+    `config/steer_observations.json`. The stop bullet says the hook changes nothing on Kiro.
+    That was run, not only read: in a scratch bootcamp project, the built `stop-nudge.py`
+    printed its block for a turn that ended without a question, and the built adapter, given
+    the same payload for `stop`, printed nothing and exited 0.
+  - **The category.** `write_catalogs()` takes the `codex` catalog's category from
+    `options.manifest.interface.category`, the key the manifest already takes it from. No
+    category literal is left in `emit.py`. The built `.agents/plugins/marketplace.json` now
+    says "Developer Tools", as the built `.codex-plugin/plugin.json` does. It said
+    "Productivity".
+  - **Three assistants' packages are unchanged.** A build of `d987dc9` and a build of this
+    change were compared with `diff -r`. The Claude, Copilot and Gemini packages are
+    identical, and so are the two other catalogs, the site and the public pages. Four files
+    differ: the ChatGPT hook file, the ChatGPT catalog, and in the Kiro package the
+    disclosure and the installer.
+  - **Tests.** `tests/test_bootcamp_build_hosts.py` goes from 14 tests to 18, and
+    `tests/test_bootcamp_build_emit.py` from 24 to 32.
+    - Four tests read the real profiles and the five built packages. One takes each matcher
+      from the built ChatGPT hook file and from the files the built Kiro installer writes into
+      a scratch workspace, and requires exactly the names the assistant's adapter map gives
+      the hook's categories. It takes the assistants from the profiles (INV-246), and fails
+      when it read none of them or when a package has neither a hook file nor an installer
+      (INV-265). One runs the installer and requires one bullet in the disclosure for each
+      file it wrote, each file name as the installer printed it, and no bullet for a file it
+      did not write. One compares the built catalog's category and the built manifest's with
+      the profile key.
+    - Negative controls run on every pass. The matcher check reports a matcher with any one
+      mapped name taken out, a name the map does not give, and a name given twice. The
+      disclosure check reports a bullet taken away, a hook file added, and a bullet for a file
+      that is not written.
+    - Eight tests build a miniature repository. An adapter map whose names differ from
+      `hooks.tools` shows which of the two a matcher was built from. A patch tool is matched
+      for a write or an edit and not for a shell command alone. An assistant with no adapter
+      keeps its `hooks.tools` names, and one with no matchers keeps none. A category the map
+      cannot name stops the build, for a package with a hook file and for one without. A
+      catalog takes whatever category the profile gives, and a profile with none stops the
+      build.
+    - Negative control run once, on an export of `d987dc9` holding only the two changed test
+      files: 9 of the 12 new tests fail (`FAILED (failures=15)`). The three that pass hold
+      before and after the change: the matcher check's own control, an assistant with no
+      adapter keeps its `hooks.tools` names, and an assistant with no matchers keeps none.
+    - The disclosure check matches the file name that opens a bullet. It does not read whether
+      a bullet's description is complete or true. That stays a reviewer's call.
+  - **Not observed.** No run on a real assistant was made, so no record is added to any
+    `hosts/<assistant>/checks.json`. The change makes each profile agree with itself. It does
+    not show that `apply_patch`, `shell`, `write` or any other name in an adapter map is a
+    tool name the assistant really sends, and those names stay recorded as not checked.
+    Whether Codex accepts "Developer Tools" as a catalog category was not checked either; the
+    manifest already ships that value. Verified on Linux only, with Python 3.12.3. The new
+    code is standard library only and has no branch on the platform (INV-001).
+  - **Compatibility.** A Kiro workspace with hooks already installed keeps the old matchers
+    until `install` runs again, which overwrites the files. On ChatGPT the write gate and the
+    failed-run check now also run for `apply_patch` and `shell`.
+  - **Found and not changed, as out of scope. Each is drafted here and not filed.**
+    1. **Not filed.** *The Kiro installer writes a stop hook whose result the adapter always
+       discards.* On Kiro the adapter's result dialect is `text`, in which a stop cannot be
+       held and no context is written for a stop. `stop-nudge.py` only ever asks for a hold.
+       So `senzing-bootcamp-stop.json` runs two Python processes at the end of every turn and
+       can change nothing, as the run above shows. The profile already lists `stop` as
+       advisory. The question for the maintainer is whether the installer should write that
+       file at all. The disclosure now says what it does.
+    2. **Not filed.** *A failing check in `tests/test_bootcamp_build_hosts.py` is reported
+       with generator errors beside it.* The file's `each()` helper yields inside
+       `self.subTest`. When an assertion in the loop body fails, the generator is closed at
+       that `yield` and the runner also prints `RuntimeError: generator ignored GeneratorExit`
+       and `AttributeError` lines. Seen while running the new tests on `d987dc9`. The four new
+       tests open `subTest` in the test body and report only their own failure; the eleven
+       older loops still use the helper.
+- **Invariants.** The register is not edited here (INV-365). The change ships two hard-rule
+  lines, both in the docstring of `tests/test_bootcamp_build_hosts.py`. `since` does not
+  report them, because `tests/` is not a rule home. The two blocks below cover them (INV-309).
+  They are two blocks because they have two subjects: which tools a hook runs for, and what a
+  bootcamper is told before agreeing to an install. No rule is drafted for the catalog
+  category: it is one value read from one profile key, held by a test. The lines this change
+  adds under `hosts/` and `tools/bootcamp_build/` carry no ⛔ and no bold MUST or NEVER.
+
+- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** A hook's matcher is derived from the adapter's own map of the assistant's tools. The rule already shipping, quoted:
+    - ⛔ **On an assistant whose hooks go through the hook adapter, a hook's matcher names exactly the tools the adapter's map gives the categories the hook covers.** — in `tests/test_bootcamp_build_hosts.py`
+
+  Enforced by `tests/test_bootcamp_build_hosts.py`.
+
+  **Why it is not an existing invariant:** INV-003 says the bootcamp is consistent, coherent
+  and complete, and names no site. INV-200 and INV-109 say what the write gate blocks, and
+  not for which of an assistant's tools the gate is run. INV-052 says how a hook is invoked.
+  INV-300 is about a rule that shipped guidance says is owned by one place. None of them says
+  that a matcher and the adapter's map name the same tools, so a matcher could again leave out
+  a tool the adapter would gate and contradict no registered wording.
+
+  Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
+  invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
+
+  **INV-NNN** — On an assistant whose hooks go through the hook adapter (`options.adapter` in `hosts/<assistant>/host.json`) and are limited to named tools (`hooks.matchers` is not `false`), each hook's matcher MUST name exactly the tools `options.adapter.tool_categories` maps to a category the hook covers, and no other name. A tool the map calls `patch` MUST be in the matcher of every hook that covers `write` or `edit`, because the adapter turns a patch into write and edit calls. Both places that build a matcher MUST derive it from that map and not from `hooks.tools`: the build, for a package that carries a hook file, and the package's hook installer, for a package that carries an installer instead, reading the copy of the map the build writes into `bootcamp_host.json`. When a hook covers a category for which the map gives no tool, the build MUST fail with an error that names the assistant and the key, for both kinds of package. An assistant with no adapter builds its matcher from `hooks.tools`, and an assistant whose profile sets `"matchers": false` has none; this rule changes neither. ⚠️ Limits: the rule makes a profile agree with itself. It does not establish that a name in the map is a tool name the assistant really sends; on 2026-11-17 no recorded run had checked that for any assistant. Enforced by `tests/test_bootcamp_build_hosts.py`, which reads the real profiles, the built hook file and the files the built installer writes, and by `tests/test_bootcamp_build_emit.py` on a miniature repository. (Source: `hook-matchers-the-kiro-hooks-disclosure-and-a-catalog-category-each-take-one-source`, GitHub issue #34, 2026-11-17.)
+
+- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** A package that installs its hooks tells the bootcamper about every hook file before asking. The rule already shipping, quoted:
+    - ⛔ **A package that installs its hooks tells the bootcamper about every hook file it writes, in one bullet for each.** — in `tests/test_bootcamp_build_hosts.py`
+
+  Enforced by `tests/test_bootcamp_build_hosts.py`.
+
+  **Why it is not an existing invariant:** INV-211 says a consent disclosure is placed before
+  its 👉 question, and not what the disclosure has to cover. INV-200 says where the bootcamp
+  writes files, and not what a bootcamper is told before hook files are written into their
+  project. INV-003 names no site. None of them says that the disclosure covers every hook the
+  install adds, so it could again describe three of five and contradict no registered wording.
+
+  Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
+  invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
+
+  **INV-NNN** — Where an assistant's package installs the bootcamp's hooks into the bootcamper's project (on 2026-11-17 only the Kiro package, through `install_hooks.py`), the skill that asks for consent MUST tell the bootcamper about every hook file the installer writes, before it asks. Its "What to tell the bootcamper" list MUST hold exactly one bullet for each hook file the installer writes and no bullet for a file it does not write. Each bullet MUST begin with the hook file's name as the installer prints it, and then say in plain words when the hook runs and everything it does, including the files it writes and a hook whose result the assistant cannot act on. A change that adds, removes or renames a hook file, or changes what a hook's scripts do, MUST change the list in the same change. ⚠️ Limits: the enforcer matches the file name that opens each bullet; whether a bullet's description is complete and true is a reviewer's call. Enforced by `tests/test_bootcamp_build_hosts.py`, which runs the built installer in a scratch workspace and compares the files it writes with the bullets. (Source: `hook-matchers-the-kiro-hooks-disclosure-and-a-catalog-category-each-take-one-source`, GitHub issue #34, 2026-11-17.)
+
+- **Commit:** uncommitted
+
 ## inv-427-is-written-for-every-file-the-guide-reads-and-ships-at-one-site
 
 - **Implemented:** 2026-11-17 (issue #39)

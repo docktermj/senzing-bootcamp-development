@@ -15,7 +15,9 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from tools.bootcamp_build import __main__ as cli  # noqa: E402
 from tools.bootcamp_build import model  # noqa: E402
-from tools.bootcamp_build.emit import build_host, claude_style_hooks, unmapped_hooks  # noqa: E402
+from tools.bootcamp_build.emit import (  # noqa: E402
+    build_host, claude_style_hooks, unmapped_hooks, write_catalogs,
+)
 from tools.bootcamp_build.model import BuildError, load_declaration, load_host  # noqa: E402
 from tools.bootcamp_build.validate import compare_trees, lint_source, residue  # noqa: E402
 
@@ -171,6 +173,86 @@ class Hooks(Workspace):
         declaration, build = self.build("alpha")
         self.assertNotIn(None, claude_style_hooks(declaration, build.host)["hooks"])
         self.assertEqual([hook["event"] for hook in unmapped_hooks(declaration, build.host)], ["pre_compact"])
+
+
+#: An adapter map whose names differ from the profile's ``hooks.tools`` names (Write, Edit, Bash),
+#: so a matcher shows which of the two it was built from.
+ADAPTER_MAP = {"patcher": "patch", "Put": "write", "put_file": "write", "Change": "edit", "Run": "shell"}
+
+
+class AdapterMatchers(Workspace):
+    """A host that goes through the hook adapter takes each matcher from the adapter's map (#34)."""
+
+    def adapter_profile(self, tool_categories=None, package_format="claude-plugin", **hooks):
+        profile = host_profile("alpha", "Alpha Code", foreign_terms=["Beta"], package_format=package_format)
+        profile["hooks"]["command"] = 'python3 "{{host.plugin_root}}/scripts/{script}" {event}'
+        profile["hooks"].update(hooks)
+        categories = ADAPTER_MAP if tool_categories is None else tool_categories
+        profile["options"] = {"adapter": {"result_dialect": "canonical", "tool_categories": categories}}
+        self.write("hosts/alpha/host.json", json.dumps(profile))
+
+    def matcher(self, tools):
+        declaration, build = self.build("alpha")
+        declaration = dict(declaration, hooks=[{"event": "pre_tool_use", "tools": tools, "script": "gate.py"}])
+        return claude_style_hooks(declaration, build.host)["hooks"]["PreTool"][0].get("matcher")
+
+    def test_a_matcher_holds_every_name_the_map_gives_a_covered_category(self):
+        self.adapter_profile()
+        self.assertEqual(self.matcher(["write", "shell"]), "patcher|Put|put_file|Run")
+        self.assertEqual(self.matcher(["write", "edit", "shell"]), "patcher|Put|put_file|Change|Run")
+
+    def test_a_patch_tool_is_matched_where_the_hook_covers_a_write_or_an_edit(self):
+        self.adapter_profile()
+        self.assertEqual(self.matcher(["edit"]), "patcher|Change")
+        self.assertEqual(self.matcher(["write"]), "patcher|Put|put_file")
+        self.assertEqual(self.matcher(["shell"]), "Run")
+
+    def test_a_host_without_an_adapter_still_takes_its_names_from_hooks_tools(self):
+        declaration, build = self.build("beta")
+        hooks = claude_style_hooks(declaration, build.host)["hooks"]
+        self.assertEqual(hooks["PreTool"][0]["matcher"], "Write|Bash")
+
+    def test_a_host_that_has_no_matchers_keeps_none(self):
+        self.adapter_profile(matchers=False)
+        self.assertIsNone(self.matcher(["write", "edit", "shell"]))
+
+    def test_a_category_the_map_cannot_name_stops_the_build(self):
+        self.adapter_profile({"patcher": "patch", "Put": "write"})
+        with self.assertRaisesRegex(BuildError, r"alpha: options\.adapter\.tool_categories .* 'shell'"):
+            self.build("alpha")
+
+    def test_it_stops_the_build_of_a_package_that_carries_no_hook_file_too(self):
+        """Such a package's matchers are built later, by an installer, from the emitted map."""
+        self.write("source/bootcamp.json", json.dumps(dict(DECLARATION, keywords=["bootcamp"])))
+        self.adapter_profile({"Put": "write"}, package_format="agent-plugin")
+        with self.assertRaisesRegex(BuildError, r"alpha: options\.adapter\.tool_categories .* 'shell'"):
+            self.build("alpha")
+        self.adapter_profile(package_format="agent-plugin")
+        _, build = self.build("alpha")
+        self.assertFalse([name for name in build.files if name.endswith("hooks.json")])
+
+
+class CatalogCategory(Workspace):
+    """A catalog entry's category is the one the host's manifest gives (#34)."""
+
+    CATALOG = {"path": "catalog/marketplace.json", "style": "codex", "name": "alpha"}
+
+    def catalog(self, interface):
+        self.profile("alpha", "Alpha Code", catalog=self.CATALOG, options={"manifest": {"interface": interface}})
+        written = write_catalogs(load_declaration(self.source), [load_host("alpha", self.hosts)], self.out)
+        self.assertEqual(written, [self.CATALOG["path"]])
+        return json.loads((self.out / self.CATALOG["path"]).read_text(encoding="utf-8"))
+
+    def test_the_category_comes_from_the_host_profile(self):
+        for category in ("Zeta Tools", "Another Shelf"):
+            with self.subTest(category=category):
+                self.assertEqual(self.catalog({"category": category})["plugins"][0]["category"], category)
+
+    def test_a_profile_without_a_category_stops_the_build(self):
+        for interface in ({}, {"category": ""}):
+            with self.subTest(interface=interface):
+                with self.assertRaisesRegex(BuildError, r"alpha: options\.manifest\.interface\.category"):
+                    self.catalog(interface)
 
 
 class OtherHostsStayOut(Workspace):
