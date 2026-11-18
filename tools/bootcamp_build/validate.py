@@ -18,7 +18,7 @@ import stat
 from dataclasses import dataclass
 from pathlib import Path
 
-from .emit import IGNORED_NAMES, MARKDOWN_SUFFIXES, HostBuild, _is_text, placed_files
+from .emit import FRONTMATTER_RE, IGNORED_NAMES, MARKDOWN_SUFFIXES, HostBuild, _is_text, placed_files
 from .model import Host
 from .render import DIRECTIVE_RE
 
@@ -28,7 +28,6 @@ SKILL_NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 SKILL_NAME_MAX = 64
 SKILL_DESCRIPTION_MAX = 1024
 SKILL_FRONTMATTER_KEYS = {"name", "description"}
-FRONTMATTER_RE = re.compile(r"\A---\r?\n(.*?)\r?\n---\r?\n", re.S)
 
 
 @dataclass(frozen=True)

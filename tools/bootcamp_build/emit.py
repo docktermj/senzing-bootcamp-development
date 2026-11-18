@@ -33,6 +33,7 @@ HOST_FILE = "bootcamp_host.json"
 FALLBACK_DIR = "hooks/fallbacks"
 HOST_RULES = "bootcamp-onboarding/host-rules.md"
 FRONTMATTER_OPEN = "---\n"
+FRONTMATTER_RE = re.compile(r"\A---\r?\n(.*?)\r?\n---\r?\n", re.S)
 #: Appended to a command rendered as a skill. A command names another skill's file by the skill's
 #: name; as a skill it must say where that is, or an assistant searches the disk and can find
 #: another copy of the bootcamp (seen on Copilot CLI 1.0.111, 2026-11-15).
@@ -42,6 +43,20 @@ SIBLING_SKILLS_NOTE = (
     "directory of this `SKILL.md`, and the `graduation` skill's are in `../graduation/`. "
     "⛔ (INV-252) Read them from there. Never search the filesystem for a skill file: a second copy of the "
     "bootcamp on the same machine is normal, and it is not the one running.\n"
+)
+#: The size, in characters, above which a Markdown file in a package is given
+#: ``READ_TO_THE_END_NOTE``. A file of this many characters or fewer gets none. It is the size
+#: at which one assistant cut a read short: Kiro IDE 1.4.26 returned about 30,000 characters of
+#: a 134 KB file and reported the rest as cut (2026-11-15). This is the one definition; the
+#: test that checks every built package reads it from here.
+READ_CUT_CHARACTERS = 30_000
+#: Placed at the top of every Markdown file over ``READ_CUT_CHARACTERS``, in every package. It
+#: names no assistant, and no file under ``source/`` carries it: a file that grows past the cut
+#: gets it at the next build, and one that shrinks under the cut loses it.
+READ_TO_THE_END_NOTE = (
+    "⛔ **(INV-427) Read this file to its last line.** It is long, and a read that reports it was cut\n"
+    "short or truncated has not read it: continue from where it stopped, in as many reads as it\n"
+    "takes, before acting on anything this file says.\n"
 )
 
 
@@ -362,6 +377,50 @@ def _add_skill_locations(build: HostBuild) -> None:
         target.write_bytes((text + "\n\n" + note.replace("{skill}", skill) + "\n").encode("utf-8"))
 
 
+def with_read_to_the_end_note(text: str) -> str:
+    """``text`` with the read-to-the-end note as its first body text.
+
+    After the frontmatter where the file has one, otherwise first in the file. The note and
+    one blank line go in front of the first line that is not blank, and nothing else changes.
+    """
+    match = FRONTMATTER_RE.match(text)
+    start = match.end() if match else 0
+    while text[start:start + 1] in ("\r", "\n"):
+        start += 1
+    return text[:start] + READ_TO_THE_END_NOTE + "\n" + text[start:]
+
+
+def needs_read_to_the_end_note(host: Host, relative: str, text: str) -> bool:
+    """True when the package file ``relative``, holding ``text``, is to carry the note.
+
+    A Markdown file over the cut, measured in characters as built for this host and before the
+    note is added. The package's docs directory is left alone: what is there is for the
+    bootcamper to read, and the example recap in it ships as a pair with a PDF made from it.
+    """
+    if Path(relative).suffix not in MARKDOWN_SUFFIXES:
+        return False
+    docs = host.layout.get("docs")
+    if docs is not None and (relative == docs or relative.startswith(docs + "/")):
+        return False
+    return len(text) > READ_CUT_CHARACTERS
+
+
+def _add_read_to_the_end_notes(build: HostBuild) -> None:
+    """Tell the guide, at the top of every long file, to read it to its last line.
+
+    An assistant can cut a long read short and act on the part it got (seen on Kiro IDE 1.4.26,
+    2026-11-15: a first turn read under a tenth of the ground rules). The step that hands over
+    the ground rules says to read on, but a skill is loaded with no hand-over sentence and a
+    phase file is handed over by name, so the note sits in the file itself. It runs after
+    every other step, so the size it measures is the file's size as the package ships it.
+    """
+    for relative in sorted(name for name in build.files if Path(name).suffix in MARKDOWN_SUFFIXES):
+        target = build.root / relative
+        text = target.read_bytes().decode("utf-8")
+        if needs_read_to_the_end_note(build.host, relative, text):
+            target.write_bytes(with_read_to_the_end_note(text).encode("utf-8"))
+
+
 def _copy_host_files(build: HostBuild, context: BuildContext) -> None:
     """Files only this host's package carries, from ``hosts/<id>/files/`` (same layout as the package)."""
     host = build.host
@@ -560,6 +619,7 @@ def build_host(
     if (source_dir / FALLBACK_DIR).is_dir():
         _emit_host_rules(build, declaration, context)
     _emit_host_file(build, declaration)
+    _add_read_to_the_end_notes(build)
     build.files.sort()
     return build
 
