@@ -203,10 +203,15 @@ VERIFIED_QUERIES = {
         "server": "1.39.0", "docs_index": "2026-10-15 10:47 UTC", "measured": "2026-10-15",
     },
     # ---------------------------------------------------------------------------------
-    # Executed 2026-09-28 on server 1.37.14 (docs index 2026-09-28 03:23 UTC) for #194, Module 2
-    # Step 1b's update path and Step 2's preview-status relay. The first two are the update
-    # commands' route; the third is the point-release notes' route, and the three after it are
-    # evidence slots of MCP-NEGATIVE markers. ⚠️ Record the PROPERTY, not ranks or scores.
+    # Module 2 Step 1b's update path, first executed 2026-09-28 on server 1.37.14 for #194. The
+    # first two are the update commands' route; the third is the point-release notes' route.
+    # ⚠️ Record the PROPERTY, not ranks or scores.
+    #
+    # The first two were re-measured for issue #35 of this repository on server 1.46.1, docs
+    # index 2026-11-14 17:44 UTC, 2026-11-18, at the default max_results. Each record is what
+    # that reply carried. The records they replace also described a notice at the head of each
+    # README, which Step 2 relayed. Step 2 no longer does, so its own query's record
+    # ('homebrew-senzingsdk preview release unsupported tap install cask') went with it.
     ("search_docs", "homebrew-senzingsdk upgrade cask brew upgrade senzingsdk", None): {
         "band": "ON TARGET BELOW AN ADJACENT TOP HIT",
         "sections": ("Upgrade",),
@@ -214,20 +219,18 @@ VERIFIED_QUERIES = {
             "ON TARGET BELOW AN ADJACENT TOP HIT: the top hit is the V3-to-V4 FAQ 'What are the "
             "exact steps to migrate from V3 to V4?'; the set carries senzing/homebrew-senzingsdk "
             "section 'Upgrade' (brew update, brew upgrade --cask senzingsdk) and the README's "
-            "'Preview Release — Unsupported' warning. Step 1b says to read past the first result",
-        "server": "1.37.14", "docs_index": "2026-09-28 03:23 UTC", "measured": "2026-09-28",
+            "'Install' and 'Uninstall' sections. Step 1b says to read past the first result",
+        "server": "1.46.1", "docs_index": "2026-11-14 17:44 UTC", "measured": "2026-11-18",
     },
-    # Re-executed for #600 at the default max_results: the same top hit. Step 1b states the
-    # route; Step 2's preview relay points at it (INV-300).
+    # Step 1b states the route (INV-300).
     ("search_docs", "scoop-senzingsdk update scoop update senzingsdk", None): {
         "band": "ON TARGET",
-        "sections": ("Update", "Preview Release — Unsupported"),
+        "sections": ("Update",),
         "returned":
-            "ON TARGET: the top hit is the senzing/scoop-senzingsdk README, which opens with the "
-            "'Preview Release — Unsupported' warning and carries section 'Update' (scoop update "
-            "senzingsdk); its CHANGELOG and template docs follow. Stated at Step 1b's update "
-            "command; Step 2's preview relay points there",
-        "server": "1.38.2", "docs_index": "2026-10-14 20:27 UTC", "measured": "2026-10-14",
+            "ON TARGET: the top hit is the senzing/scoop-senzingsdk README, served whole, which "
+            "carries section 'Update' (scoop update senzingsdk); its CHANGELOG and template docs "
+            "follow. Stated at Step 1b's update command",
+        "server": "1.46.1", "docs_index": "2026-11-14 17:44 UTC", "measured": "2026-11-18",
     },
     ("search_docs", "upgrading to 4.4.0 from v4.0.0 through v4.3.x no schema change required migration action required",
      "release_notes"): {
@@ -262,15 +265,8 @@ VERIFIED_QUERIES = {
             "past the first hit to 'Command-line Tools & SDKs'",
         "server": "1.37.29", "docs_index": "2026-10-13 23:20 UTC", "measured": "2026-10-13",
     },
-    ("search_docs", "homebrew-senzingsdk preview release unsupported tap install cask", None): {
-        "band": "ON TARGET",
-        "sections": ("Preview Release — Unsupported",),
-        "returned":
-            "ON TARGET: the top hit is senzing/homebrew-senzingsdk section 'homebrew-senzingsdk', "
-            "the 'Preview Release — Unsupported' warning ('provided as-is with no warranty and is "
-            "not supported')",
-        "server": "1.37.14", "docs_index": "2026-09-28 03:23 UTC", "measured": "2026-09-28",
-    },
+    # The two records below are evidence slots of MCP-NEGATIVE markers, the macOS and the
+    # Windows check-command negatives, also executed for #194.
     ("search_docs", "brew outdated brew info senzingsdk installed version check", None): {
         "band": "OFF TARGET BY DESIGN",
         "sections": (),
@@ -697,25 +693,10 @@ VERIFIED_QUERIES = {
             "re-executed 2026-09-28)",
         "server": "1.37.14", "docs_index": "2026-09-28 03:23 UTC", "measured": "2026-09-28",
     },
-    # Re-executed for #150 on server 1.37.13, docs index 2026-09-24 18:45 UTC (2026-09-24, and
-    # again 2026-09-26 with the same result). The 2026-08-13 record said the query "gives no
-    # figure"; the rebuilt index added an FAQ that states the figure outright, so the set now
-    # answers it and only the ranking keeps it off target. That record was replaced, not
-    # re-dated. ⚠️ Record the ranking property, not ranks or scores: they move on a rebuild.
-    ("search_docs", "evaluation license record limit how many records without a license", None): {
-        "band": "OFF TARGET BY DESIGN",
-        "sections": (),
-        "returned":
-            "OFF TARGET BY DESIGN — the negative's evidence, now a ranking one: the top-ranked hits "
-            "are the EULA's grant-of-license sections ('Senzing Non-Production License' first, "
-            "'solely for up to the number of DSRs designated therein'), which state no figure. The "
-            "result set does carry the figure, in a lower-ranked FAQ, 'What is the 500 record limit "
-            "and how do I work around SENZ9000'. sdk_guide(topic='load', record_count=<above the "
-            "limit>) states it in a fixed field instead, compatibility_notes — 'the default Senzing "
-            "license limit of 500' (server 1.37.13, docs index 2026-09-24 18:45 UTC, re-executed "
-            "2026-09-26)",
-        "server": "1.37.13", "docs_index": "2026-09-24 18:45 UTC", "measured": "2026-09-26",
-    },
+    # A record for Module 2 Step 5's record-limit query stood here until issue #35 of this
+    # repository. Its text was made false twice by an index rebuild (2026-09-24 and by 2026-11-17),
+    # so Step 5 no longer names a search_docs query or a ranking, and the record went with the
+    # marker that was its only site. tests/test_record_limit_route_names_no_ranking.py holds that.
     # Module 5's multi-language retrieval strategy (INV-212), added 2026-08-13. The first two are
     # queries the step tells the guide to RUN; the last two are the evidence slots of its two
     # `MCP-NEGATIVE` markers — quoted in order to be forbidden. All four executed against server
