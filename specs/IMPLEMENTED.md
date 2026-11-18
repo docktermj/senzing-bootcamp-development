@@ -36,6 +36,158 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## the-kiro-install-page-and-location-note-contradict-the-kiro-package
+
+- **Implemented:** 2026-11-17 (issue #42)
+- **Files changed:** `hosts/kiro/fragments/site-before.html`, `hosts/kiro/host.json`,
+  `tests/test_kiro_skills_say_where_they_are.py`, `tests/test_bootcamp_build_site.py`,
+  `specs/IMPLEMENTED.md` (this entry)
+- **MCP re-check:** n/a (no Senzing fact). Re-confirmed on 2026-11-17 against the change itself:
+  it changes what one install page says about Python and the order in which one note tells
+  the guide to look for the bootcamp's own files. Neither says anything about Senzing or
+  about what the Senzing MCP server serves. Module 5's analyzer floor is not touched. No
+  absence claim about the server is made, so INV-213's `owner-checked:` clause is not owed.
+- **Summary:** The Kiro install page and the Kiro location note each said something the Kiro
+  package does not do. Both now agree with it. These are findings 10 and 11 of
+  `production-readiness-audit-2026-11-17`.
+  - **The page.** The Python item in `hosts/kiro/fragments/site-before.html` is the text the
+    issue gives, byte for byte: "Python 3, available as `python3` on the `PATH`", the sentence
+    on the graduation recap and the optional hooks, and the Windows sentence the Claude,
+    ChatGPT and Gemini pages carry. "3.10 or later" and "Any command name works" are gone.
+    The page states no minimum Python version, because none is recorded for the bootcamp's
+    own scripts and this change measured none.
+  - **The note.** `options.skill_location_note` in `hosts/kiro/host.json` had two sentences
+    for a bootcamp missing from the Kiro home, with no order between them, and none for a
+    bootcamp found nowhere. They are replaced by one sequence. After "Read the files from
+    there" the note says: if the bootcamp is not there, look in these places, in this order,
+    and take the first one that holds the bootcamp as the bootcamp's directory.
+    1. `powers/installed/senzing-bootcamp/` inside the directory `KIRO_HOME` names
+    2. a `senzing-bootcamp` directory anywhere inside `powers/` in the directory `KIRO_HOME`
+       names
+    3. `powers/installed/senzing-bootcamp/` inside `.kiro` in the user's home directory
+    4. a `senzing-bootcamp` directory anywhere inside `powers/` in `.kiro` in the user's home
+       directory
+
+    Then: places 1 and 2 apply only when `KIRO_HOME` is set, and when none of the four places
+    holds the bootcamp the guide stops and tells the bootcamper that the bootcamp's files were
+    not found. The sentence that forbids a search of the rest of the filesystem follows,
+    unchanged.
+  - **What the note keeps.** Everything before the sequence is unchanged: the bootcamp's
+    directory and the skill's directory inside the Kiro home, what the Kiro home is with
+    `%USERPROFILE%` named for Windows, and what "this skill directory", `<this-skill-dir>`,
+    every `../` path and `${PLUGIN_ROOT}` resolve to. It is still one unwrapped line, stated
+    once in each skill, with no `~` in it, and its ⛔ still cites INV-252 on that line.
+  - **Decided here, because the issue gives the places and not the words.**
+    - The note says "the directory `KIRO_HOME` names" where the issue says "the value of
+      `KIRO_HOME`". The place is the same.
+    - The guide takes the first place that holds the bootcamp "as the bootcamp's directory",
+      so `${PLUGIN_ROOT}` and every `../` path follow the place that was found.
+    - The sequence lists all four places although the location stated above it is already
+      place 1 when `KIRO_HOME` is set and place 3 when it is not. One list in one order was
+      preferred to a shorter list that depends on which case the reader is in.
+    - The note has two conditions and each has one instruction: "If the bootcamp is not
+      there" opens the sequence, and "If none of the four places holds the bootcamp" gives
+      the stop.
+  - **Built output.** A build of `6fe4627` and a build of this change were compared with
+    `diff -r`. The Claude, Copilot, ChatGPT and Gemini packages are identical, and so are
+    the three catalogs, the public pages and those four assistants' install pages. Nineteen
+    files differ: the Kiro install page, at its Python item only, and the 18 Kiro `SKILL.md`
+    files, each at its note line only.
+  - **Tests.** `tests/test_kiro_skills_say_where_they_are.py` goes from 14 tests to 18 and
+    `tests/test_bootcamp_build_site.py` from 7 to 9.
+    - For every Kiro skill, the first module now asserts that the note states each of the
+      four places once and in that order, that the sentence opening the sequence comes before
+      them, that the sentence limiting places 1 and 2 comes after them, and that the stop is
+      stated once, after the last place and before the ban on searching the filesystem. It
+      asserts that the two replaced sentences are gone and that the note's conditions are
+      exactly the two above. The assertions for INV-252's note are kept as they were: the
+      two directories, the Kiro home, what each reference resolves to, the two sentences on
+      searching, no `~`, and one note on one line in each skill.
+    - Negative controls run on every pass against the built note: places 2 and 3 exchanged,
+      the home directory put before `KIRO_HOME`, the last place taken out, the stop taken
+      out, the stop moved before the places, and the stop given twice. Each is reported.
+    - The second module gains one test over every assistant `load_hosts()` returns. It reads
+      each built install page, requires `<code>python3</code> on the <code>PATH</code>` and
+      refuses "Any command name works". It fails when it read no assistant (INV-265). A
+      second test holds the Kiro page to the item above, once, and to no "3.10 or later".
+    - Negative control run once, on an export of `6fe4627` holding only the two changed test
+      files. The site module reports `FAILED (failures=2)`: the all-assistants test fails for
+      Kiro alone, and the Kiro test fails. The Kiro module reports `FAILED (failures=55)`:
+      the three new assertions fail for each of the 18 skills, and the control test fails.
+  - **Not observed.** No run on Kiro was made, so `hosts/kiro/checks.json` and
+    `options.skill_location_sources` are unchanged. The tests read the words of the note and
+    of the pages. They do not show which place a guide looks in first, that Kiro honors
+    `KIRO_HOME`, or that `python3` is on any bootcamper's `PATH`. No recorded run tested
+    `KIRO_HOME`. Verified on Linux only, with Python 3.12.3. The change is text and two test
+    modules that use the standard library and have no branch on the platform (INV-001).
+  - **Compatibility.** An installed Kiro Power keeps the old note until it is updated. The
+    published Kiro page changes at the next promotion.
+  - **Found and not changed, as out of scope. Each is drafted here and not filed.**
+    1. **Not filed.** *The Kiro hooks-setup skill does not say which command starts the
+       installer.* `hosts/kiro/files/skills/bootcamp-hooks-setup/SKILL.md` says to run the
+       installer "with the Python interpreter the bootcamp uses for its own scripts" and
+       writes the command as `<python> …/install_hooks.py`. The package's other commands
+       name `python3`, and the page now requires `python3` on the `PATH`. The issue puts
+       this skill out of scope. The question for the maintainer is whether the skill should
+       name `python3` as the rest of the package does.
+    2. **Not filed.** *The note does not say which copy to take when `powers/` holds more
+       than one `senzing-bootcamp`.* Places 2 and 4 look anywhere inside `powers/`. The issue
+       puts this out of scope, and the note still does not say.
+- **Invariants.** The register is not edited here (INV-365). The change rewords one
+  hard-rule line, the note's, and it still cites INV-252 on its own line:
+  `conformance.py since --since-last-audit` reports it outside the corpus, and the
+  cited-or-deferred gate checks it at its whole source line. The change ships two rules the
+  register does not hold, each stated in one ⛔ line of a test's docstring. `since` does not
+  report those, because `tests/` is not a rule home. The two blocks below cover them
+  (INV-309). The first is an amendment and not a new rule because the order and the stop
+  belong to the note INV-252 already governs. The issue says INV-252 holds as written and
+  puts the register's text out of scope, so that block changes nothing there: it drafts the
+  dated note that would bind the order and the stop, for the maintainer to apply or hold.
+  Until then only the test holds them. The second is a new rule because no registered
+  invariant says what an install page tells a reader about Python.
+
+- **PROPOSED AMENDMENT to INV-252 — awaiting the maintainer's sign-off; NOT applied.**
+    - ⛔ **If the bootcamp is not there, look in these places, in this order, and take the first one that holds the bootcamp as the bootcamp's directory** — in `hosts/kiro/host.json`
+    - ⛔ **If none of the four places holds the bootcamp, stop and tell the bootcamper that the bootcamp's files were not found.** — in `hosts/kiro/host.json`
+
+  INV-252, as amended on 2026-11-16 (issue #11), defines the Kiro home and forbids a search
+  of the filesystem. It gives no order of places to look when the bootcamp is not at the
+  stated location, and nothing for a bootcamp that is in none of them. The note that shipped
+  under it had two sentences for one condition and no order between them. Without the note
+  below, a later edit can put two unordered fallbacks back, or take the stop out, and
+  contradict no registered rule. Enforced by `tests/test_kiro_skills_say_where_they_are.py`.
+
+  Drafted wording follows, under the registered id. A new rule's id would be
+  written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
+
+  **INV-252** — (⚠️ **Dated note, 2026-11-17 (#42): a location note gives one order of places to look and ends in a stop; the Kiro home, the per-platform record and the ban on searching the filesystem above are unchanged.** Where a package's location note says where to look when the bootcamp is not at the location it states, it MUST give the places as one ordered sequence, tell the guide to use the first place that holds the bootcamp, and, after the last place, tell the guide to stop and tell the bootcamper that the bootcamp's files were not found. No condition in the note MAY carry two instructions. On Kiro the order finishes one Kiro home before the next: (1) `powers/installed/senzing-bootcamp/` inside the directory `KIRO_HOME` names; (2) a `senzing-bootcamp` directory anywhere inside `powers/` in the directory `KIRO_HOME` names; (3) `powers/installed/senzing-bootcamp/` inside `.kiro` in the user's home directory; (4) a `senzing-bootcamp` directory anywhere inside `powers/` in `.kiro` in the user's home directory. Places 1 and 2 apply only when `KIRO_HOME` is set. The note does not say which copy to take when `powers/` holds more than one `senzing-bootcamp`. Enforced by `tests/test_kiro_skills_say_where_they_are.py`, which reads the order the note states in every built Kiro skill and **cannot** establish which place a guide looks in first, or whether Kiro honors `KIRO_HOME`: on 2026-11-17 no run recorded in `hosts/kiro/checks.json` tested `KIRO_HOME`.)
+
+- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** Every assistant's install page states the Python requirement its package relies on. The rule already shipping, quoted:
+    - ⛔ **Every assistant's install page states the Python requirement its package relies on: `python3` on the `PATH`.** — in `tests/test_bootcamp_build_site.py`
+
+  Enforced by `tests/test_bootcamp_build_site.py`.
+
+  **Why it is not an existing invariant:** INV-052 says a hook is invoked as `python3`, and
+  binds the package. An install page is in no package. INV-428 and INV-429 bind what an
+  install page says about a model and an effort. INV-347 gives Module 5's analyzer a floor
+  of its own and checks it there. None of them says what a page tells a reader about Python
+  before the install, so the Kiro page said "Python 3.10 or later" and "Any command name
+  works" and contradicted no registered wording.
+
+  Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
+  invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
+
+  **INV-NNN** — Every assistant's install page (its "before you start" list, `hosts/<assistant>/fragments/site-before.html`) MUST state the Python requirement the assistant's package relies on, `python3` on the `PATH`, in the words `<code>python3</code> on the <code>PATH</code>`, and MUST NOT say that any command name works. Each package runs the bootcamp's bundled scripts as `python3`, so a `python` or `py` command alone does not meet the requirement, and a page MAY say how to add a `python3` entry where only one of those is installed. Enforced by `tests/test_bootcamp_build_site.py`, which reads the built install page of every assistant `load_hosts()` returns and fails when it read none (INV-265). It reads each page's words and **cannot** establish that `python3` is on a bootcamper's `PATH`. It does not report a page that states a minimum Python version: none is recorded for the bootcamp's own scripts, only the Kiro page is held to not saying "3.10 or later", and Module 5's analyzer floor is INV-347's. (Source: `the-kiro-install-page-and-location-note-contradict-the-kiro-package`, GitHub issue #42, 2026-11-17.)
+
+- **An older entry edited, with the maintainer's yes (2026-11-18).** The applied
+  `PROPOSED AMENDMENT to INV-252` block in `the-kiro-package-states-its-installed-path-for-linux-only`
+  quoted the note sentence this issue removes, so `tests/test_deferral_quotes_match_their_source.py`
+  failed. Its quote is shortened to the leading sentence, `(INV-252) Read the files from there.`,
+  which still ships. Nothing else in that entry changed, and the applied note in
+  `specs/INVARIANTS.md` is untouched. The unattended run stopped here because a run may not
+  edit another entry; the maintainer approved this edit on issue #42's resume.
+- **Commit:** uncommitted
+
 ## maintainer-documents-and-skills-describe-tools-and-guards-that-are-not-here
 
 - **Implemented:** 2026-11-18 (issue #48)
@@ -4412,7 +4564,7 @@ the maintainer. It decided the eight blocks the unattended run of that day queue
   it, only the test holds them.
 
 - **PROPOSED AMENDMENT to INV-252 — applied 2026-11-16 by the maintainer.**
-    - ⛔ **(INV-252) Read the files from there. If `KIRO_HOME` is set and the bootcamp is not under it, look under `.kiro` in the user's home directory next.** — in `hosts/kiro/host.json`
+    - ⛔ **(INV-252) Read the files from there.** — in `hosts/kiro/host.json`
 
   INV-252, as amended on 2026-11-16, requires a package to state where a skill's files are when
   the assistant gives no path. It does not say the stated location must hold on every platform

@@ -17,9 +17,24 @@ installs a Power on any platform; only a run on that platform can, and
 
 Enforces the note on **INV-252** dated 2026-11-16 (issue #11), applied by the maintainer that
 day: the stated location holds on every supported platform and its sources are recorded.
+
+Issue #42 gave the note one order of places to look. Until then it had two sentences for a
+bootcamp missing from the Kiro home, "look under `.kiro` in the user's home directory next" and
+"look only inside `powers/` in the Kiro home", with no order between them, and none for a
+bootcamp found nowhere.
+
+⛔ **The note names four places to look, in one order, and tells the guide to stop when the bootcamp is in none of them.**
+
+The order finishes one Kiro home before the next: the exact directory under ``KIRO_HOME``, then
+anywhere inside its ``powers/``, then the same two under ``.kiro`` in the home directory. That
+rule is drafted as a dated note on INV-252 in the ``specs/IMPLEMENTED.md`` entry for issue #42
+and awaits the maintainer; until it is applied, this module alone holds it. The module reads
+the order the note states. It cannot establish which place a guide looks in first on a real
+run.
 """
 
 import json
+import re
 import unittest
 from pathlib import Path
 
@@ -32,6 +47,49 @@ HEADING = "**Where this skill's files are.**"
 BOOTCAMP = "powers/installed/senzing-bootcamp"
 PLATFORMS = ("linux", "macos", "windows")
 STATUSES = ("observed", "documented", "unchecked")
+
+#: The places the note sends the guide to, in the order it gives them (issue #42).
+PLACES = (
+    "(1) `powers/installed/senzing-bootcamp/` inside the directory `KIRO_HOME` names;",
+    "(2) a `senzing-bootcamp` directory anywhere inside `powers/` in the directory `KIRO_HOME` names;",
+    "(3) `powers/installed/senzing-bootcamp/` inside `.kiro` in the user's home directory;",
+    "(4) a `senzing-bootcamp` directory anywhere inside `powers/` in `.kiro` in the user's home directory.",
+)
+SEQUENCE_OPENS = (
+    "If the bootcamp is not there, look in these places, in this order, and take the first one that "
+    "holds the bootcamp as the bootcamp's directory:"
+)
+ONLY_WHEN_SET = "Places 1 and 2 apply only when `KIRO_HOME` is set."
+STOP = (
+    "If none of the four places holds the bootcamp, stop and tell the bootcamper that the bootcamp's "
+    "files were not found."
+)
+#: The two sentences issue #42 replaced: one condition, two instructions, no order.
+REPLACED = (
+    "If `KIRO_HOME` is set and the bootcamp is not under it, look under `.kiro` in the user's home "
+    "directory next.",
+    "If the bootcamp's directory is missing from the Kiro home, look only inside `powers/` in the Kiro "
+    "home for `senzing-bootcamp`.",
+)
+
+
+def out_of_order(note):
+    """What is wrong with the order of the note's places and its stop; empty when nothing is.
+
+    Each part is stated once, and each starts after the one before it: the sentence that opens
+    the sequence, the four places, the sentence limiting places 1 and 2, the stop, and the ban
+    on searching the rest of the filesystem.
+    """
+    parts = (SEQUENCE_OPENS, *PLACES, ONLY_WHEN_SET, STOP, "Never search the rest of the filesystem")
+    problems = [f"stated {note.count(part)} times, not once: {part}" for part in parts if note.count(part) != 1]
+    if problems:
+        return problems
+    positions = [note.index(part) for part in parts]
+    return [
+        f"comes before the part it follows: {later}"
+        for earlier, later, a, b in zip(parts, parts[1:], positions, positions[1:])
+        if b < a + len(earlier)
+    ]
 
 
 def kiro_skills():
@@ -100,16 +158,53 @@ class KiroSkillsSayWhereTheyAre(unittest.TestCase):
     def test_the_note_keeps_the_search_inside_the_kiro_home(self):
         for name, note in self.each_note():
             with self.subTest(skill=name):
-                self.assertIn(
-                    "If `KIRO_HOME` is set and the bootcamp is not under it, look under `.kiro` in "
-                    "the user's home directory next.",
-                    note,
-                )
-                self.assertIn(
-                    "look only inside `powers/` in the Kiro home for `senzing-bootcamp`", note
-                )
                 self.assertIn("Never search the rest of the filesystem", note)
                 self.assertIn("a second copy of the bootcamp on the same machine is normal", note)
+
+    def test_the_note_names_the_four_places_in_order(self):
+        for name, note in self.each_note():
+            with self.subTest(skill=name):
+                for place in PLACES:
+                    self.assertEqual(note.count(place), 1, place)
+                positions = [note.index(place) for place in PLACES]
+                self.assertEqual(positions, sorted(positions))
+                self.assertLess(note.index(SEQUENCE_OPENS), positions[0])
+                self.assertLess(positions[-1], note.index(ONLY_WHEN_SET))
+                self.assertEqual(out_of_order(note), [])
+
+    def test_the_stop_comes_after_the_last_place(self):
+        for name, note in self.each_note():
+            with self.subTest(skill=name):
+                self.assertEqual(note.count(STOP), 1)
+                self.assertLess(note.index(PLACES[-1]), note.index(STOP))
+                self.assertLess(note.index(STOP), note.index("Never search the rest of the filesystem"))
+
+    def test_no_condition_in_the_note_has_two_instructions(self):
+        for name, note in self.each_note():
+            with self.subTest(skill=name):
+                for sentence in REPLACED:
+                    self.assertNotIn(sentence, note)
+                self.assertNotIn("look only inside", note)
+                conditions = re.findall(r"\bIf ([^,.:;]+),", note)
+                self.assertEqual(
+                    conditions, ["the bootcamp is not there", "none of the four places holds the bootcamp"]
+                )
+
+    def test_the_order_check_reports_a_note_that_is_out_of_order(self):
+        """Negative controls, so the order check cannot pass on a note it does not read."""
+        note = location_notes(kiro_skills()[0])[0]
+        self.assertEqual(out_of_order(note), [])
+        first, second, third, fourth = PLACES
+        swapped = note.replace(second, "@@").replace(third, second).replace("@@", third)
+        self.assertNotEqual(swapped, note)
+        self.assertTrue(out_of_order(swapped), "places 2 and 3 exchanged")
+        home_first = note.replace(first, "@@").replace(third, first).replace("@@", third)
+        self.assertTrue(out_of_order(home_first), "the home directory looked at before `KIRO_HOME`")
+        self.assertTrue(out_of_order(note.replace(fourth, "")), "the last place taken out")
+        self.assertTrue(out_of_order(note.replace(STOP + " ", "")), "the stop taken out")
+        early = note.replace(STOP + " ", "").replace(SEQUENCE_OPENS, STOP + " " + SEQUENCE_OPENS)
+        self.assertTrue(out_of_order(early), "the stop given before the places")
+        self.assertTrue(out_of_order(note + " " + STOP), "the stop given twice")
 
     def test_the_note_is_stated_once(self):
         for skill in kiro_skills():
