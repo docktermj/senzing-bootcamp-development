@@ -236,7 +236,28 @@ class EngineStderrIsDistinguishedFromRecordFailures(unittest.TestCase):
         body = marker.group(0)
         self.assertIn("owner:", body, "a marker with no owner: clause does not parse (INV-194)")
         self.assertIn("absence negative", body)
-        self.assertRegex(body, r"server 1\.36\.0, 2026-09-02")
+        self.assertEqual([], stamp_problems(body))
+
+    def test_a_marker_stamp_older_than_the_claim_fails(self):
+        """Negative controls for `stamp_problems` (#38)."""
+        self.assertTrue(stamp_problems("x — owner: y — server 1.33.0, 2026-08-21 -->"))
+        self.assertTrue(stamp_problems("x — owner: y -->"))
+        self.assertEqual([], stamp_problems("x — owner: y — server 1.46.1, 2026-11-18 -->"))
+
+
+#: The marker was first recorded on server 1.36.0, 2026-09-02, and re-asked on 1.46.1,
+#: 2026-11-18 (#38). What must hold is a dated stamp no older than the first record, not a pin
+#: to one date, which a later re-ask would fail.
+FIRST_RECORDED_ON = (1, 36, 0)
+
+
+def stamp_problems(marker):
+    m = re.search(r"server (\d+)\.(\d+)\.(\d+), \d{4}-\d{2}-\d{2}", marker)
+    if not m:
+        return ["the marker carries no `server X.Y.Z, YYYY-MM-DD` stamp"]
+    if tuple(int(g) for g in m.groups()) < FIRST_RECORDED_ON:
+        return ["the marker is stamped before the claim was first recorded (1.36.0)"]
+    return []
 
 
 class TheDatabaseTypeKeyIsReadFromOnePlace(unittest.TestCase):

@@ -371,11 +371,11 @@ are still absent.
      feature request WAS sent on 2026-07-31, but for the stdio-mode / private-deployment route — a
      different subject — and the two had been conflated, so 2026-08-13 is this gap's first report
      rather than a duplicate. Full evidence chain in the maintainer's development record. -->
-<!-- MCP-NEGATIVE: sdk_guide(topic='install', platform='macos_arm') and the same call with platform='windows' — install_commands, gotchas and post_install carry no brew upgrade --cask and no scoop update — owner: search_docs IS the route that carries the update command for each package manager: search_docs(query='homebrew-senzingsdk upgrade cask brew upgrade senzingsdk') returns the tap README's Upgrade section and search_docs(query='scoop-senzingsdk update scoop update senzingsdk') returns the bucket README's Update section, so the reader must go there rather than conclude the command is undocumented (routing negative) — server 1.37.14, 2026-09-28 -->
+<!-- MCP-NEGATIVE: sdk_guide(topic='install', platform='macos_arm') and the same call with platform='windows' — install_commands, gotchas and post_install carry no brew upgrade --cask and no scoop update — owner: search_docs IS the route that carries the update command for each package manager: search_docs(query='homebrew-senzingsdk upgrade cask brew upgrade senzingsdk') returns the tap README's Upgrade section and search_docs(query='scoop-senzingsdk update scoop update senzingsdk') returns the bucket README's Update section, so the reader must go there rather than conclude the command is undocumented (routing negative) — server 1.46.1, 2026-11-18 -->
 
 **Linux, apt (`linux_apt`):**
 
-<!-- MCP-NEGATIVE: sdk_guide(topic='install', platform='linux_apt') — install_commands, gotchas and post_install carry no dpkg-query and no apt-cache policy; it verifies with ls /opt/senzing/er/lib/libSz.so, an existence probe — owner: sdk_guide(topic='install', platform='linux_apt') IS the route that would carry an installed-version query for apt, and it documents installing and existence-verification only (absence negative) — server 1.39.1, 2026-10-18 -->
+<!-- MCP-NEGATIVE: sdk_guide(topic='install', platform='linux_apt') — install_commands, gotchas and post_install carry no dpkg-query and no apt-cache policy; it verifies with ls /opt/senzing/er/lib/libSz.so, an existence probe — owner: sdk_guide(topic='install', platform='linux_apt') IS the route that would carry an installed-version query for apt, and it documents installing and existence-verification only (absence negative) — server 1.46.1, 2026-11-18 -->
 
 ```bash
 # plugin-owned — sdk_guide documents neither of these
@@ -400,7 +400,7 @@ Guide-run; unverified on Windows: no test runs it there ([guide-run blocks](../b
 
 **macOS, Homebrew cask (`macos_arm`):**
 
-<!-- MCP-NEGATIVE: sdk_guide(topic='install', platform='macos_arm') and search_docs(query='brew outdated brew info senzingsdk installed version check') — neither carries brew outdated or brew info for the cask; the corpus serves the tap README's install, upgrade and uninstall usage for it and no version-check command — owner: sdk_guide(topic='install', platform='macos_arm') IS the route for the cask's commands and search_docs IS the corpus route for the tap README, so the routes that would carry a version check were asked and carry none (absence negative) — server 1.37.14, 2026-09-28 -->
+<!-- MCP-NEGATIVE: sdk_guide(topic='install', platform='macos_arm') and search_docs(query='brew outdated brew info senzingsdk installed version check') — neither carries brew outdated or brew info for the cask; the corpus serves the tap README's install, upgrade and uninstall usage for it and no version-check command — owner: sdk_guide(topic='install', platform='macos_arm') IS the route for the cask's commands and search_docs IS the corpus route for the tap README, so the routes that would carry a version check were asked and carry none (absence negative) — server 1.46.1, 2026-11-18 -->
 
 ```bash
 # plugin-owned — the server documents no brew version check:
@@ -432,7 +432,7 @@ paths still resolve.
 
 **Windows, Scoop (`windows`):**
 
-<!-- MCP-NEGATIVE: sdk_guide(topic='install', platform='windows') and search_docs(query='scoop status scoop info senzingsdk installed version check') — neither carries scoop status or scoop info; the corpus serves the bucket README's install, update and uninstall usage for it and no version-check command — owner: sdk_guide(topic='install', platform='windows') IS the route for the bucket's commands and search_docs IS the corpus route for the bucket README, so the routes that would carry a version check were asked and carry none (absence negative) — server 1.37.14, 2026-09-28 -->
+<!-- MCP-NEGATIVE: sdk_guide(topic='install', platform='windows') and search_docs(query='scoop status scoop info senzingsdk installed version check') — neither carries scoop status or scoop info; the corpus serves the bucket README's install, update and uninstall usage for it and no version-check command — owner: sdk_guide(topic='install', platform='windows') IS the route for the bucket's commands and search_docs IS the corpus route for the bucket README, so the routes that would carry a version check were asked and carry none (absence negative) — server 1.46.1, 2026-11-18 -->
 
 ```powershell
 # plugin-owned — the server documents no scoop version check:
@@ -520,7 +520,7 @@ point release needs is in the *target* version's "Migration & Action Required" n
 `search_docs` serves under `category='release_notes'`
 (server 1.37.29, docs index 2026-10-13 23:20 UTC, 2026-10-13). Relay what applies in the offer
 turn, above its question.
-<!-- MCP-NEGATIVE: search_docs(query='upgrade Senzing SDK 4.3 to 4.4 procedure') plus get_capabilities' sdk_guide topic enum — no 4.x-to-4.y procedure for that phrasing; the corpus serves V3-to-V4 migration material for it, and the topic list carries no upgrade entry — owner: search_docs(query='upgrading to 4.4.0 from v4.0.0 through v4.3.x no schema change required migration action required', category='release_notes') IS the route that carries the point-release notes, and it returns the v4.4.0 Detailed Release Notes' Migration & Action Required section, so the reader must go there rather than conclude that no procedure is documented (routing negative) — server 1.37.14, 2026-09-28 -->
+<!-- MCP-NEGATIVE: search_docs(query='upgrade Senzing SDK 4.3 to 4.4 procedure') plus get_capabilities' sdk_guide topic enum — no 4.x-to-4.y procedure for that phrasing; the corpus serves V3-to-V4 migration material for it, and the topic list carries no upgrade entry — owner: search_docs(query='upgrading to 4.4.0 from v4.0.0 through v4.3.x no schema change required migration action required', category='release_notes') IS the route that carries the point-release notes, and it returns the v4.4.0 Detailed Release Notes' Migration & Action Required section, so the reader must go there rather than conclude that no procedure is documented (routing negative) — server 1.46.1, 2026-11-18 -->
 
 - **Target 4.4.0.** Run
   `search_docs(query='upgrading to 4.4.0 from v4.0.0 through v4.3.x no schema change required migration action required', category='release_notes')`.
@@ -898,7 +898,7 @@ For the `docker` path (Intel Mac, Python on macOS/Windows, or Windows without Sc
   | C# | `apt-get update && apt-get install -y wget ca-certificates && wget -qO /tmp/packages-microsoft-prod.deb https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb && dpkg -i /tmp/packages-microsoft-prod.deb && apt-get update && apt-get install -y dotnet-sdk-10.0 && dotnet --version` |
   | Rust | `apt-get update && apt-get install -y curl ca-certificates build-essential && curl --proto =https --tlsv1.2 -sSfo /tmp/rustup-init.sh https://sh.rustup.rs && sh /tmp/rustup-init.sh -y --profile minimal && ln -sf "$HOME/.cargo/bin/cargo" "$HOME/.cargo/bin/rustc" /usr/local/bin/ && cargo --version` |
   | TypeScript | `apt-get update && apt-get install -y nodejs npm && npm install -g typescript && node --version && tsc --version` |
-  <!-- MCP-NEGATIVE: sdk_guide(topic='install', platform='docker', language='csharp' and 'typescript'), sdk_guide(topic='install', platform='linux_apt', language='java'), and find_examples(query='dockerfile') — no reply gives a command that installs a language runtime or compiler in a plain container: the docker install says the container must already hold one, the Dockerfiles start from an image that has it, and the linux_apt install's first command adds only wget, ca-certificates and sqlite3 — owner: sdk_guide(topic='install', platform='docker', language=<lang>) IS the route that would carry an in-container install step, and it carries the requirement without the command, so the rows above are the plugin's own until it does; the minimums the rows meet are served: search_docs "v4 System Requirements" (Python >= 3.10, Java >= 17, C# >= .NET Standard 2.0) and the sz-napi CONTRIBUTING and README (Node.js 18 or later, Rust MSRV 1.88 via rustup) (absence negative) — server 1.39.0, 2026-10-15 -->
+  <!-- MCP-NEGATIVE: sdk_guide(topic='install', platform='docker', language='csharp' and 'typescript'), sdk_guide(topic='install', platform='linux_apt', language='java'), and find_examples(query='dockerfile') — no reply gives a command that installs a language runtime or compiler in a plain container: the docker install says the container must already hold one, the Dockerfiles start from an image that has it or add only python3 to a Senzing runtime image, and the linux_apt install's first command adds only wget, ca-certificates and sqlite3 — owner: sdk_guide(topic='install', platform='docker', language=<lang>) IS the route that would carry an in-container install step, and it carries the requirement without the command, so the rows above are the plugin's own until it does; the minimums the rows meet are served: search_docs "v4 System Requirements" (Python >= 3.10, Java >= 17, C# >= .NET Standard 2.0) and the sz-napi README's prerequisites (Node.js 18 or later, Rust MSRV 1.88) (absence negative) — server 1.46.1, 2026-11-18 -->
 
   A row that fails leaves the container without the tool, and the first build then fails with the
   section's "tool is not found" Fix_Instruction; a container created before this step existed is
@@ -1105,7 +1105,7 @@ existing-install path, which skips Phase 1 and Phase 2; INV-338, INV-339):**
      Central" and is the one "provided with the Senzing product", used as a system-scoped
      dependency or installed into the **local** Maven repository (`java -jar sz-sdk.jar` prints
      the `mvn install:install-file` command for it).
-     <!-- MCP-NEGATIVE: sdk_guide(topic='install', platform='linux_apt', language='java') — no field of the reply names a source for the Java bindings (no sz-sdk.jar, no Maven coordinate) — owner: search_docs IS the route that carries the Java SDK reference: search_docs(query='Java SDK sz-sdk.jar Maven Usage local Maven repository') returns its "Maven Usage" and "Installation in Local Maven Repository" sections, so the reader must go there rather than conclude the source is undocumented (routing negative) — server 1.39.0, 2026-10-15 -->
+     <!-- MCP-NEGATIVE: sdk_guide(topic='install', platform='linux_apt', language='java') — no field of the reply names a source for the Java bindings (no sz-sdk.jar, no Maven coordinate) — owner: search_docs IS the route that carries the Java SDK reference: search_docs(query='Java SDK sz-sdk.jar Maven Usage local Maven repository') returns its "Maven Usage" and "Installation in Local Maven Repository" sections, so the reader must go there rather than conclude the source is undocumented (routing negative) — server 1.46.1, 2026-11-18 -->
    - **C#:** call `sdk_guide(topic='install', platform='<platform>', language='csharp')` and follow
      its `gotchas`: where the reply has a C# line, that line names the package source. Take the
      command from the bootcamper's own platform reply (INV-080), and present that platform's form
@@ -1551,7 +1551,7 @@ file (INV-080). What follows is the shape of the problem, not a substitute for t
     `com.senzing.sdk` import fails to compile, and the failure surfaces in **System verification**
     or later — one module away from the step that omitted the path, where it reads as a broken
     install rather than a wrong classpath.
-    <!-- MCP-NEGATIVE: sdk_guide(topic='install', platform='linux_apt', language='java') — carries no SENZING_ROOT, no jar path and no Java gotchas[] entry; env_vars holds only PYTHONPATH and LD_LIBRARY_PATH, and the response is identical to the same call with no language argument, so the parameter is inert on this platform — owner: sdk_guide(topic='install', platform='linux_apt', language='java') IS the route that would carry a Java jar path for Linux, asked directly and answered with neither the path nor a Java entry (absence negative) — server 1.36.0, 2026-09-02 -->
+    <!-- MCP-NEGATIVE: sdk_guide(topic='install', platform='linux_apt', language='java') — carries no SENZING_ROOT, no jar path and no Java gotchas[] entry; env_vars holds only PYTHONPATH and LD_LIBRARY_PATH, and the response is identical to the same call with no language argument, so the parameter is inert on this platform — owner: sdk_guide(topic='install', platform='linux_apt', language='java') IS the route that would carry a Java jar path for Linux, asked directly and answered with neither the path nor a Java entry (absence negative) — server 1.46.1, 2026-11-18 -->
   - **On Linux the jar is at `/opt/senzing/er/sdk/java/sz-sdk.jar`** — ⚠️ **observation-only**
     (INV-080/INV-149), measured against `senzingsdk-runtime` **4.3.4-26210** on 2026-08-31, because
     **no MCP route serves a Java path for `linux_apt`**. Treat it as a starting point to verify on
@@ -1677,7 +1677,7 @@ development machine 2026-08-26: with `PYTHONPATH` unset, `import senzing` resolv
 unreachable at `/opt/senzing/er/sdk/python`; with `PYTHONPATH` set, it resolved to the latter
 (observation-only — interpreter module-resolution order, which no MCP route reports; INV-080/INV-149).
 
-<!-- MCP-NEGATIVE: sdk_guide(topic='install', platform='macos_arm', language='python') — returns no install_commands, no env_vars and no gotchas at all, only compatibility_notes stating the Python SDK is Linux-only and offering Java/C# (official) or Docker/WSL2 instead, so there is no macOS PYTHONPATH counterpart to export — owner: sdk_guide(topic='install', platform=<that platform>, language='python') IS the route that would carry a per-platform Python variable set, and it answers by declining the platform rather than by omitting a variable (absence negative) — server 1.36.0, 2026-09-02 -->
+<!-- MCP-NEGATIVE: sdk_guide(topic='install', platform='macos_arm', language='python') — returns no install_commands, no env_vars and no gotchas at all, only compatibility_notes stating the Python SDK is Linux-only and offering Java and C# (official), Rust and TypeScript (community), or Docker/WSL2 instead, so there is no macOS PYTHONPATH counterpart to export — owner: sdk_guide(topic='install', platform=<that platform>, language='python') IS the route that would carry a per-platform Python variable set, and it answers by declining the platform rather than by omitting a variable (absence negative) — server 1.46.1, 2026-11-18 -->
 ⚠️ **Do not invent a counterpart where the server says there is none.** `PYTHONPATH` is a
 Linux-only concern because the Python SDK itself is: *"The Senzing Python SDK is ONLY supported on
 Linux. It is NOT supported on macOS or Windows"* (`sdk_guide(topic='install', platform='macos_arm',
@@ -1751,7 +1751,7 @@ expectation across.
 of its own `access_steps` advertises that parameter, but the tool's **declared schema has no
 `inline` parameter at all** — only `language`, `version` and `workflow` (both confirmed live,
 server 1.32.9, 2026-08-13).
-<!-- MCP-NEGATIVE: generate_scaffold's declared schema — carries no inline parameter, only language, version and workflow, while the response's own access_steps step 3 advertises the undeclared inline=true — owner: the tool's declared schema as the server advertises it is the authority on what it accepts, and it was read directly rather than inferred from the response prose (routing negative — the schema is the route, the prose is not) — server 1.36.0, 2026-09-02 --> Passing it is not a fallback, it is a call that cannot work, and it teaches nothing
+<!-- MCP-NEGATIVE: generate_scaffold's declared schema — carries no inline parameter, only language, version and workflow, while the response's own access_steps step 3 advertises the undeclared inline=true — owner: the tool's declared schema as the server advertises it is the authority on what it accepts, and it was read directly rather than inferred from the response prose (routing negative — the schema is the route, the prose is not) — server 1.46.1, 2026-11-18 --> Passing it is not a fallback, it is a call that cannot work, and it teaches nothing
 about why. This is INV-160's rule applied to a sibling tool: **an undeclared parameter MUST NOT be
 adopted as the remedy even when the response's own prose advertises one.** Follow the
 response's earlier steps instead, as the paragraph above says.
@@ -1774,7 +1774,7 @@ troubleshooting.
 > `LICENSESTRINGBASE64` (preferred) then `LICENSEFILE` → system CONFIGPATH → the built-in evaluation
 > license.
 >
-> <!-- MCP-NEGATIVE: search_docs(query='SENZING_LICENSE_FILE environment variable license file path'), find_examples(query='SENZING_LICENSE_FILE') and sdk_guide(topic='install'|'configure') — none names a license environment variable; sdk_guide(topic='load', record_count=<above the default limit>) named SENZING_LICENSE_FILE through server 1.36.0, 2026-09-02, and on this server no route names it (a lapse of sourcing, not evidence the engine ignores the variable) — owner: sdk_guide(topic='load', language='python', record_count=1000) compatibility_notes route the license to the engine config instead, "add it as LICENSESTRINGBASE64 (inline base64 string, preferred for containers and automation) or LICENSEFILE (path to a .lic file) in the PIPELINE section of the engine config", re-asked and confirmed (routing negative — the license setting exists, go there) — server 1.39.0, 2026-10-15 -->
+> <!-- MCP-NEGATIVE: search_docs(query='SENZING_LICENSE_FILE environment variable license file path'), find_examples(query='SENZING_LICENSE_FILE') and sdk_guide(topic='install'|'configure') — none names a license environment variable; sdk_guide(topic='load', record_count=<above the default limit>) named SENZING_LICENSE_FILE through server 1.36.0, 2026-09-02, and on this server no route names it (a lapse of sourcing, not evidence the engine ignores the variable) — owner: sdk_guide(topic='load', language='python', record_count=1000) compatibility_notes route the license to the engine config instead, "add it as LICENSESTRINGBASE64 (inline base64 string, preferred for containers and automation) or LICENSEFILE (path to a .lic file) in the PIPELINE section of the engine config", re-asked and confirmed (routing negative — the license setting exists, go there) — server 1.46.1, 2026-11-18 -->
 > ⛔ **(INV-208) The license goes in the engine config's `PIPELINE` section — `LICENSESTRINGBASE64`
 > (preferred), then `LICENSEFILE` — because that is the route the server names.** It appears in the
 > `compatibility_notes` of `sdk_guide(topic='load', language=…, record_count=<above the default
@@ -2320,7 +2320,7 @@ raise an error, it just leaves you with the bootstrap code and nothing to config
 bootcamper's platform. If the response has no `environment` key, that is what happened — re-issue
 the call with `platform` rather than reconstructing the paths by hand.
 
-<!-- MCP-NEGATIVE: sdk_guide(topic='configure', language='python') — returns no `environment` block, so neither `engine_config` nor `default_paths` — owner: sdk_guide(topic='configure', platform='linux_apt', language='python') IS the route that carries it and returned `environment.default_paths` plus `environment.engine_config` when asked (routing negative) — server 1.36.0, 2026-09-02 -->
+<!-- MCP-NEGATIVE: sdk_guide(topic='configure', language='python') — returns no `environment` block, so neither `engine_config` nor `default_paths` — owner: sdk_guide(topic='configure', platform='linux_apt', language='python') IS the route that carries it and returned `environment.default_paths` plus `environment.engine_config` when asked (routing negative) — server 1.46.1, 2026-11-18 -->
 
 **Build the JSON from `environment.default_paths`, not from the `engine_config` blob.** That response
 carries both — **provided `platform` was passed** (above). `default_paths` gives plain, correct
@@ -2404,10 +2404,10 @@ call for exactly this reason.
 > quoted the cask 4.4.x literal; Senzing fixed that upstream after the 2026-09-28 report.)
 >
 > ⚠️ `sdk_guide` gates this response on `language`: asked with `language='python'` for this platform
-> it returns only the "Python is Linux-only" compatibility note and **no install detail at all**, so
-> the gotcha above is invisible. Ask with a macOS-supported binding (Java or C#) to see it.
-> (Observed 1.37.14, 2026-09-28.)
-> <!-- MCP-NEGATIVE: sdk_guide(topic='install', platform='macos_arm', language='python') — returns no install detail, only the Linux-only note — owner: sdk_guide(topic='install', platform='macos_arm', language='python') compatibility_notes state the Python SDK is Linux-only — the absence IS the answer, not a gap — server 1.36.0, 2026-09-02 -->
+> it returns the "Python is Linux-only" compatibility note and a `next_steps` pointer to the Docker
+> install, and **no install detail at all**, so the gotcha above is invisible. Ask with a
+> macOS-supported binding (Java or C#) to see it. (Observed 1.46.1, 2026-11-18.)
+> <!-- MCP-NEGATIVE: sdk_guide(topic='install', platform='macos_arm', language='python') — returns no install detail, only the Linux-only note and a next_steps pointer to the docker install — owner: sdk_guide(topic='install', platform='macos_arm', language='python') compatibility_notes state the Python SDK is Linux-only — the absence IS the answer, not a gap — server 1.46.1, 2026-11-18 -->
 >
 > `SENZ7426` still fires at `getEngine()`, **before any record is submitted**, so "validate your
 > input data" would send the reader to inspect something that does not yet exist — which is exactly

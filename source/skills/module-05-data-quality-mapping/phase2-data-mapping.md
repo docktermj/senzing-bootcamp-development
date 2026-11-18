@@ -189,7 +189,8 @@ or missing here before, and each fails at the first call rather than degrading. 
 mistake **costs**.
 
 1. ⛔ **`start` requires BOTH `file_paths` and `data.workspace_dir`.** The tool's own contract:
-   "The call WILL FAIL without both", and "do NOT assume `/tmp` exists". Pass the project-local
+   "The call needs both arguments present", and "do NOT assume `/tmp` exists" (re-read in the
+   tool description, server 1.46.1, 2026-11-18). Pass the project-local
    mapping directory, which is where this bootcamp already keeps mapping working data (INV-050) —
    never `/tmp`, never a home-relative path:
 
@@ -396,7 +397,8 @@ data={'entity_plan': [
    'field_count': <fields belonging to it>}]}
 ```
 
-The step-2 response documents this shape as "also accepted for backward compatibility". Re-check it
+The step-2 response documents this shape as "also still accepted for backward compatibility"
+(server 1.46.1, 2026-11-18). Re-check it
 rather than assuming; if the typed branch gains the disposition, retire this note rather than
 inverting it. Three details in that payload are each load-bearing, and each was established by a
 rejection rather than by reading the response:
@@ -414,7 +416,7 @@ legacy shape with five keys — `schema_name`, `disposition`, `data_source`, `re
 `'embedded_master' requires 'record_id_source'` / `'embedded_master' requires 'embedded_in'`. Because
 no response text names it, **`embedded_in` is discoverable only by sending a payload without it and
 reading the error** — so send it from the start.
-<!-- MCP-NEGATIVE: mapping_workflow(action='advance', from step 2) — step-2 instructions never name the required embedded_in key — owner: the step-2 validator's rejection names it ('embedded_master' requires 'embedded_in'), so the error is the only route — server 1.33.0, 2026-08-21 -->
+<!-- MCP-NEGATIVE: mapping_workflow(action='advance', from step 2) — step-2 instructions never name the required embedded_in key — owner: the step-2 validator's rejection names it ('embedded_master' requires 'embedded_in'), so the error is the only route — server 1.46.1, 2026-11-18 -->
 
 **`record_id_source` is `RECORD_HASH` for the embedded entity**, because a name embedded in someone
 else's row has no per-record natural key of its own. That sentinel is not a placeholder — step 4
@@ -586,28 +588,23 @@ With **Keep as-is**, `none needed`, no section, or a Retype that names every can
 exception, change nothing. With **Retype**, the source now carries both types:
 
 - Send each master schema's `record_type` as the source's predominant type **after** the retype. It
-  stays enum-valid and is never `MIXED`: that is the enum-valid `record_type` half of the mixed-type
-  rule below. Its other half, a step 3 `type_discriminator`, does not apply to a suffix retype;
-  step 11 declares how each record is typed.
+  is one of the source's real types and is never `MIXED`: that is the dominant-type `record_type`
+  half of the mixed-type rule below. Its other half, a step 3 `type_discriminator`, does not apply
+  to a suffix retype; step 11 declares how each record is typed.
 - Say in the plan summary that the source now carries PERSON and ORGANIZATION records, and how many
   records the retype moves. This is content in the summary, not a new question.
 - Declare nothing else here: step 11 declares how each record is typed.
 
-⛔ **(INV-280) On a mixed-type source, send an enum-valid `record_type` and declare the mixture at step 3 —
-the step-2 prose asks for a value its own schema rejects.** Both halves are in the **same response**
-(re-read live, server **1.33.0, 2026-08-21**): the instructions say *"If a schema has mixed entity
-types discriminated by a field (e.g., type=person/company), set record_type to `"MIXED"` and note the
-discriminator field"*, while that response's `advance_schema` declares
-`record_type` as `enum: ["PERSON", "ORGANIZATION", "VESSEL", "AIRCRAFT"]` — and the typed `payload`
-branch for `for_step 2` carries the same enum, so a client using constrained decoding **cannot emit**
-the documented value at all.
-
-Sending `MIXED` is accepted and warns: `status: "ok"` plus, in `warnings[]`,
-`schema_plan[0] (<your schema>): record_type 'MIXED' is non-standard — expected one of: PERSON,
-ORGANIZATION, VESSEL, AIRCRAFT` (reproduced on the same server and date). So send the source's
-predominant type and let step 3's `type_discriminator` do the typing — which is
-what the tool's own prose says happens anyway (*"The type_discriminator details will be defined in
-Step 3 mapping"*), so nothing is lost.
+⛔ **(INV-280) On a mixed-type source, send the source's dominant type as `record_type`, never
+`MIXED`, and declare the mixture at step 3.** This is the step-2 response's own instruction (re-read
+live, server **1.46.1, 2026-11-18**): *"If a schema has mixed entity types discriminated by a field
+(e.g., type=person/company), set record_type to the DOMINANT type (e.g. PERSON or ORGANIZATION — do
+NOT send "MIXED": it is not a type, only a literal string here) and tell the user which field
+discriminates the types"*, and *"In Step 3, define a type_discriminator on that field giving each
+value its record_type; it overrides this default per record."* The same response's
+`advance_schema` declares `record_type` as free text (*"The usual values are PERSON, ORGANIZATION,
+VESSEL and AIRCRAFT; any other value (e.g. VEHICLE) is accepted"*), so its prose and its schema now
+agree.
 
 ⛔ **(INV-125) Step 3 rejects a source that declares BOTH organization and person name
 fields — even when no record carries both — and its message leads with the wrong problem.** A source whose name fields are
@@ -641,12 +638,6 @@ suffix has no such field, so it takes the message's first route, as step 11 decl
 - ⛔ **(INV-343) Do not pre-emptively emit a `type_discriminator` on every source.** It is the fix for this
   rejection, not a default: adding an identity override to a mapping that does not need one buys the
   same coverage-count surprise for nothing.
-
-⚠️ **If a warning like that reaches you, it is not your error and not a mapping defect** — record it
-as expected and proceed (INV-173). This is **one** known-bad interaction, and it does not
-license ignoring step-2 warnings generally: the others are real. And note the prose's *"must be PERSON or
-ORGANIZATION"* is wrong against its own enum — `VESSEL` and `AIRCRAFT` are valid, which a watchlist
-source can genuinely need. **Retire this note once step 2's prose and its `advance_schema` agree.**
 
 ⛔ **Before you advance, check the profile for a second entity hiding in a column.** This is the
 one structural thing step 2 commits to that step 3 cannot add later, and the profile report you read
@@ -864,17 +855,20 @@ attribute but means something different (server **1.37.16, 2026-10-01**). Check 
 `feature` mappings — the same lookup, asked of the other disposition. This runs **here**, where
 the routing decision is made, not after the output is analyzed.
 
-⚠️ **This mechanism is OBSERVATION-ONLY** — one run, one SDK build, 2026-08-17, with the bundled
-analyzer's own SCHEMA warning as the corroborating instrument (it fired on the collision and cleared
-on the rename). Observed: a field routed to `payload` but emitted under its own name at the record
-root, where that name is a registered feature attribute, was extracted by Senzing as a **feature**
-anyway — so the Bootcamper's explicit routing answer was honored in form and not in effect. Only
-the prohibition is documented: `mapping_workflow` step 2 states the rule but not what breaking it
-does, and no indexed `search_docs` section states that consequence either (the marker below).
-Treat the extracted-as-feature consequence as a strong local observation, not as documented
-behavior, and re-confirm before relying on it elsewhere (INV-080/INV-149).
+⚠️ **The consequence is documented too, by the routes that check and load the output.** It was
+first seen in one run, one SDK build, 2026-08-17, with the bundled analyzer's own SCHEMA warning as
+the corroborating instrument (it fired on the collision and cleared on the rename): a field routed to
+`payload` but emitted under its own name at the record root, where that name is a registered feature
+attribute, was extracted by Senzing as a **feature** anyway — so the Bootcamper's explicit routing
+answer was honored in form and not in effect. The server now states why: `analyze_record`'s
+`validation_guidance.valid_shapes` lists *"feature attributes at the record root — flat, still
+supported"* as a record shape, and the compatibility note of `sdk_guide`'s `load` topic says that
+flat shape *"is NOT one of these problems — the Entity Specification still supports it"* (server
+**1.46.1, 2026-11-18**). `mapping_workflow` step 2 states only the prohibition, and no indexed
+`search_docs` section states the consequence (the marker below), so cite those two routes for it
+(INV-080).
 
-<!-- MCP-NEGATIVE: search_docs(query='payload attribute versus registered feature attribute record root extracted as feature precedence', category='data_mapping') — no indexed section states that a root-level key named after a registered feature attribute is extracted as a feature — owner: mapping_workflow step 2's inline SENZING MAPPING REFERENCE carries the prohibition ("must NOT be a registered feature attribute") but states no consequence of breaking it, so search_docs over the Entity Specification IS the route that would carry the consequence, and its *Attribute reference* section states the rule for the inside-a-feature-object case -- "Only the attributes listed here may appear inside a feature object. Anything else is treated as payload" -- while no returned section states what happens to a record-root key whose name belongs to a registered feature, which is the case asked about (absence negative) — server 1.37.16, 2026-10-01 -->
+<!-- MCP-NEGATIVE: search_docs(query='payload attribute versus registered feature attribute record root extracted as feature precedence', category='data_mapping') — no indexed section states that a root-level key named after a registered feature attribute is extracted as a feature — owner: analyze_record(workspace_dir=<the mapping directory>) IS the route that carries the consequence, in validation_guidance.valid_shapes ("feature attributes at the record root — flat, still supported"), and sdk_guide's load topic states the same in its compatibility notes, while mapping_workflow step 2's inline SENZING MAPPING REFERENCE carries only the prohibition ("must NOT be a registered feature attribute"), so the reader must go to those two routes rather than conclude the consequence is undocumented (routing negative) — server 1.46.1, 2026-11-18 -->
 
 **On a collision, do NOT silently re-route or override the answer (INV-006).** Their intent — *do
 not match on this* — is achievable; only the key **name** is wrong. So rename the key and say so:

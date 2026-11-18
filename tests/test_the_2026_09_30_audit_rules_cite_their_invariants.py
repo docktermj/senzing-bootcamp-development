@@ -12,7 +12,7 @@ governs each:
 | the loading scaffold's counters are process-global | INV-243 |
 | the discoveries-PDF generator ships inside the plugin | INV-185 |
 | `generate_scaffold` returns a listing, not code | INV-234 |
-| on a mixed-type source, send an enum-valid `record_type` | INV-280 |
+| on a mixed-type source, send the source's dominant type as `record_type` | INV-280 |
 
 ⚠️ **Why a guard.** INV-183 requires a rule binding a step to be nameable **at** that step, and
 a `⛔` with no ID is one a later editor cannot look up. Each citation is asserted **in the window
@@ -54,7 +54,9 @@ RULES = [
     (SKILLS + "module-03-system-verification/phase1-verification.md",
      "`generate_scaffold` returns a **listing**, not code", "INV-234"),
     (SKILLS + "module-05-data-quality-mapping/phase2-data-mapping.md",
-     "On a mixed-type source, send an enum-valid `record_type`", "INV-280"),
+     # Moved with the rule's wording (#38, 2026-11-18): `record_type` is free text on server
+     # 1.46.1, so "enum-valid" no longer describes it; the instruction is unchanged.
+     "On a mixed-type source, send the source's dominant type as `record_type`", "INV-280"),
 ]
 
 # What each citation promises, so a citation cannot survive the invariant changing under it.
@@ -113,6 +115,33 @@ class EachRuleCitesItsInvariantAtItsLine(unittest.TestCase):
         """Row 2 replaces INV-315: the sentence states INV-308's one-definition rule."""
         rel, needle, _inv = RULES[1]
         self.assertNotIn("INV-315", self.window_citations(rel, needle))
+
+
+#: The mixed-type rule's retired wording (#38): "enum-valid" described the step-2 `record_type`
+#: enum, which server 1.46.1 (2026-11-18) no longer declares.
+RETIRED_MIXED_TYPE_WORDING = "send an enum-valid `record_type`"
+
+
+def retired_wording_problems(text):
+    return (["the mixed-type rule says %r again; `record_type` is free text on server 1.46.1"
+             % RETIRED_MIXED_TYPE_WORDING] if RETIRED_MIXED_TYPE_WORDING in text else [])
+
+
+class TheMixedTypeRuleKeepsItsCorrectedWording(unittest.TestCase):
+    """#38: the row's phrase moved with the rule; the old phrase must not come back."""
+
+    def setUp(self):
+        rel = RULES[-1][0]
+        self.text = (REPO_ROOT / rel).read_text(encoding="utf-8")
+
+    def test_the_shipped_rule_carries_no_retired_wording(self):
+        self.assertEqual([], retired_wording_problems(self.text))
+
+    def test_restoring_the_retired_wording_fails(self):
+        mutant = self.text.replace(RULES[-1][1],
+                                   "On a mixed-type source, " + RETIRED_MIXED_TYPE_WORDING, 1)
+        self.assertNotEqual(mutant, self.text, "the mutation found nothing to change")
+        self.assertTrue(retired_wording_problems(mutant))
 
 
 class EachCitedInvariantStillPromisesWhatIsClaimed(unittest.TestCase):

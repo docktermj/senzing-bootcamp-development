@@ -153,7 +153,7 @@ corpus rather than missed by the query (absence negative) — server **1.37.19**
 `out of sync` line seen during a concurrent SQLite load is therefore reported as **an environment
 observation**, with the SDK version and date, or not characterized at all (INV-080/INV-149) — never
 as a Senzing fact and never as reassurance the plugin cannot source.
-<!-- MCP-NEGATIVE: search_docs(query='resolved entity is out of sync expected got concurrent loading SQLite lock') — no indexed document names the "Resolved entity … is out of sync" engine message — owner: search_docs IS the corpus route for a documented engine message and the nearest material it serves is the 4.4.0 advisory-locking article stating SQLite falls back to LEASE with no advisory locks, so the message is uncovered by the corpus rather than missed by the query (absence negative) — server 1.36.0, 2026-09-02 -->
+<!-- MCP-NEGATIVE: search_docs(query='resolved entity is out of sync expected got concurrent loading SQLite lock') — no indexed document names the "Resolved entity … is out of sync" engine message — owner: search_docs IS the corpus route for a documented engine message and the nearest material it serves is the 4.4.0 advisory-locking article stating SQLite falls back to LEASE with no advisory locks, so the message is uncovered by the corpus rather than missed by the query (absence negative) — server 1.46.1, 2026-11-18 -->
 
 **Checkpoint:** write step 6.
 

@@ -451,7 +451,7 @@ identical responses"*. Meanwhile `SZ_SEARCH_BY_ATTRIBUTES_ALL`'s own row does li
 (MCP server 1.37.14, 2026-09-28).
 The membership was there all along, one lookup away. So:
 
-<!-- MCP-NEGATIVE: get_sdk_reference(topic='flags', filter='SZ_SEARCH_BY_ATTRIBUTES_DEFAULT_FLAGS', language='python') — the SZ_SEARCH_BY_ATTRIBUTES_DEFAULT_FLAGS row carries no composite_members field, while its description names the composite it is defined as — owner: get_sdk_reference(topic='flags') IS the route that owns composite membership, and the same response's SZ_SEARCH_BY_ATTRIBUTES_ALL row lists its members and the method_signatures default for search_by_attributes is SZ_SEARCH_BY_ATTRIBUTES_ALL, so the membership is reachable from this one response rather than absent (routing negative) — server 1.37.14, 2026-09-28 -->
+<!-- MCP-NEGATIVE: get_sdk_reference(topic='flags', filter='SZ_SEARCH_BY_ATTRIBUTES_DEFAULT_FLAGS', language='python') — the SZ_SEARCH_BY_ATTRIBUTES_DEFAULT_FLAGS row carries no composite_members field, while its description names the composite it is defined as — owner: get_sdk_reference(topic='flags') IS the route that owns composite membership, and the same response's SZ_SEARCH_BY_ATTRIBUTES_ALL row lists its members and the method_signatures default for search_by_attributes is SZ_SEARCH_BY_ATTRIBUTES_ALL, so the membership is reachable from this one response rather than absent (routing negative) — server 1.46.1, 2026-11-18 -->
 
 1. Ask `topic='flags'` first — it is authoritative and structured.
 2. If `composite_members` is absent, read the description first — it may name the composite it
@@ -487,7 +487,7 @@ server 1.33.0, 2026-08-26). Two shapes follow, and the choice is the binding's, 
   itself be a **collection of members**. If it is a collection, it cannot be listed among the
   members; it is **merged** into the set.
 
-<!-- MCP-NEGATIVE: get_sdk_reference(topic='flags', filter='SZ_ENTITY_INCLUDE_ALL_RELATIONS', language='java') — no field on any returned row names a binding or its argument types — the rows carry only membership, dependency and provenance fields — and the response is byte-identical with and without the language argument — owner: get_sdk_reference(topic='parameters', filter='<method>', language='java') IS the route that owns per-binding types and returns flags as Set<SzFlag> for Java plus a warning naming every binding that differs, so the parameters topic is where the reader must go (routing negative) — server 1.36.0, 2026-09-02 -->
+<!-- MCP-NEGATIVE: get_sdk_reference(topic='flags', filter='SZ_ENTITY_INCLUDE_ALL_RELATIONS', language='java') — no field on any returned row names a binding or its argument types — the rows carry only membership, dependency and provenance fields — and the response is byte-identical with and without the language argument — owner: get_sdk_reference(topic='parameters', filter='<method>', language='java') IS the route that owns per-binding types and returns flags as Set<SzFlag> for Java plus a warning naming every binding that differs, so the parameters topic is where the reader must go (routing negative) — server 1.46.1, 2026-11-18 -->
 ⚠️ **`topic='flags'` cannot answer this — no field it returns names a binding or its argument
 types.** Rows differ from one another only in membership and dependency fields
 (`composite_members`, `depends_on`, `response_paths`), never in anything language-specific

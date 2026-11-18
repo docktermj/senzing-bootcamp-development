@@ -22,14 +22,18 @@ collision is one instance of it.
 check was in the wrong place in the flow, not missing, which is why the remedy moves it to
 the mapping gate rather than inventing a new instrument.
 
-⛔ **The prohibition is documented; only its consequence is OBSERVATION-ONLY, and these
-tests pin that split**, not just the guidance. `mapping_workflow` step 2's inline *SENZING
+⛔ **The prohibition is documented, and since #38 so is its consequence; these tests pin which
+route carries which**, not just the guidance. `mapping_workflow` step 2's inline *SENZING
 MAPPING REFERENCE* serves the prohibition itself — a root-level payload attribute "must NOT
 be a registered feature attribute" (server 1.37.16, 2026-10-01, #322) — so the guidance cites
 that step for the rule. What breaking it does (the key is extracted as a feature) is still
-one run, one SDK build, the analyzer as corroborating instrument: neither that step nor any
-indexed `search_docs` section states it. That absence is carried as an `MCP-NEGATIVE` marker
-with its owning route so a dry run re-asks it (INV-080/INV-149/INV-194/INV-213).
+one run, one SDK build, the analyzer as corroborating instrument, and until #38 neither that
+step nor any indexed `search_docs` section stated it. Re-asked on server 1.46.1, 2026-11-18, the
+consequence is stated by `analyze_record` (`validation_guidance.valid_shapes`: "feature
+attributes at the record root — flat, still supported") and by `sdk_guide(topic='load')`'s
+compatibility note, so the observation-only label is gone and the text cites those routes. The
+`search_docs` query still returns no section stating it, so the marker stays, as a ROUTING
+negative naming those two routes as the owner (INV-080/INV-194/INV-213).
 
 Source spec: `specs/routing-a-registered-feature-attribute-to-payload-is-silently-a-no-op.md`.
 
@@ -149,17 +153,53 @@ class TheGeneralShapeIsNamed(unittest.TestCase):
         self.assertIn("Wherever a question's answer chooses a behavior", flat(PHASE2))
 
 
+#: #38: the consequence is now stated by these routes (server 1.46.1, 2026-11-18). What the
+#: paragraph must say, and the observation-only wording it must no longer carry.
+CONSEQUENCE_KEPT = (
+    "The consequence is documented too",
+    "2026-08-17",
+    "analyzer's own SCHEMA warning as the corroborating instrument",
+    "`analyze_record`'s `validation_guidance.valid_shapes`",
+    "feature attributes at the record root — flat, still supported",
+    "the compatibility note of `sdk_guide`'s `load` topic",
+    "**1.46.1, 2026-11-18**",
+)
+CONSEQUENCE_RETIRED = (
+    "This mechanism is OBSERVATION-ONLY",
+    "re-confirm before relying on it",
+    "Treat the extracted-as-feature consequence as a strong local observation",
+)
+
+
+def consequence_problems(text):
+    problems = ["the consequence paragraph no longer says %r" % k
+                for k in CONSEQUENCE_KEPT if k not in text]
+    problems += ["the consequence paragraph still says %r, which the 2026-11-18 re-ask retired" % r
+                 for r in CONSEQUENCE_RETIRED if r in text]
+    return problems
+
+
 class ThePrecedenceMechanismIsMarkedObservationOnly(unittest.TestCase):
-    """⛔ INV-080/INV-149 — never presented as MCP-sourced."""
+    """⛔ INV-080 — the consequence is cited to the routes that now state it (#38).
 
-    def test_it_is_labeled_observation_only_with_its_date_and_instrument(self):
+    Named for what it guarded before server 1.46.1 documented the consequence, and kept so its
+    history stays readable: until 2026-11-18 it pinned the observation-only label.
+    """
+
+    def test_it_is_cited_to_the_routes_with_its_first_observation(self):
+        self.assertEqual([], consequence_problems(flat(PHASE2)))
+
+    def test_dropping_a_cited_route_fails(self):
         text = flat(PHASE2)
-        self.assertIn("This mechanism is OBSERVATION-ONLY", text)
-        self.assertIn("2026-08-17", text)
-        self.assertIn("analyzer's own SCHEMA warning as the corroborating instrument", text)
+        for kept in CONSEQUENCE_KEPT[3:6]:
+            with self.subTest(kept=kept):
+                self.assertTrue(consequence_problems(text.replace(kept, "")))
 
-    def test_it_tells_the_reader_to_re_confirm_before_relying_on_it(self):
-        self.assertIn("re-confirm before relying on it", flat(PHASE2))
+    def test_restoring_the_observation_only_label_fails(self):
+        text = flat(PHASE2)
+        for retired in CONSEQUENCE_RETIRED:
+            with self.subTest(retired=retired):
+                self.assertTrue(consequence_problems(text + " " + retired))
 
     def test_the_absence_carries_a_well_formed_negative_marker(self):
         """INV-194 — a negative with no owning route does not parse and is not evidence.
@@ -171,7 +211,7 @@ class ThePrecedenceMechanismIsMarkedObservationOnly(unittest.TestCase):
         self.assertEqual(1, len(lines), "expected exactly one marker in this file")
         raw, marker = lines[0]
         self.assertIn("owner:", marker, "the marker names no owning route")
-        self.assertIn("absence negative", marker)
+        self.assertIn("routing negative", marker)
         self.assertRegex(raw, r"server \d+\.\d+\.\d+, \d{4}-\d{2}-\d{2} -->$")
 
     def test_the_marker_is_not_left_as_bare_prose(self):
@@ -195,34 +235,66 @@ class ThePrecedenceMechanismIsMarkedObservationOnly(unittest.TestCase):
                       "*SENZING MAPPING REFERENCE*", text)
         self.assertIn('"must NOT be a registered feature attribute"', text)
         self.assertIn("server **1.37.16, 2026-10-01**", text)
-        self.assertIn("Treat the extracted-as-feature consequence as a strong local "
-                      "observation, not as documented behavior", text)
+        # #38: the consequence is now documented too, by other routes; see
+        # `ThePrecedenceMechanismIsMarkedObservationOnly`.
+        self.assertIn("`mapping_workflow` step 2 states only the prohibition", text)
 
     def test_the_prohibition_is_not_called_undocumented_again(self):
         """#322 — the old framing contradicted the tool the guide is already calling."""
         self.assertNotIn("not as a documented rule", flat(PHASE2))
 
     def test_the_marker_is_rescoped_to_the_consequence(self):
-        """#322 / INV-213 — the claim is the consequence; the owner names both routes."""
+        """#322 / INV-213 — the claim is the consequence; the owner names the routes that carry it.
+
+        #38: re-asked on server 1.46.1, 2026-11-18. The claim still holds; the owner moved from
+        the Entity Specification's *Attribute reference* section (no longer among the query's
+        hits) to `analyze_record` and `sdk_guide(topic='load')`, which state the consequence, so
+        the marker is now a routing negative.
+        """
         lines = collision_markers()
         self.assertEqual(1, len(lines), "expected exactly one marker in this file")
         _, marker = lines[0]
+        self.assertEqual([], marker_owner_problems(marker))
+
+    def test_the_old_owner_restored_fails(self):
+        _, marker = collision_markers()[0]
+        claim, _, _ = marker.partition(" — owner: ")
+        old = (claim + " — owner: mapping_workflow step 2's inline SENZING MAPPING REFERENCE "
+               "carries the prohibition (\"must NOT be a registered feature attribute\") but "
+               "states no consequence of breaking it, so search_docs over the Entity "
+               "Specification IS the route that would carry the consequence (absence negative) "
+               "— server 1.37.16, 2026-10-01")
+        self.assertTrue(marker_owner_problems(old))
         self.assertTrue(marker.startswith(
             "MCP-NEGATIVE: search_docs(query='payload attribute versus registered feature "
             "attribute record root extracted as feature precedence', "
             "category='data_mapping') — "),
             "the marker's query string or route changed")
-        claim, _, rest = marker.partition(" — owner: ")
-        self.assertIn("no indexed section states that a root-level key named after a "
-                      "registered feature attribute is extracted as a feature", claim)
-        self.assertIn("mapping_workflow step 2's inline SENZING MAPPING REFERENCE carries "
-                      "the prohibition", rest)
-        self.assertIn("states no consequence", rest)
-        self.assertIn("search_docs over the Entity Specification IS the route that would "
-                      "carry the consequence", rest)
-        self.assertIn('"Only the attributes listed here may appear inside a feature object. '
-                      'Anything else is treated as payload"', rest)
-        self.assertTrue(marker.endswith("(absence negative) — server 1.37.16, 2026-10-01"))
+
+
+def marker_owner_problems(marker):
+    """What is wrong with the collision marker's claim and owner (#322, #38)."""
+    problems = []
+    if not marker.startswith(
+            "MCP-NEGATIVE: search_docs(query='payload attribute versus registered feature "
+            "attribute record root extracted as feature precedence', "
+            "category='data_mapping') — "):
+        problems.append("the marker's query string or route changed")
+    claim, _, rest = marker.partition(" — owner: ")
+    if ("no indexed section states that a root-level key named after a registered feature "
+            "attribute is extracted as a feature") not in claim:
+        problems.append("the claim is no longer the consequence")
+    for needle in ("analyze_record(workspace_dir=", "validation_guidance.valid_shapes",
+                   "sdk_guide's load topic",
+                   "mapping_workflow step 2's inline SENZING MAPPING REFERENCE carries only "
+                   "the prohibition", "(routing negative)"):
+        if needle not in rest:
+            problems.append("the owner clause does not name %r" % needle)
+    for retired in ("states no consequence", "search_docs over the Entity Specification IS",
+                    "(absence negative)"):
+        if retired in rest:
+            problems.append("the owner clause still says %r, retired on 2026-11-18" % retired)
+    return problems
 
 
 class TheCheckIsNotABlanketObjectionToPayload(unittest.TestCase):
