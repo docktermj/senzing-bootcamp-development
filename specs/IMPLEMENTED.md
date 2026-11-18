@@ -493,7 +493,7 @@ line and holds no copy of it, so changing the line changes the range.
   2026-11-14, promotion is `python3 -m tools.bootcamp_build promote`. The enforcer named above,
   `tests/test_propagate_publishes_the_pages_site.py`, is not carried into this repository.)
 
-- **PROPOSED AMENDMENT to INV-351 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-351 — applied 2026-11-18 by the maintainer.**
     - ⛔ **Promotion writes exactly those paths and nothing else, and it stops at the working tree: no commit, no branch, no push.** — in `tools/bootcamp_build/promote.py`
 
   INV-351 requires this repository's marketplace to carry its own name and `propagate.sh` to
