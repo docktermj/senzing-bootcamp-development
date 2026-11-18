@@ -456,7 +456,7 @@ line and holds no copy of it, so changing the line changes the range.
   from the root. The enforcer named above, `tests/test_maintainer_tooling_stays_out_of_public.py`,
   is not carried into this repository.)
 
-- **PROPOSED AMENDMENT to INV-307 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-307 — applied 2026-11-18 by the maintainer.**
     - ⛔ **Never write a new file under `specs/`.** — in `.claude/skills/production-readiness-audit/SKILL.md`
 
   INV-307 requires the frozen set to be pinned in `specs/FROZEN-MANIFEST.txt` and names
