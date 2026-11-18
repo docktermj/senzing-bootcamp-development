@@ -22,15 +22,26 @@ assistant and no assistant gets its own copy to drift.
 | `specs/` | The invariant register and its ledgers |
 | `.claude/skills/` | The maintainer operations |
 
-The source marks every place where assistants differ, in one of three ways:
+The source marks every place where assistants differ, in one of four ways:
 
 - `{{host.name}}`: a value from the assistant's profile, such as its product name.
 - `<!-- host:only claude, kiro -->` … `<!-- host:end -->`: lines kept only for the named assistants.
+- `<!-- host:except claude, kiro -->` … `<!-- host:end -->`: lines kept for every assistant but the named ones.
 - `<!-- host:include name -->`: a passage each assistant supplies, from `hosts/<assistant>/fragments/`.
 
-Text outside a marker is copied unchanged into every package.
-That is what keeps the bootcamp the same everywhere, and it is why a test that passes on
-`source/` holds for every assistant.
+The build also changes text outside a marker, in these cases, each written in
+`tools/bootcamp_build/emit.py`:
+
+- On an assistant whose package carries no commands, each command is built as a skill of the
+  same name: a `name:` line is added to its frontmatter, its `../skills/` links are rewritten
+  to `../`, and a note saying where the sibling skills are is appended.
+- On an assistant whose profile sets `skill_location_note`, that note is appended to every
+  `SKILL.md`.
+- Every Markdown file in a package that is longer than `READ_CUT_CHARACTERS`, outside the
+  package's docs directory, gets an instruction at its top to read the file to its last line.
+
+Outside these cases, text outside a marker reaches every package as it is written, and that
+is why a test that passes on `source/` holds for every assistant.
 
 ## Everyday commands
 
@@ -45,8 +56,13 @@ python3 -m tools.bootcamp_build promote --to ~/github.com/senzing/bootcamp
 
 `check` stops a change that would reach only some assistants. It fails when:
 
-- the source names an assistant outside a marker for that assistant
-- a built package names a different assistant
+- a count of names of an assistant is above its ceiling in
+  `tools/bootcamp_build/neutrality.json`, or below it until the ceiling is lowered to match.
+  Names are counted in the source, outside a marker for that assistant, and in each package,
+  where they name a different assistant.
+- a built skill has a frontmatter problem: no readable frontmatter, a `name` that does not
+  match its directory or breaks the naming rule, a `description` of a length some assistant
+  rejects, or a key not every assistant reads
 - an assistant does not define a value the source uses, or does not supply a passage it includes
 - a source file is not placed, or dropped on purpose, by every assistant
 - two builds of the same source differ

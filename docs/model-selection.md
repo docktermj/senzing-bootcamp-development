@@ -143,7 +143,8 @@ gate/format slips, and Fable's premium buys little the workloads here need.
 ## Per-skill evaluation
 
 Why each stage has its effort level. This table is the only record of the reasoning,
-so every shipped skill has a row.
+so every skill under `source/skills/` has a row. The five commands under
+`source/commands/`, which four assistants ship as skills, have none.
 
 **Re-assessed 2026-07-26,** when the levels were still session settings the bootcamper
 was asked to choose; the model half of that assessment was dropped with issue #4 and

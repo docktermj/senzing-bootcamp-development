@@ -164,8 +164,10 @@ the run rather than from a figure written here, which is how the previous baseli
 - **`per-rule`** asks whether a reader **at that line** can name the governing rule — the
   invariants cited in the rule itself or the sentence beside it. This is what INV-183 requires,
   and it is a much larger number than `rules` reports.
-- **`since --since-last-audit`** lists the hard rules added since the newest audit entry's
-  recorded commit, resolved from the ledger rather than guessed. For a run following an
+- **`since --since-last-audit`** lists the hard rules added since a start resolved from the
+  ledger rather than guessed: the newest audit entry whose `Commit:` names a commit in this
+  repository, or, when no entry yields one, the commit on the `Fallback commit` line of
+  `specs/IMPLEMENTED.md`, with a `FALLBACK` line printed (INV-432). For a run following an
   unattended implement session, this is the set that session is answerable for.
 - **`reverse-check --since-last-audit`** takes that set and asks, of each line, whether an
   invariant is cited **at it** — then prints a `VERDICT`. ⛔ **(INV-308) It says `clean` only when every
@@ -177,8 +179,10 @@ the run rather than from a figure written here, which is how the previous baseli
   and is not read here.
 
 ⛔ **Commit an audit record on its own, BEFORE the implementations that answer it.** The
-`--since-last-audit` resolver takes the newest audit entry's `Commit:` field as its range
-start, so a record committed *with* the work makes the range start at the work and report
+`--since-last-audit` resolver takes the newest audit entry whose `Commit:` field names a
+commit in this repository as its range start (and, only when no entry yields one, the commit
+on the `Fallback commit` line of `specs/IMPLEMENTED.md`, printing a `FALLBACK` line), so a
+record committed *with* the work makes the range start at the work and report
 `0 hard-rule lines added` — which reads exactly like a run that added none, and is enough to
 let a hard rule ship with no invariant and no deferral. Measured 2026-09-03: `ffa6a2f` carried
 a record plus its two implementations, `since --since-last-audit` reported 0, and
@@ -409,9 +413,11 @@ session end:
 1. ⛔ **(INV-317) Record it as you find it, before fixing anything** — one record per root cause,
    using `../feedback-to-issues/issue-template.md`. Cite `file:line`.
 
-   ⛔ **Never write a new file under `specs/`.** It is a read-only archive as of the 2026-09-15 cutover (INV-307)
-   and `tests/test_specs_are_frozen.py` rejects any new file there. Read it freely — a spec
-   often records why the plugin reads as it does — but nothing new lands there.
+   ⛔ **Never write a new file under `specs/`.** It holds live records only (INV-307), and the
+   table in `specs/README.md` is the list of the files that belong there. The frozen archive
+   of the spec files is in the repository `specs/README.md` names. Read both freely — a
+   spec often records why the plugin reads as it does — but nothing new lands under
+   `specs/`.
 
    ⚠️ **Where the record goes depends on whether anyone is watching, and the two paths are
    NOT the same.** This asymmetry is deliberate and must not be "simplified" into one branch:

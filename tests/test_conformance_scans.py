@@ -250,6 +250,56 @@ class TestTheSizeScan(unittest.TestCase):
         self.assertIn("rationale", out)
 
 
+class TestDuplicationAndSizeNameTheRootTheyRead(unittest.TestCase):
+    """`duplication` and `size` print a `CORPUS:` line naming `source`, on every run (#48).
+
+    INV-431 requires each view to name the roots it read on every run, a run that finds
+    nothing included (INV-308): `0 repeated passages` and `0 files` cannot otherwise say
+    whether anything was read. Both scans read `source/` alone, so the line names `source`.
+    """
+
+    DUPLICATION = re.compile(r"(?m)^   CORPUS: source \((\d+) file\(s\)\) — and `\.md` only\.$")
+    SIZE = re.compile(r"(?m)^   CORPUS: source \((\d+) `\.md` file\(s\)\), and the `\.py` files "
+                      r"directly under source/scripts \((\d+) file\(s\)\)\.$")
+
+    def test_duplication_names_its_root_on_a_run_that_finds_nothing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = fixture(tmp, {"skills/a.md": "# A\n\nnothing repeated here\n"})
+            code, out, err = run("duplication", root)
+        self.assertEqual(0, code, err)
+        self.assertIn("0 repeated passages", out)
+        match = self.DUPLICATION.search(out)
+        self.assertIsNotNone(match, "no CORPUS line naming source in:\n%s" % out)
+        self.assertEqual("1", match.group(1))
+
+    def test_size_names_its_root_on_a_run_with_no_markdown_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = fixture(tmp, {})
+            code, out, err = run("size", root)
+        self.assertEqual(0, code, err)
+        self.assertIn("0 files, 0 words", out)
+        match = self.SIZE.search(out)
+        self.assertIsNotNone(match, "no CORPUS line naming source in:\n%s" % out)
+        self.assertEqual(("0", "0"), match.groups())
+
+    def test_size_counts_the_bundled_scripts_in_its_line(self):
+        """`size` also reads `.py` files under `source/scripts/`, so its line is not `.md` only."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = fixture(tmp, {"skills/a.md": "one two\n", "scripts/x.py": "print(1)\n"})
+            _code, out, _err = run("size", root)
+        match = self.SIZE.search(out)
+        self.assertIsNotNone(match, "no CORPUS line naming source in:\n%s" % out)
+        self.assertEqual(("1", "1"), match.groups())
+
+    def test_both_lines_print_on_the_live_repository(self):
+        for scan, pattern in (("duplication", self.DUPLICATION), ("size", self.SIZE)):
+            with self.subTest(scan=scan):
+                _code, out, _err = run(scan, REPO_ROOT)
+                match = pattern.search(out)
+                self.assertIsNotNone(match, "%s printed no CORPUS line:\n%s" % (scan, out))
+                self.assertGreater(int(match.group(1)), 0, "%s read no file" % scan)
+
+
 class TestTheSkillDocumentsWhatTheScansCannotDo(unittest.TestCase):
     """The scans are lead generators; a run that reports their counts has run a grep."""
 
