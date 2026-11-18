@@ -36,6 +36,124 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## inv-427-is-written-for-every-file-the-guide-reads-and-ships-at-one-site
+
+- **Implemented:** 2026-11-17 (issue #39)
+- **Files changed:** `tools/bootcamp_build/emit.py`, `tools/bootcamp_build/validate.py`,
+  `tests/test_ground_rules_are_read_to_the_end.py`, `specs/IMPLEMENTED.md` (this entry)
+- **MCP re-check:** n/a (no Senzing fact). Re-confirmed on 2026-11-17 against the change itself:
+  it adds one instruction about reading a file to its end to the built copy of each long
+  Markdown file, and a number of characters that decides which files are long. Neither says
+  anything about Senzing or about what the Senzing MCP server serves. No absence claim about
+  the server is made, so INV-213's `owner-checked:` clause is not owed.
+- **Summary:** The build now puts one read-to-the-end instruction at the top of every Markdown
+  file over 30,000 characters, in every assistant's package. This is finding 5 of
+  `production-readiness-audit-2026-11-17`. Until now the instruction shipped at one site, the
+  onboarding step that names the ground rules.
+  - **The instruction.** `READ_TO_THE_END_NOTE` in `tools/bootcamp_build/emit.py` is the one
+    text. It says to read the file to its last line, that a read that reports it was cut short
+    or truncated has not read it, to continue from where it stopped in as many reads as it
+    takes, and to do so before acting on anything the file says. It cites INV-427 on its ⛔
+    line and names no assistant. It is the same three lines in every package and every file.
+  - **The cut.** `READ_CUT_CHARACTERS = 30_000`, in the same file, is the one definition. The
+    build reads it and the test imports it. A file of 30,000 characters or fewer gets no
+    instruction.
+  - **What is measured.** `_add_read_to_the_end_notes()` runs last in `build_host()`, after the
+    step that appends a skill's location and the step that writes `host-rules.md`. So the size
+    is the file's size in characters as the package ships it, before the instruction is added,
+    and each package is judged on its own files.
+  - **Where it goes.** After the frontmatter where the file has one, otherwise first in the
+    file. The instruction and one blank line go in front of the first line that is not blank,
+    and nothing else in the file changes. A `SKILL.md` over the cut still starts with its
+    frontmatter, and `tools.bootcamp_build check` still reports 0 skill frontmatter problems.
+  - **The docs directory.** The build leaves every file under the package's docs directory
+    alone. It reads the directory from the assistant's own layout: `docs/` in four packages
+    and `skills/bootcamp-onboarding/docs/` in the Kiro package. The example recap there is
+    52,069 characters and carries no instruction.
+  - **Counted on 2026-11-17, at `834a961` plus this change.** Each of the five packages holds
+    19 Markdown files over the cut. 18 carry the instruction: the ground rules, 13 phase and
+    reference files, and four `SKILL.md` files (`bootcamp-preparation`, `graduation`,
+    `module-02-sdk-setup`, `module-04-data-collection`). The 19th is the example recap. That is
+    90 files in all.
+  - **The issue's sizes are from an older commit.** It gives
+    `skills/bootcamp-preparation/SKILL.md` as 30,708 characters in the Claude package and
+    31,746 in the Kiro package, and `module-06-data-processing/phaseC-multi-source.md` as
+    29,621. They are 30,659, 31,697 and 29,444 today. Each is on the same side of the cut as
+    the issue says, so `phaseC-multi-source.md` gets no instruction.
+  - **`source/` is unchanged.** No file under `source/` or `hosts/` carries the instruction, and
+    a test holds that. The onboarding step keeps its own sentence and "before the first
+    reply". The eleven "Follow … throughout" lines are not reworded.
+  - **One regular expression moved.** `FRONTMATTER_RE` moves from `validate.py` to `emit.py`,
+    and `validate.py` imports it. `validate.py` already imports from `emit.py`, so defining it
+    in `emit.py` keeps one copy and no import cycle.
+  - **Tests.** `tests/test_ground_rules_are_read_to_the_end.py` goes from 3 tests to 30. Its
+    three existing tests are unchanged and pass.
+    - Nine tests read all five built packages, taking the assistants from the build's own list
+      (INV-246). They find every Markdown file over the cut outside the docs directory and
+      require the instruction as its first body text. They fail when a package yields no file
+      over the cut, and they require the ground rules and at least one `SKILL.md` among the
+      files found (INV-265). They also hold that the text is the same in every file, that each
+      file carries it once, that a file at or under the cut carries none, and that no file in
+      the docs directory carries it.
+    - Four tests read the instruction itself: it says every part, it fails with any part
+      removed, it names no assistant by id, name, product or any profile's foreign term, and
+      no file under `source/` or `hosts/` carries it.
+    - Six tests build a miniature repository: one character over the cut gets the instruction
+      and the cut itself does not; a file with frontmatter gets it after the frontmatter; one
+      source file is over the cut in one package and exactly at it in the other; a file that
+      grows gets it and one that shrinks loses it; the docs directory is left alone under
+      either layout; a long script is left alone.
+    - Eight negative controls run on every pass. The check reports a long file without the
+      instruction, a real ground-rules file with the instruction taken out (in each package),
+      a skill with frontmatter and no instruction, an instruction placed below the heading,
+      and an instruction with a part missing. It reports nothing for a file at the cut or in
+      the docs directory, and a second check reports an instruction on a file under the cut.
+    - Negative control run once, in a throwaway clone of `834a961` holding this change with
+      the one call to `_add_read_to_the_end_notes()` removed: 10 of the 30 tests fail
+      (`FAILED (failures=197)`).
+    - The instruction is compared with the build's text, line wraps included, because the
+      build writes it. What it says is checked with whitespace collapsed (INV-346).
+  - **Not observed.** No run on a real assistant was made, so no record is added to any
+    `hosts/<assistant>/checks.json`. The test shows that each package carries the instruction.
+    It does not show that an assistant reads on when told to. Verified on Linux only, with
+    Python 3.12.3. The new build code is standard library only, measures decoded text and has
+    no branch on the platform (INV-001). A checkout that converts line endings to CRLF would
+    count each carriage return; the build already needs LF there, because it requires a
+    command to start with `---` and a line feed.
+  - **Found and not changed, as out of scope.** Two cases the issue does not decide, neither of
+    which occurs today. The build would add the instruction to a Markdown file over the cut
+    under a `vendor/` directory, which it otherwise copies byte for byte; no package holds
+    one. And a command over the cut, built as a skill, would gain two lines that
+    `test_a_command_turned_into_a_skill_keeps_its_instructions` in
+    `tests/test_bootcamp_build_hosts.py` does not expect; the largest command is 2,352 bytes.
+- **Invariants.** Establishes no new invariant (INV-309), and proposes a change to one in
+  force. The register is not edited here (INV-365). The change adds one hard-rule line, the
+  instruction's ⛔ line in `tools/bootcamp_build/emit.py`, and it cites INV-427 on that line:
+  `conformance.py since --since-last-audit` reports it outside the corpus, cited. INV-427 as
+  registered says "before its first reply" and its enforcer checked one step, so the block
+  below drafts the dated note the issue asks for. Until the maintainer applies it, the
+  register's wording is narrower than what the packages carry.
+
+- **PROPOSED AMENDMENT to INV-427 — awaiting the maintainer's sign-off; NOT applied.**
+    - ⛔ **(INV-427) Read this file to its last line.** — in `tools/bootcamp_build/emit.py`
+
+  INV-427's first clause covers every file the bootcamp tells the guide to read before acting.
+  Its last clause says "before its first reply", and its enforcer checked only the onboarding
+  step that names the ground rules. So the rule can be read as binding the first turn alone,
+  while each package holds 17 more files of instructions over the size at which the observed
+  read was cut. Since #39 the build states the rule at the top of each of them, and
+  `tests/test_ground_rules_are_read_to_the_end.py`, the enforcer the invariant names, checks
+  every built package. Without the note below the register says less than its enforcer holds:
+  a later change could take the instruction off a phase file, or raise the cut, and
+  contradict no registered wording.
+
+  Drafted wording follows, under the registered id. A new rule's id would be
+  written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
+
+  **INV-427** — (⚠️ **Dated note, 2026-11-17 (#39): the rule covers every long file of instructions in every assistant's package, and the build states it at the top of each; the rule above is unchanged.** The rule is not about the ground rules alone, nor about the first turn alone. Every Markdown file of instructions over the cut, in every assistant's package, MUST carry the read-to-the-end instruction as its first body text: after the frontmatter where the file has one, otherwise first in the file. The cut is 30,000 characters, the size at which the read observed above was cut. It is measured on the file as built for that package, before the instruction is added, and a file of 30,000 characters or fewer carries none. The build adds the instruction: `READ_TO_THE_END_NOTE` in `tools/bootcamp_build/emit.py` is its one text and `READ_CUT_CHARACTERS` there is the one definition of the cut. No file under `source/` carries it by hand, so a file that grows past the cut gets it at the next build. The instruction MUST be the same text in every package and every file, MUST name no assistant, and MUST say all of: read the file to its last line; a read that reports it was cut short or truncated has not read the file; continue from where it stopped, in as many reads as it takes; do so before acting on anything the file says. Where the rule above says "before its first reply", read, for a file the guide reads after the first turn: before acting on anything the file says. The onboarding step that names the ground rules keeps "before the first reply", which is right for the first turn. A file under the package's docs directory is not a file of instructions and carries none: the example recap there is a model of the bootcamper's own recap and ships as a pair with a PDF. Observed (`production-readiness-audit-2026-11-17`, finding 5): the instruction shipped at one site while each package held 17 other files of instructions over the cut, four of them `SKILL.md` files that are loaded with no hand-over sentence. Enforced by `tests/test_ground_rules_are_read_to_the_end.py`, which reads the cut from the build and reads every built package; it **cannot** establish that a live turn obeys the instruction, and no run on a real assistant was made for #39.)
+
+- **Commit:** uncommitted
+
 ## shared-text-names-one-assistants-files-ids-and-mechanisms-in-other-packages
 
 - **Implemented:** 2026-11-17 (issue #30)
