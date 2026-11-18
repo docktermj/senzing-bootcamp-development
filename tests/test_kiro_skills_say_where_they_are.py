@@ -27,8 +27,8 @@ bootcamp found nowhere.
 
 The order finishes one Kiro home before the next: the exact directory under ``KIRO_HOME``, then
 anywhere inside its ``powers/``, then the same two under ``.kiro`` in the home directory. That
-rule is drafted as a dated note on INV-252 in the ``specs/IMPLEMENTED.md`` entry for issue #42
-and awaits the maintainer; until it is applied, this module alone holds it. The module reads
+rule is INV-252's dated note of 2026-11-17 (#42), which the maintainer applied on 2026-11-18,
+and this module enforces it. The module reads
 the order the note states. It cannot establish which place a guide looks in first on a real
 run.
 """

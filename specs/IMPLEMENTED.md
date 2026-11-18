@@ -319,7 +319,7 @@ line and holds no copy of it, so changing the line changes the range.
   Until then only the test holds them. The second is a new rule because no registered
   invariant says what an install page tells a reader about Python.
 
-- **PROPOSED AMENDMENT to INV-252 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-252 — applied 2026-11-18 by the maintainer.**
     - ⛔ **If the bootcamp is not there, look in these places, in this order, and take the first one that holds the bootcamp as the bootcamp's directory** — in `hosts/kiro/host.json`
     - ⛔ **If none of the four places holds the bootcamp, stop and tell the bootcamper that the bootcamp's files were not found.** — in `hosts/kiro/host.json`
 
