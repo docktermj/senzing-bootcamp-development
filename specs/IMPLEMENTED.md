@@ -36,6 +36,83 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## inv-050-says-config-license-json-is-written-in-module-4-module-2-writes-it-first
+
+- **Implemented:** 2026-11-18 (issue #41)
+- **Files changed:** `specs/IMPLEMENTED.md` (this entry)
+- **MCP re-check:** n/a (no Senzing fact). Re-confirmed on 2026-11-18 against the change
+  itself: it adds this entry and nothing else. The entry says which steps of the bootcamp
+  write `config/license.json` and quotes the bootcamp's own text. Where its note names the
+  `get_license` response, it names what Step 5a already saves; it states nothing about what
+  that call returns or how the SDK behaves. No MCP tool was called.
+- **Summary:** INV-050's layout tree annotates `config/license.json` "(written in Module 4)",
+  and its 2026-07-28 correction says "Module 2 only reads the detected limit". Module 2 Step 5a
+  saves the `get_license` response to that file, and Module 4 Step 8a sub-step 7 saves it again
+  (`production-readiness-audit-2026-11-17`, finding 9). The shipped behavior is right and the
+  invariant's text is stale, so this entry queues the `PROPOSED AMENDMENT to INV-050` block
+  below for `/review-invariants`. Nothing else changes.
+  - **The block** quotes Step 5a's sentence, "Save the returned JSON to `config/license.json`,
+    because later steps read it.", verbatim from `source/skills/module-02-sdk-setup/SKILL.md`
+    as it stands after #35 and #40. It carries the issue's dated note with `<date>` set to
+    2026-11-18, and the issue's replacement for the `license.json` line of INV-050's tree,
+    byte for byte.
+  - **Checked.** `python3 .claude/skills/review-invariants/pending_invariants.py check`
+    resolves the quote: 42 rule quotes checked, 0 mismatched, 0 unresolved, 0 unparsed (41
+    checked before this entry). `list` shows the block as pending, with
+    `AMENDS INV-050 — already registered`; the pending count goes from 31 to 32.
+  - **No test is added**, as the issue's scope says: the queue's existing checks cover the
+    block, and `tests/test_deferral_quotes_match_their_source.py` fails if Step 5a's sentence
+    stops shipping verbatim.
+  - **Not changed.** `specs/INVARIANTS.md` (INV-365), and no file under `source/`, so no
+    assistant's package changes. No run on a real assistant was made, so nothing is added to
+    any `hosts/<assistant>/checks.json`. Verified on Linux only, with Python 3.12.3. The change
+    is Markdown text in the maintainer's ledger and names no operating system's or programming
+    language's mechanism.
+- **Invariants.** The register is not edited here (INV-365). This entry establishes no new
+  invariant: the rule it concerns is INV-050, already registered, and the block below proposes
+  a dated note on it and a corrected comment on one line of its tree. The note cites INV-244
+  and INV-295, which Step 5a already applies, and changes neither.
+
+- **PROPOSED AMENDMENT to INV-050 — awaiting the maintainer's sign-off; NOT applied.**
+    - ⛔ **Save the returned JSON to `config/license.json`, because later steps read it.** — in `source/skills/module-02-sdk-setup/SKILL.md`
+
+  INV-050's tree annotates `config/license.json` "(written in Module 4)", and its 2026-07-28
+  correction says license detection moved to Module 4 and "Module 2 only reads the detected
+  limit". Module 2 Step 5a now measures the license with no prompt, saves the response to the
+  file as a provisional reading, and writes nothing when it cannot measure; Module 4 Step 8a
+  sub-step 7 measures again, with the engine configuration in force, and saves the file again.
+  Without the note below, the register tells the next editor that Module 2 writes no license
+  file, and an edit made to agree with it would remove Step 5a's save, which the step's own
+  field-name fallback reads (INV-115). The file and its purpose are unchanged. No test pins
+  which module writes the file: `tests/test_invariant_layout_tree.py` (INV-202) checks only
+  that the tree's entry is referenced under `source/`, so this block names no enforcer.
+
+  Drafted wording follows, under the registered id. A new rule's id would be
+  written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
+
+  **INV-050** — (⚠️ **Dated note, 2026-11-18 (#41): `config/license.json` is first written in Module 2; the
+  file and its purpose are unchanged.** SDK setup (Module 2) Step 5a saves the `get_license`
+  response to `config/license.json` as a provisional reading (INV-295), and writes nothing
+  when it cannot measure (INV-244). Data collection (Module 4) Step 8a sub-step 7 saves it
+  again when that step measures, with the engine configuration in force. The 2026-07-28
+  correction's "Module 2 only reads the detected limit" no longer holds. The rules above
+  still bind.)
+
+  With the note, replace the `license.json` line of INV-050's tree. The line as it stands
+  today, its two leading spaces included:
+
+  ```text
+    │   ├── license.json                   # Detected Senzing license capacity (written in Module 4)
+  ```
+
+  Its replacement:
+
+  ```text
+    │   ├── license.json                   # Detected Senzing license capacity (written in Module 2, rewritten in Module 4)
+  ```
+
+- **Commit:** uncommitted
+
 ## module-2-gives-two-install-routes-on-windows-with-python-and-no-step-chooses
 
 - **Implemented:** 2026-11-18 (issue #40)
