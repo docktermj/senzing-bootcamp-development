@@ -436,7 +436,7 @@ line and holds no copy of it, so changing the line changes the range.
   proposes a change to a requirement, and none retires an invariant: that is the maintainer's
   decision in `/review-invariants`.
 
-- **PROPOSED AMENDMENT to INV-304 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-304 — applied 2026-11-18 by the maintainer.**
     - ⛔ **This skill is development-repo only and must NOT be propagated to the public plugin repo.** — in `.claude/skills/release/SKILL.md`
 
   INV-304 governs "the propagate mirror" and names `propagate.sh` and its enforcer
