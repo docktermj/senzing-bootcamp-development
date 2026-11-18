@@ -1,5 +1,8 @@
 """A method's flags lookup reads each thing from the reply that holds it (issue #36).
 
+Enforces **INV-435** (registered 2026-11-18). It reads Markdown and calls no server, so it
+cannot establish that a live guide tells the two reply shapes apart before reading one.
+
 `get_sdk_reference(topic='flags', filter='<method>')` used to return every flag as an entry
 with fields. On server 1.46.1 (asked 2026-11-17 and again 2026-11-18) it returns, for most
 method names, a **compact list**: lines of text under group headers, with a `detail` field that

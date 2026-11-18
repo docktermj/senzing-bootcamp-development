@@ -1127,6 +1127,19 @@ line and holds no copy of it, so changing the line changes the range.
   and the pointers name their file and section. Beyond the one block the change establishes
   no new invariant.
 
+- **DEFERRED INVARIANT (resolved INV-435, registered by the maintainer 2026-11-18).** How the guide reads a flags reply. Split at review from the INV-132 amendment below, whose draft carried these MUSTs inside a dated note; the maintainer made them their own invariant. The rules already shipping, quoted:
+    - ⛔ **Choose flags from the compact list. Before reading a field or a full description, call the row form: by flag name for one flag, or by `topic='flag_details'` for a method.** — in `source/skills/bootcamp-onboarding/ground-rules.md`
+    - ⛔ **When the compact list carries no `detail` pointer, or `topic='flag_details'` fails, fall back to the flag-name row, `get_sdk_reference(topic='flags', filter='<flag name>')`, and say which route produced what you present** — in `source/skills/bootcamp-onboarding/ground-rules.md`
+    - ⛔ **a line `A = B` is not proof that `A` is a composite** — in `source/skills/module-07-query-visualize-discover/phase1-query-visualize.md`
+
+  Enforced by `tests/test_flags_lookup_reads_the_reply_that_holds_the_field.py`.
+
+  **Why it is not an existing invariant:** INV-132 governs reading a tool's parameter shape from
+  the server; it says nothing about which of two reply shapes holds a flag's fields, or how the
+  guide must tell them apart.
+
+  **INV-435** — Before reading a reply to `get_sdk_reference(topic='flags', …)`, the guide MUST tell which shape it has: the compact list (lines under group headers) or the row form (one entry per flag with its fields). It MUST choose flags from the compact list, and MUST call the row form before reading a flag's field or its full description: by flag name for one flag, or `topic='flag_details'` for a method. Where the compact list carries no `detail` pointer, or `topic='flag_details'` fails, it MUST fall back to the flag-name row and say which route produced what it presents (INV-125). In the compact list `=` also marks "depends on" and "member of", so a line `A = B` MUST NOT be read as proof that `A` is a composite. The rule is stated once, in `skills/bootcamp-onboarding/ground-rules.md` → "Reading a flags reply", and every shipped file that makes a method-filter `topic='flags'` call MUST hold it or point at it. Enforced by `tests/test_flags_lookup_reads_the_reply_that_holds_the_field.py`, which reads Markdown and calls no server; it **cannot** establish that a live guide reads the shape first. (Source: `the-flags-reference-reply-changed-shape-and-now-points-at-a-topic-the-bootcamp-never-names`, GitHub issue #36, 2026-11-18.)
+
 - **PROPOSED AMENDMENT to INV-132 — awaiting the maintainer's sign-off; NOT applied.**
     - ⛔ **Choose flags from the compact list. Before reading a field or a full description, call the row form: by flag name for one flag, or by `topic='flag_details'` for a method.** — in `source/skills/bootcamp-onboarding/ground-rules.md`
     - ⛔ **When the compact list carries no `detail` pointer, or `topic='flag_details'` fails, fall back to the flag-name row, `get_sdk_reference(topic='flags', filter='<flag name>')`, and say which route produced what you present** — in `source/skills/bootcamp-onboarding/ground-rules.md`

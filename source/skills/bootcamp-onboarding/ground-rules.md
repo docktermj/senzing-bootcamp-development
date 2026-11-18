@@ -716,7 +716,7 @@ copy (INV-300).
   row form: by flag name for one flag, or by `topic='flag_details'` for a method. When the
   compact list carries no `detail` pointer, or `topic='flag_details'` fails, fall back to the
   flag-name row, `get_sdk_reference(topic='flags', filter='<flag name>')`, and say which route
-  produced what you present (INV-125).
+  produced what you present (INV-125) (INV-435).
   <!-- MCP-NEGATIVE: get_sdk_reference(topic='flags', filter='export_json_entity_report') — the reply's data is lines of text under group headers, not objects, so no flag in it carries a field of its own — owner: get_sdk_reference(topic='flag_details', filter='export_json_entity_report') IS the route that carries a method's flags with their fields, and the reply's own detail field names it; it returns each flag as an object with its fields, so they are answered there rather than absent (routing negative) — server 1.46.1, 2026-11-18 -->
 - **Response structures (INV-115).** Flags are only half the lookup. Before writing any code
   that **parses** an SDK response, call
