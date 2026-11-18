@@ -519,7 +519,7 @@ copy (INV-300).
   error codes -> `explain_error_code`; docs and facts -> `search_docs`; working examples ->
   `find_examples`; sample data -> `get_sample_data`; reporting / counts -> `reporting_guide`;
   tool discovery -> `get_capabilities`.
-- ⛔ **A result from a bootcamp repository is not a Senzing source (INV-080).** The server's
+- ⛔ **(INV-434) A result from a bootcamp repository is not a Senzing source (INV-080).** The server's
   example and documentation corpus also indexes the bootcamp's own repositories, so a search can
   hand you this bootcamp's own text as if it were Senzing evidence. Any MCP result that names its
   repository is disregarded when that repository's name contains `bootcamp`, compared without

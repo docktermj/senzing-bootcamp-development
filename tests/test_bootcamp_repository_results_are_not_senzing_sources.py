@@ -1,5 +1,8 @@
 """A result from a bootcamp repository is not a Senzing source (issue #37).
 
+Enforces **INV-434** (registered 2026-11-18). It reads Markdown and calls no server, so it
+cannot establish that a live guide disregards such a hit.
+
 The Senzing MCP server's example and documentation corpus indexes the bootcamp's own
 repositories. On server 1.46.1 (docs index 2026-11-14 17:44 UTC, asked 2026-11-17 and again
 2026-11-18) `find_examples(query='multi-source')` surfaced the changelogs of two bootcamp
@@ -66,7 +69,7 @@ SKILLS = REPO / "source" / "skills"
 RULE_FILE = SKILLS / "bootcamp-onboarding" / "ground-rules.md"
 MARKER_FILE = SKILLS / "module-06-data-processing" / "phaseC-multi-source.md"
 
-RULE_LABEL = "**A result from a bootcamp repository is not a Senzing source"
+RULE_LABEL = "**(INV-434) A result from a bootcamp repository is not a Senzing source"
 SECTION = "## MCP-first invariant (absolute precedence)"
 #: Built, not written, so this file never carries a bare marker token of its own.
 TOKEN = "MCP-" + "NEGATIVE:"

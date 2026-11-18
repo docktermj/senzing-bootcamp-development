@@ -870,7 +870,7 @@ line and holds no copy of it, so changing the line changes the range.
   results is not one. INV-209, INV-213, INV-219, INV-300 and INV-346 are applied and not
   changed. Beyond the one block the change establishes no new invariant.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** An MCP result from a bootcamp repository is not a Senzing source. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-434, registered by the maintainer 2026-11-18).** An MCP result from a bootcamp repository is not a Senzing source. The rule already shipping, quoted:
     - ⛔ **A result from a bootcamp repository is not a Senzing source (INV-080).** — in `source/skills/bootcamp-onboarding/ground-rules.md`
 
   Enforced by `tests/test_bootcamp_repository_results_are_not_senzing_sources.py`
