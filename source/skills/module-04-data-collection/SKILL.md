@@ -1659,7 +1659,7 @@ about a roughly half-hour load, for a load of about two minutes.
      timing figures at all** (template switch and license-note caution re-checked on MCP server
      1.37.16, 2026-10-01). ⚠️ Use the query as written rather than paraphrasing it: a paraphrase
      is unmeasured, and the words in a query are not evidence about what it returns (INV-291).
-     <!-- MCP-NEGATIVE: sdk_guide(topic='load', language='python', record_count=19500) — returns no load-duration or throughput figures — owner: search_docs(query='hardware sizing capacity planning') carries them, in the Hardware Sizing FAQ (routing negative — the fact exists, go there) — server 1.36.0, 2026-09-02 -->
+     <!-- MCP-NEGATIVE: sdk_guide(topic='load', language='python', record_count=19500) — returns no load-duration or throughput figures — owner: search_docs(query='hardware sizing capacity planning') carries them, in the Hardware Sizing FAQ (routing negative — the fact exists, go there) — server 1.46.1, 2026-11-18 -->
    - ⛔ **State both numbers whenever they differ**, so the estimate is legible rather than
      mysterious: "19,500 collected, 500 loadable under the evaluation license — the load will take
      about N minutes." Suppressing the collected figure would be worse than the old behavior, not

@@ -34,7 +34,8 @@ What this pins:
   name as `NAME_ORG` only and says how the value is built; the retype sites in Phase 2 cite
   INV-336, not INV-136 (which governs required parameters and enumerated values); a joined
   `NAME_ORG` is the value the verbatim check flags, not the exempt `RECORD_TYPE`; and step 10
-  takes only the enum-valid `record_type` half of the mixed-type rule.
+  takes only the dominant-type `record_type` half of the mixed-type rule (called the enum-valid
+  half until server 1.46.1 declared `record_type` as free text, #38).
 
 The suffix list and the documented edge cases are also run against each other: the list is parsed
 from the file and applied, as written, to the names the file uses as examples.
@@ -321,7 +322,11 @@ def problems_in_phase2_plan_and_map(text):
                            (name, token))
     if s10 and not re.search(r"predominant type after the retype", s10):
         out.append("step 10 does not send the predominant post-retype record_type")
-    if s10 and not re.search(r"never `MIXED`", s10):
+    # Scoped to the Retype bullets (#38): since the mixed-type rule's own line says "never
+    # `MIXED`" too, a step-wide search would pass with the Retype bullet's half removed.
+    retype = between(s10, "With Retype, the source now carries both types",
+                     "Declare nothing else here") if s10 else ""
+    if s10 and not re.search(r"never `MIXED`", retype or ""):
         out.append("step 10 does not rule out MIXED for a retyped source")
     if s10 and not re.search(r"now carries PERSON and ORGANIZATION records", s10):
         out.append("step 10's plan summary does not say the source is now mixed-type")
@@ -409,8 +414,10 @@ def problems_in_the_name_citations(text):
                        "Declare nothing else here") or ""
     if "per the mixed-type rule below" in retype10:
         out.append("step 10 defers to the whole mixed-type rule, type_discriminator included")
-    if not re.search(r"enum-valid `record_type` half of the mixed-type rule", retype10):
-        out.append("step 10 does not take only the mixed-type rule's enum-valid record_type half")
+    if not re.search(r"dominant-type `record_type` half of the mixed-type rule", retype10):
+        out.append("step 10 does not take only the mixed-type rule's dominant-type record_type half")
+    if "enum-valid" in retype10:
+        out.append("step 10 calls record_type enum-valid; it is free text on server 1.46.1 (#38)")
     if not re.search(r"`type_discriminator`, does not apply to a suffix retype; step 11", retype10):
         out.append("step 10 does not rule out the type_discriminator half and name step 11")
     what_to_do = between(flat, "What to do — in this order:", "Four further limitations") or ""
@@ -620,7 +627,8 @@ class Phase2NegativeControls(unittest.TestCase):
                       problems_in_phase2(mutant))
 
     def test_step_10_mixed_record_type_fails(self):
-        mutant = self.mutate("It\n  stays enum-valid and is never `MIXED`", "It is `MIXED`")
+        mutant = self.mutate("It\n  is one of the source's real types and is never `MIXED`",
+                             "It is `MIXED`")
         self.assertTrue(problems_in_phase2_plan_and_map(mutant))
 
     def test_the_derived_record_type_without_justification_fails(self):
@@ -682,8 +690,15 @@ class Phase2NegativeControls(unittest.TestCase):
         self.assertIn("the pre-emptive type_discriminator rule cites INV-136",
                       problems_in_the_name_citations(mutant))
 
+    def test_step_10_calling_record_type_enum_valid_again_fails(self):
+        """#38: the retired "enum-valid" wording, restored, is caught."""
+        mutant = self.mutate("is one of the source's real types and is never `MIXED`",
+                             "stays enum-valid and is never `MIXED`")
+        self.assertIn("step 10 calls record_type enum-valid; it is free text on server 1.46.1 (#38)",
+                      problems_in_the_name_citations(mutant))
+
     def test_step_10_deferring_to_the_whole_mixed_type_rule_fails(self):
-        start = self.text.index("never `MIXED`: that is the enum-valid")
+        start = self.text.index("never `MIXED`: that is the dominant-type")
         end = self.text.index("step 11 declares how each record is typed.", start)
         end += len("step 11 declares how each record is typed.")
         mutant = self.text[:start] + "never `MIXED`, per the mixed-type rule below." + \

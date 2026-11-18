@@ -377,7 +377,7 @@ supported systems.
      fields from its `JSON_DATA`. If the lookup now lists an export method and the dumped row
      already carries `JSON_DATA`, read the fields from the row and skip the pass: the dumped row is
      the authority for what this installation returns.
-     <!-- MCP-NEGATIVE: get_sdk_reference(topic='flags', filter='SZ_ENTITY_INCLUDE_RECORD_JSON_DATA') — its applies_to names get_record and the entity, search, why, path and network calls, and neither export_json_entity_report nor export_csv_entity_report — owner: the flag's own applies_to IS the route that carries which methods accept it; search_docs returns the Java SzFlag javadoc listing SZ_EXPORT_FLAGS among its usage groups, which is why the dumped row decides (absence negative) — server 1.37.27, 2026-10-11 -->
+     <!-- MCP-NEGATIVE: get_sdk_reference(topic='flags', filter='SZ_ENTITY_INCLUDE_RECORD_JSON_DATA') — its applies_to names get_record and the entity, search, why, path and network calls, and neither export_json_entity_report nor export_csv_entity_report — owner: the flag's own applies_to IS the route that carries which methods accept it; search_docs returns the Java SzFlag javadoc listing SZ_EXPORT_FLAGS among its usage groups, which is why the dumped row decides (absence negative) — server 1.46.1, 2026-11-18 -->
 8. **Write and run the export program.** Write it in the Bootcamper's chosen language
    (`programming_language` in `config/bootcamp_preferences.yaml`, INV-002), with the SDK code
    sourced as item 6 says, and save it as the program `export_<system>` in `src/query` — `<system>`

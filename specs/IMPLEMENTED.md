@@ -36,6 +36,179 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## dated-mcp-rationales-and-quotations-in-shipped-text-no-longer-reproduce
+
+- **Implemented:** 2026-11-18 (issue #38)
+- **Files changed:** `source/skills/module-05-data-quality-mapping/phase2-data-mapping.md`,
+  `source/skills/module-05-data-quality-mapping/SKILL.md`,
+  `source/skills/module-02-sdk-setup/SKILL.md`,
+  `source/skills/bootcamp-onboarding/ground-rules.md`,
+  `source/skills/module-03b-truthset-visualization/visualization-api-reference.md`,
+  `source/skills/module-06-data-processing/phaseD-validation.md`,
+  `source/skills/module-03-system-verification/phase1-verification.md`,
+  `source/skills/module-04-data-collection/SKILL.md`,
+  `source/skills/module-06-data-processing/phaseA-build-loading.md`,
+  `source/skills/module-06-data-processing/phaseB-load-first-source.md`,
+  `source/skills/module-07-query-visualize-discover/phase1-query-visualize.md`,
+  `source/skills/module-07-query-visualize-discover/phase2-discover.md`,
+  `source/skills/module-07-query-visualize-discover/phase2b-discover.md`,
+  `source/scripts/senzing_viz_server.py`, `specs/DECLINED.md` (the two markers, by the
+  maintainer's decision of 2026-11-18), `tests/test_step2_record_type_contradiction.py`,
+  `tests/test_payload_key_collides_with_registered_feature.py`,
+  `tests/test_the_2026_09_30_audit_rules_cite_their_invariants.py`,
+  `tests/test_quality_assessment_type_name_check.py`,
+  `tests/test_globalization_retrieval_strategy.py`, `tests/test_license_env_var_absent.py`,
+  `tests/test_loader_concurrency_reads_database_type.py`,
+  `tests/test_prescribed_search_queries.py`, `specs/IMPLEMENTED.md` (this entry)
+- **MCP re-check:** server 1.46.1 (`get_capabilities`: `"server_version":"1.46.1"`), docs index
+  built 2026-11-14 17:44 UTC (`"index_built"` in every `search_docs` reply, 13404 documents),
+  2026-11-18. Outcome: the claims mostly still reproduce; ten rationales or quotations did not and
+  are corrected; two markers are findings, left untouched (below). Tools called, read-only, each
+  marker re-asked individually with its own call and parameters, every `search_docs` call at the
+  default result count with all ten hits read, the owning route re-asked where it differs, and
+  every call made before any file changed: `get_capabilities`, `mapping_workflow` (start, step 1,
+  step 2 with a legacy `embedded_master` payload lacking `embedded_in`, step 2 with
+  `record_type='MIXED'`; synthetic labels only, no data), `analyze_record`, `sdk_guide`,
+  `generate_scaffold`, `get_sdk_reference`, `search_docs`, `find_examples`, `reporting_guide`,
+  `explain_error_code`, and the declared tool schemas of `find_examples`, `generate_scaffold` and
+  `download_resource` read from the tool manifest. `submit_feedback` and `download_resource` were
+  not called. Quotes that decided a correction:
+  - `mapping_workflow` step 2: *"set record_type to the DOMINANT type (e.g. PERSON or ORGANIZATION
+    — do NOT send "MIXED": it is not a type, only a literal string here)"*; its `advance_schema`
+    `record_type` is `"type":"string"` with *"any other value (e.g. VEHICLE) is accepted"*, no
+    enum; sending `MIXED` returns *"record_type 'MIXED' is not one of the usual values ...; any
+    value is accepted, so this is advisory only"*; the legacy shape *"is also still accepted for
+    backward compatibility"*; without `embedded_in` the reply is
+    `"schema_plan[1] (employer): 'embedded_master' requires 'embedded_in'"`.
+  - `mapping_workflow`'s tool description: *"The call needs both arguments present; it does NOT
+    need the file to exist."* (the quoted *"The call WILL FAIL without both"* is gone).
+  - `analyze_record(workspace_dir='data/mapping')` `validation_guidance.valid_shapes`: *"(2)
+    feature attributes at the record root — flat, still supported"*;
+    `sdk_guide(topic='load', language='python', record_count=100)`: *"the flat/legacy shape
+    (feature attributes at the record root ...) is NOT one of these problems — the Entity
+    Specification still supports it"*.
+  - `download_resource`'s declared schema: `filename`, `filenames`, `inline`, `offset`, `version`,
+    `workspace_dir`.
+  - `search_docs(query='globalization')`: the "What languages does Senzing support?" section is
+    returned, sixth; the Rust SDK's `GLOBAL_ENVIRONMENT` is not.
+  - `search_docs(query='NEED_REEVALUATION how entity final state')`: the field appears in the how
+    flags page's payloads and in the Java `SzEngine` reference's `howEntity` example result; the
+    top hit is a bootcamp repository's script.
+  - `sdk_guide(topic='install', platform='macos_arm', language='python')`: compatibility note
+    *"(1) Pick a different language — Java and C# are officially supported on macOS and Windows;
+    Rust and TypeScript are community-supported on all platforms. (2) Pick a different environment
+    — use Docker or WSL2"*, plus a `next_steps` entry for the docker install.
+  - `mapping_workflow(action='start')` step 1: *"a `curl` download from this server over HTTP, or
+    a local extract command when the server runs over stdio"* (no "stdio/airgap mode").
+  owner-checked: `get_sdk_reference(topic='response_schemas', filter='how_entity_by_entity_id')`
+  — `HOW_RESULTS.FINAL_STATE.NEED_REEVALUATION` `{"field_type":"integer"}`, no description (the two
+  NEED_REEVALUATION absence markers).
+  owner-checked: `analyze_record` and `sdk_guide(topic='load')` — both state the root-key
+  consequence, so that marker is now a routing negative; `search_docs` with the marker's query
+  still returns no section stating it.
+  owner-checked: `sdk_guide(topic='install', platform='macos_arm', language='python')` — declines
+  the platform, no `install_commands`, `env_vars` or `gotchas` (the macOS PYTHONPATH absence).
+  owner-checked: `sdk_guide(topic='install', platform='docker', language='csharp'|'typescript')` —
+  *"It must also already contain your language runtime (python3, a JDK, .NET or Node.js)"*, no
+  install command (the container toolchain absence).
+  owner-checked: the tool manifest's declared schemas — neither `find_examples` nor
+  `generate_scaffold` declares `inline`.
+- **Summary:** `coverage_reports.py negatives --server 1.46.1` listed 37 due markers this issue
+  owns (34 under `source/skills/`, one in `source/scripts/senzing_viz_server.py`, two in
+  `specs/DECLINED.md`) and 5 current ones (#35, #36, #37, left alone). Each of the 37 was
+  re-asked on its own call. After the change the report lists 2 due, the two findings below, and
+  none of the out-of-scope three, which their merged issues had already re-dated. Line numbers
+  are at `5aaba2a`.
+  - **Holds, re-dated to server 1.46.1, 2026-11-18 (25):** `phase2-data-mapping.md:417`
+    (`embedded_in`), `senzing_viz_server.py:2351`, `module-02-sdk-setup/SKILL.md:374`, `:378`,
+    `:403`, `:435`, `:523`, `:1108`, `:1554`, `:1754`, `:1777`, `:2323`,
+    `module-04-data-collection/SKILL.md:1662`, `phaseA-build-loading.md:429`,
+    `phaseB-load-first-source.md:156`, `phase1-query-visualize.md:454` and `:490`,
+    `phase2-discover.md:189`, `phase2b-discover.md:380`, `phaseD-validation.md:509`,
+    `ground-rules.md:556`, `:1107` and `:1134` (the two the dry run did not re-ask),
+    `phase1-verification.md:285`, `specs/DECLINED.md:126`.
+  - **Corrected (10):** `specs/DECLINED.md:135` (owner clause quotes the current step-1 stdio
+    wording and the SENZ9000 binary line); `module-02-sdk-setup/SKILL.md:1680` (the reply also
+    offers Rust and TypeScript) and `:2410` with its prose (the reply also carries a `next_steps`
+    pointer to the docker install); `module-02-sdk-setup/SKILL.md:901` (the Dockerfiles that add
+    python3 do so on a Senzing runtime image; the owner's sz-napi minimums cite the README, which
+    carries both); `module-05-data-quality-mapping/SKILL.md:97` with its prose (the bare call now
+    returns the UTF-8 section, behind other Guide sections; the Rust hit is gone) and `:111`
+    (it leads with the template files, which are not all of its hits); `phaseD-validation.md:720` and
+    `visualization-api-reference.md:516` (the field also appears in the Java reference's
+    `howEntity` example; the latter's "the only hits" no longer held); `ground-rules.md:647` with
+    its prose (`download_resource` also declares `workspace_dir`);
+    `phase2-data-mapping.md:877` (now a routing negative, owner `analyze_record` and
+    `sdk_guide(topic='load')`).
+  - **The twelve sites under Problem.** `ground-rules.md:629` is the `:647` marker above;
+    `phaseD-validation.md:504` belongs to #36 and is current; `visualization-api-reference.md:516`
+    and `phase2-data-mapping.md:876` are above; `:1056` and `:1083` are `:1107` and `:1134`;
+    `module-02-sdk-setup/SKILL.md:1649` and `:2381` are the `:1680` and `:2410` markers;
+    `module-05-data-quality-mapping/SKILL.md:97` is above. `phase2-data-mapping.md:190-191` now
+    quotes *"The call needs both arguments present"*, and `:398` *"also still accepted for backward
+    compatibility"*, each stamped. The mixed-type note (`:595-602`) is retired under its own
+    condition at `:648`: the step-2 prose and its `advance_schema` agree, so the contradiction
+    paragraph, the MIXED-warning paragraph and the retirement sentence are gone, and the ⛔
+    (INV-280) rule now reads "send the source's dominant type as `record_type`, never `MIXED`",
+    cited to the step-2 quote above. The Retype bullet calls it "one of the source's real types"
+    where it said "enum-valid", since `record_type` is no longer an enum. The paragraph at
+    `:865-873` loses its OBSERVATION-ONLY label and cites `analyze_record` and
+    `sdk_guide(topic='load')` for the consequence, keeping its 2026-08-17 first observation. It
+    names that route as "`sdk_guide`'s `load` topic": the literal call form in step 11 makes
+    `tests/test_build_and_run_statement.py` read the step as one that writes SDK code.
+  - **Findings, left untouched with their old version and date (2).**
+    1. `module-02-sdk-setup/SKILL.md:239`. `search_docs(query='szBuildVersion.json build version
+       file location')` now returns, at ranks 9 and 10, a `senzing-garage` performance-test
+       runbook naming `/opt/senzing/er/szBuildVersion.json` for 4.x container images, so "no
+       indexed document gives that file's path on any platform" no longer holds as written.
+       Correcting it would also change the Linux bullet's "No MCP route states it" provenance
+       (INV-149), and whether a `senzing-garage` runbook counts as a source is a judgment: the
+       server's own anti-pattern says `senzing-garage` "contains experimental/internal/legacy
+       code". Its evidence slot in `tests/test_prescribed_search_queries.py` is left as is too.
+    2. `bootcamp-preparation/SKILL.md:295`. `sdk_guide(topic='install', platform=…)` "returns no
+       language list at all" holds for `linux_apt`, but the `macos_arm` and `windows` replies'
+       gotchas now say *"Supported languages on macOS: Java and C# (official), Rust and
+       TypeScript (community)"* (and the same for Windows). Correcting it contradicts the step's
+       reasoning that the language set is platform-independent, which decides what the guide
+       offers, so it is the maintainer's call.
+  - **Tests.** Each test that pinned retired wording now asserts the corrected wording and has a
+    negative control; none is deleted. `test_step2_record_type_contradiction.py` pins the retired
+    note (its kept and retired sentences, with a mutation for each);
+    `test_payload_key_collides_with_registered_feature.py` pins the cited routes and the routing
+    owner, and rejects the observation-only label and the old owner;
+    `test_the_2026_09_30_audit_rules_cite_their_invariants.py` moves its INV-280 row's phrase with
+    the rule and rejects the old phrase; `test_quality_assessment_type_name_check.py` reads the
+    new Retype wording, scopes its never-`MIXED` check to the Retype bullets (the rule line now
+    says it too) and rejects "enum-valid"; `test_globalization_retrieval_strategy.py` finds the
+    trap paragraph by the property it states rather than by a hit's name and rejects both retired
+    claims; `test_license_env_var_absent.py` requires the license marker's stamp to postdate the
+    lapse rather than pinning 1.39.0, and `test_loader_concurrency_reads_database_type.py` does
+    the same for the out-of-sync marker (no older than 1.36.0). In `test_prescribed_search_queries.py`, the evidence slots
+    re-measured here carry the new stamp, and the five whose reply moved are rewritten.
+  - **Every assistant.** The change is guidance text, HTML-comment markers and one code comment;
+    nothing names an assistant and nothing sits in a host marker.
+    `python3 -m tools.bootcamp_build check` passes.
+  - **Not observed.** No run on a real assistant was made, so no record is added to any
+    `hosts/<assistant>/checks.json`. The tests read text and call no server. Verified on Linux
+    only, with Python 3.12.3. The change carries no platform branch (INV-001) and names no
+    programming language's own mechanism beyond what the markers quote (INV-002).
+  - **Differs from the issue.** The issue counted 26 holds on 2026-11-17; on 2026-11-18, read at
+    all ten hits, 25 hold, 10 are corrected and 2 are findings. The issue's line numbers are from
+    an older commit. The issue named `test_mcp_call_contracts.py`; it needed no change.
+- **Follow-up, drafted and not filed.** (1) `module-05-data-quality-mapping/SKILL.md`'s ⛔ line
+  "a bare `search_docs(query="globalization")` does not reach this material" is looser than what
+  the server returns (it reaches the UTF-8 section, below other sections); a rule line, so not
+  edited here. (2) `phase2-data-mapping.md` rule 1 says `start` requires `data.workspace_dir`;
+  the server now accepts `workspace_dir` at the top level or inside `payload`/`data`. The shown
+  call still works, and changing the rule changes what the step tells the guide to do. (3) The
+  two findings above.
+- **Upstream:** not applicable. No server defect was found.
+- **Invariants.** Establishes no new invariant, and no invariant's text needs a correction: the
+  ⛔ (INV-280) rule keeps its instruction and citation, and INV-336's "the predominant
+  post-retype type as `record_type`, never `MIXED`" still matches step 10. The register is not
+  edited (INV-365).
+- **Commit:** uncommitted
+
 ## the-kiro-install-page-and-location-note-contradict-the-kiro-package
 
 - **Implemented:** 2026-11-17 (issue #42)

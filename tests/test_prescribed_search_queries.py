@@ -168,6 +168,8 @@ VERIFIED_QUERIES = {
     # ---------------------------------------------------------------------------------
     # Executed 2026-09-30 on server 1.37.16 (docs index 2026-09-29 22:00 UTC) for #289, Module 6
     # Phase D's per-binding flag-availability route. ⚠️ Record the PROPERTY, not ranks or scores.
+    # Re-measured for #38 on server 1.46.1, docs index 2026-11-14 17:44 UTC, 2026-11-18, at the
+    # default max_results, with the marker that quotes it, which carries the same stamp.
     ("search_docs", "senzing.szengineflags SzEngineFlags SZ_EXPORT_DEFAULT_FLAGS", None): {
         "band": "ON TARGET",
         "sections": ("szengineflags", "SzEngineFlags"),
@@ -179,7 +181,7 @@ VERIFIED_QUERIES = {
             "next hits are the Java SzFlags and SzFlag fields. Naming only the flag and 'python' "
             "('SZ_EXPORT_ALL_FLAGS SzEngineFlags python') put the Java SzFlag field first, which "
             "is why Phase D carries a re-query rule",
-        "server": "1.37.16", "docs_index": "2026-09-29 22:00 UTC", "measured": "2026-09-30",
+        "server": "1.46.1", "docs_index": "2026-11-14 17:44 UTC", "measured": "2026-11-18",
     },
     # ---------------------------------------------------------------------------------
     # Executed 2026-09-30 on server 1.37.16 (docs index 2026-09-29 22:00 UTC) for #287, Module 2
@@ -190,6 +192,8 @@ VERIFIED_QUERIES = {
     # 1.39.0 (docs index 2026-10-15 10:47 UTC) at the default max_results for #652, as the evidence
     # slot of Phase 3's Java-install MCP-NEGATIVE marker, which carries the same stamp: the
     # property still holds.
+    # Re-measured for #38 on server 1.46.1, docs index 2026-11-14 17:44 UTC, 2026-11-18, at the
+    # default max_results, with the marker that quotes it, which carries the same stamp.
     ("search_docs", "Java SDK sz-sdk.jar Maven Usage local Maven repository", None): {
         "band": "ON TARGET BELOW AN ADJACENT TOP HIT",
         "sections": ("Maven Usage", "Installation in Local Maven Repository"),
@@ -200,7 +204,7 @@ VERIFIED_QUERIES = {
             "(java -jar sz-sdk.jar prints the mvn install:install-file command) and 'Maven Usage' "
             "('not provided via Maven Central'; system-scoped or local-repository dependency). "
             "Phase 3 names both sections, so the reader reads past the first hit",
-        "server": "1.39.0", "docs_index": "2026-10-15 10:47 UTC", "measured": "2026-10-15",
+        "server": "1.46.1", "docs_index": "2026-11-14 17:44 UTC", "measured": "2026-11-18",
     },
     # ---------------------------------------------------------------------------------
     # Module 2 Step 1b's update path, first executed 2026-09-28 on server 1.37.14 for #194. The
@@ -267,6 +271,8 @@ VERIFIED_QUERIES = {
     },
     # The two records below are evidence slots of MCP-NEGATIVE markers, the macOS and the
     # Windows check-command negatives, also executed for #194.
+    # Re-measured for #38 on server 1.46.1, docs index 2026-11-14 17:44 UTC, 2026-11-18, at the
+    # default max_results, with the marker that quotes it, which carries the same stamp.
     ("search_docs", "brew outdated brew info senzingsdk installed version check", None): {
         "band": "OFF TARGET BY DESIGN",
         "sections": (),
@@ -274,8 +280,10 @@ VERIFIED_QUERIES = {
             "OFF TARGET BY DESIGN — the macOS check-command negative's evidence: the corpus serves "
             "the tap README's install, upgrade and uninstall sections, its changelog and the macOS "
             "quickstart for it, and no brew outdated or brew info usage",
-        "server": "1.37.14", "docs_index": "2026-09-28 03:23 UTC", "measured": "2026-09-28",
+        "server": "1.46.1", "docs_index": "2026-11-14 17:44 UTC", "measured": "2026-11-18",
     },
+    # Re-measured for #38 on server 1.46.1, docs index 2026-11-14 17:44 UTC, 2026-11-18, at the
+    # default max_results, with the marker that quotes it, which carries the same stamp.
     ("search_docs", "scoop status scoop info senzingsdk installed version check", None): {
         "band": "OFF TARGET BY DESIGN",
         "sections": (),
@@ -283,7 +291,7 @@ VERIFIED_QUERIES = {
             "OFF TARGET BY DESIGN — the Windows check-command negative's evidence: the corpus serves "
             "the bucket README (install, update, uninstall), its changelog and template docs for "
             "it, and no scoop status or scoop info usage",
-        "server": "1.37.14", "docs_index": "2026-09-28 03:23 UTC", "measured": "2026-09-28",
+        "server": "1.46.1", "docs_index": "2026-11-14 17:44 UTC", "measured": "2026-11-18",
     },
 
     # ---------------------------------------------------------------------------------
@@ -341,22 +349,25 @@ VERIFIED_QUERIES = {
     # 2026-09-02 record had no docs index): still no hit names the message. The record below
     # replaces the 2026-09-02 one, which ranked the advisory-locking article #1 (86.7) and
     # 'Scaling Out Your Database With Clustering' #2 (76.4).
+    # Re-measured for #38 on server 1.46.1, docs index 2026-11-14 17:44 UTC, 2026-11-18, at the
+    # default max_results, with the marker that quotes it, which carries the same stamp.
     ("search_docs", "resolved entity is out of sync expected got concurrent loading SQLite lock", None): {
         "band": "EMPTY OF THE TARGET",
         "sections": (),
         "returned":
-            "EMPTY OF THE TARGET, WHICH IS THE POINT. No hit names the "
-            "'Resolved entity ... is out of sync' engine message at all. The set is database "
-            "material: 'Tuning Your Database' (DB2), 'Database Setup', and 'Enabling the "
-            "Per-Entity Feature Store & Advisory Locking in Senzing 4.4.0' section 'Behavior by "
-            "database with ENTITY_LOCK_MODE = ADVISORY', whose table states that on SQLite the "
-            "engine 'Falls back to LEASE automatically (no-op)' -- adjacent and useful, but not "
-            "the message -- then 'Scaling Out Your Database With Clustering'. So the message "
-            "is uncovered by the corpus rather than missed by the phrasing, which is what makes "
-            "the absence negative at phaseB-load-first-source.md safe to state (INV-194: the "
-            "owner route was asked). Re-ask before re-dating; a negative is the one claim shape "
-            "that cannot go stale detectably.",
-        "server": "1.37.19", "docs_index": "2026-10-02 18:46 UTC", "measured": "2026-10-02",
+            "EMPTY OF THE TARGET, WHICH IS THE POINT. No hit names the 'Resolved entity ... is "
+            "out of sync' engine message at all. The set is database material: a SENZ0010 "
+            "locklist FAQ, 'Database Setup', an SQLite-creation FAQ, 'Enabling the Per-Entity "
+            "Feature Store & Advisory Locking in Senzing 4.4.0' section 'Advisory Locking "
+            "Behavior by Database with ENTITY_LOCK_MODE = ADVISORY', whose table states that on "
+            "SQLite the engine 'Falls back to LEASE automatically (no-op)' -- adjacent and "
+            "useful, but not the message -- 'Scaling Out Your Database With Clustering' and "
+            "database-tuning pages. So the message is uncovered by the corpus rather than missed "
+            "by the phrasing, which is what makes the absence negative at "
+            "phaseB-load-first-source.md safe to state (INV-194: the owner route was asked). "
+            "Re-ask before re-dating; a negative is the one claim shape that cannot go stale "
+            "detectably.",
+        "server": "1.46.1", "docs_index": "2026-11-14 17:44 UTC", "measured": "2026-11-18",
     },
 
     # ---------------------------------------------------------------------------------
@@ -515,23 +526,26 @@ VERIFIED_QUERIES = {
     # Re-executed for #383 on server 1.37.19, docs index 2026-10-02 18:46 UTC, 2026-10-02, with
     # category='data_mapping' (its record read "ADJACENT, AND DELIBERATELY SO", outside the band
     # set): the same three specification sections, and still no precedence.
+    # Re-measured for #38 on server 1.46.1, docs index 2026-11-14 17:44 UTC, 2026-11-18, at the
+    # default max_results, with the marker that quotes it, which carries the same stamp. Its marker is now
+    # a ROUTING negative: analyze_record and sdk_guide(topic='load') state the consequence.
     ("search_docs", "payload attribute versus registered feature attribute record root extracted as feature precedence",
      "data_mapping"): {
         "band": "EMPTY OF THE PRECEDENCE RULE",
         "sections": (),
         "returned":
             "EMPTY OF THE PRECEDENCE RULE, AND DELIBERATELY SO: Senzing Entity Specification -> "
-            "'Payload attributes (optional)', 'Attributes for the record key', 'Mapping "
-            "identifiers'. These establish that payload and registered features are distinct "
-            "categories and that choosing between them is a mapping decision -- they do NOT "
-            "state the precedence when a payload-intended root key carries a registered "
-            "attribute's name, which is exactly what the MCP-NEGATIVE marker at that call site "
-            "claims. The query is prescribed so a reader can re-run the absence, not to "
-            "retrieve an answer. NOTE: the highest-scoring results overall are off-topic "
-            "pricing sections ('Data Source Records (DSRs) Explained', 'Uniquely Identifying "
-            "Records in Senzing') ranked after the data_mapping rows, so category='data_mapping' "
+            "'Payload attributes (optional)', 'Mapping identifiers', 'Attributes for the record "
+            "key', then Databricks and Snowflake mapping-view sections. These establish that "
+            "payload and registered features are distinct categories and that choosing between "
+            "them is a mapping decision -- they do NOT state the precedence when a "
+            "payload-intended root key carries a registered attribute's name, which is what the "
+            "MCP-NEGATIVE marker at that call site claims; the marker names analyze_record's "
+            "valid_shapes and sdk_guide(topic='load') as the routes that do. NOTE: the "
+            "highest-scoring hit overall is an off-topic pricing section ('Data Source Records "
+            "(DSRs) Explained'), ranked after the data_mapping rows, so category='data_mapping' "
             "boosts rather than filters",
-        "server": "1.37.19", "docs_index": "2026-10-02 18:46 UTC", "measured": "2026-10-02",
+        "server": "1.46.1", "docs_index": "2026-11-14 17:44 UTC", "measured": "2026-11-18",
     },
     # Executed 2026-08-21 on server 1.33.0 (docs index 2026-08-20 17:33 UTC), for the datastore
     # mount-crossing guidance added to module-02 Step 7.
@@ -652,6 +666,8 @@ VERIFIED_QUERIES = {
     # Re-executed for #439 on the same index (1.37.19, docs index 2026-10-02 18:46 UTC,
     # 2026-10-04): the FAQ is still rank 1 for both phrasings, so the stamp is not re-dated, and
     # Step 8b's warning was replaced by a rule that cites no measurement (see the NOTE).
+    # Re-measured for #38 on server 1.46.1, docs index 2026-11-14 17:44 UTC, 2026-11-18, at the
+    # default max_results, with the marker that quotes it, which carries the same stamp.
     ("search_docs", "hardware sizing capacity planning", None): {
         "band": "ON TARGET",
         "sections": ("Hardware Sizing FAQ",),
@@ -666,7 +682,7 @@ VERIFIED_QUERIES = {
             "'Nearby wordings do not find the FAQ' warning: it replaced the warning and its "
             "stamp with a rule that cites no measurement, to use the query as written because a "
             "paraphrase is unmeasured (INV-291)",
-        "server": "1.37.19", "docs_index": "2026-10-02 18:46 UTC", "measured": "2026-10-04",
+        "server": "1.46.1", "docs_index": "2026-11-14 17:44 UTC", "measured": "2026-11-18",
     },
     # ⚠️ The three below are NOT queries a step tells the guide to RUN. Each is the evidence slot
     # of an `MCP-NEGATIVE` marker — a query that was executed and came back without the fact. The
@@ -680,6 +696,8 @@ VERIFIED_QUERIES = {
     # migration material (server 1.37.13, 2026-09-24). Nothing scans this file for that shape.
     # Re-executed for #194 on server 1.37.14, docs index 2026-09-28 03:23 UTC, 2026-09-28: the
     # marker it backs is now a ROUTING negative, and this phrasing is its missing half.
+    # Re-measured for #38 on server 1.46.1, docs index 2026-11-14 17:44 UTC, 2026-11-18, at the
+    # default max_results, with the marker that quotes it, which carries the same stamp.
     ("search_docs", "upgrade Senzing SDK 4.3 to 4.4 procedure", None): {
         "band": "OFF TARGET BY DESIGN",
         "sections": (),
@@ -691,7 +709,7 @@ VERIFIED_QUERIES = {
             "with the 'upgrading to 4.4.0 …' phrasing above, which is what module-02 Step 1b's "
             "marker names as the owner (server 1.37.14, docs index 2026-09-28 03:23 UTC, "
             "re-executed 2026-09-28)",
-        "server": "1.37.14", "docs_index": "2026-09-28 03:23 UTC", "measured": "2026-09-28",
+        "server": "1.46.1", "docs_index": "2026-11-14 17:44 UTC", "measured": "2026-11-18",
     },
     # A record for Module 2 Step 5's record-limit query stood here until issue #35 of this
     # repository. Its text was made false twice by an index rebuild (2026-09-24 and by 2026-11-17),
@@ -707,6 +725,8 @@ VERIFIED_QUERIES = {
     # default max_results: the same three Guide rows first. Phase 3's encoding line now reaches
     # this route by pointing at Module 5's SKILL.md instead of passing the bare term with the
     # filter, whose call the guard had matched to the bare term's OFF TARGET record below.
+    # Re-measured for #38 on server 1.46.1, docs index 2026-11-14 17:44 UTC, 2026-11-18, at the
+    # default max_results, with the marker that quotes it, which carries the same stamp.
     ("search_docs", "UTF-8 encoding non-Latin character support multi-language data quality", "globalization"): {
         "band": "ON TARGET",
         "sections": ("What languages does Senzing support?",),
@@ -718,11 +738,13 @@ VERIFIED_QUERIES = {
             "encoding notes, a data-providers page) carry a HIGHER relevance_score but are "
             "returned AFTER the on-topic rows -- the filter promotes rather than restricts, so "
             "never rank this set by score",
-        "server": "1.37.27", "docs_index": "2026-10-11 18:43 UTC", "measured": "2026-10-12",
+        "server": "1.46.1", "docs_index": "2026-11-14 17:44 UTC", "measured": "2026-11-18",
     },
     # Re-executed for #600 at the default max_results: the practice now sits in the top hit's own
     # section, 'Address matching examples', and 'CJK+English cross-script matching' (organization
     # names) is second, so the record names the first and step 11's site names it too.
+    # Re-measured for #38 on server 1.46.1, docs index 2026-11-14 17:44 UTC, 2026-11-18, at the
+    # default max_results, with the marker that quotes it, which carries the same stamp.
     ("search_docs", "data quality practices multi-language non-Latin", "globalization"): {
         "band": "ON TARGET",
         "sections": ("Address matching examples",),
@@ -733,7 +755,7 @@ VERIFIED_QUERIES = {
             "product and supply both forms. Then 'CJK+English cross-script matching' (organization "
             "names) and 'Enhanced address comparisons'; repo docs/best-practices.md files follow "
             "with a higher relevance_score",
-        "server": "1.38.2", "docs_index": "2026-10-14 20:27 UTC", "measured": "2026-10-14",
+        "server": "1.46.1", "docs_index": "2026-11-14 17:44 UTC", "measured": "2026-11-18",
     },
     # Re-executed for #149 on server 1.37.13, docs index 2026-09-24 18:45 UTC, 2026-09-26, at
     # max_results=6 and at the default. The 2026-08-13 record above this entry said its best
@@ -746,34 +768,39 @@ VERIFIED_QUERIES = {
     # 2026-10-11 18:43 UTC, 2026-10-12: each returns Guide sections plus the Global* matches, and
     # neither returns the 'What languages' section. Not re-dated, because Module 5's prose stamp
     # for this paragraph vouches for the 2026-09-26 measurement.
+    # Re-measured for #38 on server 1.46.1, docs index 2026-11-14 17:44 UTC, 2026-11-18, at the
+    # default max_results, with the marker that quotes it, which carries the same stamp. The Rust SDK's
+    # GLOBAL_ENVIRONMENT is gone, and the bare call now returns the 'What languages' section,
+    # behind other Guide sections, so the record below is rewritten rather than re-dated.
     ("search_docs", "globalization", None): {
         "band": "OFF TARGET BY DESIGN",
         "sections": (),
         "returned":
-            "OFF TARGET BY DESIGN — the negative's evidence, and the anti-pattern Module 5 quotes: "
-            "the corpus serves Senzing Globalization Guide sections with real prose for it, and the "
-            "bare term also admits unrelated Global* substring matches — the Rust SDK's static "
-            "GLOBAL_ENVIRONMENT, postgresql-performance-v4's 'Global — more workers' autovacuum "
-            "tuning and an MDM-Lite FAQ on 'globally unique ID'. It did not return the 'What "
-            "languages does Senzing support?' section, which the category='globalization' query "
-            "above ranks first (server 1.37.13, docs index 2026-09-24 18:45 UTC, re-executed "
-            "2026-09-26)",
-        "server": "1.37.13", "docs_index": "2026-09-24 18:45 UTC", "measured": "2026-09-26",
+            "OFF TARGET BY DESIGN — the negative's evidence, and the anti-pattern Module 5 "
+            "quotes: the corpus serves Senzing Globalization Guide sections with real prose for "
+            "it, including the 'What languages does Senzing support?' section, but behind other "
+            "Guide sections, while the category='globalization' query above returns it first; and "
+            "the bare term also admits unrelated Global* substring matches — "
+            "postgresql-performance-v4's 'Global — more workers' autovacuum tuning, an MDM-Lite "
+            "FAQ on 'globally unique ID' and an economic-cost appendix's 'Global extrapolation'. "
+            "The Rust SDK's GLOBAL_ENVIRONMENT, named by the 2026-09-26 record, is gone",
+        "server": "1.46.1", "docs_index": "2026-11-14 17:44 UTC", "measured": "2026-11-18",
     },
+    # Re-measured for #38 on server 1.46.1, docs index 2026-11-14 17:44 UTC, 2026-11-18, at the
+    # default max_results, with the marker that quotes it, which carries the same stamp.
     ("search_docs", "multi-language data quality best practices", None): {
         "band": "OFF TARGET BY DESIGN",
         "sections": (),
         "returned":
             "OFF TARGET BY DESIGN — the negative's evidence: the top six of ten hits are repo "
-            "docs/best-practices.md template files (senzingsdk-tools, senzingapi-runtime, "
-            "senzingapi-tools, senzingsdk-runtime, homebrew-senzingsdk, scoop-senzingsdk), all "
+            "docs/best-practices.md template files (senzingsdk-tools, senzingapi-tools, "
+            "senzingapi-runtime, senzingsdk-runtime, homebrew-senzingsdk, scoop-senzingsdk), all "
             "about Markdown lint and Dockerfiles, two of them title-only stubs; the rest are a "
-            "libpostal-data address-parser quality note, a 'Data Quality & Accuracy' use-case "
-            "blurb, an economic-cost appendix and an FFI 'Best Practices' list. No globalization "
-            "content at all — the phrase 'best practices' is the whole defect. With "
-            "category='globalization' the three Guide rows come first and the same files follow, "
-            "scoring ~89 against the Guide's ~9–13",
-        "server": "1.37.19", "docs_index": "2026-10-02 18:46 UTC", "measured": "2026-10-04",
+            "Kafka Connect architecture article, two data-providers pages and a 'Data Quality & "
+            "Accuracy' use-case blurb. No globalization content at all — the phrase 'best "
+            "practices' is the whole defect. With category='globalization' the Guide rows come "
+            "first and the same files follow, scoring ~34 against the Guide's ~8-12",
+        "server": "1.46.1", "docs_index": "2026-11-14 17:44 UTC", "measured": "2026-11-18",
     },
     ("search_docs", "szBuildVersion.json build version file location", None): {
         "band": "OFF TARGET BY DESIGN",
@@ -792,16 +819,21 @@ VERIFIED_QUERIES = {
     # marker as the corpus route asked for a meaning of the flag. Re-executed for #154 on the
     # same server and index, 2026-09-27, with the same result: Phase D's How-state audit quotes
     # it in its own MCP-NEGATIVE marker.
+    # Re-measured for #38 on server 1.46.1, docs index 2026-11-14 17:44 UTC, 2026-11-18, at the
+    # default max_results, with the marker that quotes it, which carries the same stamp. The visualization
+    # contract's marker, which named only the how flags page's payload, was corrected with it.
     ("search_docs", "NEED_REEVALUATION how entity final state", None): {
         "band": "OFF TARGET BY DESIGN",
         "sections": (),
         "returned":
-            "OFF TARGET BY DESIGN — the negative's evidence: the top hit is the "
-            "how_entity_by_entity_id Flags page's SZ_HOW_ENTITY_DEFAULT_FLAGS section, whose example "
-            "payload shows \"NEED_REEVALUATION\": 0; the others are that page's intro, its "
-            "SZ_INCLUDE_MATCH_KEY_DETAILS example, an Entity ID FAQ and an unrelated libpostal file. "
-            "No hit defines the field or says what sets or clears it",
-        "server": "1.37.13", "docs_index": "2026-09-24 18:45 UTC", "measured": "2026-09-27",
+            "OFF TARGET BY DESIGN — the negative's evidence: the field appears only inside "
+            "example payloads, the how_entity_by_entity_id Flags page's "
+            "SZ_HOW_ENTITY_DEFAULT_FLAGS and SZ_INCLUDE_MATCH_KEY_DETAILS sections and the Java "
+            "SzEngine reference's howEntity example result, each showing \"NEED_REEVALUATION\": 0. "
+            "The top hit is a script from a bootcamp repository, which is not a Senzing source; "
+            "the rest are that flags page's method table, get_entity* flag examples and unrelated "
+            "error codes. No hit defines the field or says what sets or clears it",
+        "server": "1.46.1", "docs_index": "2026-11-14 17:44 UTC", "measured": "2026-11-18",
     },
     # Executed for #154 on server 1.37.13, docs index 2026-09-24 18:45 UTC, 2026-09-27, at the
     # default max_results. The second corpus query in Phase D's How-state audit MCP-NEGATIVE
@@ -809,17 +841,19 @@ VERIFIED_QUERIES = {
     # ⚠️ Record the PROPERTY, not ranks or scores: they move on a rebuild.
     # Re-executed for #383 on server 1.37.19, docs index 2026-10-02 18:46 UTC, 2026-10-02 (its
     # record read "ADJACENT, NOT ON TARGET", outside the band set): the same material.
+    # Re-measured for #38 on server 1.46.1, docs index 2026-11-14 17:44 UTC, 2026-11-18, at the
+    # default max_results, with the marker that quotes it, which carries the same stamp.
     ("search_docs", "reevaluate entity when to call reevaluation needed", None): {
         "band": "EMPTY OF A NEED_REEVALUATION TIE",
         "sections": (),
         "returned":
             "EMPTY OF A NEED_REEVALUATION TIE — the negative's evidence: re-evaluation code "
-            "snippets (Rust, Python), the SzFlag/SzFlags reevaluate-entity flag constants, a "
-            "TypeScript 'Reevaluate an entity after rule changes' example, and the engine-config "
-            "FAQ 'After config changes, reevaluate splits entities but redo merges them back. Is "
-            "this a bug?', which is about config changes. No hit names NEED_REEVALUATION or ties "
-            "a re-evaluation call to it",
-        "server": "1.37.19", "docs_index": "2026-10-02 18:46 UTC", "measured": "2026-10-02",
+            "snippets (Rust, Python), the Java SzFlags/SzFlag reevaluate-entity flag constants "
+            "and usage group, the engine-config FAQ 'After config changes, reevaluate splits "
+            "entities but redo merges them back. Is this a bug?', which is about config changes, "
+            "and an overrides FAQ on entity splits. No hit names NEED_REEVALUATION or ties a "
+            "re-evaluation call to it",
+        "server": "1.46.1", "docs_index": "2026-11-14 17:44 UTC", "measured": "2026-11-18",
     },
     # ---------------------------------------------------------------------------------
     # The two below are double-quoted literals, invisible to this guard until #383 matched
@@ -938,15 +972,17 @@ VERIFIED_QUERIES = {
     # marker that records `SENZING_LICENSE_FILE`'s lapse. Executed 2026-10-15 on server 1.39.0
     # (docs index 2026-10-15 10:47 UTC) at the default, with the marker, which carries the same
     # stamp. The owner is sdk_guide(topic='load', record_count above the limit), not these.
+    # Re-measured for #38 on server 1.46.1, docs index 2026-11-14 17:44 UTC, 2026-11-18, at the
+    # default max_results, with the marker that quotes it, which carries the same stamp.
     ("search_docs", "SENZING_LICENSE_FILE environment variable license file path", None): {
         "band": "EMPTY OF SENZING_LICENSE_FILE",
         "sections": (),
         "returned":
-            "EMPTY OF SENZING_LICENSE_FILE: the End User License Agreement's 'GRANT OF LICENSE' "
-            "sections (Production and Non-Production licenses, Term, Senzing License), the "
-            "Subscription Pricing page, and 'Project License Agreement' stubs from repository "
+            "EMPTY OF SENZING_LICENSE_FILE: the Subscription Pricing page, code-snippets-v4's "
+            "get_license.py, the End User License Agreement's 'GRANT OF LICENSE' sections, a Rust "
+            "SDK environment module page and 'Project License Agreement' stubs from repository "
             "CONTRIBUTING.md files. No hit names the variable",
-        "server": "1.39.0", "docs_index": "2026-10-15 10:47 UTC", "measured": "2026-10-15",
+        "server": "1.46.1", "docs_index": "2026-11-14 17:44 UTC", "measured": "2026-11-18",
     },
     # `find_examples` (#600). Its search returns one example per repository, official
     # repositories first, so the set is bounded by the repositories the query matches and a
@@ -1019,26 +1055,31 @@ VERIFIED_QUERIES = {
     # The evidence slot of Module 2's container-route toolchain MCP-NEGATIVE marker (#595),
     # measured at the default.
     # The find_examples evidence slot of Module 2's license marker (#654), measured with it.
+    # Re-measured for #38 on server 1.46.1, docs index 2026-11-14 17:44 UTC, 2026-11-18, at the
+    # default max_results, with the marker that quotes it, which carries the same stamp.
     ("find_examples", "SENZING_LICENSE_FILE", None): {
         "band": "EMPTY OF SENZING_LICENSE_FILE",
         "sections": (),
         "returned":
             "EMPTY OF SENZING_LICENSE_FILE: examples: [] and a hint to try single SDK method "
             "names, generate_scaffold or search_docs",
-        "server": "1.39.0", "docs_index": "2026-10-15 10:47 UTC", "measured": "2026-10-15",
+        "server": "1.46.1", "docs_index": "2026-11-14 17:44 UTC", "measured": "2026-11-18",
     },
+    # Re-measured for #38 on server 1.46.1, docs index 2026-11-14 17:44 UTC, 2026-11-18, at the
+    # default max_results, with the marker that quotes it, which carries the same stamp.
     ("find_examples", "dockerfile", None): {
         "band": "EMPTY OF A TOOLCHAIN INSTALL INTO A PLAIN CONTAINER",
         "sections": (),
         "returned":
             "EMPTY OF A TOOLCHAIN INSTALL INTO A PLAIN CONTAINER: one Dockerfile per repository, "
             "each starting from an image that already holds the language or adds only python3: "
-            "code-snippets-v3 on senzingapi-runtime plus apt-get install python3, elasticsearch-v4 "
-            "on senzingsdk-runtime with a maven eclipse-temurin-25 builder, senzingsdk-runtime on "
-            "debian:13-slim, sz_rabbit_publisher on rust:1.88, sz-napi's deployment guide on "
-            "ubuntu:24.04, and senzingsdk-runtime-based queue consumers that apt-get install "
-            "python3. None installs a JDK, .NET or Node.js into a plain Debian container",
-        "server": "1.39.0", "docs_index": "2026-10-15 10:47 UTC", "measured": "2026-10-15",
+            "code-snippets-v3 on senzingapi-runtime plus apt-get install python3, "
+            "elasticsearch-v4 on senzingsdk-runtime with a maven eclipse-temurin-25 builder, "
+            "senzingsdk-runtime on debian:13-slim, sz_rabbit_publisher on rust:1.88, sz-napi's "
+            "deployment guide on ubuntu:24.04, and senzingsdk-runtime-based queue consumers and a "
+            "Flask API that apt-get install python3. None installs a JDK, .NET or Node.js into a "
+            "plain Debian container",
+        "server": "1.46.1", "docs_index": "2026-11-14 17:44 UTC", "measured": "2026-11-18",
     },
     # Three `find_examples` phrasings are gone, removed by #600 rather than recorded: Module 7's
     # integration patterns prescribed 'REST API' and 'batch report', and Module 4's XML note

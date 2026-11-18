@@ -201,11 +201,45 @@ class TheLapsedNameIsNotPresentedAsServerSourced(unittest.TestCase):
         self.assertEqual(1, len(markers), "module-02 must carry exactly one marker naming the lapse")
         marker = markers[0]
         self.assertIn("1.36.0, 2026-09-02", marker, "the marker must say when the name was last served")
-        self.assertRegex(marker, r"server 1\.39\.0, 2026-10-15 -->$", "the marker must be stamped 1.39.0")
+        self.assertEqual([], lapse_stamp_problems(marker))
         owner = marker.split("owner:", 1)[1]
         for key in PIPELINE_KEYS:
             self.assertIn(key, owner, f"the owner clause must name {key}, as the route returns it")
         self.assertIn("topic='load'", owner)
+
+
+#: The server on which no route named SENZING_LICENSE_FILE any more (2026-10-15, #654).
+LAPSE_FOUND_ON = (1, 39, 0)
+MARKER_STAMP = re.compile(r"server (\d+)\.(\d+)\.(\d+), (\d{4}-\d{2}-\d{2}) -->$")
+
+
+def lapse_stamp_problems(marker):
+    """The marker's own stamp must be a re-ask on or after the server that found the lapse.
+
+    #38 re-asked it on server 1.46.1, 2026-11-18, so the stamp is no longer pinned to 1.39.0: a
+    later re-ask moves it, and what must hold is that it never predates the lapse it records.
+    """
+    m = MARKER_STAMP.search(marker)
+    if not m:
+        return ["the marker carries no `server X.Y.Z, YYYY-MM-DD` stamp at its end"]
+    if tuple(int(g) for g in m.groups()[:3]) < LAPSE_FOUND_ON:
+        return ["the marker is stamped %s.%s.%s, before the server on which the lapse was found "
+                "(1.39.0, 2026-10-15)" % m.groups()[:3]]
+    return []
+
+
+class TheMarkerStampDoesNotPredateTheLapse(unittest.TestCase):
+    """Negative controls for `lapse_stamp_problems` (#38)."""
+
+    def test_a_re_ask_after_the_lapse_passes(self):
+        self.assertEqual([], lapse_stamp_problems("x — owner: y — server 1.46.1, 2026-11-18 -->"))
+        self.assertEqual([], lapse_stamp_problems("x — owner: y — server 1.39.0, 2026-10-15 -->"))
+
+    def test_a_stamp_before_the_lapse_fails(self):
+        self.assertTrue(lapse_stamp_problems("x — owner: y — server 1.36.0, 2026-09-02 -->"))
+
+    def test_a_missing_stamp_fails(self):
+        self.assertTrue(lapse_stamp_problems("x — owner: y -->"))
 
 
 class ThePipelineRouteIsRecorded(unittest.TestCase):

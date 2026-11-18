@@ -19,6 +19,14 @@ the bare term admits unrelated `Global*` substring matches, and it did not retur
 languages does Senzing support?" section on either index, so `category='globalization'` stays
 the route. `TheBareQueryParagraphStatesAPropertyNotACensus` keeps the stale reading out.
 
+⚠️ **The census moved again (#38).** Re-asked on server 1.46.1, docs index 2026-11-14 17:44 UTC,
+2026-11-18: the Rust SDK's `GLOBAL_ENVIRONMENT` is gone from the bare query's results, and the
+bare call now does return the "What languages does Senzing support?" section, behind other Guide
+sections, while the filtered call returns it first. The property held: unrelated `Global*`
+matches are still admitted, and the filtered call is still the route. So the trap paragraph is
+now found by the property it states (`unrelated `Global*` substring matches`) rather than by a
+hit's name, and `TheTrapParagraphCarriesNoRetiredClaim` keeps the two retired readings out.
+
 Three sites asked for this material and they disagreed — `phase3-test-load.md` already passed
 `category='globalization'`; `SKILL.md` and `phase2-data-mapping.md` did not. INV-212 had been
 registered the same day and applied only at the site its own spec was working on, which is the
@@ -99,9 +107,9 @@ class EveryGlobalizationRetrievalFilters(unittest.TestCase):
                         "category=", call,
                         "%s calls search_docs for globalization without category="
                         "'globalization'. Unfiltered, the query also admits unrelated "
-                        "Global* matches (the Rust SDK's GLOBAL_ENVIRONMENT, PostgreSQL "
-                        "autovacuum tuning), and it is not the route that returns the "
-                        "'What languages does Senzing support?' section (INV-212)" % path.name,
+                        "Global* matches (PostgreSQL autovacuum tuning, an MDM-Lite FAQ), "
+                        "and it is not the route that returns the 'What languages does "
+                        "Senzing support?' section first (INV-212)" % path.name,
                     )
 
     def test_the_strategy_prescribes_a_filtered_call(self):
@@ -173,7 +181,7 @@ class ExactlyOneSiteOwnsTheStrategy(unittest.TestCase):
 
     def test_the_strategy_names_both_query_traps(self):
         """Each trap is a distinct wrong-content route; naming one leaves the other live."""
-        self.assertIn("GLOBAL_ENVIRONMENT", self.visible,
+        self.assertIn(TRAP_PROPERTY, self.visible,
                       "the bare-query trap must be named, or a guide seeing it concludes "
                       "the documentation is thin")
         self.assertIn("best-practices.md", self.visible,
@@ -221,6 +229,9 @@ class ExactlyOneSiteOwnsTheStrategy(unittest.TestCase):
 #: paragraph is still caught rather than slipping past a finder that no longer recognizes it.
 #: Two paragraphs match today: the "Multi-language data" lead-in, which points at the filtered
 #: call, and the trap warning, which is the one naming the unrelated `Global*` matches.
+#: Since #38 the trap warning is found by the property it states, `TRAP_PROPERTY`, rather than by
+#: the name of one hit: the hit it used to name (`GLOBAL_ENVIRONMENT`) left the results on the
+#: 2026-11-14 index, and a finder keyed on a hit's name goes stale with the census.
 BARE_QUERY_CUE = re.compile(
     r"search_docs\(query=['\"]globalization['\"]\)|\bbare\s+`globalization`", re.IGNORECASE)
 #: Describing a Guide hit as having no content. True on the 2026-08-13 index, false since the
@@ -231,6 +242,32 @@ STUB_DESCRIPTION = re.compile(
 MIS_QUERY = re.compile(r"(?i)mis-?quer(?:y|ied|ies|ying)|evidence you\b")
 #: A ranking census. A rank order is what went stale; the property does not rank anything.
 RANK_CENSUS = re.compile(r"(?i)\btop hits?\b|\branks?\b|\branked\b|highest-ranked|best guide hit")
+#: The property the trap paragraph states, and the text that finds it (#38).
+TRAP_PROPERTY = "unrelated `Global*` substring matches"
+#: The two readings re-asking retired on 2026-11-18 (server 1.46.1, docs index 2026-11-14 17:44
+#: UTC): the bare call no longer returns the Rust SDK's `GLOBAL_ENVIRONMENT`, and it does return
+#: the "What languages does Senzing support?" section, behind other Guide sections.
+RETIRED_TRAP_CLAIMS = (
+    ("GLOBAL_ENVIRONMENT",
+     "the trap paragraph names the Rust SDK's GLOBAL_ENVIRONMENT, which the bare call no "
+     "longer returns (re-asked 2026-11-18, server 1.46.1)"),
+    ('did not return the "What languages does Senzing support?" section',
+     "the trap paragraph says the bare call does not return the 'What languages does Senzing "
+     "support?' section; it does, behind other Guide sections (re-asked 2026-11-18)"),
+)
+
+
+def trap_problems(strategy_text):
+    """What is wrong with the bare-query trap paragraph of a strategy text (#38)."""
+    blocks = re.sub(r"<!--.*?-->", " ", strategy_text, flags=re.S).split("\n\n")
+    trap = [b for b in blocks if BARE_QUERY_CUE.search(b) and TRAP_PROPERTY in b]
+    if len(trap) != 1:
+        return ["expected one trap paragraph naming %r, found %d" % (TRAP_PROPERTY, len(trap))]
+    flat = " ".join(trap[0].split())
+    problems = [why for needle, why in RETIRED_TRAP_CLAIMS if needle in flat]
+    if "category='globalization'" not in flat:
+        problems.append("the trap paragraph no longer keeps the filtered call as the route")
+    return problems
 
 
 class TheBareQueryParagraphStatesAPropertyNotACensus(unittest.TestCase):
@@ -252,16 +289,16 @@ class TheBareQueryParagraphStatesAPropertyNotACensus(unittest.TestCase):
         blocks = prose(STRATEGY_SITE).split("\n\n")
         #: Every paragraph quoting the bare call: none may call a Guide hit a stub or a mis-query.
         self.bare = [b for b in blocks if BARE_QUERY_CUE.search(b)]
-        #: The trap warning itself: the one that names an unrelated `Global*` match.
-        self.trap = [b for b in self.bare if "GLOBAL_ENVIRONMENT" in b]
+        #: The trap warning itself: the one that names the unrelated `Global*` matches.
+        self.trap = [b for b in self.bare if TRAP_PROPERTY in b]
         self.best_practices = [b for b in blocks if "best-practices.md" in b]
 
     def test_the_bare_query_paragraph_exists_and_stands_alone(self):
         self.assertEqual(
             1, len(self.trap),
             "expected exactly one paragraph warning about the bare globalization call and "
-            "naming GLOBAL_ENVIRONMENT; found %d. The guard below reads that paragraph, so a "
-            "missing one leaves it vacuous" % len(self.trap))
+            "naming its unrelated Global* matches; found %d. The guard below reads that "
+            "paragraph, so a missing one leaves it vacuous" % len(self.trap))
         self.assertNotIn(
             "best-practices.md", self.trap[0],
             "the two query traps must sit in separate paragraphs, so the 'best practices' "
@@ -305,6 +342,35 @@ class TheBareQueryParagraphStatesAPropertyNotACensus(unittest.TestCase):
             any(MIS_QUERY.search(b) for b in self.best_practices),
             "the 'best practices' trap still returns no globalization content, so its "
             "'evidence you mis-queried' sentence still holds and must stay (#149)")
+
+
+class TheTrapParagraphCarriesNoRetiredClaim(unittest.TestCase):
+    """#38: the trap paragraph states what the 2026-11-18 re-ask returned, not the old census."""
+
+    def setUp(self):
+        self.text = text(STRATEGY_SITE)
+
+    def test_the_shipped_paragraph_is_clean(self):
+        self.assertEqual([], trap_problems(self.text))
+
+    def test_restoring_the_rust_hit_fails(self):
+        mutant = self.text.replace(
+            "matches: `postgresql-performance-v4`'s",
+            "matches: the Rust SDK's `static GLOBAL_ENVIRONMENT`, `postgresql-performance-v4`'s", 1)
+        self.assertNotEqual(mutant, self.text, "the mutation found nothing to change")
+        self.assertIn(RETIRED_TRAP_CLAIMS[0][1], trap_problems(mutant))
+
+    def test_restoring_the_did_not_return_claim_fails(self):
+        start = self.text.index("The bare call does return the")
+        end = self.text.index("So\n  keep `category='globalization'`", start)
+        mutant = (self.text[:start] + 'The bare call also did not return the "What languages '
+                  'does Senzing support?" section, which holds the UTF-8 answer. '
+                  + self.text[end:])
+        self.assertIn(RETIRED_TRAP_CLAIMS[1][1], trap_problems(mutant))
+
+    def test_dropping_the_property_leaves_no_trap_paragraph(self):
+        mutant = self.text.replace(TRAP_PROPERTY, "some other matches")
+        self.assertTrue(trap_problems(mutant))
 
 
 class TheGalleryStepNamesTheRuleItIsAnInstanceOf(unittest.TestCase):

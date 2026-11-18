@@ -88,13 +88,14 @@ transformation programs tested + output validated; quality score reported at ste
   ⚠️ **The bare call is not the route, even though its Guide hits are usable.** Unfiltered,
   `search_docs(query='globalization')` does return Senzing Globalization Guide sections with
   real prose, and a Guide section it returns can be used like any other. But the bare term
-  also admits unrelated `Global*` substring matches: the Rust SDK's `static GLOBAL_ENVIRONMENT`,
-  `postgresql-performance-v4`'s "Global — more workers" (autovacuum tuning) and an MDM-Lite FAQ
-  on "globally unique ID". Drop those, since they are not about globalization. The bare call
-  also did not return the "What languages does Senzing support?" section, which holds the
-  UTF-8 answer. So keep `category='globalization'` as the route. (Verified live via
-  `search_docs`, server 1.37.13, docs indexed 2026-09-24 18:45 UTC, 2026-09-26.)
-  <!-- MCP-NEGATIVE: search_docs(query='globalization') — returns Globalization Guide sections but not the "What languages does Senzing support?" answer, and also admits unrelated Global* substring matches beside them — owner: search_docs(query='UTF-8 encoding non-Latin character support multi-language data quality', category='globalization') returns it, as the "What languages does Senzing support?" section (routing negative — the category boost ranks the answer first; the bare query also admits unrelated Global* matches) — server 1.37.13, 2026-09-26 -->
+  also admits unrelated `Global*` substring matches: `postgresql-performance-v4`'s "Global —
+  more workers" (autovacuum tuning), an MDM-Lite FAQ on "globally unique ID" and an economic-cost
+  article's "Global extrapolation" appendix. Drop those, since they are not about globalization.
+  The bare call does return the "What languages does Senzing support?" section, which holds the
+  UTF-8 answer, but behind other Guide sections, while the filtered call returns it first. So
+  keep `category='globalization'` as the route. (Verified live via
+  `search_docs`, server 1.46.1, docs indexed 2026-11-14 17:44 UTC, 2026-11-18.)
+  <!-- MCP-NEGATIVE: search_docs(query='globalization') — returns the "What languages does Senzing support?" answer only behind other Globalization Guide sections, and also admits unrelated Global* substring matches beside them — owner: search_docs(query='UTF-8 encoding non-Latin character support multi-language data quality', category='globalization') returns it first, as the "What languages does Senzing support?" section (routing negative — the category boost ranks the answer first; the bare query also admits unrelated Global* matches) — server 1.46.1, 2026-11-18 -->
 
   ⛔ **The words "best practices" are their own trap (INV-212): they return confidently wrong
   content, which is worse than returning nothing.** Unfiltered,
@@ -108,7 +109,7 @@ transformation programs tested + output validated; quality score reported at ste
   thin. (The sections above and this trap verified live via `search_docs`, server 1.39.0, docs
   indexed 2026-10-15 10:47 UTC, 2026-10-15, except the third row's Kanji note, last verified on
   server 1.37.19, docs indexed 2026-10-02 18:46 UTC, 2026-10-04.)
-  <!-- MCP-NEGATIVE: search_docs(query='multi-language data quality best practices') — returns no globalization content at all — the hits are repo template docs/best-practices.md files about Markdown lint and Dockerfiles, none carrying non-Latin or cross-script guidance — owner: search_docs(query='data quality practices multi-language non-Latin', category='globalization') returns it — the category boost ranks Globalization Guide sections, including the CJK+English cross-script matching example, first (routing negative — the category filter is what recovers it) — server 1.39.0, 2026-10-15 -->
+  <!-- MCP-NEGATIVE: search_docs(query='multi-language data quality best practices') — returns no globalization content at all — it leads with repo template docs/best-practices.md files about Markdown lint and Dockerfiles, and no hit carries non-Latin or cross-script guidance — owner: search_docs(query='data quality practices multi-language non-Latin', category='globalization') returns it — the category boost ranks Globalization Guide sections, including the CJK+English cross-script matching example, first (routing negative — the category filter is what recovers it) — server 1.46.1, 2026-11-18 -->
 
 ## Error handling
 

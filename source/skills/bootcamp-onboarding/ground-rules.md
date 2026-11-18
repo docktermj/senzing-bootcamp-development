@@ -553,7 +553,7 @@ copy (INV-300).
   is the whole trap. Passing it where a topic does not gate costs nothing and only adds content, so
   pass it unconditionally rather than tracking which topics gate: that list is a per-topic fact
   about the server, and the last attempt to keep one went stale within a day.
-  <!-- MCP-NEGATIVE: reporting_guide(topic='evaluation', language=None) and reporting_guide(topic='export', language=None) — each reply carries only the keys topic and needs_input, with no content keys — owner: reporting_guide IS the route that owns its topic's content, and the gated reply's own needs_input.instruction says it contains no Senzing content and asks for a re-call with language, so the absence is the gate itself rather than a gap in the topic (absence negative) — server 1.37.14, 2026-09-28 -->
+  <!-- MCP-NEGATIVE: reporting_guide(topic='evaluation', language=None) and reporting_guide(topic='export', language=None) — each reply carries only the keys topic and needs_input, with no content keys — owner: reporting_guide IS the route that owns its topic's content, and the gated reply's own needs_input.instruction says it contains no Senzing content and asks for a re-call with language, so the absence is the gate itself rather than a gap in the topic (absence negative) — server 1.46.1, 2026-11-18 -->
 - ⛔ **A `needs_input` response is a gate, not an answer.** Satisfy every gate the response asks
   for — some topics gate twice (`topic='data_mart'` asks for `language`, then `scale`) — and
   re-call rather than proceeding on what came back. Never report a topic as having no guidance on
@@ -634,8 +634,9 @@ copy (INV-300).
     Never reconstruct the file's content from memory or training data (INV-080). The step that
     needed the example then continues on its own fallback: this adds no question and blocks
     nothing beyond what that step already does.
-  - `download_resource` — `inline` **is** declared, alongside `filename`, `filenames`, `offset` and
-    `version`, and each resource's own `on_failure` names it as the remedy when the URL fetch fails.
+  - `download_resource` — `inline` **is** declared, alongside `filename`, `filenames`, `offset`,
+    `version` and `workspace_dir`, and each resource's own `on_failure` names it as the remedy when
+    the URL fetch fails.
     It is therefore permitted here — after the fetch fails, not instead of it — and it costs context.
     **An `inline=true` reply carries the resource in bounded chunks, not in one response** (INV-234):
     a reply that stops short says `truncated: true` and carries `next_offset` and `total_chars`, the
@@ -644,7 +645,7 @@ copy (INV-300).
     request that file again on its own, with `filename`. Module 5 Phase 1 Step 3 is the one step
     that puts a resource back together from chunks, and it states the procedure in full.
 
-  <!-- MCP-NEGATIVE: the declared schemas of find_examples (query, repo, file_path, list_files, language, max_lines) and generate_scaffold (language, version, workflow) — neither declares an inline parameter, while download_resource's schema (filename, filenames, inline, offset, version) does declare it — owner: each tool's declared schema as the server advertises it in the tool manifest is the authority on what that tool accepts, and all three were read there directly rather than inferred from response prose or from a sibling tool (routing negative — the schema is the route, the response's own access_steps prose is not) — server 1.37.15, 2026-09-29 -->
+  <!-- MCP-NEGATIVE: the declared schemas of find_examples (query, repo, file_path, list_files, language, max_lines) and generate_scaffold (language, version, workflow) — neither declares an inline parameter, while download_resource's schema (filename, filenames, inline, offset, version, workspace_dir) does declare it — owner: each tool's declared schema as the server advertises it in the tool manifest is the authority on what that tool accepts, and all three were read there directly rather than inferred from response prose or from a sibling tool (routing negative — the schema is the route, the response's own access_steps prose is not) — server 1.46.1, 2026-11-18 -->
 
   ⛔ **Read this as a consequence of the schema, never as a ban on the word `inline`.** Stated as
   "never pass `inline`" the rule generalizes wrongly, and a guide that internalized it that way will
@@ -1104,7 +1105,7 @@ before saving the code. The MCP server returns source files only, never a manife
 manifest comes from the language's own init command, and the Senzing dependency line comes from
 the server or Module 2's route, never from memory (INV-080). Each init command below runs pinned,
 as "Every language" above says:
-<!-- MCP-NEGATIVE: generate_scaffold(workflow='full_pipeline') for language='csharp', 'rust' and 'typescript' — each listing names source files only, with no .csproj, Cargo.toml or package.json; rust and typescript carry a dependency_note with the one Senzing dependency line, csharp carries none — owner: generate_scaffold IS the route that returns a workflow's files, and find_examples, the corpus index, says it indexes no build files or project configuration, so no route serves a manifest (absence negative) — server 1.37.28, 2026-10-13 -->
+<!-- MCP-NEGATIVE: generate_scaffold(workflow='full_pipeline') for language='csharp', 'rust' and 'typescript' — each listing names source files only, with no .csproj, Cargo.toml or package.json; rust and typescript carry a dependency_note with the one Senzing dependency line, csharp carries none — owner: generate_scaffold IS the route that returns a workflow's files, and find_examples, the corpus index, says it indexes no build files or project configuration, so no route serves a manifest (absence negative) — server 1.46.1, 2026-11-18 -->
 
 1. **The folder already has its manifest** (a re-run or a resume): reuse it. Skip the init command,
    which fails or overwrites when the manifest exists, and only replace the code.
@@ -1131,7 +1132,7 @@ as "Every language" above says:
 and TypeScript, take the dependency line from the `DEPENDENCY:` entry in the `compatibility_notes`
 of `sdk_guide(topic=<the program's topic>, language='<chosen_language>')` instead, exactly as it
 gives it.
-<!-- MCP-NEGATIVE: sdk_guide(topic='load', language='rust' and 'typescript', record_count=100), sdk_guide(topic='configure', language='rust', data_sources=['CUSTOMERS']) and reporting_guide(topic='export', language='rust', scale='small') — none of the replies carries a dependency_note field, and each sdk_guide reply states the Senzing dependency line among its own compatibility notes — owner: generate_scaffold IS the route that returns a dependency_note, and an sdk_guide reply's own notes are where that route states the line, so the line is read there (absence negative) — server 1.37.28, 2026-10-13 -->
+<!-- MCP-NEGATIVE: sdk_guide(topic='load', language='rust' and 'typescript', record_count=100), sdk_guide(topic='configure', language='rust', data_sources=['CUSTOMERS']) and reporting_guide(topic='export', language='rust', scale='small') — none of the replies carries a dependency_note field, and each sdk_guide reply states the Senzing dependency line among its own compatibility notes — owner: generate_scaffold IS the route that returns a dependency_note, and an sdk_guide reply's own notes are where that route states the line, so the line is read there (absence negative) — server 1.46.1, 2026-11-18 -->
 
 ## Windows and PowerShell
 
