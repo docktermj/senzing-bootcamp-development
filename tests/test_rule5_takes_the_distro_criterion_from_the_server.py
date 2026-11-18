@@ -321,12 +321,24 @@ class StepTwoSaysUnameCannotAnswerIt(unittest.TestCase):
                       "carry no distribution either, so the ask-instead reading survives")
 
     def test_step_two_still_asks_exactly_one_question(self):
-        """INV-012 / INV-006: this change adds a detection, not a gate."""
+        """INV-012 / INV-006: this change adds a detection, not a gate.
+
+        ⚠️ Dated note (#40): Step 2 now carries a second pinned question, rule 1's route
+        question for Windows with Python, asked only when detection leaves both Linux
+        environments open. It is not rule 5's, so this test still holds rule 5 to no question
+        and Step 2 to exactly those two.
+        """
+        step = step_two()
         self.assertEqual(
-            1, step_two().count("\U0001f449"),
-            "Step 2 no longer carries exactly one \U0001f449 question. The pinned platform "
-            "question is the only one it may ask (INV-056); rule 5's distribution read is a "
-            "detection (INV-012) and asking again would repeat a question (INV-006)")
+            2, step.count("\U0001f449"),
+            "Step 2 no longer carries exactly two \U0001f449 questions: the pinned platform "
+            "question (INV-056) and rule 1's route question (#40). Rule 5's distribution read is "
+            "a detection (INV-012) and asking again would repeat a question (INV-006)")
+        self.assertIn("\U0001f449 **Which Linux environment would you like to run the Senzing "
+                      "SDK in?", step, "the second question in Step 2 is not rule 1's route "
+                      "question")
+        self.assertNotIn("\U0001f449", rule_five(),
+                         "rule 5 asks a question; its distribution read is a detection (INV-012)")
 
     def test_the_pinned_question_and_its_five_options_are_unchanged(self):
         step = step_two()

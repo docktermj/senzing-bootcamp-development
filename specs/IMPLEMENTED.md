@@ -36,6 +36,111 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## module-2-gives-two-install-routes-on-windows-with-python-and-no-step-chooses
+
+- **Implemented:** 2026-11-18 (issue #40)
+- **Files changed:** `source/skills/module-02-sdk-setup/SKILL.md`,
+  `tests/test_windows_python_route_is_chosen.py` (new),
+  `tests/test_rule5_takes_the_distro_criterion_from_the_server.py`, `specs/IMPLEMENTED.md`
+  (this entry)
+- **MCP re-check:** server 1.46.1, docs index built 2026-11-14 17:44 UTC, 2026-11-18 — n/a (no
+  Senzing fact) for the text this change adds, re-confirmed against the diff: it states what
+  makes a container or WSL2 present on the Bootcamper's machine (`docker version`,
+  `podman version`, `wsl --list --verbose`), the pinned question, and where the route is
+  recorded. None of that is a Senzing fact. The two platform tokens the question resolves to,
+  `platform='docker'` and `platform='linux_apt'`, are the ones rule 1 already named, and are not
+  changed. Rule 1's existing server quotation, which this change keeps and does not re-stamp,
+  was re-asked as the lead's plan asked, and still reproduces. Tools: `get_capabilities`,
+  `sdk_guide`, `search_docs`, read-only, at the default result count:
+  - `get_capabilities()` gives `"server_version":"1.46.1"`. The index build is not in that
+    reply; `search_docs` gives it: `"index_built":"2026-11-14 17:44 UTC"`,
+    `"documents_indexed":13404`.
+  - `sdk_guide(topic='install', platform='windows', language='python')` returns as its only
+    `compatibility_notes` entry: "The Senzing Python SDK is ONLY supported on Linux. … (2) Pick
+    a different environment — use Docker or WSL2 to run Python inside a Linux container." Its
+    `next_steps` names `sdk_guide(topic='install', platform='docker', language='python')`. Rule
+    1's quotation, *"use Docker or WSL2 to run Python inside a Linux container"* (server
+    1.33.0, 2026-08-21), still matches word for word, so its stamp is left as it is.
+  - `search_docs(query='Python SDK Windows WSL2 Linux container')` returns the v4 Windows
+    Quickstart as hit 1, and its "Start developing" section as hit 5: "The Python SDK is
+    supported on Linux only. To use it, follow the v4 Docker Quickstart" (link markup left out
+    here). Nothing in the change rests on this reply; it was asked to see whether the server
+    now names one of the two routes as preferred, and the `sdk_guide` reply above, the route
+    rule 1 cites, names both.
+- **Summary:** On Windows with Python, Module 2 named two Linux environments, a container and
+  WSL2, and no step chose between them; the "Agent Behavior" bullet at the end of the file
+  said "Do NOT offer alternatives", which read literally forbade the WSL2 route
+  (`production-readiness-audit-2026-11-17`, finding 6). Step 2 now resolves one route.
+  - **Rule 1 states the procedure, in order.** A `route` already recorded under step 2 in
+    `config/bootcamp_progress.json` (`container` or `wsl2`) is taken, with no probe and no
+    question (INV-006). Otherwise the guide checks what is present: a container when
+    `docker version` or `podman version` answers, the probe Step 7 makes before its PostgreSQL
+    question; WSL2 when `wsl --list --verbose` lists a distribution whose VERSION is 2, a WSL 1
+    distribution not counting. Exactly one present: the guide takes it and says so in one line
+    with the reason, in the "say so if that's wrong" form Step 2 uses for the detected
+    platform, and asks nothing. Both or neither: it says what it found and asks the route
+    question once. A guide already inside WSL2 detects Linux and reaches rule 5; macOS keeps
+    the container route with no probe and no question.
+  - **The route question** is pinned verbatim after the routing rules, as the issue gave it:
+    "Which Linux environment would you like to run the Senzing SDK in? Reply with a number:",
+    options "1. A container" and "2. WSL2", a neutral lead and a numbered list (INV-051,
+    INV-056), ending the turn (INV-251). Its `**Handling each answer (INV-284).**` block
+    resolves 1 to `platform='docker'` and 2 to `platform='linux_apt'`, records the route, then
+    checkpoints step 2 and continues to Step 3. When neither was present, the answer still
+    decides the route and Step 3 proceeds as it does today.
+  - **The checkpoint** now records rule 1's `route` under step 2, the way Step 1b records its
+    outcome under step 1. A resumed session, and the `sdk_repair` detour that re-runs Step 2,
+    read it there and neither probe nor ask.
+  - **The tail bullet** now reads: install the SDK on the route Step 2's routing rules
+    resolve, natively, in a container, or in WSL2 where rule 1 chooses it; offer no route
+    those rules do not resolve; the one choice they leave to the Bootcamper is rule 1's route
+    question, on Windows with Python.
+  - **Kept.** The routing rules keep their ordinals 1 to 5, which
+    `bootcamp-preparation/SKILL.md` indexes by number, and both anchors
+    `tests/test_language_gate_names_the_cost.py` cuts on. The new presence probes are written
+    as prose, as `docker version` is at Step 7, so no new guide-run block is added. The
+    language gate in `bootcamp-preparation/SKILL.md` is not edited, and that file's
+    `TheProbeIsNotClaimed` boundary, which is about the language gate, still holds.
+  - **Tests.** `tests/test_windows_python_route_is_chosen.py`, 8 tests. Five checks, each a
+    function returning problems: rule 1 states the procedure's steps in order, and that the
+    exactly-one branch asks nothing; the question is pinned verbatim once, in Step 2, with
+    exactly its two options and a handling entry for each that resolves the platform and
+    records the route, and its handling checkpoints step 2 and continues to Step 3; the
+    checkpoint records the route; the "Agent Behavior" section does not say "do not offer
+    alternatives" and carries a bullet deferring to the routing rules; and no routing rule
+    carries a 👉, rules 1 to 5 stand in order, no rule other than rule 1 leads to the route
+    question, and Step 2 holds exactly two 👉 questions. Seven negative controls run on
+    in-memory mutants of the shipped file on every pass: rule 1 without its procedure, the
+    exactly-one branch asking, a lost handling entry, a reworded question, an unrecorded
+    route (in the handling entry and in the checkpoint), the tail bullet as it shipped before
+    this change, and a question on rule 4. Prose is matched with whitespace collapsed
+    (INV-346).
+  - **`tests/test_rule5_takes_the_distro_criterion_from_the_server.py`**:
+    `test_step_two_still_asks_exactly_one_question` asserted Step 2 carries exactly one 👉,
+    which this issue's own scope changes. It now asserts exactly two, that the second is the
+    route question, and that rule 5 carries none, so its rule-5 purpose still holds. A dated
+    note in its docstring says why.
+  - **Every assistant.** The changed text sits outside every host marker and names no
+    assistant; `python3 -m tools.bootcamp_build check` passes.
+  - **Not observed.** No run on a real assistant was made, so nothing is added to any
+    `hosts/<assistant>/checks.json`. The tests read Markdown: they cannot show that a live
+    guide runs the probes or reads `wsl --list --verbose` correctly. Verified on Linux only,
+    with Python 3.12.3. The change is Markdown text and standard-library tests (INV-001); it
+    binds Python because the server's Linux-only statement is about the Python SDK, and states
+    no programming language's own mechanism (INV-002).
+  - **Not changed (out of scope, per the issue).** Who installs a missing Docker Desktop or
+    WSL2, and how a guide on native Windows runs commands inside WSL2.
+- **Invariants.** The register is not edited here (INV-365). The lines this change adds or
+  edits under `source/` and `tests/` carry no ⛔ and no bold MUST, NEVER or ALWAYS, and
+  `conformance.py since --since-last-audit` reports none from this change. The behavior it
+  ships applies invariants already in force to one step: a recorded answer is not asked
+  again (INV-006), a detection is preferred to a question (INV-012), the question is pinned
+  with a neutral lead and a numbered list (INV-009, INV-051, INV-056), it is the turn's one 👉
+  question (INV-251), and each option has a handling entry (INV-284). Which route Module 2
+  takes on Windows with Python is a product decision recorded in the issue, guarded by the
+  test above, not a standing rule across the bootcamp. Establishes no new invariant.
+- **Commit:** uncommitted
+
 ## the-senzing-mcp-server-returns-the-bootcamps-own-repositories-as-senzing-examples
 
 - **Implemented:** 2026-11-18 (issue #37)
