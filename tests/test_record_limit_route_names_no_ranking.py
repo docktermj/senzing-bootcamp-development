@@ -1,5 +1,8 @@
 """Module 2 Step 5 says of `search_docs` only that its results are ranked.
 
+Enforces **INV-436** (registered 2026-11-18). It reads Markdown and calls no server, so it
+cannot establish what the docs index ranks first on any day.
+
 Step 5's fallback branch fills `{record limit}` from `sdk_guide(topic='load',
 record_count=<above the limit>)`, and names that tool rather than "a Senzing MCP tool". The
 reason it gives for the choice has been wrong about `search_docs` twice, each time because the
@@ -19,7 +22,7 @@ So the passage now gives a reason no rebuild can change: `sdk_guide` states the 
 fixed field, `compatibility_notes`, while `search_docs` results are ranked. It says nothing
 else about `search_docs`.
 
-⛔ **Step 5's record-limit fallback says of `search_docs` only that its results are ranked: it never says which hit ranks where, never says that a query lacks the figure, and carries no `MCP-NEGATIVE` marker for a record-limit query.**
+⛔ **(INV-436) Step 5's record-limit fallback says of `search_docs` only that its results are ranked: it never says which hit ranks where, never says that a query lacks the figure, and carries no `MCP-NEGATIVE` marker for a record-limit query.**
 
 This file fails when any of the three comes back in Step 5, or when the query the retired
 marker named is prescribed again or recorded in `VERIFIED_QUERIES`. It also holds what #150

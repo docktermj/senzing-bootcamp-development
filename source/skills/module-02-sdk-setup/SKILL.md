@@ -1908,7 +1908,7 @@ sdk_guide(topic='load', language='<chosen_language>', platform='<user_platform>'
 ```
 
 The tool is named here, rather than left as "a Senzing MCP tool", because `sdk_guide` states the
-figure in a fixed field, `compatibility_notes`, while `search_docs` results are ranked.
+figure in a fixed field, `compatibility_notes`, while `search_docs` results are ranked (INV-436).
 Present exactly what the server returns (waiting up to 30 seconds). If it
 returns no figure, drop the parenthetical entirely and say the current limit is unavailable from
 the MCP server. Never substitute a hardcoded or remembered figure — the published

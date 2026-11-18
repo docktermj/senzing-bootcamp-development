@@ -1438,7 +1438,7 @@ line and holds no copy of it, so changing the line changes the range.
   carries the notice again, so it is INV-080 applied to one fact and not a standing rule about
   previews. Beyond the one block the change establishes no new invariant.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** Module 2 Step 5's record-limit fallback says of `search_docs` only that its results are ranked. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-436, registered by the maintainer 2026-11-18).** Module 2 Step 5's record-limit fallback says of `search_docs` only that its results are ranked. The rule already shipping, quoted:
     - ⛔ **Step 5's record-limit fallback says of `search_docs` only that its results are ranked: it never says which hit ranks where, never says that a query lacks the figure, and carries no `MCP-NEGATIVE` marker for a record-limit query.** — in `tests/test_record_limit_route_names_no_ranking.py`
     - `source/skills/module-02-sdk-setup/SKILL.md` — ⛔ Step 5's fallback gives as its reason for naming `sdk_guide` that it states the figure in a fixed field, `compatibility_notes`, while `search_docs` results are ranked, and says nothing else of `search_docs`
 
