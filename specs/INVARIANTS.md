@@ -299,6 +299,14 @@ These hold at the boundaries of every module.
   (⚠️ **Dated clarification, 2026-10-19 (#686): `data/exports/` is named; the rules above are unchanged.** Module 7 step 4e writes each named system's export under `data/exports/<system>/` and hands those files to the Bootcamper as that step's deliverable, so the directory is durable rather than scratch: `/package-bootcamp` reaches it on both profiles and graduation copies it to `production/data/exports/` at the same project-relative path (INV-186). It already lived under an enumerated directory. The tree's other lines and every rule above still bind. Enforced by `tests/test_invariant_layout_tree.py` and `tests/test_handed_over_paths_can_travel.py`.)
 
   (⚠️ **Dated note, 2026-10-19 (#685): Step 5b warning and continuing is the step's own clause, not INV-048's; the tree and every rule above are unchanged.** The "(INV-048)" in the 2026-07-26 keepsake-PDF note is read as no citation: INV-048 governs `docs/bootcamp_recap.pdf`, and `docs/business_problem.pdf` and `docs/data_source_evaluation.pdf` are the two files that note exists to distinguish from it. No tree line changes. Enforced by `tests/test_discoveries_pdf.py`, which pins that Step 5b's non-blocking clause names no INV-048.)
+  (⚠️ **Dated note, 2026-11-18 (#41): `config/license.json` is first written in Module 2; the file
+  and its purpose are unchanged.** SDK setup (Module 2) Step 5a saves the `get_license` response to
+  `config/license.json` as a provisional reading (INV-295), and writes nothing when it cannot
+  measure (INV-244). Data collection (Module 4) Step 8a sub-step 7 saves it again when that step
+  measures, with the engine configuration in force. The 2026-07-28 correction's "Module 2 only reads
+  the detected limit" no longer holds, and the tree's annotation "(written in Module 4)" on the
+  `license.json` line is read as "written in Module 2, rewritten in Module 4"; the tree line itself
+  is left as it is. The rules above still bind.)
 
 ## Invariants added from implemented specs
 

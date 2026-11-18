@@ -589,7 +589,7 @@ line and holds no copy of it, so changing the line changes the range.
   a dated note on it and a corrected comment on one line of its tree. The note cites INV-244
   and INV-295, which Step 5a already applies, and changes neither.
 
-- **PROPOSED AMENDMENT to INV-050 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-050 — applied 2026-11-18 by the maintainer.**
     - ⛔ **Save the returned JSON to `config/license.json`, because later steps read it.** — in `source/skills/module-02-sdk-setup/SKILL.md`
 
   INV-050's tree annotates `config/license.json` "(written in Module 4)", and its 2026-07-28
@@ -611,21 +611,14 @@ line and holds no copy of it, so changing the line changes the range.
   response to `config/license.json` as a provisional reading (INV-295), and writes nothing
   when it cannot measure (INV-244). Data collection (Module 4) Step 8a sub-step 7 saves it
   again when that step measures, with the engine configuration in force. The 2026-07-28
-  correction's "Module 2 only reads the detected limit" no longer holds. The rules above
+  correction's "Module 2 only reads the detected limit" no longer holds, and the tree's
+  annotation "(written in Module 4)" on the `license.json` line is read as "written in
+  Module 2, rewritten in Module 4"; the tree line itself is left as it is. The rules above
   still bind.)
 
-  With the note, replace the `license.json` line of INV-050's tree. The line as it stands
-  today, its two leading spaces included:
-
-  ```text
-    │   ├── license.json                   # Detected Senzing license capacity (written in Module 4)
-  ```
-
-  Its replacement:
-
-  ```text
-    │   ├── license.json                   # Detected Senzing license capacity (written in Module 2, rewritten in Module 4)
-  ```
+  **Amended at review, 2026-11-18:** the maintainer chose the note alone, so the register stays
+  append-only. The draft also asked for the tree line to be rewritten in place; that part was
+  struck, and the note above says how to read the annotation instead.
 
 - **Commit:** uncommitted
 
