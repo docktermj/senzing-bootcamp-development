@@ -163,7 +163,7 @@ the archive safe to hand over:
   unexamined is packaged.
   The scan reads each member as UTF-8 text and as UTF-16 text, little-endian and big-endian,
   with or without a byte-order mark, so a file that a Windows PowerShell 5.1 `>` redirect
-  wrote is scanned like any other. No other encoding is read.
+  wrote is scanned like any other. No other encoding is read (INV-438).
 - **Symlinks resolved, then compared:** a member resolving outside the project root is
   skipped and named (the INV-200 rule).
   A symlinked file that resolves inside the project is also checked against the exclusion

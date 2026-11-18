@@ -200,7 +200,7 @@ SCAN_OVERLAP_BYTES = 4096
 #: between every two characters of a secret, so no pattern matched it (#46). The two UTF-16
 #: byte orders are read separately, and neither needs a byte-order mark: a mark decodes to one
 #: character no pattern contains. No other encoding is read.
-SCAN_ENCODINGS = ("utf-8", "utf-16-le", "utf-16-be")
+SCAN_ENCODINGS = ("utf-8", "utf-16-le", "utf-16-be")  # INV-438
 
 # ⛔ There is deliberately NO extension allowlist here. There was one until 2026-08-26 --
 # `TEXT_SUFFIXES`, carrying .md/.py/.json/.csv and NOT .pem, .key, .crt or the empty extension --

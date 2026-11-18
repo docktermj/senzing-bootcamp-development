@@ -61,7 +61,9 @@ Issue #46 added three rules, each held here and by the tests it names:
 Enforces **INV-437** (registered 2026-11-18); it cannot establish what a live packaging run on
 a Bootcamper's project excludes, and it creates no Windows junction.
 
-⛔ **The packager's secret scan reads every member as UTF-16 text as well as UTF-8.**
+⛔ **(INV-438) The packager's secret scan reads every member as UTF-16 text as well as UTF-8.**
+Enforces **INV-438** (registered 2026-11-18); it reads no file PowerShell wrote and cannot
+establish that a secret in some other encoding is found.
 
 ⛔ **The saved bootcamp feedback and the in-progress recap travel on `transfer` only, and each profile's text says so.**
 
