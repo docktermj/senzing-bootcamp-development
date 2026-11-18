@@ -1675,6 +1675,11 @@ line and holds no copy of it, so changing the line changes the range.
 
   **INV-NNN** — The packaged `share` profile MUST carry nothing under `docs/feedback/` or `docs/progress/`, wherever in the project tree they sit: the saved bootcamp feedback and the in-progress recap are the Bootcamper's working notes, in their own words, and not results. Each MUST be an exclusion rule of that profile, named in `PACKAGE_MANIFEST.json`'s `excluded` list where it applied and listed in `exclusion_rules_applied.share_only`, and `OPEN_ME_FIRST.md` on `share` MUST list both among what is not there. The `transfer` profile MUST carry both, and its `OPEN_ME_FIRST.md` MUST name `docs/feedback/SENZING_BOOTCAMP_FEEDBACK.md` and `docs/progress/recap_checkpoint.md` each only when the manifest's `included` list carries it. The pinned consent question in `packaging.md` MUST name the saved bootcamp feedback and the in-progress recap in the option that produces `transfer` and MUST NOT name them in the option that produces `share`, and `packaging.md` Step 4 and `source/commands/package-bootcamp.md` MUST say which profile carries them. A project with neither file packages without error. Observed (`dry-run-2026-11-17`, finding 12): `share` carried `docs/feedback/SENZING_BOOTCAMP_FEEDBACK.md` and `docs/progress/recap_checkpoint.md`, and neither the consent question nor `OPEN_ME_FIRST.md` named them. Enforced by `tests/test_package_bootcamp.py`, `tests/test_open_me_first_matches_the_manifest.py` and `tests/test_packaging_consent_gate_ships.py`, which read archives built from fixtures and the shipped wording; they **cannot** establish what a live guide asks, and they say nothing about other content under `docs/` that `share` carries. (Source: `the-packager-omits-symlinked-directories-unnamed-skips-utf-16-text-and-shares-the-feedback-file`, GitHub issue #46, 2026-11-18.)
 
+  **HELD 2026-11-18:** held with the other packaging blocks,
+  `the-bootcamp-cannot-leave-the-machine-it-was-built-on` (Draft 1) and
+  `open-me-first-says-only-what-the-manifest-includes`, because it pins `OPEN_ME_FIRST.md`
+  content in the same feature. Revisit after `dry-run` phase 3 has exercised packaging.
+
 - **Commit:** uncommitted
 
 ## restated-rules-and-lists-in-shipped-text-have-drifted-from-their-source
