@@ -512,7 +512,7 @@ line and holds no copy of it, so changing the line changes the range.
   `tests/test_propagate_publishes_the_published_marketplace_name.py`, is not carried into this
   repository.)
 
-- **PROPOSED AMENDMENT to INV-360 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-360 — applied 2026-11-18 by the maintainer.**
     - ⛔ **Bootcampers install from the public repository, [Senzing/bootcamp].** — in `README.md`
 
   INV-360 requires this repository's install surfaces to name the development repository and
@@ -524,10 +524,11 @@ line and holds no copy of it, so changing the line changes the range.
   Drafted wording follows, under the registered id. A new rule's id would be
   written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
 
-  **INV-360** — (⚠️ **Dated note, 2026-11-18 (#48): `propagate.sh` and its slug rewrite are not
-  in this repository, and nobody installs from it; no requirement changes.** Since the
-  one-repository migration of 2026-11-14, every install page is generated for the public
-  repository, `Senzing/bootcamp`. The enforcer named above,
+  **INV-360** — (⚠️ **Dated note, 2026-11-18 (#48): INV-360 no longer applies; this note is
+  the review it asks for.** This repository has no install surface that bootcampers install
+  from, and `propagate.sh` and its slug rewrite are not in it. Since the one-repository
+  migration of 2026-11-14, every install page is generated for the public repository,
+  `Senzing/bootcamp`, and `README.md` names that repository. The enforcer named above,
   `tests/test_dev_install_surfaces_name_the_dev_repo.py`, is present and records its own
   retirement in its dated note of 2026-11-14.)
 
