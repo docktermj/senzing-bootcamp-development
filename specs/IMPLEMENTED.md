@@ -36,6 +36,159 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## install-pages-and-interface-lists-are-uneven-across-assistants
+
+- **Implemented:** 2026-11-17 (issue #43)
+- **Files changed:** `hosts/copilot/fragments/site-install.html`,
+  `hosts/chatgpt/fragments/site-install.html`, `hosts/copilot/fragments/site-tips.html`,
+  `hosts/chatgpt/fragments/site-tips.html`, `hosts/gemini/fragments/site-tips.html`,
+  `hosts/kiro/fragments/site-tips.html`, `hosts/copilot/host.json`,
+  `tests/test_install_pages_cover_what_the_package_names.py` (new),
+  `specs/IMPLEMENTED.md` (this entry)
+- **MCP re-check:** n/a (no Senzing fact). Re-confirmed on 2026-11-17 against the change itself:
+  it changes what four install pages say about an assistant's interfaces and about updating
+  and uninstalling the bootcamp's package, and one name in a sentence about hooks. None of
+  that says anything about Senzing or about what the Senzing MCP server serves. No absence
+  claim about the server is made, so INV-213's `owner-checked:` clause is not owed.
+- **Summary:** Each assistant's install page now names every interface its package names, and
+  every page has one tip about updating and uninstalling. These are findings 13, 25 and 27 of
+  `production-readiness-audit-2026-11-17`.
+  - **Interfaces without steps.** The GitHub Copilot package names VS Code and the ChatGPT
+    package names the Codex CLI, and neither page mentioned it. Each page now has one
+    paragraph below its steps, with the id `vs-code` or `codex-cli`. It says the assistant also
+    runs there, that the bootcamp has not been run there, and that the page has no verified
+    install steps for it. Neither says the bootcamp supports the interface. The GitHub Copilot
+    page's first paragraph, which says "Choose one path", also says the page has no steps for
+    VS Code and links to that paragraph.
+  - **Update and uninstall tips.** All five `site-tips.html` fragments now have one tip with
+    the id `update-uninstall`, headed "Update or uninstall".
+    - Kiro and ChatGPT gain it. It says the page has no verified steps to update or uninstall,
+      and where to look, by the name the page's install steps already use: Kiro's **Powers**
+      panel, and the **Plugins** panel of the Codex desktop app.
+    - Gemini's heading was "Update". Its two update commands and the sentence above them are
+      unchanged. One sentence is added below them: those steps update the plugin, and the page
+      has no verified steps to uninstall it.
+    - Claude's tip is unchanged. Copilot's changes by the app's name only.
+  - **The Copilot name.** "the Copilot app" is now "the GitHub Copilot app" in `hooks.note` of
+    `hosts/copilot/host.json` and in the Copilot tip. The package's own naming table
+    (`hosts/copilot/fragments/interface-naming.md`) requires that name.
+  - **What a build changes.** Compared by building `6fe4627` and this change into two
+    directories: the install pages for GitHub Copilot, ChatGPT, Gemini and Kiro differ, and so
+    does one file in one package, `skills/bootcamp-onboarding/host-rules.md` in the GitHub
+    Copilot package, by the one sentence. Nothing else differs. The Claude page, the Claude
+    package and the other three packages are the same byte for byte, and no file under
+    `hosts/claude/` is changed.
+  - **No naming table is changed**, and no step is written from an assistant vendor's
+    documentation.
+  - **Tests.** `tests/test_install_pages_cover_what_the_package_names.py` is new, with 15
+    tests. It takes the assistants from the build's own list (INV-246) and builds the install
+    pages from the current files.
+    - Five tests read each assistant's naming table and look for every name in its "Say"
+      column, without the leading article, in the visible text of that assistant's built page.
+      Text in the page's head, in a script and in a tag's attributes is not visible text. They
+      fail when a table yields no name, and they hold the names the five tables give today.
+    - Three tests hold the two paragraphs: each names its interface, says the bootcamp has not
+      been run there, says the page has no verified install steps, and does not use the word
+      "support".
+    - Three tests read all five tips fragments: one tip with the id, the heading "Update or
+      uninstall", and both "update" and "uninstall" in the tip's text below the heading. They
+      also require the id exactly once on each built page.
+    - Four tests hold the Copilot name: no file under `hosts/copilot/`, no file in the built
+      GitHub Copilot package and not the built GitHub Copilot page has "Copilot app" without
+      "GitHub " in front of it. They fail when no file names the app at all.
+    - Negative controls run on every pass (INV-265): each name taken off its real page is
+      reported missing; a name present only in the head, a script or an attribute is reported
+      missing; a tip that is missing, has another heading or speaks of only one of the two is
+      reported, on fixtures and on each real fragment; the two sentences this change corrects
+      are reported, and the full name is not, also when it wraps over two lines.
+    - Negative control run once, in a throwaway clone of `6fe4627` holding only the new test
+      file: 9 of the 15 tests fail (`FAILED (failures=21)`).
+    - Text is matched with whitespace collapsed (INV-346).
+  - **Not observed.** No run on a real assistant was made, so no record is added to any
+    `hosts/<assistant>/checks.json`. The pages now say what they do not cover; nothing here
+    shows that a step they do give works. Gemini's update steps have no recorded run, as the
+    issue records, and the page's generated preview note already says its steps follow the
+    documentation. Verified on Linux only, with Python 3.12.3. The change is HTML, one JSON
+    string and a test that uses `pathlib` and reads UTF-8, with no branch on the platform
+    (INV-001).
+  - **Found and not changed, as out of scope.** Two drafts for the maintainer, neither filed.
+    1. **Not filed.** *The Claude install page says the bootcamp supports two interfaces no
+       recorded run covers.* `hosts/claude/fragments/site-install.html` says of the Claude web
+       app and the Claude IDE extensions: "The bootcamp supports those." Both records in
+       `hosts/claude/checks.json` name Claude Code 2.1.325, started with `--plugin-dir`. The
+       issue's goal is that a page claims nothing no recorded run backs, and its scope leaves
+       Claude's page out. The question for the maintainer is whether that sentence should
+       become the statement the other two pages now make.
+    2. **Not filed.** *The update and uninstall commands on the Claude and GitHub Copilot
+       pages have no recorded run.* No record in either assistant's `checks.json` mentions an
+       update, an uninstall or the removal of a marketplace. The tips give the commands
+       without a qualifier, while the Kiro and ChatGPT tips now say they have no verified
+       steps. The question is whether those commands should be run and recorded, or the tips
+       should say they follow the documentation.
+- **Invariants.** The register is not edited here (INV-365). The change ships four hard-rule
+  lines, all in the docstring of `tests/test_install_pages_cover_what_the_package_names.py`.
+  `since` does not report them, because `tests/` is not a rule home. The three blocks below
+  cover them (INV-309). They are three blocks because they have three subjects: which
+  interfaces a page names, the update and uninstall tip, and one assistant's name for its
+  desktop application. The lines this change adds under `hosts/` carry no ⛔ and no bold MUST
+  or NEVER.
+
+- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** An install page names every interface its package names, and says so where it has no steps for one. The rule already shipping, quoted:
+    - ⛔ **An install page names every interface its assistant's package names.** — in `tests/test_install_pages_cover_what_the_package_names.py`
+    - ⛔ **An install page that has no steps for an interface says the bootcamp has not been run there and that the page has no verified install steps for it.** — in `tests/test_install_pages_cover_what_the_package_names.py`
+
+  Enforced by `tests/test_install_pages_cover_what_the_package_names.py`.
+
+  **Why it is not an existing invariant:** INV-158 says which names the bootcamp uses for
+  Claude's interfaces and that the install documents cover the two primary ones. It says
+  nothing of another assistant, and nothing of an interface a package names and its page
+  leaves out. INV-003 says the bootcamp is consistent, coherent and complete, and names no
+  site. INV-428 and INV-429 say what an install page may say about a model and an effort.
+  None of them says that a page and its package's naming table name the same interfaces, so
+  a table could again gain an interface the page never mentions and contradict no registered
+  wording.
+
+  Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
+  invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
+
+  **INV-NNN** — Each assistant's built install page MUST name, in text a reader sees, every interface in the "Say" column of that assistant's naming table (`hosts/<assistant>/fragments/interface-naming.md`), by the name the table gives without its leading article. Where the page gives no install steps for an interface it names, it MUST say that the bootcamp has not been run in that interface and that the page has no verified install steps for it, and MUST NOT say the bootcamp supports it. An interface is added to a table and to its page in the same change; the page moves to the table, and an interface is not taken out of a table to make a page pass. On 2026-11-17 two interfaces have no steps: VS Code on the GitHub Copilot page and the Codex CLI on the ChatGPT page. ⚠️ Limits: the enforcer finds a name on the page and holds the statement for those two interfaces by name. It **cannot** tell steps from a disclaimer for any other interface, and it cannot establish that steps a page gives were ever followed: only a record in `hosts/<assistant>/checks.json` shows that. The Claude page's statement about the Claude web app and the Claude IDE extensions predates this rule and is not held to its second sentence. Enforced by `tests/test_install_pages_cover_what_the_package_names.py`, which builds every assistant's page and reads the tables as they are. (Source: `install-pages-and-interface-lists-are-uneven-across-assistants`, GitHub issue #43, 2026-11-17.)
+
+- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** Every install page has one tip about updating and uninstalling, under one id. The rule already shipping, quoted:
+    - ⛔ **Every install page has one tip with the id `update-uninstall`, headed "Update or uninstall", whose text speaks of both updating and uninstalling.** — in `tests/test_install_pages_cover_what_the_package_names.py`
+
+  Enforced by `tests/test_install_pages_cover_what_the_package_names.py`.
+
+  **Why it is not an existing invariant:** INV-158 requires install documents for Claude and
+  says nothing of updating or uninstalling. INV-003 names no site. INV-428 and INV-429 govern
+  the model and the effort on an install page. None of them says that a page tells a
+  bootcamper how to update or remove what it told them to install, so a new assistant's page
+  could again say nothing and contradict no registered wording.
+
+  Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
+  invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
+
+  **INV-NNN** — Each assistant's tips fragment (`hosts/<assistant>/fragments/site-tips.html`) MUST hold exactly one tip with the id `update-uninstall`, headed "Update or uninstall", and the tip's text below the heading MUST speak of both updating and uninstalling. For each of the two the tip gives the steps, or says the page has no verified steps for it and names where in the assistant to look, by a name the page's install steps already use. A tip MUST NOT give steps written from an assistant vendor's documentation as though they had been followed. The id is the same on every page and MUST NOT change, because other text links to `#update-uninstall`. ⚠️ Limits: the enforcer finds the tip, its heading and the two words. It **cannot** establish that steps a tip gives work or were ever run; on 2026-11-17 no record in any `hosts/<assistant>/checks.json` covers an update or an uninstall. Enforced by `tests/test_install_pages_cover_what_the_package_names.py`, which reads all five fragments and requires the id exactly once on each built page. (Source: `install-pages-and-interface-lists-are-uneven-across-assistants`, GitHub issue #43, 2026-11-17.)
+
+- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** Text for GitHub Copilot uses the name its own naming table gives the desktop application. The rule already shipping, quoted:
+    - ⛔ **Text written for GitHub Copilot calls its desktop application "the GitHub Copilot app".** — in `tests/test_install_pages_cover_what_the_package_names.py`
+
+  Enforced by `tests/test_install_pages_cover_what_the_package_names.py`.
+
+  **Why it is not an existing invariant:** INV-158 fixes the names of Claude's four
+  interfaces and retires one Claude name. It names no other assistant's interface. The
+  naming table in `hosts/copilot/fragments/interface-naming.md` states the name and ships in
+  the package, but no registered wording holds the package's own text to it, and two
+  sentences under `hosts/copilot/` used the short name. The maintainer may prefer a dated
+  note on INV-158 that extends it to each assistant's table; that is a different act and is
+  not drafted here.
+
+  Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
+  invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
+
+  **INV-NNN** — Text written for GitHub Copilot MUST call its desktop application "the GitHub Copilot app", the name its naming table (`hosts/copilot/fragments/interface-naming.md`) gives, and MUST NOT shorten it to "the Copilot app". This holds in every file under `hosts/copilot/`, in the built GitHub Copilot package and on its built install page. "The Copilot CLI" is the table's own name for the terminal interface and is not affected. ⚠️ Limits: the enforcer reports the words "Copilot app" with no "GitHub " in front of them, on text with whitespace collapsed. It does not check any other name in the table, and it reads no other assistant's text. Enforced by `tests/test_install_pages_cover_what_the_package_names.py`. (Source: `install-pages-and-interface-lists-are-uneven-across-assistants`, GitHub issue #43, 2026-11-17.)
+
+- **Commit:** uncommitted
+
 ## hook-matchers-the-kiro-hooks-disclosure-and-a-catalog-category-each-take-one-source
 
 - **Implemented:** 2026-11-17 (issue #34)

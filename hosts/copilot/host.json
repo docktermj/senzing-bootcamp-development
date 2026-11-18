@@ -58,7 +58,7 @@
       "shell": "bash"
     },
     "guaranteed": false,
-    "note": "On GitHub Copilot the bootcamp's hooks run while the plugin is enabled, but what a hook may tell the assistant differs between the Copilot app and the Copilot CLI."
+    "note": "On GitHub Copilot the bootcamp's hooks run while the plugin is enabled, but what a hook may tell the assistant differs between the GitHub Copilot app and the Copilot CLI."
   },
   "options": {
     "hooks_file": "com.github.copilot/hooks/hooks.json",
