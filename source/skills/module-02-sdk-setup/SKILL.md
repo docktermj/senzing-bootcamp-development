@@ -2778,9 +2778,9 @@ call succeeds** (not merely a version query).
 ## Module completion and transition
 
 Once the SDK is installed and verified, run the standard **Module Completion** process in
-`../bootcamp-onboarding/module-completion.md` (update progress, append the Module 2 recap section
-to `docs/bootcamp_recap.md`, and present the end-of-module summary), then ask the single
-transition question.
+`../bootcamp-onboarding/module-completion.md` (its Step 0 checks, update progress, append the
+Module 2 recap section to `docs/bootcamp_recap.md`, and present the end-of-module summary), then
+ask the single transition question.
 
 The next module in your selected sequence continues the bootcamp — when it is System verification, it verifies the full setup end-to-end with synthetic records; the separate Truth Set visualization module, when selected, then visualizes the Senzing Truth Set:
 

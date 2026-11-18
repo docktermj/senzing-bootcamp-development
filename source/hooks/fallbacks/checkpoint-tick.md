@@ -1,8 +1,9 @@
 ## Keep the recap checkpoint
 
 Once a module is recorded in `config/bootcamp_progress.json`, make sure
-`docs/progress/recap_checkpoint.md` exists, and refresh it at every step boundary as
-`module-completion.md` describes. To create the empty scaffold, run:
+`docs/progress/recap_checkpoint.md` exists, and refresh it at every step boundary as the
+"In-progress recap checkpoint" rule in `ground-rules.md` describes. To create the empty
+scaffold, run:
 
 ```bash
 python3 "{{host.scripts_dir}}/checkpoint-tick.py" < /dev/null

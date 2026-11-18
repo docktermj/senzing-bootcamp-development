@@ -868,13 +868,14 @@ that reconciliation stays checkable — Module 6 Phase B compares its loaded cou
 **If the bootcamper declines CORD data** or needs something different, offer secondary options
 (each has its entry under **Handling each answer** below):
 
-> "If CORD doesn't meet your needs, there are other options:
+> "If CORD doesn't meet your needs, I recommend free raw data next. If nothing in that
+> collection fits, I can generate test data instead:
 >
-> - **Free raw data:** A curated collection of 35+ free data sources at
+> - **Free raw data:** Recommended. A curated collection of 35+ free data sources at
 >   <https://github.com/docktermj/senzing-bootcamp-free-data>: these include raw samples
 >   (great for practicing mapping) and pre-mapped files.
-> - **Synthesized test data:** I can generate custom test data tailored to your specific
->   scenario."
+> - **Synthesized test data:** The fallback, when nothing in that collection fits. I can
+>   generate custom test data tailored to your specific scenario."
 
 ⛔ **If they choose ICIJ Offshore Leaks from that catalog, tell them what it currently supports
 before they map it.** Checked directly against `docktermj/senzing-bootcamp-free-data`,

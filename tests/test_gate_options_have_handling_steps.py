@@ -80,6 +80,20 @@ rather than restating its two steps (INV-300) and "Free raw data" recording
 scoped to a Bootcamper who did not choose option 5. Negative controls mutate the shipped text. It
 asserts the file *states* the routes, and cannot establish that a live guide follows them.
 
+#45 holds the three statements of Module 4's data hierarchy to one order (finding 21 of
+`production-readiness-audit-2026-11-17`: the secondary offer gave synthesized data beside free
+raw data, and two other passages called it a last resort):
+
+- ⛔ **Module 4 states one data hierarchy: CORD first, then free raw data, then synthesized test data.**
+
+`Module4StatesOneDataHierarchy` asserts that the secondary offer gives "Free raw data" first
+and calls it recommended, gives "Synthesized test data" second and calls it the fallback, and
+carries no 👉, so it stays one offer in one turn; that the "Synthesized test data" entry under
+the marker still calls it the last resort; and that the hierarchy under **Agent behavior**
+gives CORD, then the free-data catalog, then synthesized data as a last resort. Both entry
+names are unchanged, since the entries under the marker are keyed on them. It asserts what the
+file states, and cannot establish what a live guide recommends.
+
 Source spec:
 `specs/the-quality-gates-improve-option-has-no-procedure-and-is-incoherent-on-a-generated-scenario.md`.
 Source issue: #531 (part of #504). Widened by #620 (part of #602), which also pins the gate
@@ -1131,6 +1145,149 @@ class Module4ProvisionPathCarriesOutEachAnswer(unittest.TestCase):
                                 "recommend no CORD\n  alternative, ask nothing more", 1)
         self.assertNotEqual(self.text, mutant, "the re-wrap no longer applies")
         self.assertEqual([], provision_path_problems(mutant))
+
+
+#: #45: where **Agent behavior** states the data recommendation hierarchy, and its three steps
+#: in order, as `norm` reads them.
+HIERARCHY_LEAD = "follow the data recommendation hierarchy"
+HIERARCHY_STEPS = ("(1) recommend cord", "(2) if cord is declined, recommend",
+                   "(3) offer synthesized test data generation only as a last resort")
+_OFFER_ENTRY = re.compile(r"(?m)^[ \t]*-[ \t]+\*\*(?P<name>[^*]+?):\*\*")
+SYNTHESIZED_ENTRY = '- **Secondary offer, "Synthesized test data":**'
+#: The order the secondary offer gives its entries in, and the word each entry carries.
+OFFER_ORDER = (("free raw data", "recommended"), ("synthesized test data", "fallback"))
+
+
+def secondary_offer(text):
+    """The secondary offer's quote as ``(lead, [(entry name, entry text), …])``, normalized."""
+    start = text.find(SECONDARY_LEAD)
+    if start < 0:
+        return "", []
+    quoted = []
+    for line in text[start:].split("\n")[1:]:
+        if line.strip() and not line.lstrip().startswith((">", "(")):
+            break
+        if line.lstrip().startswith(">"):
+            quoted.append(_QUOTE.sub("", line))
+    parts = _OFFER_ENTRY.split("\n".join(quoted))
+    return norm(parts[0]), [(norm(name), norm(body))
+                            for name, body in zip(parts[1::2], parts[2::2])]
+
+
+def hierarchy_problems(text):
+    """Module 4's three statements of the data hierarchy give one order (#45)."""
+    problems = []
+    lead, entries = secondary_offer(text)
+    if [name for name, _ in entries] != [name for name, _ in OFFER_ORDER]:
+        problems.append("the secondary offer does not give %s"
+                        % ", then ".join(name for name, _ in OFFER_ORDER))
+    bodies = dict(entries)
+    for name, word in OFFER_ORDER:
+        if word not in bodies.get(name, ""):
+            problems.append("the secondary offer's %r does not say it is the %s choice"
+                            % (name, word))
+    if "recommend" in bodies.get("synthesized test data", ""):
+        problems.append("the secondary offer recommends synthesized test data")
+    if "👉" in lead or any("👉" in body for _, body in entries):
+        problems.append("the secondary offer asks a 👉 question; it is one offer in one turn")
+    start = text.find(SYNTHESIZED_ENTRY)
+    end = text.find("\n- **", start + 1)
+    if start < 0 or "last resort" not in norm(text[start:end]):
+        problems.append('the "Synthesized test data" entry no longer calls it the last resort')
+    flat = norm(text)
+    at = flat.find(HIERARCHY_LEAD)
+    if at < 0:
+        return problems + ["the data recommendation hierarchy moved"]
+    for step in HIERARCHY_STEPS:
+        found = flat.find(step, at)
+        if found < 0 or found - at > 900:
+            problems.append("the data recommendation hierarchy does not say %r, in that order"
+                            % step)
+            break
+        at = found
+    else:
+        second, third = flat.find(HIERARCHY_STEPS[1]), flat.find(HIERARCHY_STEPS[2])
+        if FREE_DATA not in flat[second:third]:
+            problems.append("the hierarchy's second step does not name the free-data catalog")
+    return problems
+
+
+class Module4StatesOneDataHierarchy(unittest.TestCase):
+    """#45: the secondary offer, its handling entry and Agent behavior give one order."""
+
+    def setUp(self):
+        self.text = MODULE_04.read_text(encoding="utf-8")
+
+    def test_the_three_statements_agree(self):
+        self.assertEqual([], hierarchy_problems(self.text))
+
+    def test_the_offer_is_read(self):
+        """Anti-vacuity (INV-265): the lead and both entries are found, each with text."""
+        lead, entries = secondary_offer(self.text)
+        self.assertIn("cord", lead)
+        self.assertEqual(["free raw data", "synthesized test data"],
+                         [name for name, _ in entries])
+        for name, body in entries:
+            self.assertGreater(len(body), 20, name)
+
+    def test_the_offer_keeps_both_entry_names(self):
+        """The entries under the marker are keyed on the two names."""
+        for name in ("Free raw data", "Synthesized test data"):
+            self.assertIn("> - **%s:**" % name, self.text)
+            self.assertIn('- **Secondary offer, "%s":**' % name, self.text)
+
+    def test_negative_controls(self):
+        t = self.text
+        free = "> - **Free raw data:** Recommended. A curated"
+        synthesized = ("> - **Synthesized test data:** The fallback, when nothing in that "
+                       "collection fits. I can\n>   generate custom")
+        lead = ("I recommend free raw data next. If nothing in that\n> collection fits, I can "
+                "generate test data instead:")
+        for needle in (free, synthesized, lead):
+            self.assertIn(needle, t)
+        as_shipped = (t.replace(lead, "there are other options:", 1)
+                      .replace(free, "> - **Free raw data:** A curated", 1)
+                      .replace(synthesized, "> - **Synthesized test data:** I can\n>   "
+                                            "generate custom", 1))
+        first = t.index("> - **Free raw data:**")
+        second = t.index("> - **Synthesized test data:**")
+        end = t.index('scenario."', second) + len('scenario."')
+        swapped = (t[:first] + t[second:end - 1] + "\n" + t[first:second].rstrip("\n") + '"'
+                   + t[end:])
+        mutants = {
+            "the offer as it shipped": as_shipped,
+            "synthesized data is offered first": swapped,
+            "free raw data is not marked": t.replace(free, "> - **Free raw data:** A curated", 1),
+            "synthesized data is not the fallback": t.replace(
+                "The fallback, when nothing in that collection fits. I can", "I can", 1),
+            "synthesized data is recommended": t.replace(
+                "The fallback, when nothing in that collection fits.",
+                "The fallback, and also recommended.", 1),
+            "the offer asks a question": t.replace(
+                'tailored to your specific scenario."',
+                'tailored to your specific scenario.\n>\n> 👉 **Which would you like?**"', 1),
+            "the entry drops last resort": t.replace(
+                "is what made this the last resort,", "is what led here,", 1),
+            "the hierarchy's second step is renumbered": t.replace(
+                "(2) if CORD is declined, recommend", "(3) if CORD is declined, recommend", 1),
+            "the hierarchy drops last resort": t.replace(
+                "generation only as a last resort after", "generation after", 1),
+            "the hierarchy is gone": t.replace("follow the data recommendation hierarchy",
+                                               "follow the order", 1),
+        }
+        for name, mutant in mutants.items():
+            with self.subTest(mutant=name):
+                self.assertNotEqual(t, mutant, "the mutation no longer applies")
+                self.assertNotEqual([], hierarchy_problems(mutant))
+
+    def test_a_rewrap_still_passes(self):
+        """INV-346: the offer's entries and the hierarchy may wrap."""
+        mutant = self.text.replace("> - **Free raw data:** Recommended. A curated",
+                                   "> - **Free raw data:**\n>   Recommended. A curated", 1)
+        mutant = mutant.replace("(2) if CORD is declined, recommend",
+                                "(2) if CORD is\n  declined, recommend", 1)
+        self.assertNotEqual(self.text, mutant, "the re-wrap no longer applies")
+        self.assertEqual([], hierarchy_problems(mutant))
 
 
 if __name__ == "__main__":

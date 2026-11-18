@@ -36,6 +36,208 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## restated-rules-and-lists-in-shipped-text-have-drifted-from-their-source
+
+- **Implemented:** 2026-11-17 (issue #45)
+- **Files changed:** `source/skills/module-01-business-problem/phase2-document-confirm.md`,
+  `source/skills/module-02-sdk-setup/SKILL.md`,
+  `source/skills/module-03-system-verification/phase2-report-close.md`,
+  `source/skills/module-03b-truthset-visualization/phase2-close.md`,
+  `source/skills/module-04-data-collection/SKILL.md`,
+  `source/skills/module-05-data-quality-mapping/phase2-data-mapping.md`,
+  `source/skills/bootcamp-onboarding/ground-rules.md`, `source/skills/graduation/SKILL.md`,
+  `source/hooks/fallbacks/checkpoint-tick.md`, `source/scripts/package_bootcamp.py`,
+  `tests/test_gate_options_have_handling_steps.py`,
+  `tests/test_generated_scenario_marker_drop_is_exempt.py`,
+  `tests/test_restatements_say_what_their_source_says.py` (new),
+  `specs/IMPLEMENTED.md` (this entry)
+- **MCP re-check:** n/a (no Senzing fact). Re-confirmed on 2026-11-17 against the change itself:
+  it corrects seven places where the bootcamp's own text restates the bootcamp's own text, a
+  register entry or a test file. The order in which Module 4 recommends CORD, the free-data
+  catalog and generated data is the bootcamp's own recommendation, already stated in the file,
+  and the offer's description of the catalog is unchanged. `docs/mapping/{source_name}_mapper.md`
+  is a file the bootcamp defines. None of that says anything about Senzing or about what the
+  Senzing MCP server serves. No absence claim about the server is made, so INV-213's
+  `owner-checked:` clause is not owed.
+- **Summary:** Seven restatements in shipped text now say what their source says. These are
+  findings 15, 20, 21, 28 and 29 of `production-readiness-audit-2026-11-17`, and the two parts
+  of finding 23 that #32 did not take. Each was read on `main` at `59025e1` first: none had
+  been corrected by an earlier merge, and the new tests fail on that commit (see **Tests**).
+  - **Module closes (finding 20).** The closes of Discover the Business Problem and SDK setup
+    listed "update progress, append the recap section, present the end-of-module summary" and
+    left out Step 0. Both now use the form Data collection, Data processing and Query,
+    Visualize and Discover already use: its Step 0 checks, update progress, append the recap
+    section, present the summary. The close of Data Quality, Mapping, and Transformation named
+    Step 0, then the summary, then the recap, and no progress update. It now gives Step 0,
+    progress, the recap section (INV-085), the summary (INV-032) and the completion line
+    (INV-079), in that order. The closes of System verification and Truth Set visualization
+    number the steps 1 to 4; each now says "Run Module Completion's Step 0 checks first, then:"
+    before item 1. The numbered items are unchanged.
+  - **Module 4's data hierarchy (finding 21).** The secondary offer, made when CORD is
+    declined, gave "Free raw data" and "Synthesized test data" as two equal options. It is
+    still one quote with both entries and no question. Its lead now says "I recommend free raw
+    data next. If nothing in that collection fits, I can generate test data instead", the
+    first entry opens "Recommended." and the second opens "The fallback, when nothing in that
+    collection fits." The "Synthesized test data" entry under **Handling each answer** and
+    the hierarchy under **Agent behavior** already gave that order and are unchanged. Both
+    entry names are unchanged, so the handling entries keyed on them still match. The scope of
+    "last resort" is unchanged.
+  - **Two citations (finding 15).** The sentence above the stage table states two subjects,
+    one row per stage (INV-140) and one level per row (INV-141), and cited INV-140 alone. It
+    now cites both. The list of retired nudge rules named INV-141, which is in force: the
+    register lists it in its group's main list, and its 2026-11-16 amendment keeps "exactly
+    one effort level" per row. INV-141 is removed from that list. The other five ids are in
+    the register's "Fully superseded" list for the group.
+  - **The marker's readers (finding 23).** Graduation's Step 5b listed the readers of the
+    generated-scenario marker by step number and left out Module 6 Phase C step 13. It now
+    names them by module and phase: Module 4, Module 6 Phase C and Module 6 Phase D. The
+    docstring of `tests/test_generated_scenario_marker_drop_is_exempt.py` repeated the list
+    and is brought to the same form. The marker string is unchanged.
+  - **The checkpoint fallback (finding 23).** `source/hooks/fallbacks/checkpoint-tick.md` said
+    the checkpoint is refreshed "as `module-completion.md` describes". The rule is the
+    "In-progress recap checkpoint" rule in `ground-rules.md`, and the fallback now points
+    there, in the form `failed-run-net.md` uses for "Worked steers". The rule itself is
+    unchanged.
+  - **The packager's comment (finding 28).** The comment above `DATABASE_BACKUP_ROOT` named
+    `tests/test_package_bootcamp.py` as the test that pins the constant to the tuple. That
+    file does not read the constant; `tests/test_quoted_sizes_say_what_they_missed.py` does,
+    and the comment now names it. No code changes.
+  - **Module 5's per-source documents (finding 29).** Step 18 wrote
+    `docs/mapping/mapping_[name].md` and `docs/mapping/{source_name}_mapper.md` for each
+    source, and only `_mapper.md` is read. Step 18 no longer writes the first. The structure
+    it gives for `_mapper.md` gains a `## How to run` section, between `## Quality Notes` and
+    `## Record Type Check`, naming the transformation program (the shared one when it is
+    shared) and the command that runs it on this source. That was the only content the
+    dropped document had that `_mapper.md` lacked. The lead sentence now says `_mapper.md` is
+    the source's one mapping document. The transformation lineage document and the
+    `## Record Type Check` section are unchanged.
+  - **Not changed.** The reader list of `bootcamp_complete()`, which #32 settled. The text of
+    `specs/INVARIANTS.md`. The closes of Entity Resolution Concepts and Bootcamp preparation.
+    The "In-progress recap checkpoint" rule. The other ids in the retired list, and whether
+    that list is complete. A `docs/mapping/mapping_[name].md` already in a project from an
+    earlier run: no step deletes, migrates or reads it.
+  - **Every assistant.** Every changed passage sits outside every host marker and names no
+    assistant, so all five packages get the same text. `python3 -m tools.bootcamp_build check`
+    passes.
+  - **Tests.** `tests/test_restatements_say_what_their_source_says.py` is new, with 35 tests
+    in five classes, and `tests/test_gate_options_have_handling_steps.py` gains
+    `Module4StatesOneDataHierarchy`, with 5 tests.
+    - Ten read the module closes. The order of the steps is read from the opening of
+      `module-completion.md` and checked against that file's `## Step N:` headings. A close
+      is found by scanning `source/skills/` for the phrase "standard **Module Completion**
+      process" (INV-246), and every module directory but Entity Resolution Concepts' must
+      have one that lists the steps. Each close must name Step 0 first and keep the order.
+    - Six read the two citations. The retired list is compared with the "Fully superseded"
+      lists read from the index of `specs/INVARIANTS.md`, and the register's own entries for
+      INV-140 and INV-141 must state the two subjects and be in force.
+    - Eight read the marker's readers. A reader is any file under `source/skills/` that
+      contains the marker's text and is neither Module 1's writer nor `graduation/SKILL.md`.
+      Its name in the list is read from its path, and a marker that wraps across a line is
+      still found. The marker test's docstring must repeat graduation's list.
+    - Four read the fallback's pointer and the packager's comment: the pointer names a rule
+      that `ground-rules.md` opens by that name, and the comment names a test file that
+      exists and reads the constant.
+    - Seven read Module 5: no file under `source/` names a `docs/mapping/mapping_…`
+      document, step 18 names one mapping document beside the lineage, and the structure has
+      `## How to run` and `## Record Type Check`.
+    - Five read Module 4: the offer's order and the word each entry carries, no 👉 in the
+      offer, "last resort" in the handling entry, and the three steps of the hierarchy under
+      **Agent behavior** in order.
+    - Negative controls run on every pass (INV-265): each close as it shipped, the order
+      changed in `module-completion.md` (every close then fails), INV-141 put back in the
+      retired list, either citation dropped, a reader left out of the list, a new reader not
+      listed, the old pointer, a comment naming a test that does not read the constant, the
+      dropped document put back, the structure without its section, the offer as it shipped,
+      its entries swapped and a question added to it.
+    - Negative control run once, in a throwaway clone of `59025e1` holding only the two test
+      files: 21 of the 35 new tests fail (`FAILED (failures=21, errors=2)`), and 3 of the 5
+      Module 4 tests fail (`FAILED (failures=3)`).
+    - Prose is matched with whitespace collapsed (INV-346). Two reads are by line on purpose
+      and say why: the register's index, and the headings inside the fenced structure.
+  - **Not observed.** No run on a real assistant was made, so no record is added to any
+    `hosts/<assistant>/checks.json`. Nothing here shows that a live guide runs Step 0 at a
+    close, recommends free raw data before generated data, or writes a `## How to run`
+    section. Verified on Linux only, with Python 3.12.3. The change is Markdown, one Python
+    comment and tests that use `pathlib` and read UTF-8, with no branch on the platform and
+    nothing specific to a programming language (INV-001).
+- **Invariants.** The register is not edited here (INV-365). INV-140 and INV-141 are
+  unchanged: this change corrects two citations of them, not their text. The change ships
+  three hard-rule lines, two in the docstring of
+  `tests/test_restatements_say_what_their_source_says.py` and one in the docstring of
+  `tests/test_gate_options_have_handling_steps.py`. `since` does not report them, because
+  `tests/` is not a rule home. The lines this change adds or edits under `source/` carry no ⛔
+  and no bold MUST or NEVER. The three blocks below cover the three rules that govern what the
+  guide does or says: the order of a module close, Module 4's data hierarchy and Module 5's
+  one mapping document (INV-309). The other four corrections establish no new invariant. Each
+  is a reference, not a rule: a citation and a list of retired ids that restate the register,
+  a list of the marker's readers, a pointer at a ground rule and a comment naming a test.
+  What each restates is owned by the place it names, and the new tests hold each one to that
+  place under INV-003.
+
+- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** A module close that lists Module Completion's steps lists them in its order, Step 0 first. The rule already shipping, quoted:
+    - ⛔ **A module close that lists the steps of Module Completion names its Step 0 first, then progress, recap and summary, in the order `module-completion.md` fixes.** — in `tests/test_restatements_say_what_their_source_says.py`
+    - `source/skills/module-01-business-problem/phase2-document-confirm.md` — ⛔ the close lists Module Completion's Step 0 checks, the progress update, the recap section and the summary, in that order
+    - `source/skills/module-02-sdk-setup/SKILL.md` — ⛔ the close lists Module Completion's Step 0 checks, the progress update, the recap section and the summary, in that order
+    - `source/skills/module-03-system-verification/phase2-report-close.md` — ⛔ the close says to run Module Completion's Step 0 checks first, before its numbered item 1
+    - `source/skills/module-03b-truthset-visualization/phase2-close.md` — ⛔ the close says to run Module Completion's Step 0 checks first, before its numbered item 1
+    - `source/skills/module-05-data-quality-mapping/phase2-data-mapping.md` — ⛔ the close lists Step 0's checks, the progress update, the recap section, the summary and the completion line, in that order
+
+  Enforced by `tests/test_restatements_say_what_their_source_says.py`.
+
+  **Why it is not an existing invariant:** INV-032 requires the end-of-module summary, INV-085
+  the name-based recap section and INV-413 the fields Step 1 writes, and INV-413's dated note
+  says Step 0 runs before Step 1's write. Each binds `module-completion.md` or one step of
+  it. None says that a module close which restates the steps names all of them, or names them
+  in that order. INV-300 binds a site that claims a rule is stated once, and a close claims
+  nothing of the kind. So a close could again leave out Step 0, or put the summary before the
+  recap, and contradict no registered wording. The maintainer may prefer a dated note on
+  INV-413; that is a different act and is not drafted here.
+
+  Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
+  invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
+
+  **INV-NNN** — A module close that lists the steps of Module Completion MUST name its Step 0 checks first, then updating progress, appending the module's recap section and presenting the end-of-module summary, in the order the opening of `module-completion.md` fixes. A close that names two or more of those steps MUST name all four. A close MAY instead point at the process and list no step. On 2026-11-17 eight closes list the steps: Discover the Business Problem, SDK setup, System verification, Truth Set visualization, Data collection, Data Quality, Mapping, and Transformation, Data processing, and Query, Visualize and Discover. Entity Resolution Concepts runs the process step by step and departs from it on purpose, and is not bound by this. Observed (`production-readiness-audit-2026-11-17`, finding 20): two closes listed the steps without Step 0, one put the summary before the recap, and two numbered the steps 1 to 4 and left Step 0 out, while Step 0's filings run in every module. ⚠️ Limits: the enforcer reads `source/`, finds a close by the phrase "standard **Module Completion** process", reads it up to the module's transition question and takes the first mention of each step. It reads the order from the opening of `module-completion.md`. It **cannot** establish that a live guide runs Step 0 at a module close. Enforced by `tests/test_restatements_say_what_their_source_says.py`. (Source: `restated-rules-and-lists-in-shipped-text-have-drifted-from-their-source`, GitHub issue #45, 2026-11-17.)
+
+- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** Module 4 states one data hierarchy, and its three statements of it agree. The rule already shipping, quoted:
+    - ⛔ **Module 4 states one data hierarchy: CORD first, then free raw data, then synthesized test data.** — in `tests/test_gate_options_have_handling_steps.py`
+    - `source/skills/module-04-data-collection/SKILL.md` — ⛔ the secondary offer gives "Free raw data" first as the recommended choice and "Synthesized test data" second as the fallback, in one quote with no question
+
+  Enforced by `tests/test_gate_options_have_handling_steps.py`.
+
+  **Why it is not an existing invariant:** INV-284 requires a handling step for every option
+  a pinned gate offers, and its enforcer already reads this offer's two entries. It does not
+  say in what order the bootcamp recommends data. INV-197 requires a recommended resource's
+  known limits to be stated wherever it is recommended. It does not rank one resource against
+  another. The hierarchy itself is stated under **Agent behavior** and cites no invariant. So
+  the offer could again give generated data beside the catalog as an equal choice, and
+  contradict no registered wording.
+
+  Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
+  invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
+
+  **INV-NNN** — For a Bootcamper who has no data, has no bootcamp-generated scenario and did not choose option 5 of the provision question, Data collection MUST state one data hierarchy: CORD first, then free raw data from the free-data catalog, then synthesized test data. Its three statements of that order MUST agree. The secondary offer, made when CORD is declined, MUST give "Free raw data" first as the recommended choice and "Synthesized test data" second as the fallback when nothing in the catalog fits, as one offer in one turn with no 👉. The "Synthesized test data" entry under **Handling each answer** calls it the last resort. The hierarchy under **Agent behavior** lists the three in that order. The offer's two entry names MUST stay as they are, since the handling entries are keyed on them (INV-284). "Last resort" is not a judgment on `provenance: synthesized` from the Business Case Offer, nor on option 5 of the provision question. Observed (`production-readiness-audit-2026-11-17`, finding 21): the offer gave synthesized data beside free raw data with no order, while two other passages of the same file called it a last resort. ⚠️ Limits: the enforcer reads the three passages of `source/skills/module-04-data-collection/SKILL.md` and asserts what they state. It **cannot** establish what a live guide recommends. Enforced by `tests/test_gate_options_have_handling_steps.py`. (Source: `restated-rules-and-lists-in-shipped-text-have-drifted-from-their-source`, GitHub issue #45, 2026-11-17.)
+
+- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** Module 5 writes one per-source mapping document, and how to run the transformation is in it. The rule already shipping, quoted:
+    - ⛔ **Module 5 writes one per-source mapping document, `docs/mapping/{source_name}_mapper.md`, and its structure has a `## How to run` section.** — in `tests/test_restatements_say_what_their_source_says.py`
+    - `source/skills/module-05-data-quality-mapping/phase2-data-mapping.md` — ⛔ step 18 names no mapping document but `_mapper.md` beside the transformation lineage, and the structure it gives has a `## How to run` section
+
+  Enforced by `tests/test_restatements_say_what_their_source_says.py`.
+
+  **Why it is not an existing invariant:** INV-177 requires source-qualified names for
+  per-source artifacts and names the `{source_name}_` form of `_mapper.md` as the one to
+  use. It does not say there is one mapping document per source. INV-335 and INV-336 govern
+  the `## Record Type Check` section of `_mapper.md` and when Phase 2 reads it. They do not
+  say what else the file holds. INV-042 and INV-043 require the transformation code and its
+  output, not a record of how to run it. So a second per-source document could be written
+  again, or `## How to run` dropped, and contradict no registered wording.
+
+  Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
+  invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
+
+  **INV-NNN** — Data Quality, Mapping, and Transformation MUST write one per-source mapping document, `docs/mapping/{source_name}_mapper.md`, and no file under `source/` may name a `docs/mapping/mapping_…` document. The structure step 18 gives for `_mapper.md` MUST have a `## How to run` section that names the transformation program, the shared program when one serves several sources, and the command that runs it on that source. The file stays per-source when the program is shared. The `## Record Type Check` section Phase 1 writes is kept as written (INV-335). `docs/mapping/transformation_lineage_[name].md` is a separate document and is not bound by this. A `docs/mapping/mapping_[name].md` left in a project by an earlier run is left alone: nothing deletes, migrates or reads it. Observed (`production-readiness-audit-2026-11-17`, finding 29): step 18 wrote two overlapping per-source documents, and only `_mapper.md` was read. ⚠️ Limits: the enforcer reads `source/` and the fenced structure in step 18. It **cannot** establish that a live guide writes the section, or what it writes there. Enforced by `tests/test_restatements_say_what_their_source_says.py`. (Source: `restated-rules-and-lists-in-shipped-text-have-drifted-from-their-source`, GitHub issue #45, 2026-11-17.)
+
+- **Commit:** uncommitted
+
 ## selected-modules-is-kept-in-two-files-and-the-text-disagrees-on-which-is-read
 
 - **Implemented:** 2026-11-17 (issue #44)

@@ -1933,7 +1933,6 @@ If issues are found, go back to the relevant step. Retest after changes.
   Pass the source's file in `data/raw/` as its input argument and `data/senzing-ready/[name].jsonl`
   as its output argument: the input is never that `file_path`, which then names the output, as it
   already does when Query, Visualize and Discover sends the source back to be remapped.
-- Docs in `docs/mapping/mapping_[name].md` (field mappings, logic, quality, how to run).
 - Sample output in `data/mapping/[name]_sample.jsonl`.
 - **Transformation lineage:** Create `docs/mapping/transformation_lineage_[name].md` for this
   data source, covering source file info, transformation program, output file info, field
@@ -1944,7 +1943,9 @@ If issues are found, go back to the relevant step. Retest after changes.
   copy in the `docs/` root; if one exists there, remove it.
 - **Per-source mapping specification:** Save a mapping specification markdown to
   `docs/mapping/{source_name}_mapper.md` for this data source. This file is always per-source,
-  even when the transformation program is shared. Use this structure:
+  even when the transformation program is shared, and it is the source's one mapping document:
+  its field mappings, mapping decisions, quality notes and how to run the transformation all go
+  here. Use this structure:
 
   ```markdown
   # Mapping Specification: {SOURCE_NAME}
@@ -1967,6 +1968,13 @@ If issues are found, go back to the relevant step. Retest after changes.
   ## Quality Notes
 
   - [Quality observations specific to this source]
+
+  ## How to run
+
+  - **Program:** [The transformation program in src/transform that maps this source. When
+    the program is shared, name the shared program.]
+  - **Command:** [The run command, with this source's file in data/raw/ as its input argument
+    and its load-ready file in data/senzing-ready/ as its output argument]
 
   ## Record Type Check
 
@@ -2111,8 +2119,9 @@ rejected it without an actionable reason (its `validation_rejections` hold the t
 Bootcamper chose to skip it. No `skipped` source: add nothing.
 
 Run the standard **Module Completion** process in
-`../bootcamp-onboarding/module-completion.md`: run its Step 0 checks, present the end-of-module summary (INV-032), append
-the name-based Module 5 recap section to `docs/bootcamp_recap.md` (INV-085), show the
+`../bootcamp-onboarding/module-completion.md`: run its Step 0 checks, update progress, append
+the name-based Module 5 recap section to `docs/bootcamp_recap.md` (INV-085), present the
+end-of-module summary (INV-032), show the
 `✅ Module complete: Data Quality, Mapping, and Transformation` line (INV-079), and end the turn on the pinned
 transition 👉 question naming the **next selected module** from `selected_modules` (INV-076 / INV-079):
 

@@ -1513,7 +1513,7 @@ the 👉 protocol above).
 - **Working depth by stage.** How carefully you work follows the stage you are in, by instruction
   alone. Find the stage in this table, read its effort level, and work to that level's instruction
   until the stage ends. One row per stage, in the order the bootcamp runs them, and one level per
-  row (INV-140). This table is the authoritative copy (INV-114):
+  row (INV-140, INV-141). This table is the authoritative copy (INV-114):
 
   | Stage | Effort |
   |---|---|
@@ -1546,7 +1546,7 @@ the 👉 protocol above).
 
   ⛔ **There is no module-start model or effort question.** The earlier nudge is retired, with its
   switch question, its step-down wording and its confirmation gate (INV-063, INV-069, INV-098,
-  INV-138, INV-139, INV-141). Surface, compare and offer nothing it described.
+  INV-138, INV-139). Surface, compare and offer nothing it described.
 
 - Module start banner:
 
