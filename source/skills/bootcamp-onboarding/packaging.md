@@ -62,7 +62,8 @@ option 2's `{…}` clause as the rule below the question says, and end the turn 
 1. **Results to share** — your recap PDF, keepsake documents, visualizations, the exports
    written for the systems you named (`data/exports/`) and your `production/` project
    (~<n> MB). No database, no source data, no credentials.
-2. **Everything to continue elsewhere** — the above plus your database backup, config
+2. **Everything to continue elsewhere** — the above plus your database backup,
+   saved bootcamp feedback, in-progress recap, config
    and mappings, so you can pick the bootcamp back up on another machine (~<n> MB{, which
    excludes your database backup — choosing this creates it, and it is the largest part}).
 3. **Cancel.**
@@ -141,7 +142,11 @@ the archive safe to hand over:
   also covers the `backups/revisit/state/license.json` copy an earlier graduation's Step 6b
   left behind.
 - **Never packaged on `share`, on top of that:** the mapped loader inputs
-  (`data/senzing-ready/`), `backups/`, every database file, and `docs/mapping/`.
+  (`data/senzing-ready/`), `backups/`, every database file, `docs/mapping/`, the saved
+  bootcamp feedback (`docs/feedback/`) and the in-progress recap (`docs/progress/`).
+  `transfer` carries those last two, which is why option 2 of the question names them and
+  option 1 does not. On `transfer`, `OPEN_ME_FIRST.md` names each one only when the
+  manifest's `included` list carries it; on `share` it lists both among what is not there.
   ⛔ **(INV-410) Every exclusion rule matches a path's segments wherever they sit, not only at the
   project root.** `production/` is packaged recursively and graduation copies
   `data/senzing-ready/**` into `production/data/senzing-ready/` (INV-186), so a root-anchored
@@ -156,8 +161,17 @@ the archive safe to hand over:
   extension, so a `server.pem` and an extensionless `id_rsa` were packaged while the same key in
   a `.py` was excluded. A member that cannot be **read** is also excluded and named — nothing
   unexamined is packaged.
+  The scan reads each member as UTF-8 text and as UTF-16 text, little-endian and big-endian,
+  with or without a byte-order mark, so a file that a Windows PowerShell 5.1 `>` redirect
+  wrote is scanned like any other. No other encoding is read.
 - **Symlinks resolved, then compared:** a member resolving outside the project root is
   skipped and named (the INV-200 rule).
+  A symlinked file that resolves inside the project is also checked against the exclusion
+  rules by the path it resolves to, so a link under `docs/` to a file under `data/raw/` is
+  excluded and named with that rule. A symlinked directory is never followed, wherever it
+  points and even when it is one of the directories a profile reaches for: the manifest
+  names it as a symlinked directory that was not followed, without its target, and nothing
+  under it is packaged.
 - **Verified before it is announced:** `testzip()` re-opens the finished archive and a
   `.sha256` sidecar is written before the success line prints. Never tell the bootcamper an
   archive exists without that (INV-067's discipline) — they may not discover otherwise

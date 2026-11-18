@@ -18,7 +18,9 @@ Guide-run; unverified on Windows: no test runs it there ([guide-run blocks](../s
 
 Two profiles: `share` carries the results — recap PDF, keepsake documents, visualizations
 and `production/`, with no database, no source data and no credentials. `transfer` adds the
-revisit bundle, config and mappings, so the bootcamp can be resumed elsewhere.
+revisit bundle, config and mappings, so the bootcamp can be resumed elsewhere. The saved
+bootcamp feedback (`docs/feedback/`) and the in-progress recap (`docs/progress/`) are
+dropped by `share` and carried by `transfer`.
 
 If this command was invoked **with** a profile as its argument (`share` or `transfer`),
 still run the dry run and still ask the question — the size and the exclusions are what the
