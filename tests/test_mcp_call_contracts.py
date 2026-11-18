@@ -61,21 +61,27 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 PLUGIN = REPO_ROOT / "source"
 
 # When the contract below was last checked against https://mcp.senzing.com/mcp.
-# Refreshed by `dry-run` phase 1 on 2026-08-12: all 42 action/topic/category/workflow/
-# platform/dataset/language literals still in enum, required-parameter lists unchanged,
-# and `get_capabilities` still reports tool_count 13, matching MCP_TOOLS below.
-CONTRACT_VERIFIED_ON = "2026-08-12"
+# Re-verified for #50 on 2026-11-18 by `.claude/skills/auto-test/mcp_probe.py check`
+# and the live tool schemas: no static-contract-wrong, static-contract-drift or BREAKING
+# finding and no conformance violation, so every action/topic/category/workflow/
+# platform/dataset/language literal the plugin writes is still accepted; the live tool
+# names equal MCP_TOOLS; each REQUIRED_PARAMS entry is still in the schema's `required`
+# array, or for mapping_workflow still in its description ("REQUIRED on action='start':
+# `file_paths` AND `workspace_dir`"); find_examples, submit_feedback, get_capabilities
+# and download_resource still declare no required parameter; the mapping_workflow
+# `action` enum equals VALID_WORKFLOW_ACTIONS; and `get_capabilities` reports tool_count 13.
+CONTRACT_VERIFIED_ON = "2026-11-18"
 # The server the required-parameter lists and MCP_TOOLS below were read from, via the
 # loaded tool schemas and `get_capabilities` on that date. Recorded because the server
 # ships independently of this plugin: without a version, "the schema requires this" is
 # an undated claim.
-MCP_SERVER_VERSION = "1.32.9"
+MCP_SERVER_VERSION = "1.46.1"
 
 # mapping_workflow's action enum, verbatim from the tool schema.
 VALID_WORKFLOW_ACTIONS = {"start", "advance", "back", "status", "reset"}
 
 # Every tool the MCP server exposes (`get_capabilities` reported tool_count 13 on
-# 1.32.9, 2026-08-11). The three classification sets below must partition this exactly,
+# 1.46.1, 2026-11-18). The three classification sets below must partition this exactly,
 # which is what makes "a tool the plugin calls is uncovered" a test failure rather than
 # a silent gap.
 MCP_TOOLS = {

@@ -36,6 +36,125 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## re-read-the-mcp-servers-changed-prose-and-refresh-the-probe-baseline
+
+- **Implemented:** 2026-11-18 (issue #50)
+- **Files changed:** `.claude/skills/auto-test/baseline/mcp-snapshot.json`,
+  `tests/test_mcp_call_contracts.py`, `specs/IMPLEMENTED.md` (this entry)
+- **MCP re-check:** server 1.46.1, docs index built 2026-11-14 17:44 UTC, 2026-11-18 — server
+  now contradicts the plugin, at one place no open issue covers (C1 below). Tools: the probe
+  `.claude/skills/auto-test/mcp_probe.py` (`check`, `snapshot`, `update`; read-only calls only,
+  `submit_feedback` and `download_resource` blocked in code by `NEVER_CALL`), then
+  `get_capabilities()`, `search_docs(query='one mapping_workflow over all related source files or tables together joins relationships')`
+  at the default result count, and
+  `sdk_guide(topic='configure', platform='linux_apt', language='python')`. `get_capabilities`
+  gives `"server_version":"1.46.1"`; the index build is in the `search_docs` reply's
+  `metadata`: `"index_built":"2026-11-14 17:44 UTC"`, `"documents_indexed":13404`. The server
+  is the version the issue was written against, and the probe reported the same eight changed
+  texts the issue names, so the change is what the issue asks for.
+- **Summary:** The `/auto-test` probe baseline was captured from server 1.40.10. It is
+  refreshed from 1.46.1, after every changed server text was re-read against shipped text and
+  each contradiction recorded below, and the static contract in
+  `tests/test_mcp_call_contracts.py` is re-verified and re-dated. No file under `source/` or
+  `hosts/` changes.
+  - **Probe summary line before the refresh** (`mcp_probe.py check`, 2026-11-18, exit 0):
+    `14 INFO, 10 WATCH`. The WATCH findings: `content` (`get_capabilities`), `contract-stale`
+    (`CONTRACT_VERIFIED_ON is 2026-08-12 (98 days old, limit 90)`), six `description`
+    (`find_examples`, `get_sdk_reference`, `mapping_workflow`, `reporting_guide`, `sdk_guide`,
+    `search_docs`), `instructions`, and `silent-accept` on `search_docs.category`. No BREAKING,
+    no `static-contract-wrong`, no `static-contract-drift`, no conformance violation.
+  - **Probe summary line after the refresh** (`mcp_probe.py update`, exit 0, "baseline
+    written: .claude/skills/auto-test/baseline/mcp-snapshot.json (13 tools)", then `check`,
+    exit 0): `9 INFO, 1 WATCH`. The one WATCH finding is `silent-accept` on
+    `search_docs.category`, which the issue leaves in place. No `instructions`, `description`,
+    `content` or `contract-stale` finding remains. The refreshed baseline lists `flag_details`
+    in `get_sdk_reference`'s declared `topic` enum and in its probed accepted values.
+  - **The eight texts re-read**, each against the old baseline's copy, before `update`
+    overwrote it:
+    - Server `instructions`: the `## NETWORK ACCESS` section moved below the others, unchanged
+      in wording; two routing lines were added ("Database/warehouse tables (e.g. Snowflake) →
+      export a sample of each table to CSV, then ONE mapping_workflow over the related tables",
+      and a Databricks line naming `mapping_workflow` with `environment="databricks"`).
+    - `find_examples`: "51 indexed Senzing GitHub repositories" became "53".
+    - `get_sdk_reference`: the `flags` topic with a method filter now returns "one line per
+      applicable flag … under group headers", and a new topic, "'flag_details' (the full
+      definitions and response paths for a method filter)".
+    - `mapping_workflow`, `reporting_guide`, `sdk_guide`: each gained an optional
+      `environment` ("one of snowflake, aws_lambda, azure_functions, kafka, spark,
+      databricks"), whose response "then opens with `environment_note`"; for
+      `mapping_workflow`, "dotted DB.SCHEMA.TABLE source labels … infer
+      environment=snowflake".
+    - `search_docs`: "~2175 chunks" became "~13.5k chunks", and "A result from a Senzing
+      whitepaper is one section, dated by `as_of` (last reviewed): act on it, then follow its
+      `next`".
+    - `get_capabilities` response: the version, "461 codes" to "462", "51 GitHub repositories"
+      to "53", the tool entries above, and two `suggested_workflows` steps: C1 below, and the
+      "Deploy Senzing" step, now "for production, install the senzingsdk-runtime package on
+      your own hardened, CVE-patched base (as the official senzing/ Dockerfiles do);
+      senzing/senzingsdk-runtime as a base image is for development and evaluation".
+  - **Contradictions with shipped text, for the maintainer to file (not filed):**
+    - **C1, no open issue covers it.** `get_capabilities` → `suggested_workflows` →
+      "Analyze Data with Senzing (End-to-End)", step 1: "Phase 1 — Map ALL data sources: ONE
+      mapping_workflow (steps 1-4) over all the related source files or tables together, so
+      joins and relationships between them are seen (produces mapped JSONL). Use a separate
+      workflow only for genuinely independent sources." On 1.40.10 the same step read
+      "mapping_workflow steps 1-4 for EACH source file". The server `instructions` add the
+      same for tables: "ONE mapping_workflow over the related tables". Shipped text runs one
+      workflow per source with no exception for related sources:
+      `source/skills/module-05-data-quality-mapping/phase2-data-mapping.md:234` ("This module
+      runs one workflow **per source**"), `:460` ("## Workflow (per data source)"), `:473-478`
+      ("**Per-source mapping requirement:** Each data source **must** complete its own full
+      `mapping_workflow` run … Every source gets its own independent `mapping_workflow`
+      execution") and `:41` ("a full `mapping_workflow` run, as Step 8's per-source
+      requirement demands"). This is the contradiction the issue named, confirmed; the issue
+      quoted it at `:233`, which is now `:234`.
+    - **C2, no open issue covers it.**
+      `source/skills/bootcamp-onboarding/ground-rules.md:655-661` gives as "the live
+      illustration" that "`search_docs`' declared description sizes the corpus in chunks, while
+      every `search_docs` response carries `metadata.documents_indexed`, a different figure."
+      On 1.46.1 the description says "~13.5k chunks" and the reply above carries
+      `"documents_indexed":13404`: the two figures now agree to the description's rounding, so
+      the passage's illustration no longer shows a disagreement. The rule above it (INV-280)
+      is not affected.
+    - **Covered by open issue #36.** The `get_sdk_reference` change: the `flags` reply's new
+      shape and the `flag_details` topic, which no shipped text names yet.
+  - **Read and found consistent with shipped text:** the moved `NETWORK ACCESS` section (no
+    shipped text quotes the server `instructions`); the new `environment` parameter, which the
+    bootcamp never passes — and
+    `sdk_guide(topic='configure', platform='linux_apt', language='python')` still returns the
+    `environment` response block with `default_paths` and `engine_config` that
+    `source/skills/module-02-sdk-setup/SKILL.md:2275-2281` relies on; the `as_of` and `next`
+    fields of a whitepaper result (no file under `source/` or `hosts/` names `as_of`, `next` or
+    a whitepaper); the "Deploy Senzing" step, which matches Module 2's container route, a plain
+    `debian:bookworm-slim` container with the `linux_apt` packages installed in it
+    (`module-02-sdk-setup/SKILL.md:788-791`); and the error-code and repository counts, which
+    no file under `source/` or `hosts/` states.
+  - **`CONFABULATIONS`.** The live `llm_instructions.common_confabulations` is identical to the
+    1.40.10 baseline's, item for item, so `mcp_probe.py` is not edited.
+  - **The static contract, re-verified 2026-11-18.** `mcp_probe.py check` reported no
+    `static-contract-wrong`, `static-contract-drift` or BREAKING finding. Against the live
+    schemas: the 13 live tool names equal `MCP_TOOLS`; every `REQUIRED_PARAMS` entry is in its
+    tool's `required` array, and `mapping_workflow`'s two are in its description ("REQUIRED on
+    action='start': `file_paths` AND `workspace_dir`"); the four tools classed as conditional
+    or requiring nothing declare no required parameter; the `mapping_workflow` `action` enum
+    is `start`, `advance`, `back`, `status`, `reset` (plus null); `get_capabilities` reports
+    `tool_count` 13. `CONTRACT_VERIFIED_ON` is now `2026-11-18` and `MCP_SERVER_VERSION`
+    `1.46.1`, and the comment above them says what was checked. The `MCP_TOOLS` comment's
+    tool-count date moves with them, because the count was read again today.
+  - **Spelling waiver.** The baseline still holds the server's word the waiver in
+    `tests/test_us_english_spelling.py` names, and that test passes, so the waiver stays.
+  - **Tests.** No test is added: the change is a re-verified constant and a machine-written
+    baseline. `tests/test_mcp_call_contracts.py` and the auto-test tests pass on the refreshed
+    baseline, and so do `python3 -m tools.bootcamp_build check` and the full suite.
+  - **Not observed.** No run on a real assistant was made, so no record is added to any
+    `hosts/<assistant>/checks.json`. No package's content changes. Verified on Linux only,
+    with Python 3.12.3; the change is data and a dated constant, with no branch on the
+    platform (INV-001) and no programming language's own mechanism (INV-002).
+- **Invariants.** The register is not edited here (INV-365). INV-080 is applied, not changed.
+  The change adds no ⛔ line and no bold MUST or NEVER, and ships no new rule: it establishes
+  no new invariant.
+- **Commit:** uncommitted
+
 ## two-module-2-claims-about-the-senzing-mcp-server-no-longer-hold
 
 - **Implemented:** 2026-11-18 (issue #35)
