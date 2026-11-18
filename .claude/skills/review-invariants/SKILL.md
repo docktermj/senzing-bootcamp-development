@@ -376,5 +376,7 @@ own.** Every invariant it registers was established by an earlier spec's impleme
 
 ## Scope note
 
-`.claude/` is not propagated to the public repo (`propagate.sh` mirrors `source/`,
-`.claude-plugin/`, `docs/` and `README.md` only), so this skill never ships to bootcampers.
+`.claude/` is not promoted to the public repo (`python3 -m tools.bootcamp_build promote`
+writes only every assistant's package under `plugins/`, each assistant's catalog file,
+`docs/` from `site/`, and each file under `public/` at the same path from the root), so this
+skill never ships to bootcampers.

@@ -945,7 +945,8 @@ def cmd_duplication(args):
     repo, plugin, _ = paths(args)
     n = args.words
     index = collections.defaultdict(set)
-    for path in shipped_markdown(plugin):
+    md = shipped_markdown(plugin)
+    for path in md:
         for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
             words = _normalize(line).split()
             if len(words) < n:
@@ -967,6 +968,9 @@ def cmd_duplication(args):
         print("        %s" % a)
         print("        %s" % b)
     print("\n   %d repeated passages across %d file pair(s)" % (len(shared), len(pairs)))
+    # The root read, on every run, a run with no repeated passage included (INV-431, INV-308):
+    # `0 repeated passages` alone cannot say whether anything was read.
+    print("   CORPUS: %s (%d file(s)) — and `.md` only." % (rel(plugin, repo), len(md)))
     print("   ^ repetition required AT a step is INV-183, not redundancy. The finding is")
     print("     repetition that has DRIFTED — read both sites and compare.")
     return 0
@@ -1039,9 +1043,21 @@ def cmd_size(args):
         print("\n   bundled scripts: %d files, %d lines"
               % (len(scripts),
                  sum(len(p.read_text(encoding="utf-8").splitlines()) for p in scripts)))
+    # The root read, on every run, a run with no Markdown file included (INV-431, INV-308).
+    root = rel(plugin, repo)
+    print("\n   CORPUS: %s (%d `.md` file(s)), and the `.py` files directly under %s/scripts "
+          "(%d file(s))." % (root, len(md), root, len(scripts)))
     print("\n   ^ a number, not a target. Cutting rationale to shrink it is forbidden;")
     print("     the win is merging duplicated statements, never deleting the reason.")
     return 0
+
+
+#: The `--since-last-audit` help of `since` and `reverse-check`: one definition for both, so
+#: neither can omit the fallback the other states (`last_audit_ref`, INV-432).
+SINCE_LAST_AUDIT_HELP = (
+    "start the range at the newest audit entry in specs/IMPLEMENTED.md whose Commit: names a "
+    "commit in this repository; when no entry yields one, start at the commit on the ledger's "
+    "Fallback commit line and print a FALLBACK line")
 
 
 def main(argv=None):
@@ -1060,13 +1076,13 @@ def main(argv=None):
     since = sub.add_parser("since", help="hard-rule lines added since a git ref")
     since.add_argument("--ref", default=None, help="git ref to diff against")
     since.add_argument("--since-last-audit", action="store_true",
-                       help="resolve the ref from the newest audit entry's Commit: field")
+                       help=SINCE_LAST_AUDIT_HELP)
 
     rev = sub.add_parser("reverse-check",
                          help="added rules tested for a citation, and the ones it cannot test")
     rev.add_argument("--ref", default=None, help="git ref to diff against")
     rev.add_argument("--since-last-audit", action="store_true",
-                       help="resolve the ref from the newest audit entry's Commit: field")
+                       help=SINCE_LAST_AUDIT_HELP)
 
     dup = sub.add_parser("duplication", help="passages repeated across shipped files")
     dup.add_argument("--words", type=int, default=14, help="shingle length (default 14)")

@@ -1,8 +1,8 @@
 # Tests
 
 Dev-only tests for the Senzing Bootcamp plugin. They live here at the repo top
-level — **not** under `source/` — so `propagate.sh` (which mirrors `source/`
-into the public repo) never ships them to bootcampers.
+level — **not** under `source/` — so the build, `python3 -m tools.bootcamp_build`,
+never puts them in a package.
 
 Standard library only; no third-party dependency (INV-108). Availability of the
 optional `fpdf2` renderer is probed with `importlib.util.find_spec`, never by

@@ -12,8 +12,9 @@ The bootcamp is written once, in `source/`, and built into a package for each AI
 
 - **Change the bootcamp in `source/`, never in `dist/`.** `dist/` is generated and ignored.
 - **A change must work on every assistant.** Text in `source/` names no assistant. Where
-  assistants differ, use a `{{host.name}}` value, a `<!-- host:only … -->` block or a
-  `<!-- host:include … -->` fragment, and give every assistant its value.
+  assistants differ, use a `{{host.name}}` value, a `<!-- host:only … -->` or
+  `<!-- host:except … -->` block or a `<!-- host:include … -->` fragment, and give every
+  assistant its value.
 - **Run these before saying a change is done:**
   `python3 -m tools.bootcamp_build check` and `python3 -m unittest discover -s tests`.
 - **A test that reads `source/` holds for every assistant.** Use `built("claude")` from

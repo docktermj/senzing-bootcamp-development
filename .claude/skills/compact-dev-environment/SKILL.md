@@ -80,11 +80,16 @@ authorized operation and it MUST:
    is unrecoverable.
 2. Ship a permanent, machine-readable `RENUMBERING.md` map (`old → new`, with the
    date) **at the repository root**, kept forever, so a historical citation can be
-   resolved by hand. ⛔ **Not under `specs/`** — the archive is frozen (INV-307) and
-   `tests/test_specs_are_frozen.py` rejects a new file there, so the instruction this
-   replaced could not be carried out at all: following it turned the suite red. ⚠️ Not
-   under `docs/` either, which `propagate.sh` mirrors to the public access repo. The
-   root is inside a tagged release — which is what a child needs, since children key their
+   resolved by hand. ⛔ **Not under `specs/`** — it holds live records only (INV-307), the
+   table in `specs/README.md` is the list of the files that belong there, and the frozen
+   archive of the spec files is in the repository `specs/README.md` names. The instruction
+   this replaced put the map under `specs/` while that directory was the frozen archive, so
+   it could not be carried out at all: following it turned the suite red. ⚠️ Not under
+   `docs/` either: this repository's `docs/` is not published.
+   `python3 -m tools.bootcamp_build promote` writes only every assistant's package under
+   `plugins/`, each assistant's catalog file, the public repository's `docs/` from `site/`,
+   and each file under `public/` at the same path from the root. The root is inside a
+   tagged release — which is what a child needs, since children key their
    inherited-invariant registers on the parent's `INV-NNN`.
 3. Rewrite every live citation mechanically (never by eye) and then pass
    `citations.py verify` with zero unresolved and zero unexpected IDs.
@@ -214,9 +219,10 @@ Only the third case with *no* remaining relevance is a demotion candidate.
 
 ## Step 3: Census the specs (read-only)
 
-⛔ **Specs are read, never moved, annotated or deleted (INV-307).** `specs/` froze on
-2026-09-15 into a read-only archive pinned by name in `specs/FROZEN-MANIFEST.txt`, and
-`tests/test_specs_are_frozen.py` fails on any file added, removed or changed there. A spec
+⛔ **Specs are read, never moved, annotated or deleted (INV-307).** `specs/` holds live
+records only: the table in `specs/README.md` is the list of the files that belong there,
+and no new file is written there. The spec files, frozen since 2026-09-15, are in the
+archive repository `specs/README.md` names, at the commit it pins. A spec
 is a record of a decision; the ledger heading is what makes it findable, and this step
 checks that link without acting on it.
 

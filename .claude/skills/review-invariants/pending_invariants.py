@@ -372,14 +372,14 @@ def site_label(f):
         return rel_to_repo(f)
 
 
-#: The frozen archive's own manifest. A file pinned here is read-only under INV-307, so a
+#: The frozen archive's manifest. A file pinned in it is read-only under INV-307, so a
 #: citation can never land in it -- it is unscanned AND ineligible, which are different facts.
 #:
-#: ⛔ Read from the manifest rather than by testing for a `specs/` prefix. The manifest is the
-#: repository's own authority on what the freeze covers, and it already excludes the live
-#: records that a prefix test would wrongly sweep in. They are named in one place, the
-#: "What stays live" table in `specs/README.md`, and are not listed here. A prefix is a second
-#: definition of the freeze; this is the first one.
+#: ⚠️ The manifest is not in this repository: the frozen spec files and their manifest stayed
+#: in the archive repository `specs/README.md` names, and `specs/` here holds live records
+#: only. `frozen_names()` then returns an empty set. The live records are listed in one place,
+#: the table in `specs/README.md`, and are not listed here. A `specs/` prefix test is still
+#: not used: it would sweep those live records in.
 FROZEN_MANIFEST = SPECS / "FROZEN-MANIFEST.txt"
 
 

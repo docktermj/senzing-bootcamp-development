@@ -328,9 +328,11 @@ manifest and its statuses are stated once in `drafts.py` (INV-300).
 1. **Draft — on sight.** The run's dated entry is a `## dry-run-<YYYY-MM-DD>` heading in
    `specs/IMPLEMENTED.md`, marked **Not a spec** as the `production-readiness-audit-<date>`
    entries are, and opened at the first finding. The ledger is a live record (INV-182), so the
-   draft is durable at once and the walk never stops for it. `tests/test_specs_are_frozen.py`
-   rejects any new file under `specs/`: the 2026-09-24 run that followed the pre-freeze
-   instruction turned the suite red with four.
+   draft is durable at once and the walk never stops for it. Write no new file under
+   `specs/` (INV-307): it holds live records only, the table in `specs/README.md` is the list
+   of the files that belong there, and the frozen archive of the spec files is in the
+   repository `specs/README.md` names. The 2026-09-24 run that followed the pre-freeze
+   instruction wrote four new files there and turned the suite red.
 2. **Search open and closed issues before filing**, as `/feedback-to-issues` Step 4 does
    (`gh issue list --state all --search "<terms>"`). A finding already tracked points at that
    issue instead of opening a duplicate; a comment adding what the issue lacks goes under the

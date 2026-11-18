@@ -36,6 +36,196 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## maintainer-documents-and-skills-describe-tools-and-guards-that-are-not-here
+
+- **Implemented:** 2026-11-18 (issue #48)
+- **Files changed:** `README.md`, `.claude/CLAUDE.md`, `tests/README.md`,
+  `docs/model-selection.md`, `tools/bootcamp_build/render.py` (module docstring),
+  `tools/bootcamp_build/model.py` (`Host.fragment_path` docstring),
+  `.claude/skills/production-readiness-audit/SKILL.md`,
+  `.claude/skills/production-readiness-audit/conformance.py`,
+  `.claude/skills/compact-dev-environment/SKILL.md`,
+  `.claude/skills/delegate-to-mcp-server/SKILL.md`, `.claude/skills/dry-run/SKILL.md`,
+  `.claude/skills/review-invariants/SKILL.md`,
+  `.claude/skills/review-invariants/pending_invariants.py` (one comment),
+  `.claude/skills/release/SKILL.md`, `tests/test_conformance_scans.py`, `specs/IMPLEMENTED.md`
+  (this entry)
+- **MCP re-check:** n/a (no Senzing fact). Re-confirmed on 2026-11-18 against the change
+  itself: it corrects what maintainer documents, skills, docstrings and help text say about this
+  repository's build, tests, ledger and promotion, and adds one output line to two audit scans.
+  It states nothing about the Senzing SDK, the Senzing MCP server or any Senzing behavior. No
+  MCP tool was called.
+- **Summary:** findings 30, 31 and 32 of `production-readiness-audit-2026-11-17`. Every
+  statement the issue lists now says what the repository does today, read at `7f41ed1` after
+  the earlier merges of this run.
+  - **Layout documents.** `README.md` and `.claude/CLAUDE.md` name `host:except` beside
+    `host:only`. `README.md` no longer says text outside a marker is copied unchanged: it says
+    the build also changes such text and names each case `tools/bootcamp_build/emit.py` makes,
+    a command built as a skill (the `name:` line, `../skills/` rewritten to `../`, the
+    sibling-skills note), the `skill_location_note` appended to every `SKILL.md`, and, since
+    #39, the read-to-the-end note at the top of every package Markdown file over
+    `READ_CUT_CHARACTERS` outside the docs directory. The `render.py` docstring agrees with it.
+    `check`'s list says names of an assistant are counted against the ceilings in
+    `tools/bootcamp_build/neutrality.json` and fail above a ceiling or below it until it is
+    lowered, and names the skill frontmatter problems `skill_problems()` reports.
+    `tests/README.md` says the build never puts the tests in a package.
+    `Host.fragment_path`'s docstring says `hosts/_shared/fragments/` is optional and absent,
+    with no code change. `docs/model-selection.md` says every skill under `source/skills/` has a
+    row and the five commands have none; no row is added.
+  - **Skills.** The five sentences that cited `tests/test_specs_are_frozen.py` or
+    `specs/FROZEN-MANIFEST.txt` keep their rule (no new file under `specs/`, INV-307), cite the
+    table in `specs/README.md` as the list of files that belong there, and say the frozen
+    archive of the spec files is in the repository that file names. None says a test rejects a
+    file. The three `propagate.sh` sentences name `python3 -m tools.bootcamp_build promote` and
+    the four kinds of path `promote.py`'s docstring lists. `release/SKILL.md` no longer names
+    `tests/test_maintainer_tooling_stays_out_of_public.py` or claims a test enforces the rule.
+    `compact-dev-environment` keeps its root location for `RENUMBERING.md`, its warning against
+    `docs/` now giving today's reason. The `pending_invariants.py` comment says the manifest is
+    not here and `frozen_names()` returns an empty set; its code is unchanged. The issue's
+    search prints exactly its two lines: `conformance.py:614` and the `FROZEN_MANIFEST =`
+    assignment.
+  - **The audit tool.** `production-readiness-audit/SKILL.md` and the `--since-last-audit` help
+    of `since` and `reverse-check`, now one constant `SINCE_LAST_AUDIT_HELP`, say the range
+    starts at the newest audit entry whose `Commit:` names a commit here and otherwise at the
+    `Fallback commit` line of `specs/IMPLEMENTED.md`, with a `FALLBACK` line printed. No hash is
+    copied (INV-432). `duplication` prints `CORPUS: source (<n> file(s)) — and .md only.` and
+    `size` prints a `CORPUS:` line naming `source`'s `.md` files and the `.py` files directly
+    under `source/scripts`, on every run (INV-431, INV-308). Both read the same files as before,
+    so their recorded figures do not move.
+  - **Tests.** `TestDuplicationAndSizeNameTheRootTheyRead` in `tests/test_conformance_scans.py`
+    asserts both lines on fixture runs that find nothing (no repeated passage; no Markdown
+    file), on a fixture with a bundled script, and on the live repository.
+  - **One wording found by a guard.** "the frozen spec archive" read to
+    `tests/test_compact_dev_environment_leaves_specs_frozen.py` as an instruction to archive a
+    spec, so every site says "the frozen archive of the spec files" instead.
+  - **Not changed.** `specs/INVARIANTS.md` (INV-365); any file under `source/`, `hosts/`,
+    `site/` or `public/`, so no assistant's package changes. No run on a real assistant was
+    made, so nothing is added to any `hosts/<assistant>/checks.json`. Verified on Linux only,
+    with Python 3.12.3; the change is prose, docstrings, help text and two `print` lines, and
+    the new test uses `tempfile` and `subprocess` with `sys.executable`, which hold on macOS and
+    Windows too.
+- **Invariants.** The register is not edited here (INV-365). This entry establishes no new
+  invariant. The new `CORPUS:` lines meet INV-431, already registered, and the help text states
+  INV-432. Six registered invariants name a guard or a tool this repository does not carry, so
+  this entry queues six `PROPOSED AMENDMENT` blocks below, each a dated note of facts only. None
+  proposes a change to a requirement, and none retires an invariant: that is the maintainer's
+  decision in `/review-invariants`.
+
+- **PROPOSED AMENDMENT to INV-304 — awaiting the maintainer's sign-off; NOT applied.**
+    - ⛔ **This skill is development-repo only and must NOT be propagated to the public plugin repo.** — in `.claude/skills/release/SKILL.md`
+
+  INV-304 governs "the propagate mirror" and names `propagate.sh` and its enforcer
+  `tests/test_maintainer_tooling_stays_out_of_public.py`. Neither is in this repository, and
+  `tests/test_invariant_enforcer_citations.py` lists the test as not carried. Without a note,
+  the register describes a mirror nobody runs, and #48 found a skill still citing the absent
+  test as the reason the rule is "enforced rather than remembered".
+
+  Drafted wording follows, under the registered id. A new rule's id would be
+  written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
+
+  **INV-304** — (⚠️ **Dated note, 2026-11-18 (#48): `propagate.sh` is not in this repository;
+  no requirement changes.** Since the one-repository migration of 2026-11-14, promotion is
+  `python3 -m tools.bootcamp_build promote`, which writes only the paths the docstring of
+  `tools/bootcamp_build/promote.py` lists: every assistant's package under `plugins/`, each
+  assistant's catalog file, `docs/` from `site/`, and each file under `public/` at the same path
+  from the root. The enforcer named above, `tests/test_maintainer_tooling_stays_out_of_public.py`,
+  is not carried into this repository.)
+
+- **PROPOSED AMENDMENT to INV-307 — awaiting the maintainer's sign-off; NOT applied.**
+    - ⛔ **Never write a new file under `specs/`.** — in `.claude/skills/production-readiness-audit/SKILL.md`
+
+  INV-307 requires the frozen set to be pinned in `specs/FROZEN-MANIFEST.txt` and names
+  `tests/test_specs_are_frozen.py` as its enforcer. Neither the manifest, the archived spec
+  files nor the test is in this repository, and `tests/test_invariant_enforcer_citations.py`
+  lists the test as not carried. Five skill sentences cited the test as rejecting a new file
+  under `specs/`, which no test here does; #48 corrected them, and without a note the register
+  still says the opposite.
+
+  Drafted wording follows, under the registered id. A new rule's id would be
+  written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
+
+  **INV-307** — (⚠️ **Dated note, 2026-11-18 (#48): the frozen archive and its manifest are not
+  in this repository; no requirement changes.** Since the one-repository migration of
+  2026-11-14, `specs/` holds live records only, listed in the table in `specs/README.md`, and
+  the frozen archive is the repository and commit that file names. `specs/FROZEN-MANIFEST.txt`
+  and the archived spec files are absent here. The enforcer named above,
+  `tests/test_specs_are_frozen.py`, is not carried into this repository.)
+
+- **PROPOSED AMENDMENT to INV-350 — awaiting the maintainer's sign-off; NOT applied.**
+    - ⛔ **Promotion writes exactly those paths and nothing else, and it stops at the working tree: no commit, no branch, no push.** — in `tools/bootcamp_build/promote.py`
+
+  INV-350 governs the files `propagate.sh` publishes and its rewrite pass, and names
+  `tests/test_propagate_publishes_the_pages_site.py` as its enforcer. The script, its rewrite
+  pass and the test are not in this repository; `tests/test_invariant_enforcer_citations.py`
+  lists the test as not carried. Without a note, the register describes a publishing step that
+  no longer runs.
+
+  Drafted wording follows, under the registered id. A new rule's id would be
+  written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
+
+  **INV-350** — (⚠️ **Dated note, 2026-11-18 (#48): `propagate.sh` and its rewrite pass are not
+  in this repository; no requirement changes.** Since the one-repository migration of
+  2026-11-14, promotion is `python3 -m tools.bootcamp_build promote`. The enforcer named above,
+  `tests/test_propagate_publishes_the_pages_site.py`, is not carried into this repository.)
+
+- **PROPOSED AMENDMENT to INV-351 — awaiting the maintainer's sign-off; NOT applied.**
+    - ⛔ **Promotion writes exactly those paths and nothing else, and it stops at the working tree: no commit, no branch, no push.** — in `tools/bootcamp_build/promote.py`
+
+  INV-351 requires this repository's marketplace to carry its own name and `propagate.sh` to
+  rewrite it, and names `tests/test_propagate_publishes_the_published_marketplace_name.py` as
+  its enforcer. This repository has no marketplace catalog of its own, and the script and the
+  test are not here; `tests/test_invariant_enforcer_citations.py` lists the test as not
+  carried. Without a note, the register describes a rename and a rewrite that no longer exist.
+
+  Drafted wording follows, under the registered id. A new rule's id would be
+  written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
+
+  **INV-351** — (⚠️ **Dated note, 2026-11-18 (#48): `propagate.sh` is not in this repository,
+  and neither is a marketplace catalog of this repository's own; no requirement changes.**
+  Since the one-repository migration of 2026-11-14, promotion is
+  `python3 -m tools.bootcamp_build promote`. The enforcer named above,
+  `tests/test_propagate_publishes_the_published_marketplace_name.py`, is not carried into this
+  repository.)
+
+- **PROPOSED AMENDMENT to INV-360 — awaiting the maintainer's sign-off; NOT applied.**
+    - ⛔ **Bootcampers install from the public repository, [Senzing/bootcamp].** — in `README.md`
+
+  INV-360 requires this repository's install surfaces to name the development repository and
+  relies on `propagate.sh`'s slug rewrite. Nobody installs from this repository, the script is
+  not here, and its enforcer, `tests/test_dev_install_surfaces_name_the_dev_repo.py`, is
+  present but retired by its own dated note of 2026-11-14. Without a note, the register states
+  a requirement its own enforcer has recorded as no longer applying.
+
+  Drafted wording follows, under the registered id. A new rule's id would be
+  written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
+
+  **INV-360** — (⚠️ **Dated note, 2026-11-18 (#48): `propagate.sh` and its slug rewrite are not
+  in this repository, and nobody installs from it; no requirement changes.** Since the
+  one-repository migration of 2026-11-14, every install page is generated for the public
+  repository, `Senzing/bootcamp`. The enforcer named above,
+  `tests/test_dev_install_surfaces_name_the_dev_repo.py`, is present and records its own
+  retirement in its dated note of 2026-11-14.)
+
+- **PROPOSED AMENDMENT to INV-380 — awaiting the maintainer's sign-off; NOT applied.**
+    - ⛔ **Every deliverable INV-050's tree annotates as always produced MUST be named on at least one user-facing surface, and a deliverable it annotates as produced only on the Bootcamper's yes MUST be named there as an offer rather than as something they finish with.** — in `tests/test_always_produced_deliverables_are_named.py`
+
+  INV-380 says its enforcer derives the surfaces "from `propagate.sh`'s published roots". The
+  script is not in this repository. The enforcer,
+  `tests/test_always_produced_deliverables_are_named.py`, is present and was adapted on the
+  migration to read the build's published roots instead. Without a note, the register names
+  a source of surfaces the guard no longer reads.
+
+  Drafted wording follows, under the registered id. A new rule's id would be
+  written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
+
+  **INV-380** — (⚠️ **Dated note, 2026-11-18 (#48): `propagate.sh`'s published roots are not in
+  this repository; no requirement changes.** Since the one-repository migration of 2026-11-14,
+  the published roots are the build's `public/` and `site/`. The enforcer named above,
+  `tests/test_always_produced_deliverables_are_named.py`, is present and was adapted to read
+  them.)
+
+- **Commit:** uncommitted
+
 ## inv-050-says-config-license-json-is-written-in-module-4-module-2-writes-it-first
 
 - **Implemented:** 2026-11-18 (issue #41)

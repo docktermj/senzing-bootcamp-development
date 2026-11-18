@@ -72,8 +72,9 @@ class Host:
     def fragment_path(self, name: str) -> Path:
         """Where this host's copy of a fragment is, or the shared copy when it has none of its own.
 
-        A host supplies a fragment only where it truly differs. ``hosts/_shared/fragments/`` holds
-        the wording every other host uses, so that wording is written once.
+        The shared directory ``hosts/_shared/fragments/`` is optional and does not exist today, so
+        every host supplies its own copy of each fragment. Were it added, a host with no copy of
+        its own would get the shared one.
         """
         file_name = name if "." in name else f"{name}.md"
         own = self.directory / "fragments" / file_name

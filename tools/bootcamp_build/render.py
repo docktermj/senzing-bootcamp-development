@@ -1,8 +1,14 @@
 """Render host-neutral source text for one host.
 
-The source marks every place where assistants differ. There are three markers, and text
-outside them is copied unchanged, which is what makes the bootcamp the same on every
-assistant by construction:
+The source marks every place where assistants differ. There are four markers: the three
+below, with ``host:except`` beside ``host:only``. This module copies text outside them
+unchanged, which is what makes the bootcamp the same on every assistant by construction.
+The build in ``emit.py`` then changes text outside a marker in these cases: a command built
+as a skill gets a ``name:`` line in its frontmatter, its ``../skills/`` links rewritten to
+``../`` and the sibling-skills note appended; every ``SKILL.md`` gets the location note on an
+assistant whose profile sets ``skill_location_note``; and a Markdown file longer than
+``READ_CUT_CHARACTERS``, outside the package's docs directory, gets the read-to-the-end note
+at its top.
 
 ``{{host.name}}``
     A value from the host profile's ``vars``. Every host must define every variable the

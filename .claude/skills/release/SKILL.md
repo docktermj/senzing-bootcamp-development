@@ -217,7 +217,6 @@ run can block there. Say so rather than retrying.
 ## Scope note
 
 ⛔ **This skill is development-repo only and must NOT be propagated to the public
-plugin repo.** `.claude/` is not in `propagate.sh`'s manifest (it mirrors `source/`,
-`.claude-plugin/`, `docs/` and `README.md` only), and
-`tests/test_maintainer_tooling_stays_out_of_public.py` asserts that no rsync source
-reaches into `.claude/`, so this is enforced rather than remembered.
+plugin repo.** `.claude/` is not among the paths `python3 -m tools.bootcamp_build promote`
+writes: every assistant's package under `plugins/`, each assistant's catalog file, `docs/`
+from `site/`, and each file under `public/` at the same path from the root.
