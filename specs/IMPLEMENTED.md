@@ -532,7 +532,7 @@ line and holds no copy of it, so changing the line changes the range.
   `tests/test_dev_install_surfaces_name_the_dev_repo.py`, is present and records its own
   retirement in its dated note of 2026-11-14.)
 
-- **PROPOSED AMENDMENT to INV-380 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-380 — applied 2026-11-18 by the maintainer.**
     - ⛔ **Every deliverable INV-050's tree annotates as always produced MUST be named on at least one user-facing surface, and a deliverable it annotates as produced only on the Bootcamper's yes MUST be named there as an offer rather than as something they finish with.** — in `tests/test_always_produced_deliverables_are_named.py`
 
   INV-380 says its enforcer derives the surfaces "from `propagate.sh`'s published roots". The
