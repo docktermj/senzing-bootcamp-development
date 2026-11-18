@@ -242,7 +242,8 @@ graduation's reconcile backfill (INV-085/INV-086/INV-087):
 
 1. **Update progress state.** Add `truthset_visualization` to `modules_completed` (a module name
    token, not a number), placed after `system_verification`. Set `current_module` to the next module
-   in `selected_modules` and `current_step` to `null`. All idempotent (do not duplicate).
+   in `selected_modules` (read from `config/bootcamp_preferences.yaml`) and `current_step` to
+   `null`. All idempotent (do not duplicate).
 2. **Append the recap section** to `docs/bootcamp_recap.md`, name-based and append-only (INV-085):
    `## Truth Set visualization — {timestamp}` with the four subsections (Information Shared,
    Questions & Responses, Actions Taken, End-of-Module Summary): capture the Truth Set acquisition/load, the

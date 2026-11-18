@@ -69,19 +69,6 @@ PROGRESS = {
         "truthset_visualization",
         "data_collection",
     ],
-    "selected_modules": [
-        "bootcamp_preparation",
-        "entity_resolution_concepts",
-        "business_problem",
-        "sdk_setup",
-        "system_verification",
-        "truthset_visualization",
-        "data_collection",
-        "data_quality_mapping",
-        "data_processing",
-        "query_visualize_discover",
-        "graduation",
-    ],
     # Names a container that does not exist -> exercises warn-and-continue (INV-101).
     "docker_containers": [
         {"name": "bootcamp-dryrun-absent", "image": "postgres:16", "purpose": "repository"}
@@ -95,7 +82,21 @@ PROGRESS = {
     },
 }
 
+# The module selection is kept in config/bootcamp_preferences.yaml and in no other file (#44):
+# PROGRESS above carries no `selected_modules` key, because nothing reads one there.
 PREFERENCES = """path: core
+selected_modules:
+  - bootcamp_preparation
+  - entity_resolution_concepts
+  - business_problem
+  - sdk_setup
+  - system_verification
+  - truthset_visualization
+  - data_collection
+  - data_quality_mapping
+  - data_processing
+  - query_visualize_discover
+  - graduation
 programming_language: Python
 name: Ada Lovelace
 os: Linux
