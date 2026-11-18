@@ -26,10 +26,27 @@ HERE = Path(__file__).resolve().parent
 PREFIX = "senzing-bootcamp-"
 HOOKS_DIRECTORY = Path(".kiro") / "hooks"
 TIMEOUT_SECONDS = 30
+#: The hook adapter turns a patch into write and edit calls, so a tool the adapter's map calls
+#: a patch is matched by every hook that covers either.
+PATCH_CATEGORY = "patch"
+PATCH_COVERS = {"write", "edit"}
 
 
 def quoted(value):
     return '"' + str(value).replace('"', '\\"') + '"'
+
+
+def matcher(config, hooks):
+    """The tools one event's hook must match: every name the adapter maps to a category the
+    event's scripts cover, in the map's order. Empty when the scripts are limited to no tool.
+
+    The names come from ``tool_categories``, the map the hook adapter itself reads, so the hook
+    runs for exactly the tools the adapter would act on.
+    """
+    covered = {tool for entry in hooks for tool in entry.get("tools", [])}
+    if covered & PATCH_COVERS:
+        covered.add(PATCH_CATEGORY)
+    return "|".join(name for name, category in config["tool_categories"].items() if category in covered)
 
 
 def definitions(config):
@@ -49,14 +66,9 @@ def definitions(config):
             },
             "timeout": TIMEOUT_SECONDS,
         }
-        tools = []
-        for entry in hooks:
-            for tool in entry.get("tools", []):
-                for host_tool in config["host_tools"][tool].split("|"):
-                    if host_tool not in tools:
-                        tools.append(host_tool)
+        tools = matcher(config, hooks)
         if tools:
-            hook["matcher"] = "|".join(tools)
+            hook["matcher"] = tools
         found[name + ".json"] = {"version": "v1", "hooks": [hook]}
     return found
 

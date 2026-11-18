@@ -17,10 +17,27 @@ written before they have seen what will be written and said yes.
 
 Say this much, and no more, before asking:
 
-- Two rules become mechanically enforced instead of advisory: the bootcamp's files stay inside
-  the project, and no obvious secret lands in a file the bootcamp writes.
-- Three behaviors become automatic: resuming on session start, keeping the recap checkpoint,
-  and noticing bootcamp feedback and notes.
+- `senzing-bootcamp-session-start.json`: runs when a session starts. It tells the guide where
+  the bootcamper left off, or that the bootcamp is complete. It moves recap notes left by an
+  interrupted module from `docs/progress/recap_checkpoint.md` into `docs/bootcamp_recap.md`,
+  creates that notes file when it is missing, and reports the state of any container the
+  bootcamp started.
+- `senzing-bootcamp-prompt-submit.json`: runs each time the bootcamper sends a message. It
+  creates the recap notes file, `docs/progress/recap_checkpoint.md`, when it is missing. It
+  notices bootcamp feedback, a note to keep, and a request for more or less detail. It reminds
+  the guide to open each module the same way, to name modules by their names, and to complete
+  a finished module's records.
+- `senzing-bootcamp-pre-tool-use.json`: runs before the guide writes or edits a file or runs a
+  shell command. It blocks a file written outside the project, a file that holds an obvious
+  secret, and a command that sends its output to the system temporary directory or to
+  Downloads.
+- `senzing-bootcamp-post-tool-use.json`: runs after a shell command. The first time in a
+  hands-on module that a program the guide wrote fails as it runs, it records that in
+  `config/steer_observations.json` and reminds the guide to show the bootcamper what went
+  wrong.
+- `senzing-bootcamp-stop.json`: runs when the guide finishes a turn. It checks that the turn
+  ended on its one question. A hook cannot re-open a finished turn on Kiro, so this one changes
+  nothing, and ending on one question stays a rule the guide follows by instruction.
 - It writes a few small JSON files into `.kiro/hooks/` in their project. Every file name starts
   with `senzing-bootcamp-`, and one command removes them.
 - Every hook does nothing outside a bootcamp project.
