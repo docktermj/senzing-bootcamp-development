@@ -676,6 +676,30 @@ copy (INV-300).
   `get_sdk_reference(topic='flags', filter='<method>')`, pick the flags matching the
   bootcamper's intent, explain the choice in one sentence, and reuse that knowledge within the
   module.
+
+  **Reading a flags reply.** That call returns one of two shapes, so see which one came back
+  before reading anything from it (MCP server 1.46.1, 2026-11-18):
+
+  - **The compact list.** `data` is lines of text, one per flag, under `# …` group headers, and
+    the reply carries a `detail` field that names the follow-up call. A flag's line gives its
+    name and then `— description`, with a longer description cut short at `…`, or `= A|B|C`.
+    The `=` does not say whether the right side is what the flag is made of, what it depends on
+    or what it belongs to. The list holds no `applies_to`, `source_file`, `depends_on`,
+    `composite_members` or `response_paths`. `filter='export_json_entity_report'`,
+    `'why_records'`, `'get_entity_by_record_id'` and `'find_network_by_entity_id'` returned it.
+  - **The row form.** Each `data` entry is an object with `name`, `description`, `applies_to`
+    and `source_file`, and with `depends_on`, `composite_members` and `response_paths` where the
+    server has them. `get_sdk_reference(topic='flags', filter='<flag name>')` returns it for one
+    flag, and `get_sdk_reference(topic='flag_details', filter='<method>')` for every flag of a
+    method. `filter='find_network'`, `'find_path'` and `'get_entity'` under `topic='flags'`
+    returned it directly, with no `detail` field.
+
+  Choose flags from the compact list. Before reading a field or a full description, call the
+  row form: by flag name for one flag, or by `topic='flag_details'` for a method. When the
+  compact list carries no `detail` pointer, or `topic='flag_details'` fails, fall back to the
+  flag-name row, `get_sdk_reference(topic='flags', filter='<flag name>')`, and say which route
+  produced what you present (INV-125).
+  <!-- MCP-NEGATIVE: get_sdk_reference(topic='flags', filter='export_json_entity_report') — the reply's data is lines of text under group headers, not objects, so no flag in it carries a field of its own — owner: get_sdk_reference(topic='flag_details', filter='export_json_entity_report') IS the route that carries a method's flags with their fields, and the reply's own detail field names it; it returns each flag as an object with its fields, so they are answered there rather than absent (routing negative) — server 1.46.1, 2026-11-18 -->
 - **Response structures (INV-115).** Flags are only half the lookup. Before writing any code
   that **parses** an SDK response, call
   `get_sdk_reference(topic='response_schemas', filter='<method>')`. **Never infer field names
@@ -726,7 +750,8 @@ copy (INV-300).
   `flags` or `response_schemas` response you already hold therefore carries the signature too,
   in a `method_signatures` block, so it needs no second call. (Verified on MCP server 1.32.2,
   2026-07-30: `topic='flags', filter='find_network_by_entity_id'` returned it alongside the flag
-  data. Verified on MCP server 1.37.14, 2026-09-28: `topic='response_schemas', filter='get_stats'`
+  data, and still does on 1.46.1, 2026-11-18, where the flag data is the compact list. Verified
+  on MCP server 1.37.14, 2026-09-28: `topic='response_schemas', filter='get_stats'`
   returned it alongside an *empty* `data` array — a topic with no data of its own still carries the
   signature.) When you hold no such response, ask for it directly before **calling** an SDK
   method:
@@ -818,8 +843,13 @@ The caller says which entity to pick. Everything below is the same for all three
    - **Rank.** Iterate the entity export, limited to entities with more than one record.
      `reporting_guide(topic='export', language='<chosen_language>', version='current')` gives the
      export loop; `get_sdk_reference(topic='flags', filter='export_json_entity_report',
-     language='<chosen_language>')` gives the flag that limits it to multi-record entities, and the
-     entity flags that put each entity's record count per data source on its row. ⚠️ The
+     language='<chosen_language>')` names the export's flags. Its reply is the compact list
+     ("Reading a flags reply", above; MCP server 1.46.1, 2026-11-18): the descriptions of the
+     entity-selection flags are cut short there, and an entity flag appears only inside a
+     composite's line. So read the row form before choosing: `topic='flag_details'` with the same
+     filter gives the flag that limits it to multi-record entities, and the row of an entity
+     flag named in a composite's members says what that flag puts on a row. Choose the entity
+     flags that put each entity's record count per data source on its row. ⚠️ The
      entity-selection flag alone returns rows that carry nothing but the entity ID, with no error,
      so ask for the per-source record summary as well. Rank the rows by the caller's rule. Every
      caller's rule ends on the lowest entity ID, so a re-run over the same data names the same

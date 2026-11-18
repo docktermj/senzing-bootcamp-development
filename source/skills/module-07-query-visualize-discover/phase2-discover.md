@@ -83,7 +83,8 @@ unloaded file ([what `skipped` means](../module-04-data-collection/SKILL.md#mapp
    These entities are candidates for the relationship network demonstration in step 4d; keep
    each one's relationship count, since step 4d starts from the entity with the most. Use relationship
    flags that return both kinds when calling `get_entity_by_record_id` (look up the flag names via
-   `get_sdk_reference(topic='flags', filter='get_entity_by_record_id')`), and read where the
+   `get_sdk_reference(topic='flags', filter='get_entity_by_record_id')`, and read that reply as
+   `../bootcamp-onboarding/ground-rules.md` → "Reading a flags reply" says), and read where the
    relationships sit in the response, and how a disclosed one is marked, via
    `get_sdk_reference(topic='response_schemas', filter='get_entity_by_record_id')` before counting
    them (INV-115).
@@ -158,12 +159,16 @@ not repeat it.
 3. **SDK flags and response shape:** generate the `why_records` (or `why_entities`) call,
    confirming flag names via `get_sdk_reference(topic='flags', filter='why_records')` and the
    response structure via `get_sdk_reference(topic='response_schemas', filter='why_records')`
-   before writing anything that parses it (INV-115):
+   before writing anything that parses it (INV-115). That `flags` reply is the compact list
+   (server 1.46.1, 2026-11-18), so read a flag's fields or its full description from the row form
+   (`../bootcamp-onboarding/ground-rules.md` → "Reading a flags reply"):
    - `SZ_INCLUDE_FEATURE_SCORES`: explain: "I'm using SZ_INCLUDE_FEATURE_SCORES so we can see
      the numeric similarity scores for each feature comparison. This tells us how closely each
      attribute matched between the two records." It is also what the method already defaults to:
-     the server documents `SZ_WHY_RECORDS_DEFAULT_FLAGS` as equivalent to this flag alone
-     (`get_sdk_reference(topic='flags', filter='why_records')`, server 1.32.9, 2026-08-14).
+     the server documents `SZ_WHY_RECORDS_DEFAULT_FLAGS` as equivalent to this flag alone, in
+     that composite's own row
+     (`get_sdk_reference(topic='flags', filter='SZ_WHY_RECORDS_DEFAULT_FLAGS')`, server 1.46.1,
+     2026-11-18).
    - **The why-key breakdown is `WHY_KEY_DETAILS`.** It sits at
      `WHY_RESULTS[].MATCH_INFO.WHY_KEY_DETAILS` — an object whose `CONFIRMATIONS[]` entries each
      name the feature that contributed (`FTYPE_CODE`, `TOKEN`, `SOURCE`) with its `SCORE` and
@@ -324,8 +329,10 @@ Demonstrate How Analysis using a concrete multi-record entity (3+ records) ident
    see a meaningful history of how Senzing built this entity over time."
 2. **SDK flag and response shape:** generate the `how_entity` call with
    `SZ_INCLUDE_FEATURE_SCORES` **and** `SZ_INCLUDE_MATCH_KEY_DETAILS` **together with a
-   relations flag** (confirm via `get_sdk_reference(topic='flags',
-   filter='how_entity_by_entity_id')`), and look up the response structure via
+   relations flag** (confirm the two flag names via `get_sdk_reference(topic='flags',
+   filter='how_entity_by_entity_id')`, which returns the compact list, and the relations
+   dependency in the row `get_sdk_reference(topic='flags', filter='SZ_INCLUDE_MATCH_KEY_DETAILS')`
+   returns; server 1.46.1, 2026-11-18), and look up the response structure via
    `get_sdk_reference(topic='response_schemas', filter='how_entity_by_entity_id')` before
    parsing it (INV-115). Explain: "I'm using
    SZ_INCLUDE_FEATURE_SCORES so we can see the scoring at each construction step. This shows
