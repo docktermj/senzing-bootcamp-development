@@ -95,6 +95,59 @@ def yum_ban_problems(prose):
     return [name for name, pattern in required.items() if not re.search(pattern, prose)]
 
 
+#: The query Step 2 prescribed for the Homebrew notice until issue #35 of this repository.
+RETIRED_PREVIEW_QUERY = "homebrew-senzingsdk preview release unsupported tap install cask"
+#: The title of the notice Step 2 relayed.
+RETIRED_NOTICE_TITLE = "Preview Release — Unsupported"
+_PACKAGE_ROUTE = re.compile(r"(?i)\b(?:tap|bucket|cask|homebrew|scoop)\b")
+_SUPPORT_STATUS = re.compile(
+    r"(?i)\bunsupported\b|\bnot\b(?:\W+)supported\b|\b(?:does|do)\s+not\s+support\b"
+    r"|\bas-is\b|\bno\s+warranty\b")
+
+
+def step_2():
+    text = read()
+    start = text.index("## Step 2:")
+    return text[start : text.index("\n## ", start + 10)]
+
+
+def preview_claims(section):
+    """Every place `section` says a package route is a preview or an unsupported release.
+
+    Read with whitespace collapsed, comments included, so a claim wrapped across lines or put
+    in a marker is found. Two shapes: the word "preview" anywhere, and a sentence that names the
+    tap, the bucket or its package manager and gives it a support status.
+    """
+    collapsed = re.sub(r"\s+", " ", section)
+    found = ["preview: %r" % collapsed[max(0, m.start() - 40) : m.end() + 40]
+             for m in re.finditer(r"(?i)\bpreview\b", collapsed)]
+    for sentence in re.split(r"(?<=[.!?])\s+", collapsed):
+        if _PACKAGE_ROUTE.search(sentence) and _SUPPORT_STATUS.search(sentence):
+            found.append("support status of a package route: %r" % sentence)
+    return found
+
+
+#: Step 2's retired pieces, as they shipped until issue #35. Negative controls.
+RETIRED_STEP_2 = {
+    "the macOS parenthetical":
+        "- `platform='macos_arm'`: macOS Apple Silicon (Homebrew cask; the tap is a preview "
+        "release, below)",
+    "the Windows parenthetical":
+        "- `platform='windows'`: Windows 10/11 (Scoop; the bucket is a preview release, below)",
+    "the relay paragraph":
+        "⚠️ **The Homebrew tap and the Scoop bucket are preview releases that Senzing does not "
+        "support.**\nEach README opens with \"**" + RETIRED_NOTICE_TITLE + "** … provided as-is "
+        "with no warranty and is\n**not supported**\". For `macos_arm`,\n`search_docs(query='"
+        + RETIRED_PREVIEW_QUERY + "')` returns it\nas the `senzing/homebrew-senzingsdk` section "
+        "\"homebrew-senzingsdk\".",
+    "rule 3's clause":
+        "3. macOS Apple Silicon (non-Python) → **`platform='macos_arm'`**. Relay the tap's "
+        "preview\n   status above.",
+    "rule 4's clause":
+        "   **`platform='windows'`**, and relay the bucket's preview status above.",
+}
+
+
 class TheStepExistsAndIsReachable(unittest.TestCase):
 
     def test_step_1b_exists(self):
@@ -529,38 +582,85 @@ class TheSilentFailureModesAreGuarded(unittest.TestCase):
         self.assertRegex(self.flat, r"(?i)do \*?\*?not\*?\*? mark Module 2 complete")
 
 
-class StepTwoRelaysThePreviewStatus(unittest.TestCase):
-    """#194: the tap and bucket READMEs open with "Preview Release — Unsupported".
+class StepTwoStatesNoPreviewClaim(unittest.TestCase):
+    """Step 2 does not say the Homebrew tap or the Scoop bucket is a preview or unsupported release.
 
-    `search_docs` serves the warning for both (server 1.37.14, docs index 2026-09-28 03:23 UTC,
-    2026-09-28), and Step 2 recommends both routes, so Step 2 relays it for both, with the query
-    that serves it. It is relayed as a fact, not as advice against the route: rules 3 and 4 still
-    resolve to `macos_arm` and `windows`.
+    #194 added a relay: both READMEs opened with a "Preview Release — Unsupported" notice, which
+    `search_docs` served (server 1.37.14, 2026-09-28), so Step 2 said so for both platforms, in
+    two platform-list parentheticals, a ⚠️ paragraph with the query that served it, and a clause
+    in routing rules 3 and 4. This class was then `StepTwoRelaysThePreviewStatus` and held the
+    relay in place.
+
+    Issue #35 of this repository removed it. On server 1.46.1 (docs index 2026-11-14 17:44 UTC,
+    asked 2026-11-17 and again 2026-11-18) neither README carries the notice: the Scoop README
+    comes back whole without it, and no `senzing/homebrew-senzingsdk` section the relay's own
+    query returns carries it. The text was relaying something the server no longer says
+    (INV-080). Nothing replaces it: Step 2 does not say the notice is absent either.
+
+    The class now fails when the claim comes back. The retired text is the negative control. If
+    a README carries the notice again, the relay returns for that platform with a fresh
+    measurement, and this guard is changed with it: it holds the text to what the server
+    returned on the dates above, not to a rule about previews.
+
+    It reads Markdown and calls no server, so it cannot show what either README says today.
     """
 
     def setUp(self):
-        text = read()
-        start = text.index("## Step 2:")
-        self.section = text[start : text.index("\n## ", start + 10)]
+        self.section = step_2()
         self.flat = re.sub(r"\s+", " ", self.section)
 
-    def test_the_warning_is_relayed_for_both_platforms(self):
-        self.assertIn("Preview Release — Unsupported", self.section)
-        self.assertIn("search_docs(query='homebrew-senzingsdk preview release unsupported tap "
-                      "install cask')", self.flat)
-        # #600: the bucket's route is Step 1b's update-command route, stated once there, so Step 2
-        # points at it rather than restating it; the stamp is the route's record in
-        # test_prescribed_search_queries.py, which follows the pointer (was "docs index
-        # 2026-09-28 03:23 UTC" in this section).
-        self.assertIn("that route is stated once, in `SKILL.md` → \"The update command\"",
-                      self.flat)
-        self.assertNotIn("search_docs(query='scoop-senzingsdk update scoop update senzingsdk')",
-                         self.flat, "Step 2 restates Step 1b's route (INV-300)")
+    def test_step_2_states_no_preview_or_unsupported_claim(self):
+        self.assertEqual(
+            [], preview_claims(self.section),
+            "Step 2 says the Homebrew tap or the Scoop bucket is a preview or unsupported "
+            "release. Neither README carried that notice when last read (server 1.46.1, "
+            "2026-11-18); relay it again only from a reply that carries it")
 
-    def test_the_routing_rules_still_resolve_natively_and_point_at_the_relay(self):
-        self.assertRegex(self.flat, r"(?i)not as advice\s+against it")
-        self.assertRegex(self.flat, r"(?i)\*\*`platform='macos_arm'`\*\*\. Relay the tap's preview")
-        self.assertRegex(self.flat, r"(?i)\*\*`platform='windows'`\*\*, and relay the bucket's preview")
+    def test_the_relay_query_and_the_notice_title_are_gone_from_the_module(self):
+        whole = flat()
+        self.assertNotIn(RETIRED_PREVIEW_QUERY, whole)
+        self.assertNotIn(RETIRED_NOTICE_TITLE, whole)
+
+    def test_step_2_no_longer_points_at_the_update_route(self):
+        """The pointer existed only to carry the relay; Step 1b's own statement stays."""
+        self.assertNotIn("The update command", self.flat)
+        update_route = re.sub(r"\s+", " ", step_1b())
+        self.assertIn("search_docs(query='scoop-senzingsdk update scoop update senzingsdk')",
+                      update_route)
+        self.assertIn("search_docs(query='homebrew-senzingsdk upgrade cask brew upgrade "
+                      "senzingsdk')", update_route)
+
+    def test_the_platform_list_still_names_both_native_routes(self):
+        self.assertIn("- `platform='macos_arm'`: macOS Apple Silicon (Homebrew cask", self.flat)
+        self.assertIn("- `platform='windows'`: Windows 10/11 (Scoop", self.flat)
+
+    def test_the_routing_rules_still_resolve_natively(self):
+        self.assertIn("3. macOS Apple Silicon (non-Python) → **`platform='macos_arm'`**",
+                      self.flat)
+        self.assertIn("With Scoop available → **`platform='windows'`**", self.flat)
+
+    def test_each_retired_piece_is_reported(self):
+        """Negative control: the text Step 2 carried until issue #35 fails the same check."""
+        for name, retired in RETIRED_STEP_2.items():
+            with self.subTest(piece=name):
+                self.assertTrue(preview_claims(retired), "%s is not reported" % name)
+
+    def test_a_reworded_claim_without_the_word_preview_is_reported(self):
+        for reworded in ("Senzing does not support the Homebrew tap.",
+                         "The Scoop bucket is provided as-is.",
+                         "Installing through the bucket is\nnot supported by Senzing."):
+            with self.subTest(text=reworded):
+                self.assertTrue(preview_claims(reworded))
+
+    def test_the_corrected_lines_are_not_reported(self):
+        """The check does not fire on Step 2's own words about these routes."""
+        clean = ("- `platform='macos_arm'`: macOS Apple Silicon (Homebrew cask)\n"
+                 "2. macOS Intel → **`platform='docker'`**. There is no native Intel-Mac install: "
+                 "the Homebrew\n   tap is Apple Silicon (ARM64) only.\n"
+                 "The Python SDK is supported on Linux only, so it needs one either way.\n"
+                 "4. Windows without Scoop (non-Python) → **`platform='docker'`**. With Scoop "
+                 "available →\n   **`platform='windows'`**.")
+        self.assertEqual([], preview_claims(clean))
 
 
 class ItNeitherBlocksNorOverclaims(unittest.TestCase):

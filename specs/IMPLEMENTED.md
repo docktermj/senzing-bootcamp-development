@@ -36,6 +36,180 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## two-module-2-claims-about-the-senzing-mcp-server-no-longer-hold
+
+- **Implemented:** 2026-11-18 (issue #35)
+- **Files changed:** `source/skills/module-02-sdk-setup/SKILL.md`,
+  `tests/test_record_limit_route_names_no_ranking.py` (renamed from
+  `test_record_limit_negative_is_rescoped.py`), `tests/test_prescribed_search_queries.py`,
+  `tests/test_sdk_update_offer.py`, `specs/IMPLEMENTED.md` (this entry)
+- **MCP re-check:** server 1.46.1, docs index built 2026-11-14 17:44 UTC, 2026-11-18 — server
+  now contradicts the plugin, on both claims, as the issue recorded on 2026-11-17. Tools:
+  `get_capabilities`, `search_docs`, `sdk_guide`, read-only. Every `search_docs` call was made
+  at the default result count, with no `max_results` and no `category`. The server version
+  and the index build are the ones the issue was refined against, and each reply matches what
+  the issue records, so the change is what the issue asks for. The calls, re-asked before any
+  file was changed:
+  - `get_capabilities()` gives `"server_version":"1.46.1"`. The index build is not in that
+    reply. It is in each `search_docs` reply: `"index_built":"2026-11-14 17:44 UTC"`,
+    `"documents_indexed":13404`.
+  - **Record limit.**
+    `search_docs(query='evaluation license record limit how many records without a license')`
+    returns as hit 1 the FAQ "What is the 500 record limit and how do I work around SENZ9000":
+    "Without a license, Senzing operates in evaluation mode limited to 500 Distinct Source
+    Records (DSRs)." The EULA sections "B. Senzing Production License", "A. Senzing
+    Non-Production License" and "End User License Agreement" are hits 6, 7 and 8. So the
+    shipped sentence, "its top-ranked hits are EULA grant-of-license prose that states no
+    figure, and the figure sits in a lower-ranked FAQ", was false, and so was its marker.
+  - **The route Step 5 keeps.**
+    `sdk_guide(topic='load', language='python', platform='linux_apt', record_count=1000)`
+    returns as the first `compatibility_notes` entry: "LICENSE REQUIRED: You have 1000 records,
+    which exceeds the default Senzing license limit of 500 Distinct Source Records." The route
+    is unchanged. What the passage now says of `search_docs` is the tool's own description as
+    the server gives it: "Full-text BM25 search across all indexed Senzing documentation …
+    Returns ranked results with excerpts."
+  - **Scoop.** `search_docs(query='scoop-senzingsdk update scoop update senzingsdk')` returns as
+    hit 1 the `senzing/scoop-senzingsdk` README, whole. It opens with the heading
+    "scoop-senzingsdk" and the line "Scoop bucket for installing the Senzing SDK on Windows."
+    (link markup left out here), and carries "### Update" with `scoop update senzingsdk`. Hits
+    2 to 7 are its CHANGELOG and its `docs/` pages.
+  - **Homebrew, the relay's own query.**
+    `search_docs(query='homebrew-senzingsdk preview release unsupported tap install cask')`
+    returns three sections titled `senzing/homebrew-senzingsdk`: "Install" (hit 1), "Synopsis"
+    (hit 7: "A Homebrew tap to publish the Senzing SDK for macOS.", link markup left out here)
+    and "Upgrade" (hit 10). All three were read. The other hits are the tap's
+    `docs/` pages, its CHANGELOG and the macOS quickstart. The record this query had named a
+    section "homebrew-senzingsdk" as its top hit; no section of that name came back.
+  - **Homebrew, the update route.**
+    `search_docs(query='homebrew-senzingsdk upgrade cask brew upgrade senzingsdk')` returns as
+    hit 1 the FAQ "What are the exact steps to migrate from V3 to V4?" and as hit 2
+    `senzing/homebrew-senzingsdk` section "Upgrade": `brew update`, then
+    `brew upgrade --cask senzingsdk`. The README's "Install" and "Uninstall" sections are hits
+    7 and 9. The record's band, `ON TARGET BELOW AN ADJACENT TOP HIT`, still holds.
+  - **The notice's own words.**
+    `search_docs(query='Preview Release Unsupported provided as-is with no warranty and is not supported')`
+    returns EULA warranty sections, two support FAQs and other pages, and no document from
+    `senzing/homebrew-senzingsdk` or `senzing/scoop-senzingsdk`.
+
+  That neither README carries the notice is an absence claim, so (INV-213):
+  owner-checked: `search_docs` is the route that carries both READMEs, and the route the relay
+  itself named — it returned the Scoop README whole and the Homebrew README's Install,
+  Synopsis, Upgrade and Uninstall sections, and none of them holds the words "preview",
+  "unsupported" or "warranty". `sdk_guide(topic='install', platform='macos_arm')` and
+  `sdk_guide(topic='install', platform='windows')` were asked too: their `install_commands`
+  call them "the official Senzing Homebrew tap" and "the official Senzing Scoop bucket", and
+  where those replies say "unsupported" it is of the Python SDK off Linux and of
+  `senzing-garage` repositories, not of the tap or the bucket.
+  The limit of that check: the Homebrew README is served in sections, and only the sections
+  those calls returned were read. The file was not read whole. No shipped text now says the
+  notice is absent, and no marker says so, as the issue decides.
+- **Summary:** Module 2 said two things about the Senzing MCP server that the server does not
+  return (`dry-run-2026-11-17`, findings 2 and 3). Both are corrected to the calls above, and
+  neither passage now depends on which `search_docs` hit ranks where.
+  - **Step 5, the record limit.** The fallback still fills `{record limit}` from
+    `sdk_guide(topic='load', …, record_count=1000)`. Its reason now reads: "`sdk_guide` states
+    the figure in a fixed field, `compatibility_notes`, while `search_docs` results are
+    ranked." The sentences saying which hits rank where and that the top hit has no figure
+    are removed, with the `MCP-NEGATIVE` marker for the record-limit query. The passage keeps
+    "Never substitute a hardcoded or remembered figure" with its INV-080 citation, and
+    carries no figure and no date. The ⛔ line above it is not edited.
+  - **Step 2, the preview relay.** Removed for both platforms: the two parentheticals in the
+    platform list, which now read "(Homebrew cask)" and "(Scoop)"; the ⚠️ paragraph, with its
+    prescribed query and its pointer to "The update command"; and the clauses in routing
+    rules 3 and 4. Rule 3 still resolves to `platform='macos_arm'` and rule 4 to
+    `platform='windows'`. Nothing replaces the relay. Step 1b's statement of the update route
+    is not edited.
+  - **`VERIFIED_QUERIES`.** Two records are removed, because no shipped file prescribes their
+    query now: the record-limit query and the Homebrew preview query. The two update-route
+    records are re-measured and stamped server 1.46.1, docs index 2026-11-14 17:44 UTC,
+    2026-11-18. Neither describes the notice, and the Scoop record's `sections` is `("Update",)`.
+    The Homebrew record keeps its band.
+  - **What a bootcamper is told changes.** On macOS Apple Silicon and on Windows with Scoop,
+    the guide no longer says the install route is an unsupported preview release.
+  - **Every assistant.** The changed passages sit outside every host marker and name no
+    assistant. `python3 -m tools.bootcamp_build check` passes, and a build of all five
+    packages was read: each carries the corrected Step 5 sentence, and none carries the
+    relay or either removed query.
+  - **Differs from the issue's wording, not from what it asks.** The record-limit test file is
+    renamed, which the issue allows. The class `StepTwoRelaysThePreviewStatus` is renamed
+    `StepTwoStatesNoPreviewClaim`, because it now asserts the opposite. One `search_docs`
+    call beyond the three the issue names was made, of the notice's own words, at the default
+    result count.
+  - **Tests.**
+    - `tests/test_record_limit_route_names_no_ranking.py`, 16 tests where the file it replaces
+      had 13. One function, `problems()`, reads the Step 5 passage and reports a rank claim,
+      an absence claim about `search_docs`, a marker for a `search_docs` query, the retired
+      query, a `search_docs` sentence that does not say "ranked", and a passage that no longer
+      names `search_docs` at all. The shipped passage must give none. The file also holds the
+      fill route, the fixed-field reason, no figure, no date and no "active license" claim,
+      that no Markdown file under `source/` names the retired query, and that
+      `VERIFIED_QUERIES` has no record for it.
+    - Its negative controls run on every pass: the passage as it shipped until this issue is
+      reported for its rank claim, its absence claim and its marker; the passage as it read
+      before it was first rescoped, in 2026-09, is reported for its absence claim; the
+      corrected passage with only a marker put back, with a rank claim in a second sentence,
+      or with the `search_docs` half deleted is reported for that alone; and the corrected
+      passage is clean.
+    - `tests/test_sdk_update_offer.py`: `StepTwoStatesNoPreviewClaim`, 8 tests where the class
+      it replaces had 2. `preview_claims()` reports the word "preview" anywhere in Step 2,
+      comments included, and any sentence that names the tap, the bucket or its package
+      manager and gives it a support status. Step 2 must give none; the module must not hold
+      the retired query or the notice's title; Step 2 must not point at "The update command";
+      Step 1b must still state both update routes; and the platform list and rules 3 and 4
+      must still name both native routes. Negative controls on every pass: each of the five
+      retired pieces is reported, three rewordings without the word "preview" are reported,
+      and Step 2's own corrected lines are not.
+    - `tests/test_prescribed_search_queries.py` gains no test. Its
+      `test_the_allowlist_has_no_dead_entries` is what required the two removals.
+    - Negative control run once, in a throwaway clone of `0d1b82f` holding only the two
+      rewritten test files: each gives `FAILED (failures=3)`.
+    - Prose is matched with whitespace collapsed (INV-346). The marker check reads lines and
+      says why at the read.
+  - **Not observed.** No run on a real assistant was made, so no record is added to any
+    `hosts/<assistant>/checks.json`. Nothing here shows what a live guide says at Step 2 or
+    Step 5. The tests read Markdown and call no server: they cannot show what either README
+    says on a later index. Verified on Linux only, with Python 3.12.3. The change is Markdown
+    text and standard-library tests with no branch on the platform (INV-001), and it names no
+    programming language's own mechanism (INV-002).
+  - **Not changed.** The other dated markers and quotations in the same file, the Step 1b
+    marker stamped server 1.37.14 among them (#38). How the Windows-with-Python route is
+    chosen (#40). The `/auto-test` probe baseline (#50). `specs/mcp-coverage.jsonl`, whose
+    2026-10-15 and 2026-10-19 rows record the preview claim as it then stood: it is a dated
+    record written by its own command.
+- **Invariants.** The register is not edited here (INV-365). INV-080, INV-194, INV-213, INV-219
+  and INV-291 are not changed. The lines this change adds or edits under `source/` carry no ⛔
+  and no bold MUST or NEVER, and `conformance.py since --since-last-audit` reports none from
+  this change. The
+  change ships one hard-rule line, in the docstring of
+  `tests/test_record_limit_route_names_no_ranking.py`, and the block below covers it (INV-309).
+  The Step 2 guard is not drafted as an invariant: it holds the text to what the server
+  returned on the dates above, and the issue itself says the relay returns if a README
+  carries the notice again, so it is INV-080 applied to one fact and not a standing rule about
+  previews. Beyond the one block the change establishes no new invariant.
+
+- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** Module 2 Step 5's record-limit fallback says of `search_docs` only that its results are ranked. The rule already shipping, quoted:
+    - ⛔ **Step 5's record-limit fallback says of `search_docs` only that its results are ranked: it never says which hit ranks where, never says that a query lacks the figure, and carries no `MCP-NEGATIVE` marker for a record-limit query.** — in `tests/test_record_limit_route_names_no_ranking.py`
+    - `source/skills/module-02-sdk-setup/SKILL.md` — ⛔ Step 5's fallback gives as its reason for naming `sdk_guide` that it states the figure in a fixed field, `compatibility_notes`, while `search_docs` results are ranked, and says nothing else of `search_docs`
+
+  Enforced by `tests/test_record_limit_route_names_no_ranking.py`.
+
+  **Why it is not an existing invariant:** INV-080 says where a Senzing fact comes from, and
+  the sentence it would have caught here was sourced: it was measured, dated and carried a
+  marker, and an index rebuild made it false. INV-194 scopes a negative finding to the tool
+  and parameters asked, which the retired marker did. INV-291 has an inline route record a
+  rank band and a read-past note, and so permits a statement of which hit ranks where at a
+  route the guide runs; this passage runs no `search_docs` route, so no band applies to it.
+  INV-219 binds how a test reads such a claim, not whether shipped text makes one. So the
+  ranking sentence could be written back, with a fresh date, and contradict no registered
+  wording.
+
+  Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
+  invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
+
+  **INV-NNN** — Module 2 Step 5's fallback, which fills `{record limit}` from `sdk_guide(topic='load', …, record_count=<above the default limit>)`, MUST give as its reason for naming that tool that `sdk_guide` states the figure in a fixed field, `compatibility_notes`, and MUST say of `search_docs` only that its results are ranked. The passage MUST NOT say which `search_docs` hit ranks where, MUST NOT say that a `search_docs` query lacks the figure, and MUST NOT carry an `MCP-NEGATIVE` marker for a record-limit `search_docs` query; no shipped file prescribes such a query and `VERIFIED_QUERIES` records none. Observed: the passage's statement about `search_docs` was made false twice by a rebuild of the docs index while the route it justified kept working. It first said the query returned no figure, and the index built 2026-09-24 carried an FAQ that states it. It then said the top-ranked hits state no figure and the FAQ ranks lower, and by 2026-11-17 (server 1.46.1, docs index 2026-11-14 17:44 UTC) the FAQ was the top hit. A reason that names a fixed field holds whichever hit comes first; a reason that describes a ranking is true of one build of the index. This binds one passage. It does not bind a route the guide runs, whose record carries a rank band and a read-past note under INV-291. (Relates to INV-080, INV-194 and INV-291.) Enforced by `tests/test_record_limit_route_names_no_ranking.py`. (Source: `two-module-2-claims-about-the-senzing-mcp-server-no-longer-hold`, 2026-11-18.)
+
+- **Commit:** uncommitted
+
 ## the-packager-omits-symlinked-directories-unnamed-skips-utf-16-text-and-shares-the-feedback-file
 
 - **Implemented:** 2026-11-18 (issue #46)

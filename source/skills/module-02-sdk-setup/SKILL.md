@@ -668,20 +668,10 @@ then checkpoint step 2 and continue to Step 3.
 
 - `platform='linux_apt'`: Debian/Ubuntu/Mint (apt/dpkg)
 - `platform='linux_yum'`: RHEL/Fedora/Amazon Linux (yum/dnf)
-- `platform='macos_arm'`: macOS Apple Silicon (Homebrew cask; the tap is a preview release, below)
-- `platform='windows'`: Windows 10/11 (Scoop; the bucket is a preview release, below)
+- `platform='macos_arm'`: macOS Apple Silicon (Homebrew cask)
+- `platform='windows'`: Windows 10/11 (Scoop)
 - `platform='docker'`: Platform-independent container; the fallback and the required path for
   several cases below
-
-⚠️ **The Homebrew tap and the Scoop bucket are preview releases that Senzing does not support.**
-Each README opens with "**Preview Release — Unsupported** … provided as-is with no warranty and is
-**not supported**". For `macos_arm`,
-`search_docs(query='homebrew-senzingsdk preview release unsupported tap install cask')` returns it
-as the `senzing/homebrew-senzingsdk` section "homebrew-senzingsdk". For `windows`, the
-`senzing/scoop-senzingsdk` README opens with it, above its *Update* section: that route is stated
-once, in `SKILL.md` → "The update command" (Step 1b, INV-300).
-When you name either route, say this once, as a fact about the tap or the bucket, not as advice
-against it: they remain the native routes in rules 3 and 4 below.
 
 **Routing rules (apply in order):**
 
@@ -698,12 +688,11 @@ against it: they remain the native routes in rules 3 and 4 below.
    sentence appears under `platform='macos_arm'` and its WSL2 half is wrong there.
 2. macOS Intel → **`platform='docker'`**. There is no native Intel-Mac install: the Homebrew
    tap is Apple Silicon (ARM64) only.
-3. macOS Apple Silicon (non-Python) → **`platform='macos_arm'`**. Relay the tap's preview
-   status above. If the chosen language runs on the JVM (Java), also read "The launch
-   environment" in Step 3 before the first run — installing the SDK is not the same as being
-   able to launch against it.
+3. macOS Apple Silicon (non-Python) → **`platform='macos_arm'`**. If the chosen language runs
+   on the JVM (Java), also read "The launch environment" in Step 3 before the first run —
+   installing the SDK is not the same as being able to launch against it.
 4. Windows without Scoop (non-Python) → **`platform='docker'`**. With Scoop available →
-   **`platform='windows'`**, and relay the bucket's preview status above.
+   **`platform='windows'`**.
 5. Linux → **`platform='linux_apt'`** or **`platform='linux_yum'`**, and the install decision tree
    decides which, not this file (INV-398). Call **`sdk_guide(topic='install')` with no `platform`** — the
    live decision tree the paragraph above already names — and read
@@ -1878,12 +1867,9 @@ written into this skill on purpose.** The route that answers it is `sdk_guide` w
 sdk_guide(topic='load', language='<chosen_language>', platform='<user_platform>', record_count=1000)
 ```
 
-<!-- MCP-NEGATIVE: search_docs(query='evaluation license record limit how many records without a license') — the top-ranked hits are EULA grant-of-license prose ("solely for up to the number of DSRs designated therein") that states no figure; the figure appears only in a lower-ranked FAQ ("limited to 500 Distinct Source Records (DSRs)"), so a guide reading the top hit comes away without it — owner: sdk_guide(topic='load', record_count=<above the limit>) states the figure in a fixed field, compatibility_notes, "exceeds the default Senzing license limit of 500", and explain_error_code('SENZ9000') calls it the default 500-DSR free tier; both re-asked (routing negative — the figure exists, go there) — server 1.37.13, 2026-09-24 -->
 The tool is named here, rather than left as "a Senzing MCP tool", because `sdk_guide` states the
-figure in a fixed field, `compatibility_notes`. `search_docs` ranks its results instead: asked for
-the evaluation license's record limit, its top-ranked hits are EULA grant-of-license prose that
-states no figure, and the figure sits in a lower-ranked FAQ, so a guide reading the top hit comes
-away without it. Present exactly what the server returns (waiting up to 30 seconds). If it
+figure in a fixed field, `compatibility_notes`, while `search_docs` results are ranked.
+Present exactly what the server returns (waiting up to 30 seconds). If it
 returns no figure, drop the parenthetical entirely and say the current limit is unavailable from
 the MCP server. Never substitute a hardcoded or remembered figure — the published
 capacity has changed before, and a stale number here is a Senzing fact asserted from memory
