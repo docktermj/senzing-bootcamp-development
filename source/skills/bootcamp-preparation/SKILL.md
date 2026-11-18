@@ -437,9 +437,10 @@ exactly the optional ones resolved in Step 2, in module order. If a module is mi
 **now** — after the handoff in Step 7 the next module has already started and the omission is
 invisible.
 
-Also record the selection into `config/bootcamp_progress.json` where module-completion and the
-journey map read it (a single batched write, INV-012): the ordered `selected_modules` and the
-`current_module` pointing at the first content module.
+Also set `current_module` in `config/bootcamp_progress.json` to the first content module (a single
+batched write, INV-012). This write sets no other key. The module selection is kept in one file,
+`config/bootcamp_preferences.yaml`, which the consolidated write above has already written and
+which module completion and the journey map read.
 
 ## 7. Recap the setup and hand off to the first selected content module
 

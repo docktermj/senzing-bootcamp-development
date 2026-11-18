@@ -36,6 +36,110 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## selected-modules-is-kept-in-two-files-and-the-text-disagrees-on-which-is-read
+
+- **Implemented:** 2026-11-17 (issue #44)
+- **Files changed:** `source/skills/bootcamp-preparation/SKILL.md`,
+  `source/skills/bootcamp-onboarding/module-completion.md`,
+  `source/skills/module-00-entity-resolution-concepts/SKILL.md`,
+  `source/skills/module-03-system-verification/phase2-report-close.md`,
+  `source/skills/module-03b-truthset-visualization/phase2-close.md`,
+  `.claude/skills/dry-run/scaffold_project.py`,
+  `tests/test_selected_modules_is_kept_in_one_file.py` (new),
+  `specs/IMPLEMENTED.md` (this entry)
+- **MCP re-check:** n/a (no Senzing fact). Re-confirmed on 2026-11-17 against the change itself:
+  it changes which of the bootcamp's own two state files holds the module selection, and what
+  five steps say about that. None of that says anything about Senzing or about what the
+  Senzing MCP server serves. No absence claim about the server is made, so INV-213's
+  `owner-checked:` clause is not owed.
+- **Summary:** The module selection, `selected_modules`, is now kept in one file,
+  `config/bootcamp_preferences.yaml`. This is finding 14 of
+  `production-readiness-audit-2026-11-17`.
+  - **Bootcamp preparation.** Step 6 wrote the list twice: in its consolidated preferences
+    write, and again into `config/bootcamp_progress.json`, where it said module completion and
+    the journey map read it. The second write now sets `current_module` to the first content
+    module and nothing else. Its paragraph says the selection is kept in the preferences file,
+    which the consolidated write has already written and which module completion and the
+    journey map read. The consolidated write, Step 0's rule for a saved selection and the line
+    telling the Bootcamper to edit the preferences file are unchanged.
+  - **The four readers.** Four steps set `current_module` to the next module in
+    `selected_modules` inside a write to the progress file, and named no file for the list.
+    Each now names `config/bootcamp_preferences.yaml` as the file it is read from: module
+    completion's Step 1 and the closes of Entity Resolution Concepts, System verification and
+    Truth Set visualization. Module completion's bullet keeps "next module in
+    `selected_modules`" and "unconditionally", which
+    `tests/test_module_completion_step1_lists_every_write.py` requires.
+  - **The dry-run scaffold.** `PROGRESS` no longer holds a `selected_modules` key, so no mode
+    writes one to the progress file. `PREFERENCES`, the mid-bootcamp fixture, gains the same
+    eleven tokens in the same order. `SEEDED_PREFERENCES` is unchanged.
+  - **Not changed.** The other mentions of `selected_modules` that name no file. A
+    `selected_modules` key already in the progress file of a bootcamp in progress: nothing
+    reads it and nothing removes it. What happens when the selection is edited so that
+    `current_module` is no longer in the list. No hook, shipped script or bootcamper-facing
+    text changes, and no script read the key.
+  - **Every assistant.** The five passages sit outside every host marker, so every package
+    gets the same text. `python3 -m tools.bootcamp_build check` passes.
+  - **Tests.** `tests/test_selected_modules_is_kept_in_one_file.py` is new, with 23 tests.
+    - Eight read Bootcamp preparation's Step 6. Its one write to the progress file sets
+      `current_module`, points at the first content module and does not name the list, and
+      its preferences write carries the list.
+    - Eight read the readers. Each of the four recorded files, and any file under `source/`
+      with such a step, names the preferences file beside the list in the same sentence. No
+      item under `source/` names the list beside the progress file without that.
+    - Seven build the scaffold in all three modes. No progress file carries the key, the mid
+      preferences file carries the list in the order of Bootcamp preparation's own Core list
+      (INV-246), and that list holds the module the progress fixture is on.
+    - Negative controls run on every pass (INV-265): the paragraph as it shipped, the list put
+      back into the progress write, a write with no `current_module`, each of the four sites
+      with the progress file, another file or no file named, a site reworded so it is no
+      longer found, a file named in another sentence or for another key, and a progress file
+      holding the key.
+    - Negative control run once, in a throwaway clone of `227b0ca` holding only the new test
+      file: 11 of the 23 tests fail (`FAILED (failures=23)`).
+    - Text is matched one list item or paragraph at a time with whitespace collapsed
+      (INV-346).
+  - **Not observed.** No run on a real assistant was made, so no record is added to any
+    `hosts/<assistant>/checks.json`. Nothing here shows that a live guide reads the list from
+    the preferences file. Verified on Linux only, with Python 3.12.3. The change is Markdown,
+    one Python fixture and a test that uses `pathlib` and reads UTF-8, with no branch on the
+    platform and nothing specific to a programming language (INV-001).
+- **Invariants.** The register is not edited here (INV-365). INV-076 is unchanged: it does not
+  say where the list is stored. The change ships two hard-rule lines, both in the docstring of
+  `tests/test_selected_modules_is_kept_in_one_file.py`. `since` does not report them, because
+  `tests/` is not a rule home. The lines this change adds under `source/` carry no ⛔ and no
+  bold MUST or NEVER. The block below covers the rule (INV-309). It is one block because it has
+  one subject: which file holds the module selection.
+
+- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** The module selection is kept in one file, and a step that reads it names that file. The rule already shipping, quoted:
+    - ⛔ **`selected_modules` is kept in one file, `config/bootcamp_preferences.yaml`, and nothing writes it to `config/bootcamp_progress.json`.** — in `tests/test_selected_modules_is_kept_in_one_file.py`
+    - ⛔ **A step that sets `current_module` to the next module in `selected_modules` names `config/bootcamp_preferences.yaml` as the file the list is read from.** — in `tests/test_selected_modules_is_kept_in_one_file.py`
+    - `source/skills/bootcamp-preparation/SKILL.md` — ⛔ Step 6's write to the progress file sets `current_module` to the first content module and no other key, and says the selection is kept in the preferences file
+    - `source/skills/bootcamp-onboarding/module-completion.md` — ⛔ Step 1's `current_module` bullet says to read the list from the preferences file
+    - `source/skills/module-00-entity-resolution-concepts/SKILL.md` — ⛔ Step 2's progress write names the preferences file as where the list is read from
+    - `source/skills/module-03-system-verification/phase2-report-close.md` — ⛔ the close's progress update names the preferences file as where the list is read from
+    - `source/skills/module-03b-truthset-visualization/phase2-close.md` — ⛔ the close's progress update names the preferences file as where the list is read from
+
+  Enforced by `tests/test_selected_modules_is_kept_in_one_file.py`.
+
+  **Why it is not an existing invariant:** INV-076 says the Bootcamper chooses a path and
+  which modules run. It does not say where the list is stored. INV-058 batches the
+  administrative writes and asks for one consolidated preference write; it does not say which
+  file holds which key, and the second copy was written under it. INV-133 says a preference
+  saved in the preferences file is honored; it does not forbid a second copy elsewhere.
+  INV-413 says module completion's Step 1 sets `current_module` to the next module in
+  `selected_modules`; it does not say which file the list is read from. INV-029's dated note
+  gives the journey map one row per `selected_modules` entry and names no file. So the
+  progress copy could be written again, or a step could again read the list with no file
+  named, and contradict no registered wording. The maintainer may prefer a dated note on
+  INV-076 or INV-413; that is a different act and is not drafted here.
+
+  Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
+  invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
+
+  **INV-NNN** — The module selection, `selected_modules`, MUST be kept in one file, `config/bootcamp_preferences.yaml`. Bootcamp preparation writes it there in its consolidated preference write (INV-058), and the bootcamp MUST NOT write it to `config/bootcamp_progress.json`: Bootcamp preparation's write to the progress file sets `current_module` to the first content module and does not name the list. A step that sets `current_module` to the next module in `selected_modules` MUST name `config/bootcamp_preferences.yaml` as the file the list is read from. On 2026-11-17 four steps do so: module completion's Step 1 and the closes of Entity Resolution Concepts, System verification and Truth Set visualization. The dry-run scaffold MUST NOT write a `selected_modules` key to the progress file in any mode, and its mid-bootcamp preferences MUST carry the ordered list. A `selected_modules` key already in the progress file of a bootcamp begun before this rule is left in place and is never read. ⚠️ Limits: the enforcer reads `source/` and the scaffold, and takes the list and the preferences file to be tied when they are neighboring backticked names in one sentence. It **cannot** establish that a live guide reads the list from the preferences file. It does not check a mention of `selected_modules` that names no file and sets no `current_module`, and it does not say what happens when the selection is edited so that `current_module` is no longer in the list. Enforced by `tests/test_selected_modules_is_kept_in_one_file.py`. (Source: `selected-modules-is-kept-in-two-files-and-the-text-disagrees-on-which-is-read`, GitHub issue #44, 2026-11-17.)
+
+- **Commit:** uncommitted
+
 ## install-pages-and-interface-lists-are-uneven-across-assistants
 
 - **Implemented:** 2026-11-17 (issue #43)
