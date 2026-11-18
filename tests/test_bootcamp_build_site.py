@@ -2,6 +2,17 @@
 
 A host cannot have a package without a page, and no page can point a bootcamper at one of the
 retired per-assistant repositories.
+
+⛔ **Every assistant's install page states the Python requirement its package relies on: `python3` on the `PATH`.**
+
+Every package runs the bundled scripts as ``python3``, so a page that accepts another command
+name promises a bootcamp that then fails at its first script. Until issue #42 the Kiro page
+said "Python 3.10 or later" and "Any command name works (`python3`, `python` or `py`)", while
+the Kiro package and the other four pages required ``python3``. The rule is drafted as a
+deferred invariant in the ``specs/IMPLEMENTED.md`` entry for issue #42 and awaits the
+maintainer. The test reads each page's words. It cannot establish that ``python3`` is on any
+bootcamper's ``PATH``, and it states no minimum Python version, because none is recorded for
+the bootcamp's own scripts.
 """
 
 import re
@@ -19,6 +30,13 @@ from tools.bootcamp_build.site import build_site, site_hosts  # noqa: E402
 SITE_DIR = REPO_ROOT / "site"
 RETIRED = re.compile(r"senzing-bootcamp-(?:claude|copilot|chatgpt|gemini)-plugin|senzing-bootcamp-kiro-power")
 FRAGMENTS = ("site-before.html", "site-install.html", "site-tips.html")
+PYTHON_ON_PATH = "<code>python3</code> on the <code>PATH</code>"
+ANY_COMMAND_NAME = "Any command name works"
+KIRO_PYTHON_ITEM = (
+    "<li><strong>Python 3</strong>, available as <code>python3</code> on the <code>PATH</code>. The "
+    "bootcamp's graduation recap and its optional hooks run on it. On Windows, if only <code>python</code> "
+    "or <code>py</code> is installed, add a <code>python3</code> entry to the <code>PATH</code>.</li>"
+)
 
 
 class Site(unittest.TestCase):
@@ -90,6 +108,20 @@ class Site(unittest.TestCase):
         for host in self.hosts:
             with self.subTest(host=host.id):
                 self.assertIn("docs/feedback/SENZING_BOOTCAMP_FEEDBACK.md", self.page(f"{host.id}/index.html"))
+
+    def test_every_install_page_states_the_python_requirement_its_package_relies_on(self):
+        self.assertTrue(self.hosts, "no assistant was read")
+        for host in self.hosts:
+            with self.subTest(host=host.id):
+                text = self.page(f"{host.id}/index.html")
+                self.assertIn(PYTHON_ON_PATH, text)
+                self.assertNotIn(ANY_COMMAND_NAME, text)
+
+    def test_the_kiro_page_states_python3_on_the_path_and_no_version_floor(self):
+        text = self.page("kiro/index.html")
+        self.assertEqual(text.count(KIRO_PYTHON_ITEM), 1)
+        self.assertNotIn("3.10 or later", text)
+        self.assertNotIn(ANY_COMMAND_NAME, text)
 
 
 if __name__ == "__main__":
