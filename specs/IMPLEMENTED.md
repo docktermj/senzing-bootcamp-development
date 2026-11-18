@@ -1604,7 +1604,7 @@ line and holds no copy of it, so changing the line changes the range.
   or NEVER. The three blocks below cover the three rules (INV-309). Beyond them the change
   establishes no new invariant.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** The packager never follows a link into a path it would leave out, and names what it did not enter. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-437, registered by the maintainer 2026-11-18).** The packager never follows a link into a path it would leave out, and names what it did not enter. The rule already shipping, quoted:
     - ⛔ **The packager never enters a symlinked directory and always names it, and it checks a symlinked file by the path it resolves to.** — in `tests/test_package_bootcamp.py`
     - `source/scripts/package_bootcamp.py` — ⛔ `collect()` checks each candidate root and each directory the walk lists, names a linked one in `excluded`, and checks a member's resolved path against the exclusion rules
     - `source/skills/bootcamp-onboarding/packaging.md` — ⛔ Step 4's "Symlinks resolved, then compared" bullet says a symlinked directory is never followed and is named, and a symlinked file is checked by the path it resolves to

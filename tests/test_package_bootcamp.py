@@ -57,7 +57,9 @@ They read the members of archives built from fixtures; they do not establish tha
 
 Issue #46 added three rules, each held here and by the tests it names:
 
-⛔ **The packager never enters a symlinked directory and always names it, and it checks a symlinked file by the path it resolves to.**
+⛔ **(INV-437) The packager never enters a symlinked directory and always names it, and it checks a symlinked file by the path it resolves to.**
+Enforces **INV-437** (registered 2026-11-18); it cannot establish what a live packaging run on
+a Bootcamper's project excludes, and it creates no Windows junction.
 
 ⛔ **The packager's secret scan reads every member as UTF-16 text as well as UTF-8.**
 

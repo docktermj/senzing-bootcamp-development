@@ -160,7 +160,7 @@ NOT_PRESENT = "not present in this project"
 
 #: The reason recorded for a symlinked directory that no exclusion rule matched. The walk does
 #: not enter one, wherever it points, so without this entry the directory would be in neither
-#: the archive nor `excluded` and a recipient could not tell it had been left out.
+#: the archive nor `excluded` and a recipient could not tell it had been left out (INV-437).
 #: ⚠️ The reason does not name the link's target, on purpose: the manifest travels with the
 #: archive, and a target can hold a user name or a path outside the project.
 SYMLINKED_DIRECTORY = "a symlinked directory; not followed, so nothing under it is packaged"

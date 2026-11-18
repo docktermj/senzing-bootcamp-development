@@ -171,7 +171,7 @@ the archive safe to hand over:
   excluded and named with that rule. A symlinked directory is never followed, wherever it
   points and even when it is one of the directories a profile reaches for: the manifest
   names it as a symlinked directory that was not followed, without its target, and nothing
-  under it is packaged.
+  under it is packaged (INV-437).
 - **Verified before it is announced:** `testzip()` re-opens the finished archive and a
   `.sha256` sidecar is written before the success line prints. Never tell the bootcamper an
   archive exists without that (INV-067's discipline) — they may not discover otherwise
