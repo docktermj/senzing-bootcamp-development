@@ -1,5 +1,8 @@
 """Each assistant's install page covers what its package names (#43).
 
+Enforces **INV-443** (registered 2026-11-18); it cannot establish that steps a page gives
+were ever followed.
+
 An assistant's package and its install page are written in different files, and three gaps had
 opened between them (findings 13, 25 and 27 of `production-readiness-audit-2026-11-17`):
 
@@ -14,12 +17,12 @@ opened between them (findings 13, 25 and 27 of `production-readiness-audit-2026-
 
 What must hold, on every assistant:
 
-- ⛔ **An install page names every interface its assistant's package names.**
+- ⛔ **(INV-443) An install page names every interface its assistant's package names.**
   The names are the "Say" column of the assistant's naming table, without a leading article:
   "the Codex desktop app" is looked for as "Codex desktop app". The page is read as the build
   writes it and as a reader sees it, because a page may name its one interface in text that
   comes from the assistant's profile and not from a fragment (the Kiro page does).
-- ⛔ **An install page that has no steps for an interface says the bootcamp has not been run there and that the page has no verified install steps for it.**
+- ⛔ **(INV-443) An install page that has no steps for an interface says the bootcamp has not been run there and that the page has no verified install steps for it.**
   It does not say the bootcamp supports the interface. Held for the two such interfaces
   recorded on 2026-11-17: VS Code on the GitHub Copilot page and the Codex CLI on the ChatGPT
   page.

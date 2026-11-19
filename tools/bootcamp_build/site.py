@@ -98,7 +98,8 @@ def _expand_markers(text: str, hosts: list[Host], current: Host | None, version:
     """Replace the site's own markers, each alone on its line, keeping the line's indentation.
 
     The `site-before.html` fragment each host gives here states `python3` on the `PATH`
-    (INV-433).
+    (INV-433), and its install fragment names every interface the host's naming table names,
+    disclaiming one it has no steps for (INV-443).
     """
     count = COUNT_WORDS.get(len(hosts), str(len(hosts)))
     text = text.replace("{{site.assistant_count}}", count)

@@ -2122,7 +2122,7 @@ line and holds no copy of it, so changing the line changes the range.
   desktop application. The lines this change adds under `hosts/` carry no ⛔ and no bold MUST
   or NEVER.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** An install page names every interface its package names, and says so where it has no steps for one. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-443, registered by the maintainer 2026-11-18).** An install page names every interface its package names, and says so where it has no steps for one. The rule already shipping, quoted:
     - ⛔ **An install page names every interface its assistant's package names.** — in `tests/test_install_pages_cover_what_the_package_names.py`
     - ⛔ **An install page that has no steps for an interface says the bootcamp has not been run there and that the page has no verified install steps for it.** — in `tests/test_install_pages_cover_what_the_package_names.py`
 
@@ -2140,7 +2140,26 @@ line and holds no copy of it, so changing the line changes the range.
   Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
   invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
 
-  **INV-NNN** — Each assistant's built install page MUST name, in text a reader sees, every interface in the "Say" column of that assistant's naming table (`hosts/<assistant>/fragments/interface-naming.md`), by the name the table gives without its leading article. Where the page gives no install steps for an interface it names, it MUST say that the bootcamp has not been run in that interface and that the page has no verified install steps for it, and MUST NOT say the bootcamp supports it. An interface is added to a table and to its page in the same change; the page moves to the table, and an interface is not taken out of a table to make a page pass. On 2026-11-17 two interfaces have no steps: VS Code on the GitHub Copilot page and the Codex CLI on the ChatGPT page. ⚠️ Limits: the enforcer finds a name on the page and holds the statement for those two interfaces by name. It **cannot** tell steps from a disclaimer for any other interface, and it cannot establish that steps a page gives were ever followed: only a record in `hosts/<assistant>/checks.json` shows that. The Claude page's statement about the Claude web app and the Claude IDE extensions predates this rule and is not held to its second sentence. Enforced by `tests/test_install_pages_cover_what_the_package_names.py`, which builds every assistant's page and reads the tables as they are. (Source: `install-pages-and-interface-lists-are-uneven-across-assistants`, GitHub issue #43, 2026-11-17.)
+  **INV-NNN** — Each assistant's built install page MUST name, in text a reader sees, every
+  interface in the "Say" column of that assistant's naming table
+  (`hosts/<assistant>/fragments/interface-naming.md`), by the name the table gives without its
+  leading article. Where the page gives no install steps for an interface it names, it MUST say
+  that the bootcamp has not been run in that interface and that the page has no verified install
+  steps for it, and MUST NOT say the bootcamp supports it. An interface is added to a table and
+  to its page in the same change; the page moves to the table, and an interface is not taken out
+  of a table to make a page pass. ⚠️ Limits: the enforcer finds a name on the page, and holds
+  the statement by name for VS Code on the GitHub Copilot page and the Codex CLI on the ChatGPT
+  page. It **cannot** tell steps from a disclaimer for any other interface, and it cannot
+  establish that steps a page gives were ever followed: only a record in
+  `hosts/<assistant>/checks.json` shows that. The Claude page's statement about the Claude web
+  app and the Claude IDE extensions predates this rule and is not held to its second sentence.
+  Enforced by `tests/test_install_pages_cover_what_the_package_names.py`, which builds every
+  assistant's page and reads the tables as they are. (Source:
+  `install-pages-and-interface-lists-are-uneven-across-assistants`, GitHub issue #43,
+  2026-11-17.)
+
+  **Amended at review, 2026-11-18:** the maintainer struck the dated sentence that listed the two
+  interfaces with no steps; the Limits now names them, since that is what the test checks.
 
 - **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** Every install page has one tip about updating and uninstalling, under one id. The rule already shipping, quoted:
     - ⛔ **Every install page has one tip with the id `update-uninstall`, headed "Update or uninstall", whose text speaks of both updating and uninstalling.** — in `tests/test_install_pages_cover_what_the_package_names.py`
