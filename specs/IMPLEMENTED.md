@@ -3328,7 +3328,7 @@ line and holds no copy of it, so changing the line changes the range.
   below, only the test holds either rule. INV-003 is the invariant the finding was filed
   under; its wording is not touched.
 
-- **PROPOSED AMENDMENT to INV-430 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-430 — applied 2026-11-18 by the maintainer.**
     - ⛔ **No package names a partial source file it drops.** — in `tests/test_partial_shipping_has_a_reason.py`
 
   INV-430 requires a recorded reason for a file that ships to some assistants and not others,

@@ -9,8 +9,8 @@ assistants dropped it: nothing asked why one package carried a file the others d
 
 ⛔ **(INV-430) No package carries the maintainer page `model-selection.md`, and no package names `effort-mechanisms`.**
 
-⛔ **No package names a partial source file it drops.** Added by #26 and proposed as a dated
-note on INV-430. Until the maintainer applies that note, only this file holds the rule.
+⛔ **(INV-430) No package names a partial source file it drops.** Added by #26 as INV-430's
+dated note of 2026-11-17, applied by the maintainer on 2026-11-18.
 
 Enforces **INV-430** (registered 2026-11-16), and **INV-055** where it says the opt-out is
 documented: item 9 below holds that in every package.
