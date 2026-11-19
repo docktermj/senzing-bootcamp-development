@@ -907,7 +907,7 @@ The caller says which entity to pick. Everything below is the same for all three
   project-relative ones — this binds tool **arguments** too, not just writes: where a tool requires
   a writable directory (`workspace_dir` on `mapping_workflow` and `analyze_record`), pass a
   project-relative path. The write half is yours to keep whether or not a hook backs it on this
-  assistant: where it runs, the write-gate blocks a write that breaks it.
+  assistant: where it runs, the write-gate blocks a write that breaks it (INV-451).
   **Never modify global shell config** — `~/.zshrc`, `~/.bashrc`, `~/.profile`, PowerShell
   `$PROFILE` or equivalent are off-limits, and so is any other file outside the project (INV-199).
   Write a project-local environment script instead. MCP install guidance legitimately tells a

@@ -36,7 +36,7 @@ The three rules, one line each:
 
 ⛔ **(INV-450) A fallback says that nothing does a hook's job only where the assistant's mapping has no event for the hook or lists it as advisory, and says that the hook may not run where the mapping has one.**
 
-⛔ **No file under `source/skills/` says without a condition that a hook does something.**
+⛔ **(INV-451) No file under `source/skills/` says without a condition that a hook does something.**
 
 ⛔ **Shared text names no hook event, and the Markdown of a built package names a hook event only when the event is in that assistant's own mapping.**
 
