@@ -192,7 +192,7 @@ def adapter_tool_names(host: Host, tools: list[str]) -> list[str]:
     """The names in the host's adapter map that a hook covering ``tools`` has to match.
 
     Every name the map gives one of the hook's categories, in the map's order, so the matcher
-    names exactly the tools the adapter would act on. The installer a host carries in place
+    names exactly the tools the adapter would act on (INV-446). The installer a host carries in place
     of a hook file derives its matchers the same way, from the copy of the map in
     ``bootcamp_host.json``.
     """
@@ -476,6 +476,9 @@ def _copy_host_files(build: HostBuild, context: BuildContext) -> None:
 def fallback_scripts(declaration: dict, host: Host) -> list[str]:
     """Hook scripts whose rule this host must be given as an instruction, in declared order.
 
+    A fallback says nothing does a hook's job only on a host with no event for it, or an
+    advisory one, and otherwise that the hook may not run (INV-450).
+
     A script needs no instruction only when the host is guaranteed to run it: the host has an
     event for it, the event can do what the script asks (it is not ``advisory``), and the
     host's hooks run without the bootcamper having to install or approve them.
@@ -504,7 +507,8 @@ def host_rules(declaration: dict, host: Host, context: BuildContext) -> str:
         "",
     ]
     # The bootcamp's files say "plugin" throughout. An assistant that calls its package
-    # something else is told so once, in the file its guide reads at the start of every session.
+    # something else is told so once, in the file its guide reads at the start of every session
+    # (INV-449).
     noun = host.vars.get("package_noun", "plugin")
     if noun != "plugin":
         lines += [f'In the bootcamp\'s files, "plugin" means this {noun}.', ""]

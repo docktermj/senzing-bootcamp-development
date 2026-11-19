@@ -160,7 +160,7 @@ NOT_PRESENT = "not present in this project"
 
 #: The reason recorded for a symlinked directory that no exclusion rule matched. The walk does
 #: not enter one, wherever it points, so without this entry the directory would be in neither
-#: the archive nor `excluded` and a recipient could not tell it had been left out.
+#: the archive nor `excluded` and a recipient could not tell it had been left out (INV-437).
 #: ⚠️ The reason does not name the link's target, on purpose: the manifest travels with the
 #: archive, and a target can hold a user name or a path outside the project.
 SYMLINKED_DIRECTORY = "a symlinked directory; not followed, so nothing under it is packaged"
@@ -200,7 +200,7 @@ SCAN_OVERLAP_BYTES = 4096
 #: between every two characters of a secret, so no pattern matched it (#46). The two UTF-16
 #: byte orders are read separately, and neither needs a byte-order mark: a mark decodes to one
 #: character no pattern contains. No other encoding is read.
-SCAN_ENCODINGS = ("utf-8", "utf-16-le", "utf-16-be")
+SCAN_ENCODINGS = ("utf-8", "utf-16-le", "utf-16-be")  # INV-438
 
 # ⛔ There is deliberately NO extension allowlist here. There was one until 2026-08-26 --
 # `TEXT_SUFFIXES`, carrying .md/.py/.json/.csv and NOT .pem, .key, .crt or the empty extension --
@@ -476,7 +476,7 @@ def plugin_version():
     """The version of the package this script ships in.
 
     Read first from ``bootcamp_version`` in the ``bootcamp_host.json`` the build writes
-    beside this script, which every assistant's package carries (#31). Only when that file
+    beside this script, which every assistant's package carries (#31, INV-453). Only when that file
     gives no version -- it is missing, cannot be read, is not valid JSON, or holds no
     non-empty string under that key -- are the two manifest paths below tried, per
     INV-252's skill-relative resolution. Nothing is searched for.

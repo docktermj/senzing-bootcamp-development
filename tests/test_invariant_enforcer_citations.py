@@ -962,7 +962,83 @@ NAMED_TEST = re.compile(r"tests/(test_[a-z0-9_]+\.py)")
 #: the extractor, which found 359, the new pair present by name and none removed.
 #: Same review: INV-432 registered (issue #10), enforced by one test that cites it back.
 #: Re-derived by running the extractor, which found 360, the new pair present by name.
-EXPECTED_PAIRS = 360
+#: 2026-11-18 review: INV-057's dated note of 2026-11-17 (#28) applied; it names
+#: test_each_package_names_an_operation_in_its_own_form.py, which cites INV-057 back.
+#: Re-derived by running the extractor, which found 361, the new pair present by name and
+#: none removed.
+#: Same review: INV-433 registered (issue #42), enforced by one test that cites it back.
+#: Re-derived by running the extractor, which found 362, the new pair present by name.
+#: Same review: INV-434 registered (issue #37), enforced by one test that cites it back.
+#: Re-derived by running the extractor, which found 363, the new pair present by name.
+#: Same review: INV-435 registered (issue #36, split at review from the INV-132 note),
+#: enforced by one test that cites it back. Re-derived by running the extractor, which
+#: found 364, the new pair present by name.
+#: Same review: INV-436 registered (issue #35), enforced by one test that cites it back.
+#: Re-derived by running the extractor, which found 365, the new pair present by name.
+#: Same review: INV-437 registered (issue #46), enforced by one test that cites it back.
+#: Re-derived by running the extractor, which found 366, the new pair present by name.
+#: Same review: INV-438 registered (issue #46), enforced by one test that cites it back.
+#: Re-derived by running the extractor, which found 367, the new pair present by name.
+#: Same review: INV-439 registered (issue #45, reworded at review), enforced by one test
+#: that cites it back. Re-derived by running the extractor, which found 368, the new pair
+#: present by name.
+#: Same review: INV-440 registered (issue #45), enforced by one test that cites it back.
+#: Re-derived by running the extractor, which found 369, the new pair present by name.
+#: Same review: INV-441 registered (issue #45), enforced by one test that cites it back.
+#: Re-derived by running the extractor, which found 370, the new pair present by name.
+#: Same review: INV-442 registered (issue #44, reworded at review), enforced by one test
+#: that cites it back. Re-derived by running the extractor, which found 371, the new pair
+#: present by name.
+#: Same review: INV-443 registered (issue #43, reworded at review), enforced by one test
+#: that cites it back. Re-derived by running the extractor, which found 372, the new pair
+#: present by name.
+#: Same review: INV-444 registered (issue #43, reworded at review), enforced by the same
+#: test, which cites it back. Re-derived by running the extractor, which found 373, the new
+#: pair present by name.
+#: Same review: INV-445 registered (issue #43), enforced by the same test, which cites it
+#: back. Re-derived by running the extractor, which found 374, the new pair present by name.
+#: Same review: INV-446 registered (issue #34, reworded at review), enforced by two tests
+#: that both cite it back. Re-derived by running the extractor, which found 376, the two new
+#: pairs present by name.
+#: Same review: INV-447 registered (issue #34, reworded at review), enforced by one test
+#: that cites it back. Re-derived by running the extractor, which found 377, the new pair
+#: present by name.
+#: Same review: INV-223's 2026-11-17 note applied (issue #30). It names a second enforcer,
+#: which cites it back. Re-derived by running the extractor, which found 378, the new pair
+#: present by name.
+#: Same review: INV-448 registered (issue #30, reworded at review), enforced by two tests
+#: that both cite it back. Re-derived by running the extractor, which found 380, the two new
+#: pairs present by name.
+#: Same review: INV-449 registered (issue #30, reworded at review), enforced by one test
+#: that cites it back. Re-derived by running the extractor, which found 381, the new pair
+#: present by name.
+#: Same review: INV-167's 2026-11-17 note applied (issue #27, reworded at review). It names
+#: two enforcers, one of them new to INV-167, and both already cite it back. Re-derived by
+#: running the extractor, which found 382, the new pair present by name.
+#: Same review: INV-450 registered (issue #29), enforced by one test that cites it back.
+#: Re-derived by running the extractor, which found 383, the new pair present by name.
+#: Same review: INV-451 registered (issue #29), enforced by the same test, which cites it
+#: back. Re-derived by running the extractor, which found 384, the new pair present by name.
+#: Same review: INV-452 registered (issue #29), enforced by the same test, which cites it
+#: back. Re-derived by running the extractor, which found 385, the new pair present by name.
+#: Same review: INV-055's 2026-11-17 note applied (issue #26). It names two tests, the first
+#: INV-055 has had, and both already cite it back. Re-derived by running the extractor, which
+#: found 387, the two new pairs present by name.
+#: Same review: INV-453 registered (issue #31, reworded at review), enforced by one test
+#: that cites it back. Re-derived by running the extractor, which found 388, the new pair
+#: present by name.
+#: Same review (2026-11-19): INV-227's 2026-11-17 note applied (issue #32). It names a test
+#: new to INV-227, which cites it back. Re-derived by running the extractor, which found 389,
+#: the new pair present by name.
+#: Same review: INV-200's 2026-11-17 note applied (issue #33, reworded at review). It names
+#: a test new to INV-200, which cites it back. Re-derived by running the extractor, which
+#: found 390, the new pair present by name.
+#: Same review: INV-454 registered (issue #25), enforced by one test that cites it back.
+#: Re-derived by running the extractor, which found 391, the new pair present by name.
+#: Same review: INV-455 registered (issue #49). Its wording names the gate and the test
+#: that enforces it, and both cite it back. Re-derived by running the extractor, which found
+#: 393, the two new pairs present by name.
+EXPECTED_PAIRS = 393
 
 
 #: Adapted (one-repository migration, 2026-11-14): enforcers the register names that were not

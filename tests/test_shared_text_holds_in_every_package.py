@@ -19,11 +19,10 @@ it is added (INV-246).
    shown to the bootcamper word for word that said "plugin"; a sweep of every `text` display
    block and every pinned 👉 question, in each package whose noun is not "plugin", keeps it so.
 
-   ⛔ **Text a package shows the bootcamper word for word names the package by its assistant's own noun.**
+   ⛔ **(INV-449) Text a package shows the bootcamper word for word names the package by its assistant's own noun.**
 
-   That line is queued as a `DEFERRED INVARIANT` block in this issue's entry of
-   `specs/IMPLEMENTED.md`, awaiting the maintainer's sign-off. Until then only this file holds
-   it. It binds displayed text only: guide-facing prose, the identifiers `PLUGIN_ROOT` and
+   That line is **INV-449**, registered by the maintainer on 2026-11-18; this file cannot
+   establish what a guide on a real assistant shows. It binds displayed text only: guide-facing prose, the identifiers `PLUGIN_ROOT` and
    `plugin.json`, the `plugin` routing value and the `**Plugin version:**` label keep the word,
    as the issue decides.
 3. **The skill's directory.** `onboarding-flow.md` said "The harness supplies that directory at
@@ -45,12 +44,16 @@ it is added (INV-246).
    and that the pid comes from the launch confirmation's port lookup.
    `tests/test_viz_server_process_handle.py` pins its place in the launch confirmation and
    mutates it.
+   This holds **INV-223**'s 2026-11-17 note (#30, applied 2026-11-18) in every built package;
+   it cannot establish that a live turn records no pid from such an id.
 
 The build's check for another assistant's name ignores letter case since #30, which is how the
 model ID in passage 4 went unreported. `tests/test_bootcamp_build_emit.py` plants a lowercase
 name in a package and in the source and sees each reported. `TheCheckIgnoresCaseOnTheRealTree`
 here holds the real tree to the recorded ceilings: nothing in `source/`, and in each non-Claude
 package the one project-directory variable the hook adapter reads.
+The ceilings only come down (INV-448, registered 2026-11-18); this cannot find a name put
+together at run time.
 
 Each check is a function over text, and a negative control feeds it the wording #30 replaced, or
 another package's value, and sees it reported.

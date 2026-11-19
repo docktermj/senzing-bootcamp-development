@@ -3,7 +3,10 @@
 A host cannot have a package without a page, and no page can point a bootcamper at one of the
 retired per-assistant repositories.
 
-⛔ **Every assistant's install page states the Python requirement its package relies on: `python3` on the `PATH`.**
+⛔ **(INV-433) Every assistant's install page states the Python requirement its package relies on: `python3` on the `PATH`.**
+
+Enforces **INV-433** (registered 2026-11-18). It reads each built page's words and cannot
+establish that `python3` is on a bootcamper's `PATH`.
 
 Every package runs the bundled scripts as ``python3``, so a page that accepts another command
 name promises a bootcamp that then fails at its first script. Until issue #42 the Kiro page

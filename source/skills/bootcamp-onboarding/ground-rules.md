@@ -519,7 +519,7 @@ copy (INV-300).
   error codes -> `explain_error_code`; docs and facts -> `search_docs`; working examples ->
   `find_examples`; sample data -> `get_sample_data`; reporting / counts -> `reporting_guide`;
   tool discovery -> `get_capabilities`.
-- ⛔ **A result from a bootcamp repository is not a Senzing source (INV-080).** The server's
+- ⛔ **(INV-434) A result from a bootcamp repository is not a Senzing source (INV-080).** The server's
   example and documentation corpus also indexes the bootcamp's own repositories, so a search can
   hand you this bootcamp's own text as if it were Senzing evidence. Any MCP result that names its
   repository is disregarded when that repository's name contains `bootcamp`, compared without
@@ -716,7 +716,7 @@ copy (INV-300).
   row form: by flag name for one flag, or by `topic='flag_details'` for a method. When the
   compact list carries no `detail` pointer, or `topic='flag_details'` fails, fall back to the
   flag-name row, `get_sdk_reference(topic='flags', filter='<flag name>')`, and say which route
-  produced what you present (INV-125).
+  produced what you present (INV-125) (INV-435).
   <!-- MCP-NEGATIVE: get_sdk_reference(topic='flags', filter='export_json_entity_report') — the reply's data is lines of text under group headers, not objects, so no flag in it carries a field of its own — owner: get_sdk_reference(topic='flag_details', filter='export_json_entity_report') IS the route that carries a method's flags with their fields, and the reply's own detail field names it; it returns each flag as an object with its fields, so they are answered there rather than absent (routing negative) — server 1.46.1, 2026-11-18 -->
 - **Response structures (INV-115).** Flags are only half the lookup. Before writing any code
   that **parses** an SDK response, call
@@ -907,7 +907,7 @@ The caller says which entity to pick. Everything below is the same for all three
   project-relative ones — this binds tool **arguments** too, not just writes: where a tool requires
   a writable directory (`workspace_dir` on `mapping_workflow` and `analyze_record`), pass a
   project-relative path. The write half is yours to keep whether or not a hook backs it on this
-  assistant: where it runs, the write-gate blocks a write that breaks it.
+  assistant: where it runs, the write-gate blocks a write that breaks it (INV-451).
   **Never modify global shell config** — `~/.zshrc`, `~/.bashrc`, `~/.profile`, PowerShell
   `$PROFILE` or equivalent are off-limits, and so is any other file outside the project (INV-199).
   Write a project-local environment script instead. MCP install guidance legitimately tells a

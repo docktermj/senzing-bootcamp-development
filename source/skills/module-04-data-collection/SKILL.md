@@ -1757,7 +1757,7 @@ this step does not run at all:** no Module Completion, no second Module 4 recap 
 update and no transition question. The Bootcamper never left Module 5, so return there at the step
 Module 5's Step 7b names ([Step 2](#receiving-a-collection-return)).
 
-Run the standard **Module Completion** process in `../bootcamp-onboarding/module-completion.md`
+Run the standard **Module Completion** process (INV-439) in `../bootcamp-onboarding/module-completion.md`
 (its Step 0 checks, update progress, append the Module 4 recap section to `docs/bootcamp_recap.md`, and present the
 end-of-module summary), then ask the single transition question:
 
@@ -1779,7 +1779,7 @@ if it's already in the right format for Senzing."
 - Document everything in `docs/data_source_locations.md`.
 - **If the bootcamper doesn't have data or asks about free data sources** — and has **no
   bootcamp-generated scenario** (see the marker check in Step 2), and did not choose option 5 at
-  Step 2's provision question — follow the data recommendation hierarchy: (1) recommend CORD
+  Step 2's provision question — follow the data recommendation hierarchy (INV-440): (1) recommend CORD
   data first via the `get_sample_data` MCP tool with
   reference to
   <https://senzing.com/senzing-ready-data-collections-cord/>; (2) if CORD is declined, recommend

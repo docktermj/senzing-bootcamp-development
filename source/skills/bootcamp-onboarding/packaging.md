@@ -163,7 +163,7 @@ the archive safe to hand over:
   unexamined is packaged.
   The scan reads each member as UTF-8 text and as UTF-16 text, little-endian and big-endian,
   with or without a byte-order mark, so a file that a Windows PowerShell 5.1 `>` redirect
-  wrote is scanned like any other. No other encoding is read.
+  wrote is scanned like any other. No other encoding is read (INV-438).
 - **Symlinks resolved, then compared:** a member resolving outside the project root is
   skipped and named (the INV-200 rule).
   A symlinked file that resolves inside the project is also checked against the exclusion
@@ -171,7 +171,7 @@ the archive safe to hand over:
   excluded and named with that rule. A symlinked directory is never followed, wherever it
   points and even when it is one of the directories a profile reaches for: the manifest
   names it as a symlinked directory that was not followed, without its target, and nothing
-  under it is packaged.
+  under it is packaged (INV-437).
 - **Verified before it is announced:** `testzip()` re-opens the finished archive and a
   `.sha256` sidecar is written before the success line prints. Never tell the bootcamper an
   archive exists without that (INV-067's discipline) — they may not discover otherwise

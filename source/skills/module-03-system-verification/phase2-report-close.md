@@ -194,14 +194,14 @@ visualization module, which stops its own at its close).
 
 ## Step 11: Module Close
 
-Complete **System Verification** using the standard **Module Completion** process in
+Complete **System Verification** using the standard **Module Completion** process (INV-439) in
 `../bootcamp-onboarding/module-completion.md`. This module records only itself; the Truth Set
 visualization is a separate, standalone module that records itself at its own close
 (INV-085/INV-086/INV-087). Run Module Completion's Step 0 checks first, then:
 
 1. **Update progress state.** Add `system_verification` to `modules_completed` (a module name token,
    not a number). Set `current_module` to the next module in `selected_modules` (read from
-   `config/bootcamp_preferences.yaml`), and `current_step` to `null`. All idempotent (do not
+   `config/bootcamp_preferences.yaml`), and `current_step` to `null` (INV-442). All idempotent (do not
    duplicate).
 2. **Append the recap section** to `docs/bootcamp_recap.md`, name-based and append-only (INV-085):
    `## System verification — {timestamp}` (Information Shared, Questions & Responses, Actions Taken,

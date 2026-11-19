@@ -4,7 +4,7 @@ which interface. The bootcamp runs in more than one, and the names are not inter
 
 | Say | For |
 | --- | --- |
-| **the GitHub Copilot app** | The desktop application. |
+| **the GitHub Copilot app** | The desktop application (INV-445). |
 | **the Copilot CLI** | GitHub Copilot in a terminal. |
 | **VS Code** | GitHub Copilot's agent mode in Visual Studio Code. |
 

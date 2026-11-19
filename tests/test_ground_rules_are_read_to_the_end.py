@@ -29,7 +29,8 @@ The instruction is compared with the build's own text, line wraps included, beca
 writes it and the claim is that every file carries the same text. What it says is checked with
 whitespace collapsed (INV-346).
 
-Enforces **INV-427** (registered 2026-11-16). It establishes that every package carries the
+Enforces **INV-427** (registered 2026-11-16) and its 2026-11-17 note for every long file
+(#39, applied 2026-11-18). It establishes that every package carries the
 instruction at the step that names the ground rules and at the top of every long file; it does
 not establish that a live turn obeys it, which only a run on the assistant can show
 (`hosts/kiro/checks.json` records one that did, for the ground rules). No run on a real

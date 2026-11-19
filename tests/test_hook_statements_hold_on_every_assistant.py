@@ -34,11 +34,11 @@ Issue #29 settled three things, and this file holds a test for each:
 
 The three rules, one line each:
 
-⛔ **A fallback says that nothing does a hook's job only where the assistant's mapping has no event for the hook or lists it as advisory, and says that the hook may not run where the mapping has one.**
+⛔ **(INV-450) A fallback says that nothing does a hook's job only where the assistant's mapping has no event for the hook or lists it as advisory, and says that the hook may not run where the mapping has one.**
 
-⛔ **No file under `source/skills/` says without a condition that a hook does something.**
+⛔ **(INV-451) No file under `source/skills/` says without a condition that a hook does something.**
 
-⛔ **Shared text names no hook event, and the Markdown of a built package names a hook event only when the event is in that assistant's own mapping.**
+⛔ **(INV-452) Shared text names no hook event, and the Markdown of a built package names a hook event only when the event is in that assistant's own mapping.**
 
 Each line is queued as a `DEFERRED INVARIANT` block in this issue's entry of
 `specs/IMPLEMENTED.md`, awaiting the maintainer's sign-off. Until then only this file holds

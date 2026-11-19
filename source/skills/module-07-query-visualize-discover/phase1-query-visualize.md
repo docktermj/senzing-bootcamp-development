@@ -336,7 +336,7 @@ prints two other things the same way. `filter='get_entity_by_record_id'` returne
 flags it depends on, and `SZ_ENTITY_INCLUDE_RECORD_JSON_DATA = SZ_RECORD_DEFAULT_FLAGS`, a flag
 and the composite it is a member of (that flag's own row describes it as "Member of
 SZ_RECORD_DEFAULT_FLAGS."). So a line `A = B` is not proof that `A` is a composite: neither of
-those two flags' rows carries `composite_members`. Read `A`'s own row before treating it as
+those two flags' rows carries `composite_members` (INV-435). Read `A`'s own row before treating it as
 one, as the lookup above does for `SZ_INCLUDE_MATCH_KEY_DETAILS`.
 <!-- MCP-NEGATIVE: get_sdk_reference(topic='flags', filter='get_entity_by_record_id') — the compact list has no notation of its own for "depends on" or "member of": it prints SZ_INCLUDE_MATCH_KEY_DETAILS and SZ_ENTITY_INCLUDE_RECORD_JSON_DATA with the same = as a composite — owner: get_sdk_reference(topic='flags', filter='SZ_INCLUDE_MATCH_KEY_DETAILS') and the same call with filter='SZ_ENTITY_INCLUDE_RECORD_JSON_DATA' ARE the routes that carry what each flag is, and neither flag's row carries composite_members while each description states the relations dependency or the membership, so the distinction is answered there rather than absent (routing negative) — server 1.46.1, 2026-11-18 -->
 
@@ -1645,7 +1645,7 @@ except the live `why`/`how`/`search`. Then ask the teardown gate, pinned verbati
 
 Module 7 is the **last content module before graduation** (required in every path). Once the gate
 is satisfied and the teardown step above is done or skipped, run the standard **Module Completion**
-process in `../bootcamp-onboarding/module-completion.md` (its Step 0 checks, update progress, append the Module 7 recap
+process (INV-439) in `../bootcamp-onboarding/module-completion.md` (its Step 0 checks, update progress, append the Module 7 recap
 section to `docs/bootcamp_recap.md`, and present the end-of-module summary).
 
 <a id="headline-block"></a>

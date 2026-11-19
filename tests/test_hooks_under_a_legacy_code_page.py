@@ -8,7 +8,7 @@ not print its own 👉. ``session-start.py`` printed its em dash as byte 0x97, t
 UTF-8 decode of that failed, and the adapter ended quietly with the hook's exit code lost. A
 write the gate refused was then allowed through all four packages that run the adapter.
 
-⛔ **A hook script and the hook adapter give the same exit code and the same bytes on stdout and stderr whatever Python's I/O encoding is.**
+⛔ **(INV-454) A hook script and the hook adapter give the same exit code and the same bytes on stdout and stderr whatever Python's I/O encoding is.**
 
 How the scripts keep that rule: a payload is read as bytes and decoded as UTF-8, every JSON
 they write is ASCII-escaped, and plain text and stderr are written as UTF-8 bytes. Text that

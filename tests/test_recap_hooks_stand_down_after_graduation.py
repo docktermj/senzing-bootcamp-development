@@ -47,9 +47,8 @@ defect it guards.
 Asserts the finished case of **INV-227**'s 2026-11-10 note (#905) for these three hooks, and
 that **INV-101**'s stop at session end survives it.
 
-A further dated note to INV-227 (#32), which would bind these three hooks in the register, is
-queued as a `PROPOSED AMENDMENT` block in this issue's entry of `specs/IMPLEMENTED.md`,
-awaiting the maintainer's sign-off.
+INV-227's 2026-11-17 note (#32), applied by the maintainer on 2026-11-19, binds these three hooks
+in the register.
 
 **What this cannot establish.** That a live assistant fires these hooks after graduation, or
 what a real container runtime does: only a live run observes those. It was run on Linux only.

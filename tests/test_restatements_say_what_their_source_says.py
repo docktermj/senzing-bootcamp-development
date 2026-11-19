@@ -7,7 +7,9 @@ holds the guards for six of them. The seventh, Module 4's data hierarchy, is hel
 
 What must hold:
 
-- ⛔ **A module close that lists the steps of Module Completion names its Step 0 first, then progress, recap and summary, in the order `module-completion.md` fixes.**
+- ⛔ **(INV-439) A module close that lists the steps of Module Completion names its Step 0 first, then progress, recap and summary, in the order `module-completion.md` fixes.**
+Enforces **INV-439** (registered 2026-11-18); it cannot establish that a live guide runs
+Step 0 at a module close.
   The order is read from the opening of `module-completion.md`, not copied here. A close is
   any passage under `source/skills/` that runs the "standard **Module Completion** process",
   read from that phrase to the module's transition question. A passage that names the process
@@ -31,7 +33,8 @@ What must hold:
 - **The packager's comment names the test that holds the pin.** The comment above
   `DATABASE_BACKUP_ROOT` in `source/scripts/package_bootcamp.py` names a test file that
   exists and reads that constant.
-- ⛔ **Module 5 writes one per-source mapping document, `docs/mapping/{source_name}_mapper.md`, and its structure has a `## How to run` section.**
+- ⛔ **(INV-441) Module 5 writes one per-source mapping document, `docs/mapping/{source_name}_mapper.md`, and its structure has a `## How to run` section.**
+  Enforces **INV-441** (registered 2026-11-18); it cannot establish what a live guide writes.
   No file under `source/` names a `docs/mapping/mapping_…` document, and step 18 names no
   mapping document but `_mapper.md` beside the transformation lineage. The dropped document
   held one thing `_mapper.md` lacked: how to run the transformation.

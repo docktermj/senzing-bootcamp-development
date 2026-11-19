@@ -36,6 +36,41 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## invariant-review-2026-11-18
+
+**Not a spec** — the record of a `/review-invariants` session, attended by the maintainer.
+
+- **Implemented:** 2026-11-18 to 2026-11-19
+- **Files changed:** `specs/INVARIANTS.md`, `specs/IMPLEMENTED.md`; citation sites in
+  `source/skills/` (the ground rules, module completion, packaging, Bootcamp preparation and
+  Modules 0 to 7), `source/hooks/README.md`, `source/scripts/feedback-capture.py`,
+  `source/scripts/package_bootcamp.py`, `hosts/_shared/hook_adapter.py`,
+  `hosts/copilot/fragments/interface-naming.md`, `hosts/kiro/files/skills/`,
+  `tools/bootcamp_build/` (`emit.py`, `site.py`, `validate.py`); back-citations and rule-line
+  citations in `tests/`, and `tests/test_invariant_enforcer_citations.py`
+- **MCP re-check:** n/a (no Senzing fact)
+- **Summary:** Every pending block was decided, each on its own yes, and each decision is its
+  own commit on branch `1-docktermj-7`.
+  - **Registered:** INV-433 to INV-455, 23 invariants. INV-435 was split out of the INV-132
+    amendment at review.
+  - **Amendments applied:** dated notes on INV-050, INV-055, INV-057, INV-132, INV-167,
+    INV-200, INV-223, INV-227, INV-252, INV-304, INV-307, INV-350, INV-351, INV-360 (worded as
+    its retirement), INV-380, INV-427 and INV-430.
+  - **Wording changed at review, with a second yes on the changed text:** the maintainer struck
+    dated lists of current members and status snapshots ("on 2026-11-17 no record…", "today
+    the Claude package alone", "when this rule was drafted…") from INV-167, INV-200, INV-439,
+    INV-442, INV-443, INV-444, INV-446, INV-447, INV-448, INV-449 and INV-453, and an extra
+    sentence from INV-057. Each block records what was struck.
+  - **Held:** one, the share-profile block from #46. Revisit after `dry-run` phase 3 has
+    exercised packaging. The three earlier holds were not re-offered; none of their revisit
+    conditions was met.
+  - **Guard:** the enforcer pair count was re-derived by the extractor at each decision, 360 to
+    393, with a note per change.
+  - **Remains:** the queue is empty; four blocks are held.
+- **Establishes no invariant of its own** (INV-309): every id it registered or amended was
+  established by the entry its block sits in.
+- **Commit:** uncommitted
+
 ## dated-mcp-rationales-and-quotations-in-shipped-text-no-longer-reproduce
 
 - **Implemented:** 2026-11-18 (issue #38)
@@ -319,7 +354,7 @@ line and holds no copy of it, so changing the line changes the range.
   Until then only the test holds them. The second is a new rule because no registered
   invariant says what an install page tells a reader about Python.
 
-- **PROPOSED AMENDMENT to INV-252 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-252 — applied 2026-11-18 by the maintainer.**
     - ⛔ **If the bootcamp is not there, look in these places, in this order, and take the first one that holds the bootcamp as the bootcamp's directory** — in `hosts/kiro/host.json`
     - ⛔ **If none of the four places holds the bootcamp, stop and tell the bootcamper that the bootcamp's files were not found.** — in `hosts/kiro/host.json`
 
@@ -335,7 +370,7 @@ line and holds no copy of it, so changing the line changes the range.
 
   **INV-252** — (⚠️ **Dated note, 2026-11-17 (#42): a location note gives one order of places to look and ends in a stop; the Kiro home, the per-platform record and the ban on searching the filesystem above are unchanged.** Where a package's location note says where to look when the bootcamp is not at the location it states, it MUST give the places as one ordered sequence, tell the guide to use the first place that holds the bootcamp, and, after the last place, tell the guide to stop and tell the bootcamper that the bootcamp's files were not found. No condition in the note MAY carry two instructions. On Kiro the order finishes one Kiro home before the next: (1) `powers/installed/senzing-bootcamp/` inside the directory `KIRO_HOME` names; (2) a `senzing-bootcamp` directory anywhere inside `powers/` in the directory `KIRO_HOME` names; (3) `powers/installed/senzing-bootcamp/` inside `.kiro` in the user's home directory; (4) a `senzing-bootcamp` directory anywhere inside `powers/` in `.kiro` in the user's home directory. Places 1 and 2 apply only when `KIRO_HOME` is set. The note does not say which copy to take when `powers/` holds more than one `senzing-bootcamp`. Enforced by `tests/test_kiro_skills_say_where_they_are.py`, which reads the order the note states in every built Kiro skill and **cannot** establish which place a guide looks in first, or whether Kiro honors `KIRO_HOME`: on 2026-11-17 no run recorded in `hosts/kiro/checks.json` tested `KIRO_HOME`.)
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** Every assistant's install page states the Python requirement its package relies on. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-433, registered by the maintainer 2026-11-18).** Every assistant's install page states the Python requirement its package relies on. The rule already shipping, quoted:
     - ⛔ **Every assistant's install page states the Python requirement its package relies on: `python3` on the `PATH`.** — in `tests/test_bootcamp_build_site.py`
 
   Enforced by `tests/test_bootcamp_build_site.py`.
@@ -436,7 +471,7 @@ line and holds no copy of it, so changing the line changes the range.
   proposes a change to a requirement, and none retires an invariant: that is the maintainer's
   decision in `/review-invariants`.
 
-- **PROPOSED AMENDMENT to INV-304 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-304 — applied 2026-11-18 by the maintainer.**
     - ⛔ **This skill is development-repo only and must NOT be propagated to the public plugin repo.** — in `.claude/skills/release/SKILL.md`
 
   INV-304 governs "the propagate mirror" and names `propagate.sh` and its enforcer
@@ -456,7 +491,7 @@ line and holds no copy of it, so changing the line changes the range.
   from the root. The enforcer named above, `tests/test_maintainer_tooling_stays_out_of_public.py`,
   is not carried into this repository.)
 
-- **PROPOSED AMENDMENT to INV-307 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-307 — applied 2026-11-18 by the maintainer.**
     - ⛔ **Never write a new file under `specs/`.** — in `.claude/skills/production-readiness-audit/SKILL.md`
 
   INV-307 requires the frozen set to be pinned in `specs/FROZEN-MANIFEST.txt` and names
@@ -476,7 +511,7 @@ line and holds no copy of it, so changing the line changes the range.
   and the archived spec files are absent here. The enforcer named above,
   `tests/test_specs_are_frozen.py`, is not carried into this repository.)
 
-- **PROPOSED AMENDMENT to INV-350 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-350 — applied 2026-11-18 by the maintainer.**
     - ⛔ **Promotion writes exactly those paths and nothing else, and it stops at the working tree: no commit, no branch, no push.** — in `tools/bootcamp_build/promote.py`
 
   INV-350 governs the files `propagate.sh` publishes and its rewrite pass, and names
@@ -493,7 +528,7 @@ line and holds no copy of it, so changing the line changes the range.
   2026-11-14, promotion is `python3 -m tools.bootcamp_build promote`. The enforcer named above,
   `tests/test_propagate_publishes_the_pages_site.py`, is not carried into this repository.)
 
-- **PROPOSED AMENDMENT to INV-351 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-351 — applied 2026-11-18 by the maintainer.**
     - ⛔ **Promotion writes exactly those paths and nothing else, and it stops at the working tree: no commit, no branch, no push.** — in `tools/bootcamp_build/promote.py`
 
   INV-351 requires this repository's marketplace to carry its own name and `propagate.sh` to
@@ -512,7 +547,7 @@ line and holds no copy of it, so changing the line changes the range.
   `tests/test_propagate_publishes_the_published_marketplace_name.py`, is not carried into this
   repository.)
 
-- **PROPOSED AMENDMENT to INV-360 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-360 — applied 2026-11-18 by the maintainer.**
     - ⛔ **Bootcampers install from the public repository, [Senzing/bootcamp].** — in `README.md`
 
   INV-360 requires this repository's install surfaces to name the development repository and
@@ -524,14 +559,15 @@ line and holds no copy of it, so changing the line changes the range.
   Drafted wording follows, under the registered id. A new rule's id would be
   written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
 
-  **INV-360** — (⚠️ **Dated note, 2026-11-18 (#48): `propagate.sh` and its slug rewrite are not
-  in this repository, and nobody installs from it; no requirement changes.** Since the
-  one-repository migration of 2026-11-14, every install page is generated for the public
-  repository, `Senzing/bootcamp`. The enforcer named above,
+  **INV-360** — (⚠️ **Dated note, 2026-11-18 (#48): INV-360 no longer applies; this note is
+  the review it asks for.** This repository has no install surface that bootcampers install
+  from, and `propagate.sh` and its slug rewrite are not in it. Since the one-repository
+  migration of 2026-11-14, every install page is generated for the public repository,
+  `Senzing/bootcamp`, and `README.md` names that repository. The enforcer named above,
   `tests/test_dev_install_surfaces_name_the_dev_repo.py`, is present and records its own
   retirement in its dated note of 2026-11-14.)
 
-- **PROPOSED AMENDMENT to INV-380 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-380 — applied 2026-11-18 by the maintainer.**
     - ⛔ **Every deliverable INV-050's tree annotates as always produced MUST be named on at least one user-facing surface, and a deliverable it annotates as produced only on the Bootcamper's yes MUST be named there as an offer rather than as something they finish with.** — in `tests/test_always_produced_deliverables_are_named.py`
 
   INV-380 says its enforcer derives the surfaces "from `propagate.sh`'s published roots". The
@@ -588,7 +624,7 @@ line and holds no copy of it, so changing the line changes the range.
   a dated note on it and a corrected comment on one line of its tree. The note cites INV-244
   and INV-295, which Step 5a already applies, and changes neither.
 
-- **PROPOSED AMENDMENT to INV-050 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-050 — applied 2026-11-18 by the maintainer.**
     - ⛔ **Save the returned JSON to `config/license.json`, because later steps read it.** — in `source/skills/module-02-sdk-setup/SKILL.md`
 
   INV-050's tree annotates `config/license.json` "(written in Module 4)", and its 2026-07-28
@@ -610,21 +646,14 @@ line and holds no copy of it, so changing the line changes the range.
   response to `config/license.json` as a provisional reading (INV-295), and writes nothing
   when it cannot measure (INV-244). Data collection (Module 4) Step 8a sub-step 7 saves it
   again when that step measures, with the engine configuration in force. The 2026-07-28
-  correction's "Module 2 only reads the detected limit" no longer holds. The rules above
+  correction's "Module 2 only reads the detected limit" no longer holds, and the tree's
+  annotation "(written in Module 4)" on the `license.json` line is read as "written in
+  Module 2, rewritten in Module 4"; the tree line itself is left as it is. The rules above
   still bind.)
 
-  With the note, replace the `license.json` line of INV-050's tree. The line as it stands
-  today, its two leading spaces included:
-
-  ```text
-    │   ├── license.json                   # Detected Senzing license capacity (written in Module 4)
-  ```
-
-  Its replacement:
-
-  ```text
-    │   ├── license.json                   # Detected Senzing license capacity (written in Module 2, rewritten in Module 4)
-  ```
+  **Amended at review, 2026-11-18:** the maintainer chose the note alone, so the register stays
+  append-only. The draft also asked for the tree line to be rewritten in place; that part was
+  struck, and the note above says how to read the annotation instead.
 
 - **Commit:** uncommitted
 
@@ -876,7 +905,7 @@ line and holds no copy of it, so changing the line changes the range.
   results is not one. INV-209, INV-213, INV-219, INV-300 and INV-346 are applied and not
   changed. Beyond the one block the change establishes no new invariant.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** An MCP result from a bootcamp repository is not a Senzing source. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-434, registered by the maintainer 2026-11-18).** An MCP result from a bootcamp repository is not a Senzing source. The rule already shipping, quoted:
     - ⛔ **A result from a bootcamp repository is not a Senzing source (INV-080).** — in `source/skills/bootcamp-onboarding/ground-rules.md`
 
   Enforced by `tests/test_bootcamp_repository_results_are_not_senzing_sources.py`
@@ -1133,7 +1162,20 @@ line and holds no copy of it, so changing the line changes the range.
   and the pointers name their file and section. Beyond the one block the change establishes
   no new invariant.
 
-- **PROPOSED AMENDMENT to INV-132 — awaiting the maintainer's sign-off; NOT applied.**
+- **DEFERRED INVARIANT (resolved INV-435, registered by the maintainer 2026-11-18).** How the guide reads a flags reply. Split at review from the INV-132 amendment below, whose draft carried these MUSTs inside a dated note; the maintainer made them their own invariant. The rules already shipping, quoted:
+    - ⛔ **Choose flags from the compact list. Before reading a field or a full description, call the row form: by flag name for one flag, or by `topic='flag_details'` for a method.** — in `source/skills/bootcamp-onboarding/ground-rules.md`
+    - ⛔ **When the compact list carries no `detail` pointer, or `topic='flag_details'` fails, fall back to the flag-name row, `get_sdk_reference(topic='flags', filter='<flag name>')`, and say which route produced what you present** — in `source/skills/bootcamp-onboarding/ground-rules.md`
+    - ⛔ **a line `A = B` is not proof that `A` is a composite** — in `source/skills/module-07-query-visualize-discover/phase1-query-visualize.md`
+
+  Enforced by `tests/test_flags_lookup_reads_the_reply_that_holds_the_field.py`.
+
+  **Why it is not an existing invariant:** INV-132 governs reading a tool's parameter shape from
+  the server; it says nothing about which of two reply shapes holds a flag's fields, or how the
+  guide must tell them apart.
+
+  **INV-435** — Before reading a reply to `get_sdk_reference(topic='flags', …)`, the guide MUST tell which shape it has: the compact list (lines under group headers) or the row form (one entry per flag with its fields). It MUST choose flags from the compact list, and MUST call the row form before reading a flag's field or its full description: by flag name for one flag, or `topic='flag_details'` for a method. Where the compact list carries no `detail` pointer, or `topic='flag_details'` fails, it MUST fall back to the flag-name row and say which route produced what it presents (INV-125). In the compact list `=` also marks "depends on" and "member of", so a line `A = B` MUST NOT be read as proof that `A` is a composite. The rule is stated once, in `skills/bootcamp-onboarding/ground-rules.md` → "Reading a flags reply", and every shipped file that makes a method-filter `topic='flags'` call MUST hold it or point at it. Enforced by `tests/test_flags_lookup_reads_the_reply_that_holds_the_field.py`, which reads Markdown and calls no server; it **cannot** establish that a live guide reads the shape first. (Source: `the-flags-reference-reply-changed-shape-and-now-points-at-a-topic-the-bootcamp-never-names`, GitHub issue #36, 2026-11-18.)
+
+- **PROPOSED AMENDMENT to INV-132 — applied 2026-11-18 by the maintainer.**
     - ⛔ **Choose flags from the compact list. Before reading a field or a full description, call the row form: by flag name for one flag, or by `topic='flag_details'` for a method.** — in `source/skills/bootcamp-onboarding/ground-rules.md`
     - ⛔ **When the compact list carries no `detail` pointer, or `topic='flag_details'` fails, fall back to the flag-name row, `get_sdk_reference(topic='flags', filter='<flag name>')`, and say which route produced what you present** — in `source/skills/bootcamp-onboarding/ground-rules.md`
     - ⛔ **a line `A = B` is not proof that `A` is a composite** — in `source/skills/module-07-query-visualize-discover/phase1-query-visualize.md`
@@ -1153,7 +1195,11 @@ line and holds no copy of it, so changing the line changes the range.
   Drafted wording follows, under the registered id. A new rule's id would be
   written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
 
-  **INV-132** — (⚠️ **Dated note, 2026-11-18 (#36): under a method filter, `topic='flags'` may return a compact list that carries no flag fields; the parameter-shape rule above is unchanged.** On MCP server 1.46.1 (docs index 2026-11-14 17:44 UTC), `get_sdk_reference(topic='flags', filter='<method>')` returned, for `export_json_entity_report`, `why_records`, `get_entity_by_record_id`, `how_entity_by_entity_id`, `search_by_attributes`, `find_network_by_entity_id` and `find_path_by_entity_id`, a **compact list**: lines of text under group headers, with a `detail` field naming `topic='flag_details'`, and no `composite_members`, `depends_on`, `response_paths`, `applies_to` or `source_file`. Those fields are in the **row form**, which a flag-name filter returns for one flag and `get_sdk_reference(topic='flag_details', filter='<method>')` returns for every flag of a method; `filter='find_network'`, `'find_path'` and `'get_entity'` returned the row form directly. So the clause above, "flag entries additionally carry `composite_members`, `depends_on` and `response_paths`", holds for the row form only. The `method_signatures` block came back with both shapes, so a `flags` result in hand still answers the parameter shape. The guide MUST see which shape a flags reply has before reading it, MUST choose flags from the compact list, and MUST call the row form before reading a flag's field or its full description. Where the compact list carries no `detail` pointer, or `topic='flag_details'` fails, it MUST fall back to the flag-name row and say which route produced what it presents (INV-125). In the compact list `=` also marks "depends on" and "member of", so a line `A = B` MUST NOT be read as proof that `A` is a composite. The rule is stated in `skills/bootcamp-onboarding/ground-rules.md` → "Reading a flags reply", and every shipped file that makes a method-filter `topic='flags'` call MUST hold it or point at it. Which filters return which shape is an observation on that server, recorded with its date, and not a rule (INV-169). Enforced by `tests/test_flags_lookup_reads_the_reply_that_holds_the_field.py`, which reads Markdown and calls no server. Source: `the-flags-reference-reply-changed-shape-and-now-points-at-a-topic-the-bootcamp-never-names`, 2026-11-18.)
+  **INV-132** — (⚠️ **Dated note, 2026-11-18 (#36): the clause on flag entries holds for the row form only; the parameter-shape rule above is unchanged.** On MCP server 1.46.1 (docs index 2026-11-14 17:44 UTC), `get_sdk_reference(topic='flags', filter='<method>')` returned, for several methods, a compact list: lines of text under group headers, with a `detail` field naming `topic='flag_details'`, and none of `composite_members`, `depends_on`, `response_paths`, `applies_to` or `source_file`. Those fields are in the row form, which a flag-name filter returns for one flag and `topic='flag_details'` returns for every flag of a method. So "flag entries additionally carry `composite_members`, `depends_on` and `response_paths`" holds for the row form only. The `method_signatures` block came back with both shapes, so a `flags` result in hand still answers the parameter shape. How the guide reads a flags reply is INV-435. Which filters return which shape is an observation on that server, recorded with its date, and not a rule (INV-169).)
+
+  **Amended at review, 2026-11-18:** the maintainer split this draft. Its MUSTs on reading a
+  flags reply became INV-435 (the block above), and this note keeps only the factual
+  correction.
 
 - **Commit:** uncommitted
 
@@ -1427,7 +1473,7 @@ line and holds no copy of it, so changing the line changes the range.
   carries the notice again, so it is INV-080 applied to one fact and not a standing rule about
   previews. Beyond the one block the change establishes no new invariant.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** Module 2 Step 5's record-limit fallback says of `search_docs` only that its results are ranked. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-436, registered by the maintainer 2026-11-18).** Module 2 Step 5's record-limit fallback says of `search_docs` only that its results are ranked. The rule already shipping, quoted:
     - ⛔ **Step 5's record-limit fallback says of `search_docs` only that its results are ranked: it never says which hit ranks where, never says that a query lacks the figure, and carries no `MCP-NEGATIVE` marker for a record-limit query.** — in `tests/test_record_limit_route_names_no_ranking.py`
     - `source/skills/module-02-sdk-setup/SKILL.md` — ⛔ Step 5's fallback gives as its reason for naming `sdk_guide` that it states the figure in a fixed field, `compatibility_notes`, while `search_docs` results are ranked, and says nothing else of `search_docs`
 
@@ -1593,7 +1639,7 @@ line and holds no copy of it, so changing the line changes the range.
   or NEVER. The three blocks below cover the three rules (INV-309). Beyond them the change
   establishes no new invariant.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** The packager never follows a link into a path it would leave out, and names what it did not enter. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-437, registered by the maintainer 2026-11-18).** The packager never follows a link into a path it would leave out, and names what it did not enter. The rule already shipping, quoted:
     - ⛔ **The packager never enters a symlinked directory and always names it, and it checks a symlinked file by the path it resolves to.** — in `tests/test_package_bootcamp.py`
     - `source/scripts/package_bootcamp.py` — ⛔ `collect()` checks each candidate root and each directory the walk lists, names a linked one in `excluded`, and checks a member's resolved path against the exclusion rules
     - `source/skills/bootcamp-onboarding/packaging.md` — ⛔ Step 4's "Symlinks resolved, then compared" bullet says a symlinked directory is never followed and is named, and a symlinked file is checked by the path it resolves to
@@ -1618,7 +1664,7 @@ line and holds no copy of it, so changing the line changes the range.
 
   **INV-NNN** — `package_bootcamp.py` MUST NOT enter a symlinked directory, whether it resolves inside or outside the project, and whether it is found during the walk, is a candidate root itself or is a directory above a candidate root inside the project. A Windows directory junction counts as a symlinked directory. Each one MUST be listed in `PACKAGE_MANIFEST.json`'s `excluded` list as `<path>/`: with the rule, when an exclusion rule matches the link's own path, and otherwise with a reason saying it is a symlinked directory that was not followed. That reason MUST NOT name the link's target, because the manifest travels with the archive and a target can hold a user name or a path outside the project. A symlinked file that resolves inside the project MUST be checked against the profile's exclusion rules by its resolved project-relative path as well as by its own path; a match on either MUST exclude it, and the reason MUST name the rule. A link that resolves to a path no rule matches is packaged under the link's path, and a link that resolves outside the project is excluded and named as resolving outside the project root. Observed (`dry-run-2026-11-17`, finding 12, and the refinement of issue #46): a symlinked directory was in neither the archive nor `excluded`, and on `share` a link under `docs/` to a file under `data/raw/` was packaged under the link's name. Enforced by `tests/test_package_bootcamp.py`, which builds the links in fixture projects and skips, with its reason, where the platform cannot create one; it was run on Linux only, creates no junction (the junction case is a stand-in `lstat` result), and **cannot** establish what a live packaging run on a Bootcamper's project excludes. (Source: `the-packager-omits-symlinked-directories-unnamed-skips-utf-16-text-and-shares-the-feedback-file`, GitHub issue #46, 2026-11-18.)
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** The packager's secret scan reads UTF-16 text as well as UTF-8. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-438, registered by the maintainer 2026-11-18).** The packager's secret scan reads UTF-16 text as well as UTF-8. The rule already shipping, quoted:
     - ⛔ **The packager's secret scan reads every member as UTF-16 text as well as UTF-8.** — in `tests/test_package_bootcamp.py`
     - `source/scripts/package_bootcamp.py` — ⛔ `_scan()` decodes each block in every encoding in `SCAN_ENCODINGS` and applies the secret patterns to each
     - `source/skills/bootcamp-onboarding/packaging.md` — ⛔ Step 4's "Content-scanned" bullet says the scan reads each member as UTF-8 and as UTF-16 text, in either byte order, with or without a byte-order mark
@@ -1663,6 +1709,11 @@ line and holds no copy of it, so changing the line changes the range.
   invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
 
   **INV-NNN** — The packaged `share` profile MUST carry nothing under `docs/feedback/` or `docs/progress/`, wherever in the project tree they sit: the saved bootcamp feedback and the in-progress recap are the Bootcamper's working notes, in their own words, and not results. Each MUST be an exclusion rule of that profile, named in `PACKAGE_MANIFEST.json`'s `excluded` list where it applied and listed in `exclusion_rules_applied.share_only`, and `OPEN_ME_FIRST.md` on `share` MUST list both among what is not there. The `transfer` profile MUST carry both, and its `OPEN_ME_FIRST.md` MUST name `docs/feedback/SENZING_BOOTCAMP_FEEDBACK.md` and `docs/progress/recap_checkpoint.md` each only when the manifest's `included` list carries it. The pinned consent question in `packaging.md` MUST name the saved bootcamp feedback and the in-progress recap in the option that produces `transfer` and MUST NOT name them in the option that produces `share`, and `packaging.md` Step 4 and `source/commands/package-bootcamp.md` MUST say which profile carries them. A project with neither file packages without error. Observed (`dry-run-2026-11-17`, finding 12): `share` carried `docs/feedback/SENZING_BOOTCAMP_FEEDBACK.md` and `docs/progress/recap_checkpoint.md`, and neither the consent question nor `OPEN_ME_FIRST.md` named them. Enforced by `tests/test_package_bootcamp.py`, `tests/test_open_me_first_matches_the_manifest.py` and `tests/test_packaging_consent_gate_ships.py`, which read archives built from fixtures and the shipped wording; they **cannot** establish what a live guide asks, and they say nothing about other content under `docs/` that `share` carries. (Source: `the-packager-omits-symlinked-directories-unnamed-skips-utf-16-text-and-shares-the-feedback-file`, GitHub issue #46, 2026-11-18.)
+
+  **HELD 2026-11-18:** held with the other packaging blocks,
+  `the-bootcamp-cannot-leave-the-machine-it-was-built-on` (Draft 1) and
+  `open-me-first-says-only-what-the-manifest-includes`, because it pins `OPEN_ME_FIRST.md`
+  content in the same feature. Revisit after `dry-run` phase 3 has exercised packaging.
 
 - **Commit:** uncommitted
 
@@ -1804,7 +1855,7 @@ line and holds no copy of it, so changing the line changes the range.
   What each restates is owned by the place it names, and the new tests hold each one to that
   place under INV-003.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** A module close that lists Module Completion's steps lists them in its order, Step 0 first. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-439, registered by the maintainer 2026-11-18).** A module close that lists Module Completion's steps lists them in its order, Step 0 first. The rule already shipping, quoted:
     - ⛔ **A module close that lists the steps of Module Completion names its Step 0 first, then progress, recap and summary, in the order `module-completion.md` fixes.** — in `tests/test_restatements_say_what_their_source_says.py`
     - `source/skills/module-01-business-problem/phase2-document-confirm.md` — ⛔ the close lists Module Completion's Step 0 checks, the progress update, the recap section and the summary, in that order
     - `source/skills/module-02-sdk-setup/SKILL.md` — ⛔ the close lists Module Completion's Step 0 checks, the progress update, the recap section and the summary, in that order
@@ -1826,9 +1877,26 @@ line and holds no copy of it, so changing the line changes the range.
   Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
   invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
 
-  **INV-NNN** — A module close that lists the steps of Module Completion MUST name its Step 0 checks first, then updating progress, appending the module's recap section and presenting the end-of-module summary, in the order the opening of `module-completion.md` fixes. A close that names two or more of those steps MUST name all four. A close MAY instead point at the process and list no step. On 2026-11-17 eight closes list the steps: Discover the Business Problem, SDK setup, System verification, Truth Set visualization, Data collection, Data Quality, Mapping, and Transformation, Data processing, and Query, Visualize and Discover. Entity Resolution Concepts runs the process step by step and departs from it on purpose, and is not bound by this. Observed (`production-readiness-audit-2026-11-17`, finding 20): two closes listed the steps without Step 0, one put the summary before the recap, and two numbered the steps 1 to 4 and left Step 0 out, while Step 0's filings run in every module. ⚠️ Limits: the enforcer reads `source/`, finds a close by the phrase "standard **Module Completion** process", reads it up to the module's transition question and takes the first mention of each step. It reads the order from the opening of `module-completion.md`. It **cannot** establish that a live guide runs Step 0 at a module close. Enforced by `tests/test_restatements_say_what_their_source_says.py`. (Source: `restated-rules-and-lists-in-shipped-text-have-drifted-from-their-source`, GitHub issue #45, 2026-11-17.)
+  **INV-NNN** — A module close that lists the steps of Module Completion MUST name its Step 0
+  checks first, then updating progress, appending the module's recap section and presenting the
+  end-of-module summary, in the order the opening of `module-completion.md` fixes. A close that
+  names two or more of those steps MUST name all four. A close MAY instead point at the process
+  and list no step. Entity Resolution Concepts runs the process step by step and departs from it
+  on purpose, and is not bound by this. Observed (`production-readiness-audit-2026-11-17`,
+  finding 20): two closes listed the steps without Step 0, one put the summary before the recap,
+  and two numbered the steps 1 to 4 and left Step 0 out, while Step 0's filings run in every
+  module. ⚠️ Limits: the enforcer reads `source/`, finds a close by the phrase "standard
+  **Module Completion** process", reads it up to the module's transition question and takes the
+  first mention of each step. It reads the order from the opening of `module-completion.md`. It
+  **cannot** establish that a live guide runs Step 0 at a module close. Enforced by
+  `tests/test_restatements_say_what_their_source_says.py`. (Source:
+  `restated-rules-and-lists-in-shipped-text-have-drifted-from-their-source`, GitHub issue #45,
+  2026-11-17.)
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** Module 4 states one data hierarchy, and its three statements of it agree. The rule already shipping, quoted:
+  **Amended at review, 2026-11-18:** the maintainer struck the sentence that listed the eight
+  closes by name, so the rule states the property only.
+
+- **DEFERRED INVARIANT (resolved INV-440, registered by the maintainer 2026-11-18).** Module 4 states one data hierarchy, and its three statements of it agree. The rule already shipping, quoted:
     - ⛔ **Module 4 states one data hierarchy: CORD first, then free raw data, then synthesized test data.** — in `tests/test_gate_options_have_handling_steps.py`
     - `source/skills/module-04-data-collection/SKILL.md` — ⛔ the secondary offer gives "Free raw data" first as the recommended choice and "Synthesized test data" second as the fallback, in one quote with no question
 
@@ -1847,7 +1915,7 @@ line and holds no copy of it, so changing the line changes the range.
 
   **INV-NNN** — For a Bootcamper who has no data, has no bootcamp-generated scenario and did not choose option 5 of the provision question, Data collection MUST state one data hierarchy: CORD first, then free raw data from the free-data catalog, then synthesized test data. Its three statements of that order MUST agree. The secondary offer, made when CORD is declined, MUST give "Free raw data" first as the recommended choice and "Synthesized test data" second as the fallback when nothing in the catalog fits, as one offer in one turn with no 👉. The "Synthesized test data" entry under **Handling each answer** calls it the last resort. The hierarchy under **Agent behavior** lists the three in that order. The offer's two entry names MUST stay as they are, since the handling entries are keyed on them (INV-284). "Last resort" is not a judgment on `provenance: synthesized` from the Business Case Offer, nor on option 5 of the provision question. Observed (`production-readiness-audit-2026-11-17`, finding 21): the offer gave synthesized data beside free raw data with no order, while two other passages of the same file called it a last resort. ⚠️ Limits: the enforcer reads the three passages of `source/skills/module-04-data-collection/SKILL.md` and asserts what they state. It **cannot** establish what a live guide recommends. Enforced by `tests/test_gate_options_have_handling_steps.py`. (Source: `restated-rules-and-lists-in-shipped-text-have-drifted-from-their-source`, GitHub issue #45, 2026-11-17.)
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** Module 5 writes one per-source mapping document, and how to run the transformation is in it. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-441, registered by the maintainer 2026-11-18).** Module 5 writes one per-source mapping document, and how to run the transformation is in it. The rule already shipping, quoted:
     - ⛔ **Module 5 writes one per-source mapping document, `docs/mapping/{source_name}_mapper.md`, and its structure has a `## How to run` section.** — in `tests/test_restatements_say_what_their_source_says.py`
     - `source/skills/module-05-data-quality-mapping/phase2-data-mapping.md` — ⛔ step 18 names no mapping document but `_mapper.md` beside the transformation lineage, and the structure it gives has a `## How to run` section
 
@@ -1942,7 +2010,7 @@ line and holds no copy of it, so changing the line changes the range.
   bold MUST or NEVER. The block below covers the rule (INV-309). It is one block because it has
   one subject: which file holds the module selection.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** The module selection is kept in one file, and a step that reads it names that file. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-442, registered by the maintainer 2026-11-18).** The module selection is kept in one file, and a step that reads it names that file. The rule already shipping, quoted:
     - ⛔ **`selected_modules` is kept in one file, `config/bootcamp_preferences.yaml`, and nothing writes it to `config/bootcamp_progress.json`.** — in `tests/test_selected_modules_is_kept_in_one_file.py`
     - ⛔ **A step that sets `current_module` to the next module in `selected_modules` names `config/bootcamp_preferences.yaml` as the file the list is read from.** — in `tests/test_selected_modules_is_kept_in_one_file.py`
     - `source/skills/bootcamp-preparation/SKILL.md` — ⛔ Step 6's write to the progress file sets `current_module` to the first content module and no other key, and says the selection is kept in the preferences file
@@ -1968,7 +2036,27 @@ line and holds no copy of it, so changing the line changes the range.
   Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
   invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
 
-  **INV-NNN** — The module selection, `selected_modules`, MUST be kept in one file, `config/bootcamp_preferences.yaml`. Bootcamp preparation writes it there in its consolidated preference write (INV-058), and the bootcamp MUST NOT write it to `config/bootcamp_progress.json`: Bootcamp preparation's write to the progress file sets `current_module` to the first content module and does not name the list. A step that sets `current_module` to the next module in `selected_modules` MUST name `config/bootcamp_preferences.yaml` as the file the list is read from. On 2026-11-17 four steps do so: module completion's Step 1 and the closes of Entity Resolution Concepts, System verification and Truth Set visualization. The dry-run scaffold MUST NOT write a `selected_modules` key to the progress file in any mode, and its mid-bootcamp preferences MUST carry the ordered list. A `selected_modules` key already in the progress file of a bootcamp begun before this rule is left in place and is never read. ⚠️ Limits: the enforcer reads `source/` and the scaffold, and takes the list and the preferences file to be tied when they are neighboring backticked names in one sentence. It **cannot** establish that a live guide reads the list from the preferences file. It does not check a mention of `selected_modules` that names no file and sets no `current_module`, and it does not say what happens when the selection is edited so that `current_module` is no longer in the list. Enforced by `tests/test_selected_modules_is_kept_in_one_file.py`. (Source: `selected-modules-is-kept-in-two-files-and-the-text-disagrees-on-which-is-read`, GitHub issue #44, 2026-11-17.)
+  **INV-NNN** — The module selection, `selected_modules`, MUST be kept in one file,
+  `config/bootcamp_preferences.yaml`. Bootcamp preparation writes it there in its consolidated
+  preference write (INV-058), and the bootcamp MUST NOT write it to
+  `config/bootcamp_progress.json`: Bootcamp preparation's write to the progress file sets
+  `current_module` to the first content module and does not name the list. A step that sets
+  `current_module` to the next module in `selected_modules` MUST name
+  `config/bootcamp_preferences.yaml` as the file the list is read from. The dry-run scaffold
+  MUST NOT write a `selected_modules` key to the progress file in any mode, and its mid-bootcamp
+  preferences MUST carry the ordered list. A `selected_modules` key already in the progress file
+  of a bootcamp begun before this rule is left in place and is never read. ⚠️ Limits: the
+  enforcer reads `source/` and the scaffold, and takes the list and the preferences file to be
+  tied when they are neighboring backticked names in one sentence. It **cannot** establish that
+  a live guide reads the list from the preferences file. It does not check a mention of
+  `selected_modules` that names no file and sets no `current_module`, and it does not say what
+  happens when the selection is edited so that `current_module` is no longer in the list.
+  Enforced by `tests/test_selected_modules_is_kept_in_one_file.py`. (Source:
+  `selected-modules-is-kept-in-two-files-and-the-text-disagrees-on-which-is-read`, GitHub issue
+  #44, 2026-11-17.)
+
+  **Amended at review, 2026-11-18:** the maintainer struck the sentence that listed the four
+  steps by name, so the rule states the property only.
 
 - **Commit:** uncommitted
 
@@ -2069,7 +2157,7 @@ line and holds no copy of it, so changing the line changes the range.
   desktop application. The lines this change adds under `hosts/` carry no ⛔ and no bold MUST
   or NEVER.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** An install page names every interface its package names, and says so where it has no steps for one. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-443, registered by the maintainer 2026-11-18).** An install page names every interface its package names, and says so where it has no steps for one. The rule already shipping, quoted:
     - ⛔ **An install page names every interface its assistant's package names.** — in `tests/test_install_pages_cover_what_the_package_names.py`
     - ⛔ **An install page that has no steps for an interface says the bootcamp has not been run there and that the page has no verified install steps for it.** — in `tests/test_install_pages_cover_what_the_package_names.py`
 
@@ -2087,9 +2175,28 @@ line and holds no copy of it, so changing the line changes the range.
   Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
   invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
 
-  **INV-NNN** — Each assistant's built install page MUST name, in text a reader sees, every interface in the "Say" column of that assistant's naming table (`hosts/<assistant>/fragments/interface-naming.md`), by the name the table gives without its leading article. Where the page gives no install steps for an interface it names, it MUST say that the bootcamp has not been run in that interface and that the page has no verified install steps for it, and MUST NOT say the bootcamp supports it. An interface is added to a table and to its page in the same change; the page moves to the table, and an interface is not taken out of a table to make a page pass. On 2026-11-17 two interfaces have no steps: VS Code on the GitHub Copilot page and the Codex CLI on the ChatGPT page. ⚠️ Limits: the enforcer finds a name on the page and holds the statement for those two interfaces by name. It **cannot** tell steps from a disclaimer for any other interface, and it cannot establish that steps a page gives were ever followed: only a record in `hosts/<assistant>/checks.json` shows that. The Claude page's statement about the Claude web app and the Claude IDE extensions predates this rule and is not held to its second sentence. Enforced by `tests/test_install_pages_cover_what_the_package_names.py`, which builds every assistant's page and reads the tables as they are. (Source: `install-pages-and-interface-lists-are-uneven-across-assistants`, GitHub issue #43, 2026-11-17.)
+  **INV-NNN** — Each assistant's built install page MUST name, in text a reader sees, every
+  interface in the "Say" column of that assistant's naming table
+  (`hosts/<assistant>/fragments/interface-naming.md`), by the name the table gives without its
+  leading article. Where the page gives no install steps for an interface it names, it MUST say
+  that the bootcamp has not been run in that interface and that the page has no verified install
+  steps for it, and MUST NOT say the bootcamp supports it. An interface is added to a table and
+  to its page in the same change; the page moves to the table, and an interface is not taken out
+  of a table to make a page pass. ⚠️ Limits: the enforcer finds a name on the page, and holds
+  the statement by name for VS Code on the GitHub Copilot page and the Codex CLI on the ChatGPT
+  page. It **cannot** tell steps from a disclaimer for any other interface, and it cannot
+  establish that steps a page gives were ever followed: only a record in
+  `hosts/<assistant>/checks.json` shows that. The Claude page's statement about the Claude web
+  app and the Claude IDE extensions predates this rule and is not held to its second sentence.
+  Enforced by `tests/test_install_pages_cover_what_the_package_names.py`, which builds every
+  assistant's page and reads the tables as they are. (Source:
+  `install-pages-and-interface-lists-are-uneven-across-assistants`, GitHub issue #43,
+  2026-11-17.)
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** Every install page has one tip about updating and uninstalling, under one id. The rule already shipping, quoted:
+  **Amended at review, 2026-11-18:** the maintainer struck the dated sentence that listed the two
+  interfaces with no steps; the Limits now names them, since that is what the test checks.
+
+- **DEFERRED INVARIANT (resolved INV-444, registered by the maintainer 2026-11-18).** Every install page has one tip about updating and uninstalling, under one id. The rule already shipping, quoted:
     - ⛔ **Every install page has one tip with the id `update-uninstall`, headed "Update or uninstall", whose text speaks of both updating and uninstalling.** — in `tests/test_install_pages_cover_what_the_package_names.py`
 
   Enforced by `tests/test_install_pages_cover_what_the_package_names.py`.
@@ -2105,7 +2212,10 @@ line and holds no copy of it, so changing the line changes the range.
 
   **INV-NNN** — Each assistant's tips fragment (`hosts/<assistant>/fragments/site-tips.html`) MUST hold exactly one tip with the id `update-uninstall`, headed "Update or uninstall", and the tip's text below the heading MUST speak of both updating and uninstalling. For each of the two the tip gives the steps, or says the page has no verified steps for it and names where in the assistant to look, by a name the page's install steps already use. A tip MUST NOT give steps written from an assistant vendor's documentation as though they had been followed. The id is the same on every page and MUST NOT change, because other text links to `#update-uninstall`. ⚠️ Limits: the enforcer finds the tip, its heading and the two words. It **cannot** establish that steps a tip gives work or were ever run; on 2026-11-17 no record in any `hosts/<assistant>/checks.json` covers an update or an uninstall. Enforced by `tests/test_install_pages_cover_what_the_package_names.py`, which reads all five fragments and requires the id exactly once on each built page. (Source: `install-pages-and-interface-lists-are-uneven-across-assistants`, GitHub issue #43, 2026-11-17.)
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** Text for GitHub Copilot uses the name its own naming table gives the desktop application. The rule already shipping, quoted:
+  **Amended at review, 2026-11-18:** the maintainer struck the dated sentence saying no
+  `checks.json` record covered an update or an uninstall.
+
+- **DEFERRED INVARIANT (resolved INV-445, registered by the maintainer 2026-11-18).** Text for GitHub Copilot uses the name its own naming table gives the desktop application. The rule already shipping, quoted:
     - ⛔ **Text written for GitHub Copilot calls its desktop application "the GitHub Copilot app".** — in `tests/test_install_pages_cover_what_the_package_names.py`
 
   Enforced by `tests/test_install_pages_cover_what_the_package_names.py`.
@@ -2258,7 +2368,7 @@ line and holds no copy of it, so changing the line changes the range.
   category: it is one value read from one profile key, held by a test. The lines this change
   adds under `hosts/` and `tools/bootcamp_build/` carry no ⛔ and no bold MUST or NEVER.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** A hook's matcher is derived from the adapter's own map of the assistant's tools. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-446, registered by the maintainer 2026-11-18).** A hook's matcher is derived from the adapter's own map of the assistant's tools. The rule already shipping, quoted:
     - ⛔ **On an assistant whose hooks go through the hook adapter, a hook's matcher names exactly the tools the adapter's map gives the categories the hook covers.** — in `tests/test_bootcamp_build_hosts.py`
 
   Enforced by `tests/test_bootcamp_build_hosts.py`.
@@ -2275,7 +2385,10 @@ line and holds no copy of it, so changing the line changes the range.
 
   **INV-NNN** — On an assistant whose hooks go through the hook adapter (`options.adapter` in `hosts/<assistant>/host.json`) and are limited to named tools (`hooks.matchers` is not `false`), each hook's matcher MUST name exactly the tools `options.adapter.tool_categories` maps to a category the hook covers, and no other name. A tool the map calls `patch` MUST be in the matcher of every hook that covers `write` or `edit`, because the adapter turns a patch into write and edit calls. Both places that build a matcher MUST derive it from that map and not from `hooks.tools`: the build, for a package that carries a hook file, and the package's hook installer, for a package that carries an installer instead, reading the copy of the map the build writes into `bootcamp_host.json`. When a hook covers a category for which the map gives no tool, the build MUST fail with an error that names the assistant and the key, for both kinds of package. An assistant with no adapter builds its matcher from `hooks.tools`, and an assistant whose profile sets `"matchers": false` has none; this rule changes neither. ⚠️ Limits: the rule makes a profile agree with itself. It does not establish that a name in the map is a tool name the assistant really sends; on 2026-11-17 no recorded run had checked that for any assistant. Enforced by `tests/test_bootcamp_build_hosts.py`, which reads the real profiles, the built hook file and the files the built installer writes, and by `tests/test_bootcamp_build_emit.py` on a miniature repository. (Source: `hook-matchers-the-kiro-hooks-disclosure-and-a-catalog-category-each-take-one-source`, GitHub issue #34, 2026-11-17.)
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** A package that installs its hooks tells the bootcamper about every hook file before asking. The rule already shipping, quoted:
+  **Amended at review, 2026-11-18:** the maintainer struck the dated clause saying no recorded
+  run had checked the map's names for any assistant.
+
+- **DEFERRED INVARIANT (resolved INV-447, registered by the maintainer 2026-11-18).** A package that installs its hooks tells the bootcamper about every hook file before asking. The rule already shipping, quoted:
     - ⛔ **A package that installs its hooks tells the bootcamper about every hook file it writes, in one bullet for each.** — in `tests/test_bootcamp_build_hosts.py`
 
   Enforced by `tests/test_bootcamp_build_hosts.py`.
@@ -2290,6 +2403,9 @@ line and holds no copy of it, so changing the line changes the range.
   invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
 
   **INV-NNN** — Where an assistant's package installs the bootcamp's hooks into the bootcamper's project (on 2026-11-17 only the Kiro package, through `install_hooks.py`), the skill that asks for consent MUST tell the bootcamper about every hook file the installer writes, before it asks. Its "What to tell the bootcamper" list MUST hold exactly one bullet for each hook file the installer writes and no bullet for a file it does not write. Each bullet MUST begin with the hook file's name as the installer prints it, and then say in plain words when the hook runs and everything it does, including the files it writes and a hook whose result the assistant cannot act on. A change that adds, removes or renames a hook file, or changes what a hook's scripts do, MUST change the list in the same change. ⚠️ Limits: the enforcer matches the file name that opens each bullet; whether a bullet's description is complete and true is a reviewer's call. Enforced by `tests/test_bootcamp_build_hosts.py`, which runs the built installer in a scratch workspace and compares the files it writes with the bullets. (Source: `hook-matchers-the-kiro-hooks-disclosure-and-a-catalog-category-each-take-one-source`, GitHub issue #34, 2026-11-17.)
+
+  **Amended at review, 2026-11-18:** the maintainer struck the dated parenthesis naming the
+  one package that installs its hooks.
 
 - **Commit:** uncommitted
 
@@ -2391,7 +2507,7 @@ line and holds no copy of it, so changing the line changes the range.
   below drafts the dated note the issue asks for. Until the maintainer applies it, the
   register's wording is narrower than what the packages carry.
 
-- **PROPOSED AMENDMENT to INV-427 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-427 — applied 2026-11-18 by the maintainer.**
     - ⛔ **(INV-427) Read this file to its last line.** — in `tools/bootcamp_build/emit.py`
 
   INV-427's first clause covers every file the bootcamp tells the guide to read before acting.
@@ -2542,7 +2658,7 @@ line and holds no copy of it, so changing the line changes the range.
   the MCP failure message: INV-252 and INV-185 give the resolution order and do not say who
   supplies a skill's directory.
 
-- **PROPOSED AMENDMENT to INV-223 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-223 — applied 2026-11-18 by the maintainer.**
     - ⛔ **A handle that names a task rather than a process is not a pid.** — in `source/skills/module-03b-truthset-visualization/visualization-api-reference.md`
 
   INV-223's 2026-11-10 note says "A handle from the host's own background-task mechanism is
@@ -2558,7 +2674,7 @@ line and holds no copy of it, so changing the line changes the range.
 
   **INV-223** — (⚠️ **Dated note, 2026-11-17 (#30): the handle warning names no assistant's feature; the rule above and the rest of the 2026-11-10 note are unchanged.** Where the 2026-11-10 note says "A handle from the host's own background-task mechanism is not a pid", read: a handle that names a task rather than a process is not a pid. When the server is started by something other than the shell forms the contract's handle table gives, the id it returns names a task, not a process: the guide MUST record no pid from it and MUST take the pid from the launch confirmation's port lookup, and where that lookup names no single listener the checkpoint keeps no pid and teardown's missing-pid fallback applies. The warning MUST be the same text in every assistant's package and MUST name no assistant and no assistant's feature, because a background-task mechanism is a feature of one assistant and the contract ships to all of them. Enforced by `tests/test_viz_server_process_handle.py`, and in every built package by `tests/test_shared_text_holds_in_every_package.py`. Whether any assistant other than Claude has such a feature was not looked into when this note was drafted.)
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** The build's check for another assistant's name ignores letter case. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-448, registered by the maintainer 2026-11-18).** The build's check for another assistant's name ignores letter case. The rule already shipping, quoted:
     - ⛔ **The build's check for another assistant's name matches it in any letter case, in `source/` and in every built package.** — in `tests/test_bootcamp_build_emit.py`
 
   Enforced by `tests/test_bootcamp_build_emit.py`.
@@ -2576,7 +2692,10 @@ line and holds no copy of it, so changing the line changes the range.
 
   **INV-NNN** — `python3 -m tools.bootcamp_build check` MUST report every term an assistant's profile lists in `foreign_terms` whatever its letter case, both in `source/` outside a host block for the assistants that term belongs to and in each built package. A model ID, a directory name, an environment variable and a comment are text like any other: a script gets no exemption, and the fix for a reported line is to remove the name or take it from a host value, never to split the string. The ceilings in `tools/bootcamp_build/neutrality.json` MUST only come down; when this rule was drafted they were 0 for `source/` and for the Claude package and 1 for each other package, the one being `CLAUDE_PROJECT_DIR` in the hook adapter. Observed (`production-readiness-audit-2026-11-17`, finding 12): the feedback entry's `Model / effort` example gave a Claude model ID in all five packages, and two bundled scripts and one comment spelled the Claude package's directories, and the check passed because it matched the capitalized name only. Enforced by `tests/test_bootcamp_build_emit.py`, which plants a lowercase name in a miniature repository and runs the check on it, and by `tests/test_shared_text_holds_in_every_package.py`, which holds the real tree to the recorded ceilings; neither can find a name put together at run time. (Source: `shared-text-names-one-assistants-files-ids-and-mechanisms-in-other-packages`, GitHub issue #30, 2026-11-17.)
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** Text shown to the bootcamper word for word names the package by the assistant's own noun. The rule already shipping, quoted:
+  **Amended at review, 2026-11-18:** the maintainer struck the snapshot of the ceilings as they
+  stood when the rule was drafted.
+
+- **DEFERRED INVARIANT (resolved INV-449, registered by the maintainer 2026-11-18).** Text shown to the bootcamper word for word names the package by the assistant's own noun. The rule already shipping, quoted:
     - ⛔ **Text a package shows the bootcamper word for word names the package by its assistant's own noun.** — in `tests/test_shared_text_holds_in_every_package.py`
 
   Enforced by `tests/test_shared_text_holds_in_every_package.py`.
@@ -2591,6 +2710,8 @@ line and holds no copy of it, so changing the line changes the range.
   invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
 
   **INV-NNN** — Text a skill file tells the guide to show the Bootcamper word for word, a fenced `text` display block or a pinned 👉 question, MUST name the package by the assistant's own noun, taken from `package_noun` in `hosts/<assistant>/host.json`: "Power" in the Kiro package and "plugin" in the others when this rule was drafted. Where an assistant's noun is not "plugin", its `host-rules.md`, which the guide reads at the start of every session, MUST say once that "plugin" in the bootcamp's files means that noun, and no other package carries the sentence. This binds displayed text only: guide-facing prose, the identifiers `PLUGIN_ROOT` and `plugin.json`, the `plugin` routing value in a feedback entry and the `**Plugin version:**` label keep the word. Observed (`production-readiness-audit-2026-11-17`, finding 16): the MCP failure message said "this plugin's" in the Kiro package. Enforced by `tests/test_shared_text_holds_in_every_package.py`, which reads every `text` display block and every pinned 👉 question of each built package whose noun is not "plugin"; it **cannot** establish what a guide on a real assistant shows, and it does not read text a script prints. (Source: `shared-text-names-one-assistants-files-ids-and-mechanisms-in-other-packages`, GitHub issue #30, 2026-11-17.)
+
+  **Amended at review, 2026-11-18:** the maintainer struck the dated list of each package's noun.
 
 - **Commit:** uncommitted
 
@@ -2756,7 +2877,7 @@ line and holds no copy of it, so changing the line changes the range.
   describes the amendment as drafted for `/review-invariants`; INV-386 wants it reworded when
   the note is registered.
 
-- **PROPOSED AMENDMENT to INV-057 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-057 — applied 2026-11-18 by the maintainer.**
     - ⛔ **Render the terminal banner, verbatim, exactly once, then the one `{{host.invoke_package_bootcamp}}` line below it, verbatim.** — in `source/skills/graduation/SKILL.md`
 
   INV-057's 2026-11-10 note pins the closing line as "Run `/package-bootcamp` anytime to
@@ -2773,7 +2894,7 @@ line and holds no copy of it, so changing the line changes the range.
   Drafted wording follows, under the registered id. A new rule's id would be
   written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
 
-  **INV-057** — (⚠️ **Dated note, 2026-11-17 (#28): the closing line names the packaging operation in the assistant's own form.** In a package that ships the slash command, which today is the Claude package alone, the line reads, verbatim, "Run `/package-bootcamp` anytime to bundle your bootcamp results into one zip you can archive, move to another machine, or share with others." In every other package it reads, verbatim, "Say "Back up the bootcamp" anytime to bundle your bootcamp results into one zip you can archive, move to another machine, or share with others.", which names the request that assistant's install page gives. Each assistant's form is its `invoke_package_bootcamp` value in `hosts/<assistant>/host.json`. The finished-bootcamp reply in `bootcamp-onboarding/SKILL.md` step 2 uses the same sentence in the same form. Where INV-102's 2026-11-10 note says "its one `/package-bootcamp` line", read the line in the assistant's own form. The same reading applies where INV-227, INV-239, INV-254 and INV-392 name an operation by its slash command: a package names the operation in its assistant's own form, the `invoke_<command>` value for that command. The rest of the 2026-11-10 note is unchanged: the line is shown exactly once, together with the banner, as a plain line outside its fence, on the normal path and after the production build's Abort alike, under every verbosity preset; it is a statement with no 👉 and no question, names no archive path, and nothing follows it (INV-251). Enforced by `tests/test_graduation_ending_surfaces.py` and `tests/test_each_package_names_an_operation_in_its_own_form.py`, which build every assistant's package. Neither establishes that saying the request reaches the operation on a real assistant; no such run was recorded when this note was drafted.)
+  **INV-057** — (⚠️ **Dated note, 2026-11-17 (#28): the closing line names the packaging operation in the assistant's own form.** In a package that ships the slash command, which today is the Claude package alone, the line reads, verbatim, "Run `/package-bootcamp` anytime to bundle your bootcamp results into one zip you can archive, move to another machine, or share with others." In every other package it reads, verbatim, "Say "Back up the bootcamp" anytime to bundle your bootcamp results into one zip you can archive, move to another machine, or share with others.", which names the request that assistant's install page gives. Each assistant's form is its `invoke_package_bootcamp` value in `hosts/<assistant>/host.json`. The finished-bootcamp reply in `bootcamp-onboarding/SKILL.md` step 2 uses the same sentence in the same form. Where INV-102's 2026-11-10 note says "its one `/package-bootcamp` line", read the line in the assistant's own form. The rest of the 2026-11-10 note is unchanged: the line is shown exactly once, together with the banner, as a plain line outside its fence, on the normal path and after the production build's Abort alike, under every verbosity preset; it is a statement with no 👉 and no question, names no archive path, and nothing follows it (INV-251). Enforced by `tests/test_graduation_ending_surfaces.py` and `tests/test_each_package_names_an_operation_in_its_own_form.py`, which build every assistant's package. Neither establishes that saying the request reaches the operation on a real assistant; no such run was recorded when this note was drafted.)
 
 - **Commit:** uncommitted
 
@@ -2944,7 +3065,7 @@ line and holds no copy of it, so changing the line changes the range.
   wording. INV-163's wording does not change, so it gets no block: the line after a block
   still carries its disclosure. INV-300 is unchanged: the statement is still made once.
 
-- **PROPOSED AMENDMENT to INV-167 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-167 — applied 2026-11-18 by the maintainer.**
     - ⛔ **It runs in whichever shell that tool provides, and which shell that is on Windows is unverified.** — in `source/skills/bootcamp-onboarding/ground-rules.md`
     - ⛔ **the guide translates a guide-run block to Windows PowerShell 5.1 with the table of 5.1 syntax limits above, runs the translation, and treats the result as unverified in that shell** — in `source/skills/bootcamp-onboarding/ground-rules.md`
     - ⛔ **Guide-run; unverified on Windows: no test runs it there** — in `source/skills/bootcamp-onboarding/ground-rules.md`
@@ -2962,7 +3083,11 @@ line and holds no copy of it, so changing the line changes the range.
   Drafted wording follows, under the registered id. A new rule's id would be
   written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
 
-  **INV-167** — (⚠️ **Dated note, 2026-11-17 (#27): the guide's shell is stated per assistant, and the pointer line names no shell; the syntax rules above, the hand-run rule and the #505 note are unchanged.** The #508, #596 and #597 notes describe a guide whose shell tool is Bash and whose shell is POSIX, Git Bash on Windows. The Claude package keeps that statement by the maintainer's decision on #27; no run on Windows is recorded for any assistant, and a real run recorded in `hosts/<assistant>/checks.json` is what moves an assistant from one statement to the other. `ground-rules.md` `#guide-run-blocks` stays the one statement (INV-300) and MUST, in each assistant's package, name the guide's shell tool from that assistant's `shell_tool` host value, which MUST equal its `hooks.tools.shell`, and say which shell runs a guide-run block: the POSIX shell of those notes in a package that keeps that statement, today the Claude package alone; in every other package whichever shell the assistant's tool provides, with that shell on Windows stated as unverified (INV-163). In a POSIX shell those notes bind as written. Where the guide's shell is PowerShell, the guide MUST translate a guide-run block to Windows PowerShell 5.1 with that section's table of 5.1 syntax limits, run the translation and treat the result as unverified in that shell; a translated block that fails follows its own site's failure rule; and a PowerShell-only guide-run block is run directly, the `powershell.exe -NoProfile -Command …` call and its quoting applying only from a POSIX shell. The pointer line after a guide-run block MUST name no shell and no tool, in one wording at every site and in every assistant's package: "Guide-run; unverified on Windows: no test runs it there", linking `#guide-run-blocks`. A command in a built `host-rules.md` whose package does not state a POSIX shell MUST be given in a POSIX form and in a Windows PowerShell 5.1 form that meets the syntax rules above and the #505 note. Enforced by `tests/test_each_package_states_its_own_guide_shell.py`, which builds every assistant's package, and by `tests/test_guide_run_blocks_declare_their_shell.py`. Neither establishes which shell an assistant gives the guide on Windows, and neither executes a PowerShell form: the PowerShell forms are checked by reading and were unexecuted when this note was drafted (INV-163).)
+  **INV-167** — (⚠️ **Dated note, 2026-11-17 (#27): the guide's shell is stated per assistant, and the pointer line names no shell; the syntax rules above, the hand-run rule and the #505 note are unchanged.** The #508, #596 and #597 notes describe a guide whose shell tool is Bash and whose shell is POSIX, Git Bash on Windows. The Claude package keeps that statement by the maintainer's decision on #27, and a real run recorded in `hosts/<assistant>/checks.json` is what moves an assistant from one statement to the other. `ground-rules.md` `#guide-run-blocks` stays the one statement (INV-300) and MUST, in each assistant's package, name the guide's shell tool from that assistant's `shell_tool` host value, which MUST equal its `hooks.tools.shell`, and say which shell runs a guide-run block: the POSIX shell of those notes in a package that keeps that statement; in every other package whichever shell the assistant's tool provides, with that shell on Windows stated as unverified (INV-163). In a POSIX shell those notes bind as written. Where the guide's shell is PowerShell, the guide MUST translate a guide-run block to Windows PowerShell 5.1 with that section's table of 5.1 syntax limits, run the translation and treat the result as unverified in that shell; a translated block that fails follows its own site's failure rule; and a PowerShell-only guide-run block is run directly, the `powershell.exe -NoProfile -Command …` call and its quoting applying only from a POSIX shell. The pointer line after a guide-run block MUST name no shell and no tool, in one wording at every site and in every assistant's package: "Guide-run; unverified on Windows: no test runs it there", linking `#guide-run-blocks`. A command in a built `host-rules.md` whose package does not state a POSIX shell MUST be given in a POSIX form and in a Windows PowerShell 5.1 form that meets the syntax rules above and the #505 note. Enforced by `tests/test_each_package_states_its_own_guide_shell.py`, which builds every assistant's package, and by `tests/test_guide_run_blocks_declare_their_shell.py`. Neither establishes which shell an assistant gives the guide on Windows, and neither executes a PowerShell form: the PowerShell forms are checked by reading (INV-163).)
+
+  **Amended at review, 2026-11-18:** the maintainer struck three snapshots: that no Windows run
+  was recorded, that the Claude package alone keeps the POSIX statement, and that the
+  PowerShell forms were unexecuted when the note was drafted.
 
 - **Commit:** uncommitted
 
@@ -3095,7 +3220,7 @@ line and holds no copy of it, so changing the line changes the range.
   to use an event name. INV-003 is the invariant the finding was filed under; its wording is
   not touched.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** A fallback's statement about its hook follows the assistant's hook mapping. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-450, registered by the maintainer 2026-11-18).** A fallback's statement about its hook follows the assistant's hook mapping. The rule already shipping, quoted:
     - ⛔ **A fallback says that nothing does a hook's job only where the assistant's mapping has no event for the hook or lists it as advisory, and says that the hook may not run where the mapping has one.** — in `tests/test_hook_statements_hold_on_every_assistant.py`
 
   Enforced by `tests/test_hook_statements_hold_on_every_assistant.py`.
@@ -3111,7 +3236,7 @@ line and holds no copy of it, so changing the line changes the range.
 
   **INV-NNN** — A fallback under `source/hooks/fallbacks/` that says whether a hook does its job MUST say that nothing does it only in the package of an assistant whose `hooks.events` mapping in `hosts/<assistant>/host.json` has no event for that hook or lists the event in `hooks.advisory`. In the package of every other assistant that carries the fallback it MUST say that a hook does the job when it runs and that it may not run. A hook declared on more than one event has no event only when every one of them is null or advisory. Both wordings MUST be followed by the same instruction to the guide, and no package may carry both wordings for one hook. Observed 2026-11-17 (`production-readiness-audit-2026-11-17`, finding 4): four packages said "Nothing checks a write before it happens" although each of those assistants has an event for the write gate. Enforced by `tests/test_hook_statements_hold_on_every_assistant.py`, which builds each package and compares each fallback's statement in `host-rules.md`, and each `host:only` and `host:except` list in the source, with every assistant's mapping. It recognizes the two wordings by their shape and **cannot** establish that a hook runs on a real assistant. (Source: `the-fallback-rules-and-the-ground-rules-state-opposite-facts-about-the-same-hooks`, GitHub issue #29, 2026-11-17.)
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** Shared skill text states what a hook does only with a condition. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-451, registered by the maintainer 2026-11-18).** Shared skill text states what a hook does only with a condition. The rule already shipping, quoted:
     - ⛔ **No file under `source/skills/` says without a condition that a hook does something.** — in `tests/test_hook_statements_hold_on_every_assistant.py`
 
   Enforced by `tests/test_hook_statements_hold_on_every_assistant.py`.
@@ -3126,7 +3251,7 @@ line and holds no copy of it, so changing the line changes the range.
 
   **INV-NNN** — A Markdown file under `source/skills/` that says what a hook does MUST say it in a form that holds whether or not a hook backs the rule on the assistant reading it. The rule is stated as the guide's to keep, and the sentence that names the hook's action MUST carry its condition, for example "whether or not a hook backs it on this assistant", "where a hook runs it" or "where it runs". A script MAY be named as the one that acts, because that is true whether a hook or the guide runs it. Observed 2026-11-17 (`production-readiness-audit-2026-11-17`, finding 4): the ground rules said without condition that a hook enforces the write gate, folds the recap and stops containers, in four packages whose `host-rules.md` said that nothing does. Enforced by `tests/test_hook_statements_hold_on_every_assistant.py`, which pins each sentence #29 retired and scans every Markdown file under `source/skills/` for a sentence that says a hook acts and carries no condition. The scan knows a closed list of sentence shapes, so it **cannot** find an unconditional statement worded another way, and it cannot establish that a conditional sentence is true on a real assistant. (Source: `the-fallback-rules-and-the-ground-rules-state-opposite-facts-about-the-same-hooks`, GitHub issue #29, 2026-11-17.)
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** Shared text names no hook event, and a package's Markdown names only its own assistant's events. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-452, registered by the maintainer 2026-11-18).** Shared text names no hook event, and a package's Markdown names only its own assistant's events. The rule already shipping, quoted:
     - ⛔ **Shared text names no hook event, and the Markdown of a built package names a hook event only when the event is in that assistant's own mapping.** — in `tests/test_hook_statements_hold_on_every_assistant.py`
 
   Enforced by `tests/test_hook_statements_hold_on_every_assistant.py`.
@@ -3238,7 +3363,7 @@ line and holds no copy of it, so changing the line changes the range.
   below, only the test holds either rule. INV-003 is the invariant the finding was filed
   under; its wording is not touched.
 
-- **PROPOSED AMENDMENT to INV-430 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-430 — applied 2026-11-18 by the maintainer.**
     - ⛔ **No package names a partial source file it drops.** — in `tests/test_partial_shipping_has_a_reason.py`
 
   INV-430 requires a recorded reason for a file that ships to some assistants and not others,
@@ -3254,7 +3379,7 @@ line and holds no copy of it, so changing the line changes the range.
 
   **INV-430** — (⚠️ **Dated note, 2026-11-17 (#26): a package MUST NOT name a partial source file it drops; the rule above is unchanged.** No file in an assistant's package may hold the path of a source file that ships to some assistants and not to that one: neither the file's path under `source/` nor the path a package that carries it uses. This binds Markdown and scripts alike, a comment included. `hooks/README.md` is the standing case and is held more tightly: it ships to the Claude package only, and no file in any package, the Claude package included, may name it except the page itself. Where shared text needs a fact such a file states, it states the fact. Observed (`production-readiness-audit-2026-11-17`, finding 1): four prose sites and four script comment lines named `hooks/README.md` in all five packages while four layouts dropped it. Enforced by `tests/test_partial_shipping_has_a_reason.py`, which takes the partial files from the shipped sets, requires each to be one a `PARTIAL` entry covers, and searches the bytes of every file in each built package that drops one; it fails when no partial file was checked or a package was not built. It **cannot** find a path put together at run time or a file named by its base name alone, and the limit stated above stands: it does not check that every path a package names resolves inside that package.)
 
-- **PROPOSED AMENDMENT to INV-055 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-055 — applied 2026-11-18 by the maintainer.**
     - ⛔ **Where the hook that re-opens a turn to ask for a missing closing question runs, the bootcamper can turn it off with either of two switches** — in `source/skills/bootcamp-onboarding/ground-rules.md`
 
   INV-055 requires "a documented opt-out" and does not say where it is documented. The only
@@ -3351,7 +3476,7 @@ line and holds no copy of it, so changing the line changes the range.
   docstring. `since` does not report it, because `tests/` is not a rule home. The block below
   covers it (INV-309).
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** A bundled script that reports the bootcamp's version reads it from the `bootcamp_host.json` beside it first. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-453, registered by the maintainer 2026-11-18).** A bundled script that reports the bootcamp's version reads it from the `bootcamp_host.json` beside it first. The rule already shipping, quoted:
     - ⛔ **A bundled script that reports the bootcamp's version reads `bootcamp_version` from the `bootcamp_host.json` beside it before any manifest.** — in `tests/test_scripts_report_the_built_version.py`
 
   Enforced by `tests/test_scripts_report_the_built_version.py`.
@@ -3370,6 +3495,9 @@ line and holds no copy of it, so changing the line changes the range.
   invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
 
   **INV-NNN** — A bundled script that reports the bootcamp's version MUST read it first from `bootcamp_version` in the `bootcamp_host.json` the build writes beside that script, so that it reports the built version in every assistant's package. Two scripts report it: `feedback-capture.py`, in the text it injects when the bootcamper asks to give feedback, and `package_bootcamp.py`, as `plugin_version` in `PACKAGE_MANIFEST.json` and on the last line of `OPEN_ME_FIRST.md`. When that file gives no version (it is missing, cannot be read, is not valid JSON, or holds no string under `bootcamp_version` that is more than whitespace) the script MUST NOT raise and MUST go on to its own manifest lookup, at paths fixed from the script's location, and then report its unresolved value ("Unknown" from the hook, "unknown" from the packager), never a guess. A script MUST NOT search the filesystem for either file (INV-252). Observed (`dry-run-2026-11-17`, finding 4; `production-readiness-audit-2026-11-17`, finding 22): reading a manifest path alone, the hook told the guide the version was "Unknown" in the Copilot, ChatGPT, Gemini and Kiro packages, and the packager recorded "unknown" in the ChatGPT and Kiro packages. Enforced by `tests/test_scripts_report_the_built_version.py`, which runs both scripts from every built package and the fallback cases on scratch copies; it **cannot** establish that a live assistant runs the hook or what a guide then records, and it was run on Linux only. (Source: `the-feedback-hook-and-the-packager-report-the-bootcamp-version-as-unknown-on-non-claude-packages`, GitHub issue #31, 2026-11-17.)
+
+  **Amended at review, 2026-11-18:** the maintainer struck the sentence listing the two scripts
+  that report the version.
 
 - **Commit:** uncommitted
 
@@ -3448,7 +3576,7 @@ line and holds no copy of it, so changing the line changes the range.
   maintainer applies it, only the test holds it. INV-101 is unchanged: session end still
   stops the recorded containers while the progress file records a module.
 
-- **PROPOSED AMENDMENT to INV-227 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-227 — applied 2026-11-19 by the maintainer.**
     - ⛔ **Once the bootcamp is complete it folds nothing and still stops the containers.** — in `source/hooks/README.md`
     - ⛔ **Once the bootcamp is complete it folds nothing and prints nothing.** — in `source/hooks/README.md`
     - ⛔ **it then creates no checkpoint and gives no reminder** — in `source/hooks/README.md`
@@ -3567,7 +3695,7 @@ line and holds no copy of it, so changing the line changes the range.
   note that would bind the PowerShell reading. Until the maintainer applies it, only the test
   holds it.
 
-- **PROPOSED AMENDMENT to INV-200 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-200 — applied 2026-11-19 by the maintainer.**
     - ⛔ **A command sent by a shell tool declared as PowerShell is read by PowerShell's rules and held to the same rule** — in `source/hooks/README.md`
 
   INV-200's dated note of 2026-11-06 says what the gate blocks and allows on a Bash command,
@@ -3581,6 +3709,9 @@ line and holds no copy of it, so changing the line changes the range.
   written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
 
   **INV-200** — (⚠️ **Dated note, 2026-11-17 (#33): a command from a shell tool declared as PowerShell is read by PowerShell's rules; the Bash reading and the Write/Edit boundary above are unchanged.** An assistant's profile names which of its shell tools is PowerShell (`options.adapter.shell_dialects` in `hosts/<assistant>/host.json`), and the hook adapter passes that on as `shell_dialect` in the canonical payload; `tool_name` stays `Bash`, and a payload that names no dialect MUST be read as POSIX shell. On a PowerShell command the gate MUST block, with the same temp/Downloads message, a top-level output target that resolves to system temp or Downloads outside the project, in each command the line holds: a `>` or `>>` redirect, alone or with a stream in front (`2>`, `2>>`, `*>`, `*>>`); `Out-File`; `Set-Content` and `Add-Content` (`sc`, `ac`); `Tee-Object` (`tee`); the destination of `Copy-Item` and `Move-Item` (`cp`, `copy`, `cpi`, `mv`, `move`, `mi`); and `Invoke-WebRequest -OutFile` (`iwr`, `curl`, `wget`), with `curl.exe -o` and `wget -O` read as on Bash. Command and parameter names match in any case. System temp is also `$env:TEMP`, `$env:TMP` and `$env:TMPDIR`, in any case, with or without braces; Downloads is reached through `$HOME`, `$env:USERPROFILE`, `$env:HOME` or `~`. It MUST allow a target inside the project first, as above, and MUST allow `$null`, a stream merge such as `2>&1`, a temp path that is a source, a non-temp target outside the project, a quoted payload such as `powershell -Command '…'`, a here-string's body, and a command it cannot split. A variable other than those named, an expression and an abbreviated parameter name are not evaluated, and the secret check (INV-109) does not run. Enforced by `tests/test_write_gate_powershell.py`, which sends each command through the built Copilot adapter and **cannot** establish what a live PowerShell writes or what payload Copilot sends on Windows: that payload has not been observed, and no run in `hosts/copilot/checks.json` is on Windows.)
+
+  **Amended at review, 2026-11-19:** the maintainer struck the closing snapshot that the payload had
+  not been observed and that no Copilot run was on Windows.
 
 - **Commit:** uncommitted
 
@@ -3745,7 +3876,7 @@ line and holds no copy of it, so changing the line changes the range.
   line, in the new test module's docstring. `since` does not report it, because `tests/` is
   not a rule home. The block below covers it.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** A hook script and the hook adapter give the same result whatever Python's I/O encoding is. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-454, registered by the maintainer 2026-11-19).** A hook script and the hook adapter give the same result whatever Python's I/O encoding is. The rule already shipping, quoted:
     - ⛔ **A hook script and the hook adapter give the same exit code and the same bytes on stdout and stderr whatever Python's I/O encoding is.** — in `tests/test_hooks_under_a_legacy_code_page.py`
 
   Enforced by `tests/test_hooks_under_a_legacy_code_page.py`.
@@ -3823,7 +3954,7 @@ line and holds no copy of it, so changing the line changes the range.
   line, in the gate's docstring. `since` does not report it, because `tests/` is not a rule
   home. The block below covers it.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** The cited-or-deferred gate checks every line `since` reports, in every range, at its source line. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-455, registered by the maintainer 2026-11-19).** The cited-or-deferred gate checks every line `since` reports, in every range, at its source line. The rule already shipping, quoted:
     - ⛔ **Every line `since` reports, `+` or `!`, is checked in every range, at its whole source line.** — in `tests/test_new_hard_rules_are_cited_or_deferred.py`
 
   Enforced by `tests/test_the_gate_checks_outside_lines_at_their_source.py`.
