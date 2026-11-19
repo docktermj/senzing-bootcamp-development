@@ -283,20 +283,26 @@ questions.
   consolidated write so the recap and graduation report can address the bootcamper by name; if
   none is available, leave `name` unset. Never ask for it and never block on it.
 - Call **`get_capabilities`** on the Senzing MCP server for the supported programming languages.
-  It is the tool that carries that fact, and in the server's model the language set is
-  **platform-independent**: Python, Java and C# official, Rust and TypeScript/Node.js
-  community-maintained wrappers (re-verified 2026-08-12, server 1.32.9). What varies per platform is
-  the install *mechanism*, not which languages exist — so do **not** route this lookup to
-  `sdk_guide`: `sdk_guide(topic='install', platform=…)` returns install commands, env vars, paths
-  and gotchas and **no language list at all**, and with no `platform` it returns the platform
-  decision tree rather than a language one — `needs_input.parameter` is `platform`, offering five
-  operating systems (both halves re-checked live, same server and date, `platform='linux_apt'` and
-  no-platform).
-  <!-- MCP-NEGATIVE: sdk_guide(topic='install', platform=…) — returns no language list at all — owner: get_capabilities carries the language set (routing negative — the fact exists, go there) — server 1.39.1, 2026-10-18 -->
-  The one
-  genuine platform↔language constraint the server does state — the Python SDK is supported on Linux
-  only, with Docker or WSL2 as the route on macOS/Windows — is carried in the annotation rules
-  below and in Module 2's routing, which is where it belongs.
+  It is the tool that carries the full set, and it is the **only** source of the options offered
+  here: Python, Java and C# official, Rust and TypeScript/Node.js community-maintained wrappers
+  (re-verified 2026-11-19, server 1.46.1). Do **not** route this lookup to `sdk_guide`, and do
+  **not** filter the set by platform. `sdk_guide(topic='install', platform=…)` returns install
+  commands, env vars, paths and gotchas, and with no `platform` it returns the platform decision
+  tree rather than a language one — `needs_input.parameter` is `platform`, offering five operating
+  systems. Its reply differs by platform:
+  - **`macos_arm` and `windows`:** the `gotchas` list the programming languages supported there —
+    *"Java and C# (official), Rust and TypeScript (community)"* — and send Python to Docker or WSL2,
+    because the Python SDK is supported on Linux only. That is the `get_capabilities` set narrowed
+    by Python alone, for that one reason.
+  - **`linux_apt`, `linux_yum` and `docker`:** the reply carries no language list.
+
+  (Every platform and the no-platform call re-checked live, same server and date.)
+  <!-- MCP-NEGATIVE: sdk_guide(topic='install', platform='linux_apt', 'linux_yum' or 'docker') — returns no language list — owner: get_capabilities carries the language set (routing negative — the fact exists, go there) — server 1.46.1, 2026-11-19 -->
+  So the set is the same on every platform except for **where Python runs**, and that one
+  platform↔language constraint the server states — the Python SDK is supported on Linux only, with
+  Docker or WSL2 as the route on macOS/Windows — is carried in the annotation rules below and in
+  Module 2's routing, which is where it belongs. Python stays among the options on macOS and
+  Windows, annotated with its cost and the server's routes.
 - Always say "**programming language**", never the bare word "language" (avoids confusion with
   spoken languages).
 - Present the MCP-returned options as a **numbered list**, rendered **directly beneath the 👉

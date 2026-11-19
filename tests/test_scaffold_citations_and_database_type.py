@@ -43,7 +43,9 @@ it literally, and a wrong workflow name or an unwritten key produces no error at
 
 Run:  python3 -m unittest discover -s tests
 """
+import importlib.util
 import re
+import sys
 import unittest
 from pathlib import Path
 
@@ -55,6 +57,20 @@ MODULE_03 = SKILLS / "module-03-system-verification" / "phase1-verification.md"
 MODULE_04 = SKILLS / "module-04-data-collection" / "SKILL.md"
 MODULE_06 = SKILLS / "module-06-data-processing" / "phaseA-build-loading.md"
 PREPARATION = SKILLS / "bootcamp-preparation" / "SKILL.md"
+
+
+def _load(path, name):
+    spec = importlib.util.spec_from_file_location(name, path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+#: The MCP-NEGATIVE marker grammar is imported, never restated, so the marker on the language
+#: lookup parses here exactly as the negatives report parses it.
+reports = _load(REPO_ROOT / ".claude" / "skills" / "dry-run" / "coverage_reports.py",
+                "coverage_reports_for_language_lookup")
 
 # The key both readers use and Module 2 Step 7 must write. One spelling, asserted in one place,
 # so a rename cannot drift the writer away from the readers again.
@@ -319,35 +335,123 @@ class DatabaseTypeHasAWriterAndBothReadersAgree(unittest.TestCase):
 
 
 class TheLanguageLookupGoesToTheToolThatCarriesIt(unittest.TestCase):
-    """Item 2: `sdk_guide` returns install detail and no language list; `get_capabilities` does."""
+    """Item 2: `get_capabilities` carries the language set and is the only source of the offer.
+
+    #80 corrected the reasoning around it. The step used to say the set was
+    "platform-independent" and that `sdk_guide(topic='install', platform=…)` returns "no language
+    list at all". On server 1.46.1 (2026-11-19) the `macos_arm` and `windows` replies list the
+    programming languages supported there: the `get_capabilities` set without Python, which they
+    send to Docker or WSL2 because the Python SDK is Linux-only. `linux_apt`, `linux_yum` and
+    `docker` still carry no list, so the negative marker is scoped to those three. What the
+    Bootcamper is offered does not change: Python stays an option on macOS and Windows,
+    annotated with its cost and routes.
+    """
+
+    def setUp(self):
+        self.text = flat(PREPARATION)
+        # The one bullet that holds the lookup, up to the next rule of the step.
+        start = self.text.index("Call **`get_capabilities`** on the Senzing MCP server")
+        end = self.text.index('Always say "**programming language**"', start)
+        self.lookup = self.text[start:end]
 
     def test_preparation_names_get_capabilities(self):
         self.assertRegex(
-            flat(PREPARATION),
+            self.text,
             r"(?i)Call \*\*`get_capabilities`\*\* on the Senzing MCP server for the supported "
             r"programming languages",
             "Bootcamp preparation must route the supported-languages lookup to get_capabilities",
         )
 
-    def test_it_no_longer_routes_that_lookup_to_sdk_guide(self):
-        self.assertNotRegex(
-            flat(PREPARATION),
-            r"(?i)`get_capabilities` or `sdk_guide`.{0,80}supported programming languages",
-            "the lookup is still offered to sdk_guide, which carries no language list",
+    def test_get_capabilities_is_the_only_source_of_the_offered_list(self):
+        self.assertRegex(
+            self.lookup,
+            r"(?i)it is the \*\*only\*\* source of the options offered here",
+            "the step must say get_capabilities alone supplies the offered list",
+        )
+        self.assertRegex(
+            self.lookup,
+            r"(?i)do \*\*not\*\* filter the set by platform",
+            "the step must not filter the offered list by a per-platform sdk_guide reply",
         )
 
-    def test_it_says_the_language_set_is_platform_independent(self):
+    def test_it_no_longer_routes_that_lookup_to_sdk_guide(self):
+        self.assertNotRegex(
+            self.text,
+            r"(?i)`get_capabilities` or `sdk_guide`.{0,80}supported programming languages",
+            "the lookup is still offered to sdk_guide; get_capabilities is its only source",
+        )
         self.assertRegex(
-            flat(PREPARATION),
-            r"(?i)platform-independent",
-            "'on that platform' mis-framed the fact: there is no per-platform language list",
+            self.lookup,
+            r"(?i)Do \*\*not\*\* route this lookup to `sdk_guide`",
+        )
+
+    def test_it_says_which_install_replies_list_languages(self):
+        """macos_arm and windows list Java, C#, Rust and TypeScript and send Python to Linux."""
+        self.assertRegex(
+            self.lookup,
+            r"(?i)\*\*`macos_arm` and `windows`:\*\* the `gotchas` list the programming languages "
+            r"supported there",
+        )
+        self.assertRegex(
+            self.lookup,
+            r"(?i)Java and C# \(official\), Rust and TypeScript \(community\)",
+        )
+        self.assertRegex(
+            self.lookup,
+            r"(?i)send Python to Docker or WSL2, because the Python SDK is supported on Linux only",
+        )
+        self.assertRegex(
+            self.lookup,
+            r"(?i)\*\*`linux_apt`, `linux_yum` and `docker`:\*\* the reply carries no language list",
+        )
+
+    def test_the_retired_claims_are_gone(self):
+        """Negative control: the two claims #80 found false on server 1.46.1."""
+        self.assertNotRegex(
+            self.text,
+            r"(?i)no language list at all",
+            "the step again says sdk_guide's install reply carries no language list on any "
+            "platform; on macos_arm and windows it does",
+        )
+        self.assertNotRegex(
+            self.text,
+            r"(?i)language set is \*{0,2}platform-independent",
+            "the step again calls the language set platform-independent, unqualified; the "
+            "macos_arm and windows replies narrow it by Python",
+        )
+        self.assertRegex(
+            self.lookup,
+            r"(?i)the same on every platform except for \*\*where Python runs\*\*",
+            "the qualified form of the claim must stay",
+        )
+
+    def test_the_negative_marker_is_scoped_to_the_platforms_it_holds_for(self):
+        markers = [m for m in reports.MCP_NEGATIVE.finditer(self.lookup)]
+        self.assertEqual(len(markers), 1, "the lookup must carry exactly one parsed MCP-NEGATIVE marker")
+        claim = markers[0].group("claim")
+        for platform in ("linux_apt", "linux_yum", "docker"):
+            self.assertIn(platform, claim, f"the marker no longer names {platform}")
+        for platform in ("macos_arm", "windows"):
+            self.assertNotIn(
+                platform, claim,
+                f"the marker claims {platform} returns no language list; on server 1.46.1 it does",
+            )
+        self.assertNotIn("platform=…", claim, "the marker is back to claiming every platform")
+        self.assertIn("get_capabilities", markers[0].group("owner"))
+
+    def test_python_stays_an_option_on_macos_and_windows(self):
+        self.assertRegex(
+            self.lookup,
+            r"(?i)Python stays among the options on macOS and Windows, annotated with its cost and "
+            r"the server's routes",
         )
 
     def test_the_per_platform_annotation_rules_are_preserved(self):
         """The spec requires the surrounding rules stay unchanged."""
-        text = flat(PREPARATION)
+        text = self.text
         self.assertRegex(text, r"(?i)Present the MCP-returned options as a \*\*numbered list\*\*")
         self.assertRegex(text, r"(?i)Always say \"\*\*programming language\*\*\"")
+        self.assertRegex(text, r"(?i)On macOS, suppress the WSL2 half")
 
 
 if __name__ == "__main__":
