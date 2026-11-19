@@ -1,5 +1,8 @@
 """The cited-or-deferred gate checks every reported line, `+` or `!`, at its source line.
 
+Enforces **INV-455** (registered 2026-11-19); it cannot establish that a cited invariant governs
+the rule beside it.
+
 `conformance.py since` reports a hard rule inside the Markdown corpus with `+`, and one outside
 it with `!`: in `docs/`, in `tools/bootcamp_build/`, or in a non-`.md` file under a scanned
 root. `tests/test_new_hard_rules_are_cited_or_deferred.py` is the gate that reads the report.

@@ -3919,7 +3919,7 @@ line and holds no copy of it, so changing the line changes the range.
   line, in the gate's docstring. `since` does not report it, because `tests/` is not a rule
   home. The block below covers it.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** The cited-or-deferred gate checks every line `since` reports, in every range, at its source line. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-455, registered by the maintainer 2026-11-19).** The cited-or-deferred gate checks every line `since` reports, in every range, at its source line. The rule already shipping, quoted:
     - ⛔ **Every line `since` reports, `+` or `!`, is checked in every range, at its whole source line.** — in `tests/test_new_hard_rules_are_cited_or_deferred.py`
 
   Enforced by `tests/test_the_gate_checks_outside_lines_at_their_source.py`.

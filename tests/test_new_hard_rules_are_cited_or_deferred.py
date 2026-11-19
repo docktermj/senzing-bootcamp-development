@@ -72,7 +72,7 @@ starts at the fallback commit the ledger states, and this guard checks that rang
 rule inside the Markdown corpus with `+` and one outside it with `!`: in `docs/`, in
 `tools/bootcamp_build/`, or in a non-`.md` file under a scanned root.
 
-⛔ **Every line `since` reports, `+` or `!`, is checked in every range, at its whole source line.**
+⛔ **(INV-455) Every line `since` reports, `+` or `!`, is checked in every range, at its whole source line.**
 
 Until #49 a `!` line was checked only in a range holding no `+` line, and against the
 110-character display text. An uncited rule in `hosts/kiro/host.json` passed in any range that
