@@ -3541,7 +3541,7 @@ line and holds no copy of it, so changing the line changes the range.
   maintainer applies it, only the test holds it. INV-101 is unchanged: session end still
   stops the recorded containers while the progress file records a module.
 
-- **PROPOSED AMENDMENT to INV-227 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-227 — applied 2026-11-19 by the maintainer.**
     - ⛔ **Once the bootcamp is complete it folds nothing and still stops the containers.** — in `source/hooks/README.md`
     - ⛔ **Once the bootcamp is complete it folds nothing and prints nothing.** — in `source/hooks/README.md`
     - ⛔ **it then creates no checkpoint and gives no reminder** — in `source/hooks/README.md`
