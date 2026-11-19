@@ -285,7 +285,7 @@ class LetterCaseDoesNotHideAName(Workspace):
     """Issue #30: a model ID, a directory and a variable spell an assistant's name in lower or
     upper case. Each is reported, in a built package and in the source, as the name itself is.
 
-    ⛔ **The build's check for another assistant's name matches it in any letter case, in `source/` and in every built package.**
+    ⛔ **(INV-448) The build's check for another assistant's name matches it in any letter case, in `source/` and in every built package.**
 
     That line is queued as a `DEFERRED INVARIANT` block in issue #30's entry of
     `specs/IMPLEMENTED.md`, awaiting the maintainer's sign-off. Until then only this file and

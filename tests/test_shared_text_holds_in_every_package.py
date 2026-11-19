@@ -53,6 +53,8 @@ model ID in passage 4 went unreported. `tests/test_bootcamp_build_emit.py` plant
 name in a package and in the source and sees each reported. `TheCheckIgnoresCaseOnTheRealTree`
 here holds the real tree to the recorded ceilings: nothing in `source/`, and in each non-Claude
 package the one project-directory variable the hook adapter reads.
+The ceilings only come down (INV-448, registered 2026-11-18); this cannot find a name put
+together at run time.
 
 Each check is a function over text, and a negative control feeds it the wording #30 replaced, or
 another package's value, and sees it reported.

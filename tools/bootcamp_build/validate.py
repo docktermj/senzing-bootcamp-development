@@ -42,7 +42,7 @@ class Finding:
 
 
 def _term_pattern(terms: tuple[str, ...] | list[str]) -> re.Pattern[str] | None:
-    """One pattern for a host's foreign terms, matched whatever their letter case.
+    """One pattern for a host's foreign terms, matched whatever their letter case (INV-448).
 
     A model ID, a directory and an environment variable spell an assistant's name in lower or
     upper case, and each is as much another host's text as the capitalized name is.
