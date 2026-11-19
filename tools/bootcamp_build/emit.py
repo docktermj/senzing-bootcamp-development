@@ -476,6 +476,9 @@ def _copy_host_files(build: HostBuild, context: BuildContext) -> None:
 def fallback_scripts(declaration: dict, host: Host) -> list[str]:
     """Hook scripts whose rule this host must be given as an instruction, in declared order.
 
+    A fallback says nothing does a hook's job only on a host with no event for it, or an
+    advisory one, and otherwise that the hook may not run (INV-450).
+
     A script needs no instruction only when the host is guaranteed to run it: the host has an
     event for it, the event can do what the script asks (it is not ``advisory``), and the
     host's hooks run without the bootcamper having to install or approve them.

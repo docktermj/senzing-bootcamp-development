@@ -3185,7 +3185,7 @@ line and holds no copy of it, so changing the line changes the range.
   to use an event name. INV-003 is the invariant the finding was filed under; its wording is
   not touched.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** A fallback's statement about its hook follows the assistant's hook mapping. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-450, registered by the maintainer 2026-11-18).** A fallback's statement about its hook follows the assistant's hook mapping. The rule already shipping, quoted:
     - ⛔ **A fallback says that nothing does a hook's job only where the assistant's mapping has no event for the hook or lists it as advisory, and says that the hook may not run where the mapping has one.** — in `tests/test_hook_statements_hold_on_every_assistant.py`
 
   Enforced by `tests/test_hook_statements_hold_on_every_assistant.py`.
