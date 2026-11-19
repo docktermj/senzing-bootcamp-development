@@ -1,6 +1,7 @@
 # Bootcamp hooks
 
-The plugin ships these hooks (registered in `hooks.json`). Following the bootcamp
+The plugin ships these hooks (registered in `hooks.json`), under the event names only this
+file carries (INV-452). Following the bootcamp
 convention, each hook's purpose is phrased beginning with the word "to", from the
 bootcamper's point of view (e.g. "to review what you said"). They are `command`-type
 hooks wired to small **Python** scripts under `../scripts/`, each invoked by a
