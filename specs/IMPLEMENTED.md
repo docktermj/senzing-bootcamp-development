@@ -36,6 +36,58 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## module-2s-szbuildversion-json-provenance-is-stale-search-docs-now-names-the-linux-path
+
+- **Implemented:** 2026-11-19 (issue #79)
+- **Files changed:** `source/skills/module-02-sdk-setup/SKILL.md`,
+  `tests/test_build_version_provenance_is_per_platform.py`,
+  `tests/test_prescribed_search_queries.py`, `tests/test_step1_filesystem_fallback.py`,
+  `specs/IMPLEMENTED.md` (this entry)
+- **MCP re-check:** server 1.46.1 (`get_capabilities`: `"server_version":"1.46.1"`), docs index
+  2026-11-14 17:44 UTC, 2026-11-19. Tools called, read-only, before any file changed:
+  `get_capabilities`; `search_docs(query='szBuildVersion.json build version file location',
+  max_results=10)`; `sdk_guide(topic='install')` with `platform='macos_arm'`, `'windows'` and
+  `'linux_apt'`. Outcome: still reproduces — the server contradicts the plugin's old wording.
+  `search_docs` names `/opt/senzing/er/szBuildVersion.json` in two sections of
+  `senzing-garage/aws-cloudformation-performance-testing/docs/performance-test-runbook.md`
+  ("1.5 Verify the deployed image builds"), for the 4.x container images
+  (`public.ecr.aws/senzing/...`), whose own check finds the file with `find /`; no hit names a
+  path for an apt, yum or Homebrew install. `windows` still names `szBuildVersion.json` in its
+  `gotchas[]` support data; `linux_apt` still never mentions the file. Each of the three install
+  replies also carries the anti-pattern *"Using senzing-garage repos"*, which says that organization holds
+  experimental, internal or legacy code; the bullet cites it for why the runbook corroborates
+  rather than sources the path. The issue's premise holds, and the change is what it asked for.
+  owner-checked: `sdk_guide(topic='install', platform='macos_arm')` — the install route that
+  names the macOS support data, under `$(brew --prefix)/opt/senzing/data`, lists
+  `address_datamodel`, `nomicon` and the `*TransRules.sz` modules and no `szBuildVersion.json`;
+  with `search_docs` as the corpus route returning no macOS path, the macOS absence stands, and
+  the marker's owner clause now names both routes.
+- **Summary:** Module 2 Step 1's Linux bullet for `szBuildVersion.json` said "No MCP route
+  states it", and the `MCP-NEGATIVE` marker behind it said `search_docs` serves no document giving
+  the path on any platform (server 1.37.13, 2026-09-26). The bullet keeps the label "environment
+  observation, not MCP-sourced" (INV-149) and the 2026-09-01 install observation
+  (`BUILD_VERSION 4.4.0.26242`) as its source, with its date unchanged (INV-191). It now cites
+  the `search_docs` call as corroboration, scoped to the 4.x container images and to the
+  `senzing-garage` runbook that names the path, stamped server 1.46.1, docs index 2026-11-14
+  17:44 UTC, 2026-11-19, and keeps its `linux_apt` sentence. The marker is narrowed to the
+  macOS absence, records the Linux runbook hit, keeps the Windows owner note, names the
+  `macos_arm` install route as an owner, and is dated server 1.46.1, 2026-11-19;
+  `coverage_reports.py negatives --server 1.46.1` now reports 0 DUE. The `search_docs` record in
+  `tests/test_prescribed_search_queries.py` is re-measured on the same stamp and keeps its
+  `OFF TARGET BY DESIGN` band: the runbook sits below the top hits, so it is no route. The
+  macOS and Windows bullets, `tests/test_mcp_negative_rationale_shape.py`'s historical quote and
+  the recap example's sentinel path are untouched. `TheLinuxBulletCitesTheRunbookAsCorroboration`
+  and `TheNegativeMarkerIsScopedToWhatTheServerStillLacks` replace the class that pinned the old
+  claim; negative controls were run by restoring the old text: "No MCP route states it" fails two
+  tests, the "on any platform" claim fails two, and the old 1.37.13 stamp fails one. No test was
+  deleted.
+- **Establishes no invariant** (INV-309). Treating a `senzing-garage` hit as corroboration
+  rather than a source is decided for this bullet only, as the issue's revision 1 records, and no
+  general rule is drafted. The rules this change applies are already in force and are unchanged:
+  INV-149 (the observation label), INV-285 (provenance stated per platform), INV-191 (a stamp
+  moves only for a check that ran) and INV-213 (an absence claim names its owning route).
+- **Commit:** uncommitted
+
 ## bootcamp-preparations-language-list-may-offer-a-language-a-platform-does-not-support
 
 - **Implemented:** 2026-11-19 (issue #80)

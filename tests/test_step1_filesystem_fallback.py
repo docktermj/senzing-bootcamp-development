@@ -107,10 +107,10 @@ class TheFallbackCoversEveryPlatform(unittest.TestCase):
 class TheVersionFileIsNotPresentedAsAnMcpFact(unittest.TestCase):
     """The build-metadata file's location is an environment observation, not a tool's answer.
 
-    `search_docs` returns no document giving that file's path on any platform — the version fact
-    the corpus serves is the SDK's own version call. So the paths may be named as observations and
-    must not be presented as MCP-sourced, and the reader must be routed to the SDK when the file is
-    not where expected.
+    `search_docs` names the Linux path only in a `senzing-garage` runbook about the 4.x container
+    images, and gives no path for macOS (#79) — the version fact the corpus serves is the SDK's
+    own version call. So the paths may be named as observations and must not be presented as
+    MCP-sourced, and the reader must be routed to the SDK when the file is not where expected.
     """
 
     def setUp(self):

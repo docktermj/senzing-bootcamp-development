@@ -802,17 +802,24 @@ VERIFIED_QUERIES = {
             "first and the same files follow, scoring ~34 against the Guide's ~8-12",
         "server": "1.46.1", "docs_index": "2026-11-14 17:44 UTC", "measured": "2026-11-18",
     },
+    # Re-measured for #79 on server 1.46.1, docs index 2026-11-14 17:44 UTC, 2026-11-19, at the
+    # default max_results, with the marker that quotes it, which carries the same stamp. The
+    # 2026-09-26 record (server 1.37.13) said no indexed document gave the path on any platform.
     ("search_docs", "szBuildVersion.json build version file location", None): {
         "band": "OFF TARGET BY DESIGN",
         "sections": (),
         "returned":
-            "OFF TARGET BY DESIGN — this is the negative's evidence: no indexed document gives the "
-            "file's path on any platform. It serves SDK version-call examples for it, top hit "
-            "senzing/code-snippets-v4 -> python/information/get_version.py, and build/packaging "
-            "documents. The corpus serves SzProduct.get_version(), not a file location, which is why "
-            "Step 1 routes the reader to the SDK call and marks the file paths as environment "
-            "observations (server 1.37.13, docs index 2026-09-24 18:45 UTC, re-executed 2026-09-26)",
-        "server": "1.37.13", "docs_index": "2026-09-24 18:45 UTC", "measured": "2026-09-26",
+            "OFF TARGET BY DESIGN — the negative's evidence: no indexed document gives the file's "
+            "path for macOS, and the only one naming the Linux path, "
+            "/opt/senzing/er/szBuildVersion.json, is a senzing-garage performance-test runbook, "
+            "aws-cloudformation-performance-testing's docs/performance-test-runbook.md, about the "
+            "4.x container images and below the top hits, so it is no route. Above it the corpus "
+            "serves a SQLite-version FAQ, SDK version-call examples (senzing/code-snippets-v4 -> "
+            "python/information/get_version.py and the sz-sdk python and rust docs) and build "
+            "scripts. The corpus serves SzProduct.get_version(), not a file location, which is why "
+            "Step 1 routes the reader to the SDK call, keeps the install observation as the Linux "
+            "path's source and cites the runbook only as corroboration for those images",
+        "server": "1.46.1", "docs_index": "2026-11-14 17:44 UTC", "measured": "2026-11-19",
     },
     # Executed for #169 on server 1.37.13, docs index 2026-09-24 18:45 UTC, 2026-09-26, at
     # max_results=5. The visualization contract's /api/how entry quotes it in its MCP-NEGATIVE
