@@ -1937,7 +1937,7 @@ If issues are found, go back to the relevant step. Retest after changes.
   copy in the `docs/` root; if one exists there, remove it.
 - **Per-source mapping specification:** Save a mapping specification markdown to
   `docs/mapping/{source_name}_mapper.md` for this data source. This file is always per-source,
-  even when the transformation program is shared, and it is the source's one mapping document:
+  even when the transformation program is shared, and it is the source's one mapping document (INV-441):
   its field mappings, mapping decisions, quality notes and how to run the transformation all go
   here. Use this structure:
 
