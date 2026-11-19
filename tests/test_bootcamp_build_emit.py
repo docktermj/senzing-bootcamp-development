@@ -1,4 +1,9 @@
-"""Building a host's package: where files go, and what stops a host being left behind."""
+"""Building a host's package: where files go, and what stops a host being left behind.
+
+Enforces **INV-446** (registered 2026-11-18) on a miniature repository, with
+`test_bootcamp_build_hosts.py` on the real profiles; neither establishes that a name in an
+adapter map is a tool name the assistant really sends.
+"""
 
 import contextlib
 import io

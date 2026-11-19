@@ -2333,7 +2333,7 @@ line and holds no copy of it, so changing the line changes the range.
   category: it is one value read from one profile key, held by a test. The lines this change
   adds under `hosts/` and `tools/bootcamp_build/` carry no ⛔ and no bold MUST or NEVER.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** A hook's matcher is derived from the adapter's own map of the assistant's tools. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-446, registered by the maintainer 2026-11-18).** A hook's matcher is derived from the adapter's own map of the assistant's tools. The rule already shipping, quoted:
     - ⛔ **On an assistant whose hooks go through the hook adapter, a hook's matcher names exactly the tools the adapter's map gives the categories the hook covers.** — in `tests/test_bootcamp_build_hosts.py`
 
   Enforced by `tests/test_bootcamp_build_hosts.py`.
@@ -2349,6 +2349,9 @@ line and holds no copy of it, so changing the line changes the range.
   invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
 
   **INV-NNN** — On an assistant whose hooks go through the hook adapter (`options.adapter` in `hosts/<assistant>/host.json`) and are limited to named tools (`hooks.matchers` is not `false`), each hook's matcher MUST name exactly the tools `options.adapter.tool_categories` maps to a category the hook covers, and no other name. A tool the map calls `patch` MUST be in the matcher of every hook that covers `write` or `edit`, because the adapter turns a patch into write and edit calls. Both places that build a matcher MUST derive it from that map and not from `hooks.tools`: the build, for a package that carries a hook file, and the package's hook installer, for a package that carries an installer instead, reading the copy of the map the build writes into `bootcamp_host.json`. When a hook covers a category for which the map gives no tool, the build MUST fail with an error that names the assistant and the key, for both kinds of package. An assistant with no adapter builds its matcher from `hooks.tools`, and an assistant whose profile sets `"matchers": false` has none; this rule changes neither. ⚠️ Limits: the rule makes a profile agree with itself. It does not establish that a name in the map is a tool name the assistant really sends; on 2026-11-17 no recorded run had checked that for any assistant. Enforced by `tests/test_bootcamp_build_hosts.py`, which reads the real profiles, the built hook file and the files the built installer writes, and by `tests/test_bootcamp_build_emit.py` on a miniature repository. (Source: `hook-matchers-the-kiro-hooks-disclosure-and-a-catalog-category-each-take-one-source`, GitHub issue #34, 2026-11-17.)
+
+  **Amended at review, 2026-11-18:** the maintainer struck the dated clause saying no recorded
+  run had checked the map's names for any assistant.
 
 - **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** A package that installs its hooks tells the bootcamper about every hook file before asking. The rule already shipping, quoted:
     - ⛔ **A package that installs its hooks tells the bootcamper about every hook file it writes, in one bullet for each.** — in `tests/test_bootcamp_build_hosts.py`

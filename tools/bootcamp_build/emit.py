@@ -192,7 +192,7 @@ def adapter_tool_names(host: Host, tools: list[str]) -> list[str]:
     """The names in the host's adapter map that a hook covering ``tools`` has to match.
 
     Every name the map gives one of the hook's categories, in the map's order, so the matcher
-    names exactly the tools the adapter would act on. The installer a host carries in place
+    names exactly the tools the adapter would act on (INV-446). The installer a host carries in place
     of a hook file derives its matchers the same way, from the copy of the map in
     ``bootcamp_host.json``.
     """

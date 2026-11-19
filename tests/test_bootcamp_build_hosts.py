@@ -10,7 +10,7 @@ matcher and the adapter's map of the assistant's tools, the hooks disclosure and
 the installer writes, and the catalog's category and the manifest's. Each now has one source,
 and these checks read the real host profiles:
 
-⛔ **On an assistant whose hooks go through the hook adapter, a hook's matcher names exactly the tools the adapter's map gives the categories the hook covers.**
+⛔ **(INV-446) On an assistant whose hooks go through the hook adapter, a hook's matcher names exactly the tools the adapter's map gives the categories the hook covers.**
 
 ⛔ **A package that installs its hooks tells the bootcamper about every hook file it writes, in one bullet for each.**
 

@@ -41,7 +41,7 @@ def matcher(config, hooks):
     event's scripts cover, in the map's order. Empty when the scripts are limited to no tool.
 
     The names come from ``tool_categories``, the map the hook adapter itself reads, so the hook
-    runs for exactly the tools the adapter would act on.
+    runs for exactly the tools the adapter would act on (INV-446).
     """
     covered = {tool for entry in hooks for tool in entry.get("tools", [])}
     if covered & PATCH_COVERS:
