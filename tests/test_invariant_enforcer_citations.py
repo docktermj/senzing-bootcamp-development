@@ -1030,7 +1030,10 @@ NAMED_TEST = re.compile(r"tests/(test_[a-z0-9_]+\.py)")
 #: Same review (2026-11-19): INV-227's 2026-11-17 note applied (issue #32). It names a test
 #: new to INV-227, which cites it back. Re-derived by running the extractor, which found 389,
 #: the new pair present by name.
-EXPECTED_PAIRS = 389
+#: Same review: INV-200's 2026-11-17 note applied (issue #33, reworded at review). It names
+#: a test new to INV-200, which cites it back. Re-derived by running the extractor, which
+#: found 390, the new pair present by name.
+EXPECTED_PAIRS = 390
 
 
 #: Adapted (one-repository migration, 2026-11-14): enforcers the register names that were not

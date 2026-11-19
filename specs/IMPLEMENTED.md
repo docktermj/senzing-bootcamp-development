@@ -3660,7 +3660,7 @@ line and holds no copy of it, so changing the line changes the range.
   note that would bind the PowerShell reading. Until the maintainer applies it, only the test
   holds it.
 
-- **PROPOSED AMENDMENT to INV-200 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-200 — applied 2026-11-19 by the maintainer.**
     - ⛔ **A command sent by a shell tool declared as PowerShell is read by PowerShell's rules and held to the same rule** — in `source/hooks/README.md`
 
   INV-200's dated note of 2026-11-06 says what the gate blocks and allows on a Bash command,
@@ -3674,6 +3674,9 @@ line and holds no copy of it, so changing the line changes the range.
   written as NNN deliberately; for the next free one, read it off `INVARIANTS.md`.
 
   **INV-200** — (⚠️ **Dated note, 2026-11-17 (#33): a command from a shell tool declared as PowerShell is read by PowerShell's rules; the Bash reading and the Write/Edit boundary above are unchanged.** An assistant's profile names which of its shell tools is PowerShell (`options.adapter.shell_dialects` in `hosts/<assistant>/host.json`), and the hook adapter passes that on as `shell_dialect` in the canonical payload; `tool_name` stays `Bash`, and a payload that names no dialect MUST be read as POSIX shell. On a PowerShell command the gate MUST block, with the same temp/Downloads message, a top-level output target that resolves to system temp or Downloads outside the project, in each command the line holds: a `>` or `>>` redirect, alone or with a stream in front (`2>`, `2>>`, `*>`, `*>>`); `Out-File`; `Set-Content` and `Add-Content` (`sc`, `ac`); `Tee-Object` (`tee`); the destination of `Copy-Item` and `Move-Item` (`cp`, `copy`, `cpi`, `mv`, `move`, `mi`); and `Invoke-WebRequest -OutFile` (`iwr`, `curl`, `wget`), with `curl.exe -o` and `wget -O` read as on Bash. Command and parameter names match in any case. System temp is also `$env:TEMP`, `$env:TMP` and `$env:TMPDIR`, in any case, with or without braces; Downloads is reached through `$HOME`, `$env:USERPROFILE`, `$env:HOME` or `~`. It MUST allow a target inside the project first, as above, and MUST allow `$null`, a stream merge such as `2>&1`, a temp path that is a source, a non-temp target outside the project, a quoted payload such as `powershell -Command '…'`, a here-string's body, and a command it cannot split. A variable other than those named, an expression and an abbreviated parameter name are not evaluated, and the secret check (INV-109) does not run. Enforced by `tests/test_write_gate_powershell.py`, which sends each command through the built Copilot adapter and **cannot** establish what a live PowerShell writes or what payload Copilot sends on Windows: that payload has not been observed, and no run in `hosts/copilot/checks.json` is on Windows.)
+
+  **Amended at review, 2026-11-19:** the maintainer struck the closing snapshot that the payload had
+  not been observed and that no Copilot run was on Windows.
 
 - **Commit:** uncommitted
 
