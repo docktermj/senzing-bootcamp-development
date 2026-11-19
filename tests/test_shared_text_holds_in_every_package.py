@@ -19,11 +19,10 @@ it is added (INV-246).
    shown to the bootcamper word for word that said "plugin"; a sweep of every `text` display
    block and every pinned 👉 question, in each package whose noun is not "plugin", keeps it so.
 
-   ⛔ **Text a package shows the bootcamper word for word names the package by its assistant's own noun.**
+   ⛔ **(INV-449) Text a package shows the bootcamper word for word names the package by its assistant's own noun.**
 
-   That line is queued as a `DEFERRED INVARIANT` block in this issue's entry of
-   `specs/IMPLEMENTED.md`, awaiting the maintainer's sign-off. Until then only this file holds
-   it. It binds displayed text only: guide-facing prose, the identifiers `PLUGIN_ROOT` and
+   That line is **INV-449**, registered by the maintainer on 2026-11-18; this file cannot
+   establish what a guide on a real assistant shows. It binds displayed text only: guide-facing prose, the identifiers `PLUGIN_ROOT` and
    `plugin.json`, the `plugin` routing value and the `**Plugin version:**` label keep the word,
    as the issue decides.
 3. **The skill's directory.** `onboarding-flow.md` said "The harness supplies that directory at

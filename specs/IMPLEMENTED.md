@@ -2660,7 +2660,7 @@ line and holds no copy of it, so changing the line changes the range.
   **Amended at review, 2026-11-18:** the maintainer struck the snapshot of the ceilings as they
   stood when the rule was drafted.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** Text shown to the bootcamper word for word names the package by the assistant's own noun. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-449, registered by the maintainer 2026-11-18).** Text shown to the bootcamper word for word names the package by the assistant's own noun. The rule already shipping, quoted:
     - ⛔ **Text a package shows the bootcamper word for word names the package by its assistant's own noun.** — in `tests/test_shared_text_holds_in_every_package.py`
 
   Enforced by `tests/test_shared_text_holds_in_every_package.py`.
@@ -2675,6 +2675,8 @@ line and holds no copy of it, so changing the line changes the range.
   invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
 
   **INV-NNN** — Text a skill file tells the guide to show the Bootcamper word for word, a fenced `text` display block or a pinned 👉 question, MUST name the package by the assistant's own noun, taken from `package_noun` in `hosts/<assistant>/host.json`: "Power" in the Kiro package and "plugin" in the others when this rule was drafted. Where an assistant's noun is not "plugin", its `host-rules.md`, which the guide reads at the start of every session, MUST say once that "plugin" in the bootcamp's files means that noun, and no other package carries the sentence. This binds displayed text only: guide-facing prose, the identifiers `PLUGIN_ROOT` and `plugin.json`, the `plugin` routing value in a feedback entry and the `**Plugin version:**` label keep the word. Observed (`production-readiness-audit-2026-11-17`, finding 16): the MCP failure message said "this plugin's" in the Kiro package. Enforced by `tests/test_shared_text_holds_in_every_package.py`, which reads every `text` display block and every pinned 👉 question of each built package whose noun is not "plugin"; it **cannot** establish what a guide on a real assistant shows, and it does not read text a script prints. (Source: `shared-text-names-one-assistants-files-ids-and-mechanisms-in-other-packages`, GitHub issue #30, 2026-11-17.)
+
+  **Amended at review, 2026-11-18:** the maintainer struck the dated list of each package's noun.
 
 - **Commit:** uncommitted
 

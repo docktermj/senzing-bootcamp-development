@@ -504,7 +504,8 @@ def host_rules(declaration: dict, host: Host, context: BuildContext) -> str:
         "",
     ]
     # The bootcamp's files say "plugin" throughout. An assistant that calls its package
-    # something else is told so once, in the file its guide reads at the start of every session.
+    # something else is told so once, in the file its guide reads at the start of every session
+    # (INV-449).
     noun = host.vars.get("package_noun", "plugin")
     if noun != "plugin":
         lines += [f'In the bootcamp\'s files, "plugin" means this {noun}.', ""]
