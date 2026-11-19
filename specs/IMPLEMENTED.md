@@ -3841,7 +3841,7 @@ line and holds no copy of it, so changing the line changes the range.
   line, in the new test module's docstring. `since` does not report it, because `tests/` is
   not a rule home. The block below covers it.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** A hook script and the hook adapter give the same result whatever Python's I/O encoding is. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-454, registered by the maintainer 2026-11-19).** A hook script and the hook adapter give the same result whatever Python's I/O encoding is. The rule already shipping, quoted:
     - ⛔ **A hook script and the hook adapter give the same exit code and the same bytes on stdout and stderr whatever Python's I/O encoding is.** — in `tests/test_hooks_under_a_legacy_code_page.py`
 
   Enforced by `tests/test_hooks_under_a_legacy_code_page.py`.

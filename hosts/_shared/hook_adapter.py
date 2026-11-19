@@ -17,7 +17,7 @@ A hook must never break the assistant it runs in. Anything that goes wrong here 
 quietly, allowing the action; set ``SENZING_BOOTCAMP_HOOK_DEBUG=1`` to see why on stderr.
 
 Nothing here depends on the encoding the console gives Python (a legacy code page on
-Windows). The payload is read as bytes and decoded as UTF-8. Each script is given ASCII JSON
+Windows; INV-454). The payload is read as bytes and decoded as UTF-8. Each script is given ASCII JSON
 and its output is read as bytes, so its exit code is used even when that output is not valid
 UTF-8. Every JSON this writes is ASCII-escaped, and plain text and stderr are written as
 UTF-8 bytes.
