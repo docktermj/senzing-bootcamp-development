@@ -1779,7 +1779,7 @@ if it's already in the right format for Senzing."
 - Document everything in `docs/data_source_locations.md`.
 - **If the bootcamper doesn't have data or asks about free data sources** — and has **no
   bootcamp-generated scenario** (see the marker check in Step 2), and did not choose option 5 at
-  Step 2's provision question — follow the data recommendation hierarchy: (1) recommend CORD
+  Step 2's provision question — follow the data recommendation hierarchy (INV-440): (1) recommend CORD
   data first via the `get_sample_data` MCP tool with
   reference to
   <https://senzing.com/senzing-ready-data-collections-cord/>; (2) if CORD is declined, recommend

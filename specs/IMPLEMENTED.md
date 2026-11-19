@@ -1861,7 +1861,7 @@ line and holds no copy of it, so changing the line changes the range.
   **Amended at review, 2026-11-18:** the maintainer struck the sentence that listed the eight
   closes by name, so the rule states the property only.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** Module 4 states one data hierarchy, and its three statements of it agree. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-440, registered by the maintainer 2026-11-18).** Module 4 states one data hierarchy, and its three statements of it agree. The rule already shipping, quoted:
     - ⛔ **Module 4 states one data hierarchy: CORD first, then free raw data, then synthesized test data.** — in `tests/test_gate_options_have_handling_steps.py`
     - `source/skills/module-04-data-collection/SKILL.md` — ⛔ the secondary offer gives "Free raw data" first as the recommended choice and "Synthesized test data" second as the fallback, in one quote with no question
 

@@ -84,7 +84,8 @@ asserts the file *states* the routes, and cannot establish that a live guide fol
 `production-readiness-audit-2026-11-17`: the secondary offer gave synthesized data beside free
 raw data, and two other passages called it a last resort):
 
-- ⛔ **Module 4 states one data hierarchy: CORD first, then free raw data, then synthesized test data.**
+- ⛔ **(INV-440) Module 4 states one data hierarchy: CORD first, then free raw data, then synthesized test data.**
+  Enforces **INV-440** (registered 2026-11-18); it cannot establish what a live guide recommends.
 
 `Module4StatesOneDataHierarchy` asserts that the secondary offer gives "Free raw data" first
 and calls it recommended, gives "Synthesized test data" second and calls it the fallback, and
