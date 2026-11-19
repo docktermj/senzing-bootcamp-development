@@ -29,6 +29,14 @@ Verified 2026-09-01, server 1.35.3, all three routes asked:
     linux_apt  -> names it nowhere; observed on-box at 4.4.0.26242  (observation)
     macos_arm  -> names it nowhere; support data listed without it  (unknown)
 
+#79 re-asked `search_docs(query='szBuildVersion.json build version file location')` on server
+1.46.1 (docs index 2026-11-14 17:44 UTC), 2026-11-19. The corpus now names
+`/opt/senzing/er/szBuildVersion.json`, but only in a `senzing-garage` performance-test runbook,
+for the 4.x container images. So the Linux bullet no longer says "No MCP route states it": it
+keeps the install observation as its source and cites the runbook as corroboration scoped to
+those images, and the negative marker is narrowed to macOS. The three routes above were asked
+again on the same day and still answer as recorded.
+
 Enforces **INV-285** — a provenance label covering several independently-moving facts is
 stated per fact, each with its own route and date.
 
@@ -39,13 +47,29 @@ guide's behavior at that step is `dry-run` phase 3's to observe.
 Stdlib only; nothing under ``source/`` is imported (INV-108).
 """
 
+import importlib.util
 import re
+import sys
 import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 SKILL = (REPO / "source" / "skills" /
          "module-02-sdk-setup" / "SKILL.md")
+
+
+def _load(path, name):
+    spec = importlib.util.spec_from_file_location(name, path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+#: The MCP-NEGATIVE marker grammar is imported, never restated, so the marker below parses here
+#: exactly as the negatives report parses it.
+reports = _load(REPO / ".claude" / "skills" / "dry-run" / "coverage_reports.py",
+                "coverage_reports_for_build_version_provenance")
 
 
 def provenance_block():
@@ -94,9 +118,11 @@ class ProvenanceIsStatedPerPlatform(unittest.TestCase):
 
     def test_linux_stays_an_observation_and_says_so(self):
         self.assertRegex(
-            self.block, r"(?i)Linux — environment observation",
-            "Linux is still an observation — no MCP route states it — and must stay labeled "
-            "as one (INV-149). Promoting it on the strength of the Windows change would be "
+            self.block, r"(?i)Linux — environment observation, not MCP-sourced",
+            "Linux is still an observation and must stay labeled as one (INV-149): the only "
+            "route that names the path is a senzing-garage runbook about container images, "
+            "which corroborates the install observation and does not replace it (#79). "
+            "Promoting it on the strength of that runbook, or of the Windows change, would be "
             "the same defect in the other direction.",
         )
         self.assertRegex(
@@ -132,21 +158,104 @@ class ProvenanceIsStatedPerPlatform(unittest.TestCase):
         )
 
 
-class TheNegativeMarkerStillAssertsItsClaim(unittest.TestCase):
-    """The spec's fourth criterion: extend the owner clause, never weaken the claim."""
+def linux_bullet():
+    block = flat(provenance_block())
+    start = block.index("**Linux —")
+    return block[start:block.index("**macOS —", start)]
+
+
+class TheLinuxBulletCitesTheRunbookAsCorroboration(unittest.TestCase):
+    """#79: the corpus now names the Linux path, in one place and for one case.
+
+    `search_docs(query='szBuildVersion.json build version file location')` names
+    `/opt/senzing/er/szBuildVersion.json` in a `senzing-garage` performance-test runbook, for the
+    4.x container images (server 1.46.1, 2026-11-19). The bullet keeps the 2026-09-01 install
+    observation as its source and cites that hit as corroboration scoped to those images.
+    """
+
+    def setUp(self):
+        self.bullet = linux_bullet()
+
+    def test_the_install_observation_stays_the_primary_source(self):
+        self.assertRegex(self.bullet, r"BUILD_VERSION 4\.4\.0\.26242`? \(2026-09-01\)",
+                         "the 2026-09-01 observation keeps its build and its date (INV-191)")
+        self.assertRegex(self.bullet, r"(?i)install observation is the source")
+
+    def test_the_search_docs_hit_is_cited_as_corroboration_scoped_to_container_images(self):
+        self.assertIn(
+            "search_docs(query='szBuildVersion.json build version file location')", self.bullet,
+            "the bullet must name the call that names the path, so the next reader can re-ask it",
+        )
+        self.assertRegex(self.bullet, r"(?i)corroborat")
+        self.assertRegex(self.bullet, r"senzing-garage`? performance-test runbook")
+        self.assertRegex(self.bullet, r"(?i)4\.x container images")
+        self.assertRegex(
+            self.bullet,
+            r"server \*{0,2}\d+\.\d+\.\d+\*{0,2}, docs index \d{4}-\d\d-\d\d \d\d:\d\d UTC, "
+            r"\d{4}-\d\d-\d\d",
+            "the corroboration must carry the server version, docs index and date it was asked "
+            "on (INV-080)",
+        )
+
+    def test_the_linux_apt_install_sentence_is_kept(self):
+        self.assertRegex(
+            self.bullet,
+            r"`sdk_guide\(topic='install', platform='linux_apt'\)` gives `default_paths` and a "
+            r"`ls /opt/senzing/er/lib/libSz\.so` verification step and never mentions the file",
+        )
+
+    def test_the_retired_no_route_claim_is_gone(self):
+        """Negative control: on server 1.46.1 a route does name the path."""
+        self.assertNotRegex(
+            self.bullet, r"(?i)no MCP route (states|names|gives|serves) (it|the path)",
+            "the bullet again says no MCP route states the Linux path; search_docs names it, "
+            "in a runbook about the 4.x container images",
+        )
+
+
+class TheNegativeMarkerIsScopedToWhatTheServerStillLacks(unittest.TestCase):
+    """The marker keeps the macOS absence and records the Linux runbook hit (#79)."""
 
     def setUp(self):
         text = SKILL.read_text(encoding="utf-8")
         i = text.index("<!-- MCP-NEGATIVE: search_docs(query='szBuildVersion.json")
-        self.marker = flat(text[i: text.index("-->", i)])
+        self.raw = text[i: text.index("-->", i) + 3]
+        self.marker = flat(self.raw)
+        self.parsed = reports.MCP_NEGATIVE.search(self.raw)
 
-    def test_the_search_docs_claim_is_unchanged(self):
-        self.assertRegex(
-            self.marker, r"(?i)no indexed document gives that file's path on any platform",
-            "The `search_docs` claim still holds and must not be weakened. It is scoped to "
-            "the corpus route, and the corpus still returns no file location — the Windows "
-            "fact is served by a different tool.",
+    def test_the_marker_still_parses(self):
+        self.assertIsNotNone(
+            self.parsed,
+            "the marker no longer parses as an MCP-NEGATIVE marker, so it drops off the "
+            "negatives worklist",
         )
+
+    def test_the_claim_is_the_macos_absence(self):
+        claim = flat(self.parsed.group("claim"))
+        self.assertRegex(claim, r"(?i)no indexed document gives the file's path for macOS")
+
+    def test_the_claim_records_the_linux_runbook_hit(self):
+        claim = flat(self.parsed.group("claim"))
+        self.assertRegex(claim, r"(?i)for Linux the corpus names \S*szBuildVersion\.json only in "
+                                r"a senzing-garage performance-test runbook")
+        self.assertRegex(claim, r"(?i)4\.x container images")
+
+    def test_the_retired_any_platform_claim_is_gone(self):
+        """Negative control: the claim #79 found false on server 1.46.1."""
+        self.assertNotRegex(
+            self.marker, r"(?i)on any platform",
+            "the marker again says no indexed document gives the path on any platform; the "
+            "corpus names the Linux path for the 4.x container images",
+        )
+
+    def test_the_marker_is_dated_no_earlier_than_the_re_ask(self):
+        version = tuple(int(n) for n in self.parsed.group("version").split("."))
+        self.assertGreaterEqual(
+            version, (1, 46, 1),
+            "the marker is dated before the server #79 re-asked it on, so the negatives report "
+            "lists it as DUE again",
+        )
+        self.assertGreaterEqual(self.parsed.group("date"), "2026-11-19")
 
     def test_the_owner_clause_records_the_route_that_does_serve_windows(self):
         self.assertRegex(
@@ -159,6 +268,11 @@ class TheNegativeMarkerStillAssertsItsClaim(unittest.TestCase):
             self.marker, r"platform='windows'",
             "The owner clause must name the serving route, not merely allude to it.",
         )
+
+    def test_the_owner_clause_names_the_macos_install_route(self):
+        """INV-213: an absence claim names the route that would carry the fact."""
+        self.assertIn("sdk_guide(topic='install', platform='macos_arm')",
+                      flat(self.parsed.group("owner")))
 
 
 if __name__ == "__main__":

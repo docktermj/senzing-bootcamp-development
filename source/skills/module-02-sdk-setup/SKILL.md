@@ -226,8 +226,13 @@ three is what let the Windows half go stale while reading as reviewed.
   4.3.3.26191).
 - **Linux — environment observation, not MCP-sourced (INV-149).** `/opt/senzing/er/` and also
   `/opt/senzing/data/`. Observed on a real install, both files present and identical, reporting
-  `BUILD_VERSION 4.4.0.26242` (2026-09-01). No MCP route states it:
-  `sdk_guide(topic='install', platform='linux_apt')` gives `default_paths` and a
+  `BUILD_VERSION 4.4.0.26242` (2026-09-01). That install observation is the source.
+  `search_docs(query='szBuildVersion.json build version file location')` corroborates the `er`
+  path for the 4.x container images only: it names `/opt/senzing/er/szBuildVersion.json` in a
+  `senzing-garage` performance-test runbook, about those images rather than an apt or yum install
+  (server **1.46.1**, docs index 2026-11-14 17:44 UTC, 2026-11-19). Treat it as corroboration, not
+  as the source: the install replies' own anti-patterns say `senzing-garage` holds experimental or
+  internal code. `sdk_guide(topic='install', platform='linux_apt')` gives `default_paths` and a
   `ls /opt/senzing/er/lib/libSz.so` verification step and never mentions the file.
 - **macOS — unknown, and the route was asked.** `sdk_guide(topic='install', platform='macos_arm')`
   names the support data under `$(brew --prefix)/opt/senzing/data` as `address_datamodel`,
@@ -236,7 +241,7 @@ three is what let the Windows half go stale while reading as reviewed.
 
 If the file is not where expected, read the version through the SDK rather than concluding the SDK
 is missing.
-<!-- MCP-NEGATIVE: search_docs(query='szBuildVersion.json build version file location') — no indexed document gives that file's path on any platform; the corpus serves SDK version-READING material for it (the get_version() examples) and build/packaging documents, none stating where the file lives — owner: search_docs IS the corpus route for a documented file location, and the version fact the corpus does serve is the SDK's get_version() rather than a file, so the SDK route is where the reader must go (routing negative; NOTE the Windows path IS served, by sdk_guide(topic='install', platform='windows') in its gotchas[] — this claim is scoped to search_docs and to Linux/macOS) — server 1.37.13, 2026-09-26 -->
+<!-- MCP-NEGATIVE: search_docs(query='szBuildVersion.json build version file location') — no indexed document gives the file's path for macOS; for Linux the corpus names /opt/senzing/er/szBuildVersion.json only in a senzing-garage performance-test runbook, for the 4.x container images, and gives no path for an apt or yum install; the rest of what it serves is SDK version-READING material (the get_version() examples) and build/packaging documents — owner: search_docs IS the corpus route for a documented file location, and sdk_guide(topic='install', platform='macos_arm') IS the install route that names the macOS support data, which it lists without the file; the version fact the corpus does serve is the SDK's get_version() rather than a file, so the SDK route is where the reader must go (routing negative; NOTE the Windows path IS served, by sdk_guide(topic='install', platform='windows') in its gotchas[] — this claim is scoped to search_docs, to macOS, and to Linux outside the container images) — server 1.46.1, 2026-11-19 -->
 
 **If the SDK is found and version is V4.0+:**
 
