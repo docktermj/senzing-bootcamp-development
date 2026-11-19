@@ -2180,7 +2180,7 @@ line and holds no copy of it, so changing the line changes the range.
   **Amended at review, 2026-11-18:** the maintainer struck the dated sentence saying no
   `checks.json` record covered an update or an uninstall.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** Text for GitHub Copilot uses the name its own naming table gives the desktop application. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-445, registered by the maintainer 2026-11-18).** Text for GitHub Copilot uses the name its own naming table gives the desktop application. The rule already shipping, quoted:
     - ⛔ **Text written for GitHub Copilot calls its desktop application "the GitHub Copilot app".** — in `tests/test_install_pages_cover_what_the_package_names.py`
 
   Enforced by `tests/test_install_pages_cover_what_the_package_names.py`.
