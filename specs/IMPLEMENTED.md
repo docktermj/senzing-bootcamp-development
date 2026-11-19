@@ -2472,7 +2472,7 @@ line and holds no copy of it, so changing the line changes the range.
   below drafts the dated note the issue asks for. Until the maintainer applies it, the
   register's wording is narrower than what the packages carry.
 
-- **PROPOSED AMENDMENT to INV-427 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-427 — applied 2026-11-18 by the maintainer.**
     - ⛔ **(INV-427) Read this file to its last line.** — in `tools/bootcamp_build/emit.py`
 
   INV-427's first clause covers every file the bootcamp tells the guide to read before acting.
