@@ -2353,7 +2353,7 @@ line and holds no copy of it, so changing the line changes the range.
   **Amended at review, 2026-11-18:** the maintainer struck the dated clause saying no recorded
   run had checked the map's names for any assistant.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** A package that installs its hooks tells the bootcamper about every hook file before asking. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-447, registered by the maintainer 2026-11-18).** A package that installs its hooks tells the bootcamper about every hook file before asking. The rule already shipping, quoted:
     - ⛔ **A package that installs its hooks tells the bootcamper about every hook file it writes, in one bullet for each.** — in `tests/test_bootcamp_build_hosts.py`
 
   Enforced by `tests/test_bootcamp_build_hosts.py`.
@@ -2368,6 +2368,9 @@ line and holds no copy of it, so changing the line changes the range.
   invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
 
   **INV-NNN** — Where an assistant's package installs the bootcamp's hooks into the bootcamper's project (on 2026-11-17 only the Kiro package, through `install_hooks.py`), the skill that asks for consent MUST tell the bootcamper about every hook file the installer writes, before it asks. Its "What to tell the bootcamper" list MUST hold exactly one bullet for each hook file the installer writes and no bullet for a file it does not write. Each bullet MUST begin with the hook file's name as the installer prints it, and then say in plain words when the hook runs and everything it does, including the files it writes and a hook whose result the assistant cannot act on. A change that adds, removes or renames a hook file, or changes what a hook's scripts do, MUST change the list in the same change. ⚠️ Limits: the enforcer matches the file name that opens each bullet; whether a bullet's description is complete and true is a reviewer's call. Enforced by `tests/test_bootcamp_build_hosts.py`, which runs the built installer in a scratch workspace and compares the files it writes with the bullets. (Source: `hook-matchers-the-kiro-hooks-disclosure-and-a-catalog-category-each-take-one-source`, GitHub issue #34, 2026-11-17.)
+
+  **Amended at review, 2026-11-18:** the maintainer struck the dated parenthesis naming the
+  one package that installs its hooks.
 
 - **Commit:** uncommitted
 

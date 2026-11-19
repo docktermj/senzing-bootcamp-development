@@ -12,7 +12,7 @@ and these checks read the real host profiles:
 
 ⛔ **(INV-446) On an assistant whose hooks go through the hook adapter, a hook's matcher names exactly the tools the adapter's map gives the categories the hook covers.**
 
-⛔ **A package that installs its hooks tells the bootcamper about every hook file it writes, in one bullet for each.**
+⛔ **(INV-447) A package that installs its hooks tells the bootcamper about every hook file it writes, in one bullet for each.**
 
 Those two lines are queued as `DEFERRED INVARIANT` blocks in this issue's entry of
 `specs/IMPLEMENTED.md`, awaiting the maintainer's sign-off. Until then only this file holds

@@ -15,7 +15,7 @@ written before they have seen what will be written and said yes.
 
 ## What to tell the bootcamper
 
-Say this much, and no more, before asking:
+Say this much, and no more, before asking (INV-447):
 
 - `senzing-bootcamp-session-start.json`: runs when a session starts. It tells the guide where
   the bootcamper left off, or that the bootcamp is complete. It moves recap notes left by an
