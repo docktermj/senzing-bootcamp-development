@@ -235,7 +235,7 @@ never blocks this module — it keeps the close from reporting a cleanup that di
 
 ## Step 5: Module Close
 
-Complete this module using the standard **Module Completion** process in
+Complete this module using the standard **Module Completion** process (INV-439) in
 `../bootcamp-onboarding/module-completion.md`. Record it as a first-class module in the order the
 bootcamper experienced it (immediately after System verification), so it does not depend on
 graduation's reconcile backfill (INV-085/INV-086/INV-087). Run Module Completion's Step 0 checks

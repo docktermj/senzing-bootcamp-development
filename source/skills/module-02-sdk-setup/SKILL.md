@@ -2804,7 +2804,7 @@ call succeeds** (not merely a version query).
 
 ## Module completion and transition
 
-Once the SDK is installed and verified, run the standard **Module Completion** process in
+Once the SDK is installed and verified, run the standard **Module Completion** process (INV-439) in
 `../bootcamp-onboarding/module-completion.md` (its Step 0 checks, update progress, append the
 Module 2 recap section to `docs/bootcamp_recap.md`, and present the end-of-module summary), then
 ask the single transition question.

@@ -413,7 +413,7 @@ find it — via the module-completion "Files produced" list. **Checkpoint:** wri
 missing, write its entry by Step 11's **Registry write**, and only then continue (INV-402). The
 bootcamper-described case has no such check.
 
-Run the standard **Module Completion** process in
+Run the standard **Module Completion** process (INV-439) in
 `../bootcamp-onboarding/module-completion.md` (its Step 0 checks, update progress, append the
 Module 1 recap section to `docs/bootcamp_recap.md`, and present the end-of-module summary), then
 ask the single transition question.

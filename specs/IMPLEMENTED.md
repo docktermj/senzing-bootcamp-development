@@ -1820,7 +1820,7 @@ line and holds no copy of it, so changing the line changes the range.
   What each restates is owned by the place it names, and the new tests hold each one to that
   place under INV-003.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** A module close that lists Module Completion's steps lists them in its order, Step 0 first. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-439, registered by the maintainer 2026-11-18).** A module close that lists Module Completion's steps lists them in its order, Step 0 first. The rule already shipping, quoted:
     - ⛔ **A module close that lists the steps of Module Completion names its Step 0 first, then progress, recap and summary, in the order `module-completion.md` fixes.** — in `tests/test_restatements_say_what_their_source_says.py`
     - `source/skills/module-01-business-problem/phase2-document-confirm.md` — ⛔ the close lists Module Completion's Step 0 checks, the progress update, the recap section and the summary, in that order
     - `source/skills/module-02-sdk-setup/SKILL.md` — ⛔ the close lists Module Completion's Step 0 checks, the progress update, the recap section and the summary, in that order
@@ -1842,7 +1842,24 @@ line and holds no copy of it, so changing the line changes the range.
   Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
   invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
 
-  **INV-NNN** — A module close that lists the steps of Module Completion MUST name its Step 0 checks first, then updating progress, appending the module's recap section and presenting the end-of-module summary, in the order the opening of `module-completion.md` fixes. A close that names two or more of those steps MUST name all four. A close MAY instead point at the process and list no step. On 2026-11-17 eight closes list the steps: Discover the Business Problem, SDK setup, System verification, Truth Set visualization, Data collection, Data Quality, Mapping, and Transformation, Data processing, and Query, Visualize and Discover. Entity Resolution Concepts runs the process step by step and departs from it on purpose, and is not bound by this. Observed (`production-readiness-audit-2026-11-17`, finding 20): two closes listed the steps without Step 0, one put the summary before the recap, and two numbered the steps 1 to 4 and left Step 0 out, while Step 0's filings run in every module. ⚠️ Limits: the enforcer reads `source/`, finds a close by the phrase "standard **Module Completion** process", reads it up to the module's transition question and takes the first mention of each step. It reads the order from the opening of `module-completion.md`. It **cannot** establish that a live guide runs Step 0 at a module close. Enforced by `tests/test_restatements_say_what_their_source_says.py`. (Source: `restated-rules-and-lists-in-shipped-text-have-drifted-from-their-source`, GitHub issue #45, 2026-11-17.)
+  **INV-NNN** — A module close that lists the steps of Module Completion MUST name its Step 0
+  checks first, then updating progress, appending the module's recap section and presenting the
+  end-of-module summary, in the order the opening of `module-completion.md` fixes. A close that
+  names two or more of those steps MUST name all four. A close MAY instead point at the process
+  and list no step. Entity Resolution Concepts runs the process step by step and departs from it
+  on purpose, and is not bound by this. Observed (`production-readiness-audit-2026-11-17`,
+  finding 20): two closes listed the steps without Step 0, one put the summary before the recap,
+  and two numbered the steps 1 to 4 and left Step 0 out, while Step 0's filings run in every
+  module. ⚠️ Limits: the enforcer reads `source/`, finds a close by the phrase "standard
+  **Module Completion** process", reads it up to the module's transition question and takes the
+  first mention of each step. It reads the order from the opening of `module-completion.md`. It
+  **cannot** establish that a live guide runs Step 0 at a module close. Enforced by
+  `tests/test_restatements_say_what_their_source_says.py`. (Source:
+  `restated-rules-and-lists-in-shipped-text-have-drifted-from-their-source`, GitHub issue #45,
+  2026-11-17.)
+
+  **Amended at review, 2026-11-18:** the maintainer struck the sentence that listed the eight
+  closes by name, so the rule states the property only.
 
 - **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** Module 4 states one data hierarchy, and its three statements of it agree. The rule already shipping, quoted:
     - ⛔ **Module 4 states one data hierarchy: CORD first, then free raw data, then synthesized test data.** — in `tests/test_gate_options_have_handling_steps.py`
