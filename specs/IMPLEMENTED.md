@@ -3441,7 +3441,7 @@ line and holds no copy of it, so changing the line changes the range.
   docstring. `since` does not report it, because `tests/` is not a rule home. The block below
   covers it (INV-309).
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** A bundled script that reports the bootcamp's version reads it from the `bootcamp_host.json` beside it first. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-453, registered by the maintainer 2026-11-18).** A bundled script that reports the bootcamp's version reads it from the `bootcamp_host.json` beside it first. The rule already shipping, quoted:
     - ⛔ **A bundled script that reports the bootcamp's version reads `bootcamp_version` from the `bootcamp_host.json` beside it before any manifest.** — in `tests/test_scripts_report_the_built_version.py`
 
   Enforced by `tests/test_scripts_report_the_built_version.py`.
@@ -3460,6 +3460,9 @@ line and holds no copy of it, so changing the line changes the range.
   invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
 
   **INV-NNN** — A bundled script that reports the bootcamp's version MUST read it first from `bootcamp_version` in the `bootcamp_host.json` the build writes beside that script, so that it reports the built version in every assistant's package. Two scripts report it: `feedback-capture.py`, in the text it injects when the bootcamper asks to give feedback, and `package_bootcamp.py`, as `plugin_version` in `PACKAGE_MANIFEST.json` and on the last line of `OPEN_ME_FIRST.md`. When that file gives no version (it is missing, cannot be read, is not valid JSON, or holds no string under `bootcamp_version` that is more than whitespace) the script MUST NOT raise and MUST go on to its own manifest lookup, at paths fixed from the script's location, and then report its unresolved value ("Unknown" from the hook, "unknown" from the packager), never a guess. A script MUST NOT search the filesystem for either file (INV-252). Observed (`dry-run-2026-11-17`, finding 4; `production-readiness-audit-2026-11-17`, finding 22): reading a manifest path alone, the hook told the guide the version was "Unknown" in the Copilot, ChatGPT, Gemini and Kiro packages, and the packager recorded "unknown" in the ChatGPT and Kiro packages. Enforced by `tests/test_scripts_report_the_built_version.py`, which runs both scripts from every built package and the fallback cases on scratch copies; it **cannot** establish that a live assistant runs the hook or what a guide then records, and it was run on Linux only. (Source: `the-feedback-hook-and-the-packager-report-the-bootcamp-version-as-unknown-on-non-claude-packages`, GitHub issue #31, 2026-11-17.)
+
+  **Amended at review, 2026-11-18:** the maintainer struck the sentence listing the two scripts
+  that report the version.
 
 - **Commit:** uncommitted
 

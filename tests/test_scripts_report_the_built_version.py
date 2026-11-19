@@ -18,7 +18,7 @@ directories deeper), so those archives recorded `"plugin_version": "unknown"`
 The build already writes the version beside both scripts, in `bootcamp_host.json`, on every
 assistant, and `feedback.md` already tells the guide to read it there first.
 
-⛔ **A bundled script that reports the bootcamp's version reads `bootcamp_version` from the `bootcamp_host.json` beside it before any manifest.**
+⛔ **(INV-453) A bundled script that reports the bootcamp's version reads `bootcamp_version` from the `bootcamp_host.json` beside it before any manifest.**
 
 That line is queued as a `DEFERRED INVARIANT` block in this issue's entry of
 `specs/IMPLEMENTED.md`, awaiting the maintainer's sign-off. Until then only this file holds it.

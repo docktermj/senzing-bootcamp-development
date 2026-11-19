@@ -37,7 +37,7 @@ def plugin_version():
 
     Read first from ``bootcamp_version`` in the ``bootcamp_host.json`` the build writes
     beside this file, which every assistant's package carries, so the answer does not
-    depend on where an assistant keeps its manifest (#31). Only when that file gives no
+    depend on where an assistant keeps its manifest (#31, INV-453). Only when that file gives no
     version -- it is missing, cannot be read, is not valid JSON, or holds no non-empty
     string under that key -- is the manifest above this file's directory read. Both are
     fixed paths from this file: nothing is searched for (INV-252).
