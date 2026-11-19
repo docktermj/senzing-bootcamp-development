@@ -36,6 +36,41 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## invariant-review-2026-11-18
+
+**Not a spec** — the record of a `/review-invariants` session, attended by the maintainer.
+
+- **Implemented:** 2026-11-18 to 2026-11-19
+- **Files changed:** `specs/INVARIANTS.md`, `specs/IMPLEMENTED.md`; citation sites in
+  `source/skills/` (the ground rules, module completion, packaging, Bootcamp preparation and
+  Modules 0 to 7), `source/hooks/README.md`, `source/scripts/feedback-capture.py`,
+  `source/scripts/package_bootcamp.py`, `hosts/_shared/hook_adapter.py`,
+  `hosts/copilot/fragments/interface-naming.md`, `hosts/kiro/files/skills/`,
+  `tools/bootcamp_build/` (`emit.py`, `site.py`, `validate.py`); back-citations and rule-line
+  citations in `tests/`, and `tests/test_invariant_enforcer_citations.py`
+- **MCP re-check:** n/a (no Senzing fact)
+- **Summary:** Every pending block was decided, each on its own yes, and each decision is its
+  own commit on branch `1-docktermj-7`.
+  - **Registered:** INV-433 to INV-455, 23 invariants. INV-435 was split out of the INV-132
+    amendment at review.
+  - **Amendments applied:** dated notes on INV-050, INV-055, INV-057, INV-132, INV-167,
+    INV-200, INV-223, INV-227, INV-252, INV-304, INV-307, INV-350, INV-351, INV-360 (worded as
+    its retirement), INV-380, INV-427 and INV-430.
+  - **Wording changed at review, with a second yes on the changed text:** the maintainer struck
+    dated lists of current members and status snapshots ("on 2026-11-17 no record…", "today
+    the Claude package alone", "when this rule was drafted…") from INV-167, INV-200, INV-439,
+    INV-442, INV-443, INV-444, INV-446, INV-447, INV-448, INV-449 and INV-453, and an extra
+    sentence from INV-057. Each block records what was struck.
+  - **Held:** one, the share-profile block from #46. Revisit after `dry-run` phase 3 has
+    exercised packaging. The three earlier holds were not re-offered; none of their revisit
+    conditions was met.
+  - **Guard:** the enforcer pair count was re-derived by the extractor at each decision, 360 to
+    393, with a note per change.
+  - **Remains:** the queue is empty; four blocks are held.
+- **Establishes no invariant of its own** (INV-309): every id it registered or amended was
+  established by the entry its block sits in.
+- **Commit:** uncommitted
+
 ## dated-mcp-rationales-and-quotations-in-shipped-text-no-longer-reproduce
 
 - **Implemented:** 2026-11-18 (issue #38)
