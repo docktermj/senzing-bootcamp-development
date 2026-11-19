@@ -201,7 +201,7 @@ visualization is a separate, standalone module that records itself at its own cl
 
 1. **Update progress state.** Add `system_verification` to `modules_completed` (a module name token,
    not a number). Set `current_module` to the next module in `selected_modules` (read from
-   `config/bootcamp_preferences.yaml`), and `current_step` to `null`. All idempotent (do not
+   `config/bootcamp_preferences.yaml`), and `current_step` to `null` (INV-442). All idempotent (do not
    duplicate).
 2. **Append the recap section** to `docs/bootcamp_recap.md`, name-based and append-only (INV-085):
    `## System verification — {timestamp}` (Information Shared, Questions & Responses, Actions Taken,

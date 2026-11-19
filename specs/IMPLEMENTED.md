@@ -1975,7 +1975,7 @@ line and holds no copy of it, so changing the line changes the range.
   bold MUST or NEVER. The block below covers the rule (INV-309). It is one block because it has
   one subject: which file holds the module selection.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** The module selection is kept in one file, and a step that reads it names that file. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-442, registered by the maintainer 2026-11-18).** The module selection is kept in one file, and a step that reads it names that file. The rule already shipping, quoted:
     - ⛔ **`selected_modules` is kept in one file, `config/bootcamp_preferences.yaml`, and nothing writes it to `config/bootcamp_progress.json`.** — in `tests/test_selected_modules_is_kept_in_one_file.py`
     - ⛔ **A step that sets `current_module` to the next module in `selected_modules` names `config/bootcamp_preferences.yaml` as the file the list is read from.** — in `tests/test_selected_modules_is_kept_in_one_file.py`
     - `source/skills/bootcamp-preparation/SKILL.md` — ⛔ Step 6's write to the progress file sets `current_module` to the first content module and no other key, and says the selection is kept in the preferences file
@@ -2001,7 +2001,27 @@ line and holds no copy of it, so changing the line changes the range.
   Drafted wording follows. The id is written as NNN deliberately: a literal number would cite an
   invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
 
-  **INV-NNN** — The module selection, `selected_modules`, MUST be kept in one file, `config/bootcamp_preferences.yaml`. Bootcamp preparation writes it there in its consolidated preference write (INV-058), and the bootcamp MUST NOT write it to `config/bootcamp_progress.json`: Bootcamp preparation's write to the progress file sets `current_module` to the first content module and does not name the list. A step that sets `current_module` to the next module in `selected_modules` MUST name `config/bootcamp_preferences.yaml` as the file the list is read from. On 2026-11-17 four steps do so: module completion's Step 1 and the closes of Entity Resolution Concepts, System verification and Truth Set visualization. The dry-run scaffold MUST NOT write a `selected_modules` key to the progress file in any mode, and its mid-bootcamp preferences MUST carry the ordered list. A `selected_modules` key already in the progress file of a bootcamp begun before this rule is left in place and is never read. ⚠️ Limits: the enforcer reads `source/` and the scaffold, and takes the list and the preferences file to be tied when they are neighboring backticked names in one sentence. It **cannot** establish that a live guide reads the list from the preferences file. It does not check a mention of `selected_modules` that names no file and sets no `current_module`, and it does not say what happens when the selection is edited so that `current_module` is no longer in the list. Enforced by `tests/test_selected_modules_is_kept_in_one_file.py`. (Source: `selected-modules-is-kept-in-two-files-and-the-text-disagrees-on-which-is-read`, GitHub issue #44, 2026-11-17.)
+  **INV-NNN** — The module selection, `selected_modules`, MUST be kept in one file,
+  `config/bootcamp_preferences.yaml`. Bootcamp preparation writes it there in its consolidated
+  preference write (INV-058), and the bootcamp MUST NOT write it to
+  `config/bootcamp_progress.json`: Bootcamp preparation's write to the progress file sets
+  `current_module` to the first content module and does not name the list. A step that sets
+  `current_module` to the next module in `selected_modules` MUST name
+  `config/bootcamp_preferences.yaml` as the file the list is read from. The dry-run scaffold
+  MUST NOT write a `selected_modules` key to the progress file in any mode, and its mid-bootcamp
+  preferences MUST carry the ordered list. A `selected_modules` key already in the progress file
+  of a bootcamp begun before this rule is left in place and is never read. ⚠️ Limits: the
+  enforcer reads `source/` and the scaffold, and takes the list and the preferences file to be
+  tied when they are neighboring backticked names in one sentence. It **cannot** establish that
+  a live guide reads the list from the preferences file. It does not check a mention of
+  `selected_modules` that names no file and sets no `current_module`, and it does not say what
+  happens when the selection is edited so that `current_module` is no longer in the list.
+  Enforced by `tests/test_selected_modules_is_kept_in_one_file.py`. (Source:
+  `selected-modules-is-kept-in-two-files-and-the-text-disagrees-on-which-is-read`, GitHub issue
+  #44, 2026-11-17.)
+
+  **Amended at review, 2026-11-18:** the maintainer struck the sentence that listed the four
+  steps by name, so the rule states the property only.
 
 - **Commit:** uncommitted
 

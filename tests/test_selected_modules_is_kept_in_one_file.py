@@ -1,5 +1,8 @@
 """`selected_modules` is kept in one file, `config/bootcamp_preferences.yaml` (#44).
 
+Enforces **INV-442** (registered 2026-11-18); it cannot establish that a live guide reads
+the list from the preferences file.
+
 Bootcamp preparation wrote the module selection twice: into `config/bootcamp_preferences.yaml`
 in its consolidated write, and into `config/bootcamp_progress.json` in a second write that
 said the progress copy was "where module-completion and the journey map read it". Every site
@@ -11,12 +14,12 @@ scaffold wrote the progress copy too, and its mid-bootcamp preferences held no l
 
 What must hold:
 
-- ⛔ **`selected_modules` is kept in one file, `config/bootcamp_preferences.yaml`, and nothing writes it to `config/bootcamp_progress.json`.**
+- ⛔ **(INV-442) `selected_modules` is kept in one file, `config/bootcamp_preferences.yaml`, and nothing writes it to `config/bootcamp_progress.json`.**
   Bootcamp preparation's Step 6 writes the list in its consolidated preferences write. Its
   write to the progress file sets `current_module` to the first content module and does not
   name the list. The dry-run scaffold writes no `selected_modules` key to the progress file in
   any mode, and its mid-bootcamp preferences carry the ordered list.
-- ⛔ **A step that sets `current_module` to the next module in `selected_modules` names `config/bootcamp_preferences.yaml` as the file the list is read from.**
+- ⛔ **(INV-442) A step that sets `current_module` to the next module in `selected_modules` names `config/bootcamp_preferences.yaml` as the file the list is read from.**
   Held by name for the four steps that do so on 2026-11-17: module completion's Step 1 and
   the closes of Entity Resolution Concepts, System verification and Truth Set visualization.
   Held as well for any such step found anywhere under `source/`.

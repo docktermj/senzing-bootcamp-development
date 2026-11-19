@@ -440,7 +440,7 @@ invisible.
 Also set `current_module` in `config/bootcamp_progress.json` to the first content module (a single
 batched write, INV-012). This write sets no other key. The module selection is kept in one file,
 `config/bootcamp_preferences.yaml`, which the consolidated write above has already written and
-which module completion and the journey map read.
+which module completion and the journey map read (INV-442).
 
 ## 7. Recap the setup and hand off to the first selected content module
 
