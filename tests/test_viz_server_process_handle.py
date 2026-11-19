@@ -26,6 +26,8 @@ and replaces the captured pid when it differs, stated once in the contract with 
 PowerShell and a docker-route form, and linked from both launch sites. It also widened the ban
 to `pgrep -f` and `ps | grep`. Its wording is INV-223's dated note of 2026-11-10,
 registered by the maintainer on 2026-11-10.
+Its 2026-11-17 note (#30, applied 2026-11-18) words the handle warning so it names no
+assistant's feature: a handle that names a task rather than a process is not a pid.
 
 Source spec: `specs/visualization-server-teardown-does-not-record-a-pid.md`.
 

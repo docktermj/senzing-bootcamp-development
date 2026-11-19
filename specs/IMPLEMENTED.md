@@ -2623,7 +2623,7 @@ line and holds no copy of it, so changing the line changes the range.
   the MCP failure message: INV-252 and INV-185 give the resolution order and do not say who
   supplies a skill's directory.
 
-- **PROPOSED AMENDMENT to INV-223 — awaiting the maintainer's sign-off; NOT applied.**
+- **PROPOSED AMENDMENT to INV-223 — applied 2026-11-18 by the maintainer.**
     - ⛔ **A handle that names a task rather than a process is not a pid.** — in `source/skills/module-03b-truthset-visualization/visualization-api-reference.md`
 
   INV-223's 2026-11-10 note says "A handle from the host's own background-task mechanism is

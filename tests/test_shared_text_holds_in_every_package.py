@@ -45,6 +45,8 @@ it is added (INV-246).
    and that the pid comes from the launch confirmation's port lookup.
    `tests/test_viz_server_process_handle.py` pins its place in the launch confirmation and
    mutates it.
+   This holds **INV-223**'s 2026-11-17 note (#30, applied 2026-11-18) in every built package;
+   it cannot establish that a live turn records no pid from such an id.
 
 The build's check for another assistant's name ignores letter case since #30, which is how the
 model ID in passage 4 went unreported. `tests/test_bootcamp_build_emit.py` plants a lowercase
