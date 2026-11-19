@@ -1,7 +1,7 @@
 """Each assistant's install page covers what its package names (#43).
 
-Enforces **INV-443** (registered 2026-11-18); it cannot establish that steps a page gives
-were ever followed.
+Enforces **INV-443** and **INV-444** (both registered 2026-11-18); it cannot establish that
+steps a page or a tip gives were ever followed.
 
 An assistant's package and its install page are written in different files, and three gaps had
 opened between them (findings 13, 25 and 27 of `production-readiness-audit-2026-11-17`):
@@ -26,7 +26,7 @@ What must hold, on every assistant:
   It does not say the bootcamp supports the interface. Held for the two such interfaces
   recorded on 2026-11-17: VS Code on the GitHub Copilot page and the Codex CLI on the ChatGPT
   page.
-- ⛔ **Every install page has one tip with the id `update-uninstall`, headed "Update or uninstall", whose text speaks of both updating and uninstalling.**
+- ⛔ **(INV-444) Every install page has one tip with the id `update-uninstall`, headed "Update or uninstall", whose text speaks of both updating and uninstalling.**
   It gives the steps, or says the page has no verified steps. The id is the same on every page
   because other text links to it.
 - ⛔ **Text written for GitHub Copilot calls its desktop application "the GitHub Copilot app".**

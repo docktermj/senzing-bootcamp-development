@@ -99,7 +99,8 @@ def _expand_markers(text: str, hosts: list[Host], current: Host | None, version:
 
     The `site-before.html` fragment each host gives here states `python3` on the `PATH`
     (INV-433), and its install fragment names every interface the host's naming table names,
-    disclaiming one it has no steps for (INV-443).
+    disclaiming one it has no steps for (INV-443). Its tips fragment holds the one
+    `update-uninstall` tip every page links to (INV-444).
     """
     count = COUNT_WORDS.get(len(hosts), str(len(hosts)))
     text = text.replace("{{site.assistant_count}}", count)

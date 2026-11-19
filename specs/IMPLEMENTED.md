@@ -2161,7 +2161,7 @@ line and holds no copy of it, so changing the line changes the range.
   **Amended at review, 2026-11-18:** the maintainer struck the dated sentence that listed the two
   interfaces with no steps; the Limits now names them, since that is what the test checks.
 
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** Every install page has one tip about updating and uninstalling, under one id. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-444, registered by the maintainer 2026-11-18).** Every install page has one tip about updating and uninstalling, under one id. The rule already shipping, quoted:
     - ⛔ **Every install page has one tip with the id `update-uninstall`, headed "Update or uninstall", whose text speaks of both updating and uninstalling.** — in `tests/test_install_pages_cover_what_the_package_names.py`
 
   Enforced by `tests/test_install_pages_cover_what_the_package_names.py`.
@@ -2176,6 +2176,9 @@ line and holds no copy of it, so changing the line changes the range.
   invariant that does not exist. Mint at the next free id, and read it off `INVARIANTS.md`.
 
   **INV-NNN** — Each assistant's tips fragment (`hosts/<assistant>/fragments/site-tips.html`) MUST hold exactly one tip with the id `update-uninstall`, headed "Update or uninstall", and the tip's text below the heading MUST speak of both updating and uninstalling. For each of the two the tip gives the steps, or says the page has no verified steps for it and names where in the assistant to look, by a name the page's install steps already use. A tip MUST NOT give steps written from an assistant vendor's documentation as though they had been followed. The id is the same on every page and MUST NOT change, because other text links to `#update-uninstall`. ⚠️ Limits: the enforcer finds the tip, its heading and the two words. It **cannot** establish that steps a tip gives work or were ever run; on 2026-11-17 no record in any `hosts/<assistant>/checks.json` covers an update or an uninstall. Enforced by `tests/test_install_pages_cover_what_the_package_names.py`, which reads all five fragments and requires the id exactly once on each built page. (Source: `install-pages-and-interface-lists-are-uneven-across-assistants`, GitHub issue #43, 2026-11-17.)
+
+  **Amended at review, 2026-11-18:** the maintainer struck the dated sentence saying no
+  `checks.json` record covered an update or an uninstall.
 
 - **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** Text for GitHub Copilot uses the name its own naming table gives the desktop application. The rule already shipping, quoted:
     - ⛔ **Text written for GitHub Copilot calls its desktop application "the GitHub Copilot app".** — in `tests/test_install_pages_cover_what_the_package_names.py`
