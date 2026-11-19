@@ -36,6 +36,61 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## bootcamp-preparations-language-list-may-offer-a-language-a-platform-does-not-support
+
+- **Implemented:** 2026-11-19 (issue #80)
+- **Files changed:** `source/skills/bootcamp-preparation/SKILL.md`,
+  `tests/test_scaffold_citations_and_database_type.py`, `specs/IMPLEMENTED.md` (this entry)
+- **MCP re-check:** server 1.46.1 (`get_capabilities`: `"server_version":"1.46.1"`),
+  2026-11-19. Tools called, read-only, before any file changed: `get_capabilities`;
+  `sdk_guide(topic='install')` with `platform='macos_arm'`, `'windows'`, `'linux_apt'`,
+  `'linux_yum'`, `'docker'`, and with no `platform`. Outcome: still reproduces — the server
+  contradicts the plugin's old wording. The `macos_arm` and `windows` `gotchas` each say
+  *"Supported languages on macOS: Java and C# (official), Rust and TypeScript (community). To use
+  Python, switch to Docker or WSL2 (Linux container)."* (Windows the same, naming Windows), after
+  *"The Senzing Python SDK is ONLY supported on Linux."* `linux_apt`, `linux_yum` and `docker`
+  return no language list; with no `platform` the reply is the platform decision tree
+  (`needs_input.parameter` is `platform`, five options). The issue's premise holds unchanged, and
+  the change is what it asked for.
+  owner-checked: `get_capabilities` — the full set, Python, Java and C# (official), Rust and
+  TypeScript/Node.js (community-maintained wrappers); it is the route the language lookup uses
+  and the one the rescoped marker names as owner.
+- **Summary:** Bootcamp preparation's language lookup said the language set was
+  "platform-independent" and that `sdk_guide(topic='install', platform=…)` returns "no language
+  list at all". On server 1.46.1 the `macos_arm` and `windows` replies list the set without
+  Python. The step now says so, with the reason (the Python SDK is Linux-only), and says the set
+  is the same on every platform except for where Python runs. `get_capabilities` stays the only
+  source of the offered list, and the step now also says not to filter it by platform. The
+  verification stamp is 2026-11-19, server 1.46.1. The `MCP-NEGATIVE` marker is scoped to
+  `linux_apt`, `linux_yum` and `docker` at the same server and date, and
+  `coverage_reports.py negatives --server 1.46.1` lists it as current, not DUE. What the
+  Bootcamper is offered does not change: Python stays an option on macOS and Windows, annotated
+  with its cost and the server's routes, and the WSL2-on-macOS suppression note and Module 2's
+  routing rules are untouched. `TheLanguageLookupGoesToTheToolThatCarriesIt` replaces the test
+  that pinned "platform-independent" with assertions on the corrected wording, a negative control
+  that rejects both retired claims (each fails against the old text), and a check that the
+  marker, parsed with the negatives report's own grammar, names the three platforms and not
+  `macos_arm` or `windows`. No test was deleted.
+- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** Bootcamp preparation offers the programming languages `get_capabilities` returns, unfiltered by platform. The rule already shipping, quoted:
+    - ⛔ **Python stays among the options on macOS and Windows, annotated with its cost and the server's routes.** — in `source/skills/bootcamp-preparation/SKILL.md`
+    - `source/skills/bootcamp-preparation/SKILL.md` — ⛔ `get_capabilities` is the only source of the offered list, the lookup is not routed to `sdk_guide`, and the set is not filtered by platform
+
+  Enforced by `tests/test_scaffold_citations_and_database_type.py`
+  (`TheLanguageLookupGoesToTheToolThatCarriesIt`).
+
+  **Why it is not an existing invariant:** INV-280 settles which text is authoritative for a
+  tool's coverage (`get_capabilities` over a declared schema), not where Bootcamp preparation's
+  offer comes from or whether a platform's narrower install reply filters it. INV-224 binds where
+  the options and their annotations render, not which options there are. INV-075 says the
+  programming-language question is asked, and INV-002 binds what the Bootcamper builds, not the
+  source of the offered list.
+
+  The drafted wording:
+
+  **INV-NNN** — Bootcamp preparation MUST take the programming languages it offers from `get_capabilities` alone: it MUST NOT route that lookup to `sdk_guide` or filter the offered set by a platform's install reply. Where a platform's install reply lists a narrower set and names an environment route for a language it leaves out, that language MUST stay among the options, annotated on its option with its cost and the routes the server names, never removed. Enforced by `tests/test_scaffold_citations_and_database_type.py` (`TheLanguageLookupGoesToTheToolThatCarriesIt`). (Source: GitHub issue #80.)
+  *(written as NNN deliberately: this command cannot mint an id, and a literal id here would cite an invariant that does not exist and turn `citations.py verify` red. If the maintainer registers it, mint at the next free id — read it off `INVARIANTS.md` rather than trusting a number written here.)*
+- **Commit:** uncommitted
+
 ## invariant-review-2026-11-18
 
 **Not a spec** — the record of a `/review-invariants` session, attended by the maintainer.
