@@ -36,6 +36,31 @@ line and holds no copy of it, so changing the line changes the range.
 
 -->
 
+## invariant-review-2026-11-20
+
+**Not a spec** — the record of a `/review-invariants` session, attended by the maintainer.
+
+- **Implemented:** 2026-11-20
+- **Files changed:** `specs/INVARIANTS.md`, `specs/IMPLEMENTED.md`;
+  `source/skills/bootcamp-preparation/SKILL.md` (citation sites);
+  `tests/test_scaffold_citations_and_database_type.py` (back-citation) and
+  `tests/test_invariant_enforcer_citations.py`
+- **MCP re-check:** n/a (no Senzing fact)
+- **Summary:** The one pending block was decided on the maintainer's yes.
+  - **Registered:** INV-456, from #80's block, as drafted: Bootcamp preparation takes the
+    programming languages it offers from `get_capabilities` alone, unfiltered by platform, and
+    keeps a language a platform's install reply leaves out among the options, annotated. Filed
+    under *MCP sourcing and tool contracts*. Cited at both rule sites in Bootcamp preparation's
+    language lookup; a repository-wide scan for the rule's words found no other site.
+  - **Ledger:** #80's entry now records its commit, `8b77a56`.
+  - **Held:** none new. The four earlier holds were not re-offered; none of their revisit
+    conditions was met.
+  - **Guard:** the enforcer pair count was re-derived by the extractor, 393 to 394, with a note.
+  - **Remains:** the queue is empty; four blocks are held.
+- **Establishes no invariant of its own** (INV-309): INV-456 was established by the entry its
+  block sits in.
+- **Commit:** uncommitted
+
 ## module-2s-szbuildversion-json-provenance-is-stale-search-docs-now-names-the-linux-path
 
 - **Implemented:** 2026-11-19 (issue #79)
@@ -123,7 +148,7 @@ line and holds no copy of it, so changing the line changes the range.
   that rejects both retired claims (each fails against the old text), and a check that the
   marker, parsed with the negatives report's own grammar, names the three platforms and not
   `macos_arm` or `windows`. No test was deleted.
-- **DEFERRED INVARIANT — awaiting the maintainer's sign-off; NOT minted.** Bootcamp preparation offers the programming languages `get_capabilities` returns, unfiltered by platform. The rule already shipping, quoted:
+- **DEFERRED INVARIANT (resolved INV-456, registered by the maintainer 2026-11-20).** Bootcamp preparation offers the programming languages `get_capabilities` returns, unfiltered by platform. The rule already shipping, quoted:
     - ⛔ **Python stays among the options on macOS and Windows, annotated with its cost and the server's routes.** — in `source/skills/bootcamp-preparation/SKILL.md`
     - `source/skills/bootcamp-preparation/SKILL.md` — ⛔ `get_capabilities` is the only source of the offered list, the lookup is not routed to `sdk_guide`, and the set is not filtered by platform
 
@@ -141,7 +166,7 @@ line and holds no copy of it, so changing the line changes the range.
 
   **INV-NNN** — Bootcamp preparation MUST take the programming languages it offers from `get_capabilities` alone: it MUST NOT route that lookup to `sdk_guide` or filter the offered set by a platform's install reply. Where a platform's install reply lists a narrower set and names an environment route for a language it leaves out, that language MUST stay among the options, annotated on its option with its cost and the routes the server names, never removed. Enforced by `tests/test_scaffold_citations_and_database_type.py` (`TheLanguageLookupGoesToTheToolThatCarriesIt`). (Source: GitHub issue #80.)
   *(written as NNN deliberately: this command cannot mint an id, and a literal id here would cite an invariant that does not exist and turn `citations.py verify` red. If the maintainer registers it, mint at the next free id — read it off `INVARIANTS.md` rather than trusting a number written here.)*
-- **Commit:** uncommitted
+- **Commit:** 8b77a56
 
 ## invariant-review-2026-11-18
 

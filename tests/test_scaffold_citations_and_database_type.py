@@ -345,6 +345,11 @@ class TheLanguageLookupGoesToTheToolThatCarriesIt(unittest.TestCase):
     `docker` still carry no list, so the negative marker is scoped to those three. What the
     Bootcamper is offered does not change: Python stays an option on macOS and Windows,
     annotated with its cost and routes.
+
+    Enforces INV-456 (registered 2026-11-20): the offered list comes from `get_capabilities`
+    alone, unfiltered by platform, and Python stays an annotated option. These assertions read
+    the skill file only; they cannot establish that a live guide obeys the rule, which only
+    `dry-run` phase 3 can observe.
     """
 
     def setUp(self):
