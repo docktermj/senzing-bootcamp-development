@@ -286,7 +286,7 @@ questions.
   It is the tool that carries the full set, and it is the **only** source of the options offered
   here: Python, Java and C# official, Rust and TypeScript/Node.js community-maintained wrappers
   (re-verified 2026-11-19, server 1.46.1). Do **not** route this lookup to `sdk_guide`, and do
-  **not** filter the set by platform. `sdk_guide(topic='install', platform=…)` returns install
+  **not** filter the set by platform (INV-456). `sdk_guide(topic='install', platform=…)` returns install
   commands, env vars, paths and gotchas, and with no `platform` it returns the platform decision
   tree rather than a language one — `needs_input.parameter` is `platform`, offering five operating
   systems. Its reply differs by platform:
@@ -301,7 +301,7 @@ questions.
   So the set is the same on every platform except for **where Python runs**, and that one
   platform↔language constraint the server states — the Python SDK is supported on Linux only, with
   Docker or WSL2 as the route on macOS/Windows — is carried in the annotation rules below and in
-  Module 2's routing, which is where it belongs. Python stays among the options on macOS and
+  Module 2's routing, which is where it belongs. (INV-456) Python stays among the options on macOS and
   Windows, annotated with its cost and the server's routes.
 - Always say "**programming language**", never the bare word "language" (avoids confusion with
   spoken languages).
